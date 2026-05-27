@@ -3787,11 +3787,14 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_NVME_IO:
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
+	case SPDK_BDEV_IO_TYPE_NVME_IOV_MD:
 		/* Don't try to decode the NVMe command - just assume worst-case and that
 		 * it overlaps a locked range.
 		 */
 		return true;
 	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_COMPARE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 		if (!range->quiesce) {
 			return false;
 		}
@@ -3802,22 +3805,46 @@ bdev_io_range_is_locked(struct spdk_bdev_io *bdev_io, struct lba_range *range)
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_ZCOPY:
 	case SPDK_BDEV_IO_TYPE_COPY:
-		r.offset = bdev_io->u.bdev.offset_blocks;
+	case SPDK_BDEV_IO_TYPE_COMPARE_AND_WRITE:
 		r.length = bdev_io->u.bdev.num_blocks;
-		if (!bdev_lba_range_overlapped(range, &r)) {
-			/* This I/O doesn't overlap the specified LBA range. */
-			return false;
-		} else if (range->owner_ch == ch && range->locked_ctx == bdev_io->internal.caller_ctx) {
-			/* This I/O overlaps, but the I/O is on the same channel that locked this
-			 * range, and the caller_ctx is the same as the locked_ctx.  This means
-			 * that this I/O is associated with the lock, and is allowed to execute.
+		break;
+	case SPDK_BDEV_IO_TYPE_ZONE_APPEND:
+		/* offset_blocks holds the zone start LBA, not the target LBA - the device
+		 * writes num_blocks blocks at the zone's write pointer, which may be
+		 * anywhere within the zone. So range-check the whole zone, which is always
+		 * a superset of the blocks that will be written.
+		 */
+		if (bdev_io->bdev->zone_size == 0) {
+			/* zone_size is unset, so the zone extent is unknown - assume
+			 * worst-case and that it overlaps a locked range.
 			 */
-			return false;
-		} else {
 			return true;
 		}
+		r.length = bdev_io->bdev->zone_size;
+		break;
+	case SPDK_BDEV_IO_TYPE_SEEK_HOLE:
+	case SPDK_BDEV_IO_TYPE_SEEK_DATA:
+		/* Seek doesn't set num_blocks, so it can't be range-checked.
+		 * Block unconditionally during quiesce.
+		 */
+		return range->quiesce;
 	default:
 		return false;
+	}
+
+	r.offset = bdev_io->u.bdev.offset_blocks;
+
+	if (!bdev_lba_range_overlapped(range, &r)) {
+		/* This I/O doesn't overlap the specified LBA range. */
+		return false;
+	} else if (range->owner_ch == ch && range->locked_ctx == bdev_io->internal.caller_ctx) {
+		/* This I/O overlaps, but the I/O is on the same channel that locked this
+		 * range, and the caller_ctx is the same as the locked_ctx.  This means
+		 * that this I/O is associated with the lock, and is allowed to execute.
+		 */
+		return false;
+	} else {
+		return true;
 	}
 }
 

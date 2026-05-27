@@ -14,6 +14,7 @@
 #undef SPDK_CONFIG_VTUNE
 
 #include "bdev/bdev.c"
+#include "bdev/bdev_zone.c"
 
 #define MOCK_ACCEL_SEQUENCE_FINISH
 #define MOCK_ACCEL_DIF_FUNCTIONS
@@ -5594,6 +5595,120 @@ lock_lba_range_with_split_io(void)
 }
 
 static void
+lock_lba_range_with_zone_append(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *channel;
+	struct spdk_bdev_io *bdev_io;
+	char buf[512];
+	int ctx1, ctx2;
+	int rc;
+
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("bdev0");
+
+	/* Turn bdev0 into a zoned bdev with 128-block zones, so zone 0 spans [0, 128)
+	 * and zone 1 spans [128, 256).
+	 */
+	bdev->zoned = true;
+	bdev->zone_size = 128;
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(io_ch != NULL);
+	channel = spdk_io_channel_get_ctx(io_ch);
+
+	/* Lock a range near the end of zone 0. Note that the I/O below use a different
+	 * caller_ctx than the lock, so they never qualify for the "I/O belongs to the
+	 * lock owner" exception.
+	 */
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 100, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(g_lock_lba_range_done == true);
+
+	/* A zone append passes the zone start LBA (0) as offset_blocks, but the device
+	 * places the data at the zone's write pointer, which may be anywhere within
+	 * [0, 128) - including inside the locked [100, 110) range. So the append has to
+	 * be deferred, even though [offset_blocks, offset_blocks + num_blocks) on its own
+	 * does not overlap the lock.
+	 */
+	g_io_done = false;
+	rc = spdk_bdev_zone_append(desc, io_ch, buf, 0, 1, io_done, &ctx2);
+	CU_ASSERT(rc == 0);
+
+	bdev_io = TAILQ_FIRST(&channel->io_locked);
+	SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
+	CU_ASSERT(bdev_io->type == SPDK_BDEV_IO_TYPE_ZONE_APPEND);
+	CU_ASSERT(bdev_io->u.bdev.offset_blocks == 0);
+	CU_ASSERT(g_io_done == false);
+
+	/* An append to zone 1 spans [128, 256), which doesn't overlap the lock, so it is
+	 * submitted immediately.
+	 */
+	rc = spdk_bdev_zone_append(desc, io_ch, buf, 128, 1, io_done, &ctx2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_NEXT(bdev_io, internal.ch_link) == NULL);
+
+	stub_complete_io(1);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+
+	/* Unlocking the range releases the deferred append. */
+	g_io_done = false;
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 100, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->io_locked));
+
+	stub_complete_io(1);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+
+	/* Now the other caller of bdev_io_range_is_locked(): an outstanding zone append
+	 * that may land in the range must hold off the lock until it completes.
+	 */
+	g_io_done = false;
+	rc = spdk_bdev_zone_append(desc, io_ch, buf, 0, 1, io_done, &ctx2);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(TAILQ_EMPTY(&channel->io_locked));
+
+	g_lock_lba_range_done = false;
+	rc = bdev_lock_lba_range(desc, io_ch, 100, 10, lock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(g_io_done == false);
+	CU_ASSERT(g_lock_lba_range_done == false);
+
+	stub_complete_io(1);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(g_lock_lba_range_done == true);
+
+	g_unlock_lba_range_done = false;
+	rc = bdev_unlock_lba_range(desc, io_ch, 100, 10, unlock_lba_range_done, &ctx1);
+	CU_ASSERT(rc == 0);
+	spdk_delay_us(100);
+	poll_threads();
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(TAILQ_EMPTY(&channel->locked_ranges));
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
+static void
 bdev_quiesce_done(void *ctx, int status)
 {
 	g_lock_lba_range_done = true;
@@ -8826,6 +8941,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_with_io_outstanding);
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
 	CU_ADD_TEST(suite, lock_lba_range_with_split_io);
+	CU_ADD_TEST(suite, lock_lba_range_with_zone_append);
 	CU_ADD_TEST(suite, bdev_quiesce);
 	CU_ADD_TEST(suite, bdev_unregister_during_quiesced_range_unlock);
 	CU_ADD_TEST(suite, bdev_io_abort);
