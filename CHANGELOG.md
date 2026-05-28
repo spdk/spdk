@@ -1,6 +1,6 @@
 # Changelog
 
-## v26.05: (Upcoming Release)
+## v26.05
 
 ### accel
 
