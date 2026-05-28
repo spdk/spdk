@@ -17,6 +17,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
 	struct spdk_nvme_ns_data	*nsdata = nvme_ns_get_data(ns);
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
+	struct spdk_nvme_ns_data_lbaf	lbaf;
 	uint32_t			format_index;
 
 	ns->identify_pending = false;
@@ -30,11 +31,12 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 
 	ns->flags = 0x0000;
 	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	spdk_nvme_ns_get_format(ns, format_index, &lbaf);
 
-	ns->sector_size = 1 << nsdata->lbaf[format_index].lbads;
+	ns->sector_size = 1 << lbaf.lbads;
 	ns->extended_lba_size = ns->sector_size;
 
-	ns->md_size = nsdata->lbaf[format_index].ms;
+	ns->md_size = lbaf.ms;
 	if (nsdata->flbas.extended) {
 		ns->flags |= SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED;
 		ns->extended_lba_size += ns->md_size;
@@ -83,7 +85,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	}
 
 	ns->pi_type = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
-	if (nsdata->lbaf[format_index].ms && nsdata->dps.pit) {
+	if (lbaf.ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
 		if (nsdata_nvm != NULL && ctrlr->cdata.ctratt.elbas) {
@@ -436,6 +438,26 @@ spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
 	} else {
 		return ((nsdata->flbas.msb_format << 4) + nsdata->flbas.format);
 	}
+}
+
+int
+spdk_nvme_ns_get_format(struct spdk_nvme_ns *ns, uint8_t format_index,
+			struct spdk_nvme_ns_data_lbaf *lbaf)
+{
+	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+
+	if (!lbaf) {
+		return -EINVAL;
+	}
+
+	memset(lbaf, 0, sizeof(*lbaf));
+
+	if (format_index > spdk_min(nsdata->nlbaf, SPDK_NVME_NS_MAX_LBA_FORMATS - 1)) {
+		return -EINVAL;
+	}
+
+	*lbaf = nsdata->lbaf[format_index];
+	return 0;
 }
 
 const struct spdk_nvme_ns_data *

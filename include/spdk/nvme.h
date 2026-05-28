@@ -3376,6 +3376,18 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
 
 /**
+ * Copy a single LBA format entry from a namespace.
+ *
+ * \param ns Namespace.
+ * \param format_index Index into the lbaf array. Must satisfy format_index <= nlbaf.
+ * \param lbaf Output buffer that receives the copy. Must be non-NULL.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_nvme_ns_get_format(struct spdk_nvme_ns *ns, uint8_t format_index,
+			    struct spdk_nvme_ns_data_lbaf *lbaf);
+
+/**
  * Check whether if the namespace can support extended LBA when end-to-end data
  * protection enabled.
  *
