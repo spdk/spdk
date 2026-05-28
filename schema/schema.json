@@ -245,6 +245,23 @@
       ]
     },
     {
+      "name": "lvs_clear_method",
+      "fields": [
+        {"name": "unmap", "value": "LVS_CLEAR_WITH_UNMAP"},
+        {"name": "write_zeroes", "value": "LVS_CLEAR_WITH_WRITE_ZEROES"},
+        {"name": "none", "value": "LVS_CLEAR_WITH_NONE"}
+      ]
+    },
+    {
+      "name": "lvol_clear_method",
+      "fields": [
+        {"name": "default", "value": "LVOL_CLEAR_WITH_DEFAULT"},
+        {"name": "none", "value": "LVOL_CLEAR_WITH_NONE"},
+        {"name": "unmap", "value": "LVOL_CLEAR_WITH_UNMAP"},
+        {"name": "write_zeroes", "value": "LVOL_CLEAR_WITH_WRITE_ZEROES"}
+      ]
+    },
+    {
       "name": "dpdk_cryptodev_driver",
       "fields": [
         {"name": "crypto_aesni_mb", "value": "SPDK_ACCEL_DPDK_CRYPTODEV_DRIVER_AESNI_MB"},
@@ -5068,8 +5085,9 @@
         },
         {
           "name": "clear_method",
-          "type": "string",
-          "description": "Change clear method for data region. Available: none, unmap (default), write_zeroes"
+          "type": "enum",
+          "class": "lvs_clear_method",
+          "description": "Change clear method for data region."
         },
         {
           "name": "num_md_pages_per_cluster_ratio",
@@ -5177,8 +5195,9 @@
         },
         {
           "name": "clear_method",
-          "type": "string",
-          "description": "Change default data clusters clear method. Available: none, unmap, write_zeroes"
+          "type": "enum",
+          "class": "lvol_clear_method",
+          "description": "Change default data clusters clear method."
         }
       ]
     },

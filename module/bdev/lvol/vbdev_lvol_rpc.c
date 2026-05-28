@@ -64,7 +64,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_lvstore_decode
 	{"bdev_name", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, cluster_sz), spdk_json_decode_uint32, true},
 	{"lvs_name", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, lvs_name), spdk_json_decode_string},
-	{"clear_method", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, clear_method), spdk_json_decode_string, true},
+	{"clear_method", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, clear_method), rpc_decode_lvs_clear_method, true},
 	{"num_md_pages_per_cluster_ratio", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, num_md_pages_per_cluster_ratio), spdk_json_decode_uint32, true},
 	{"md_page_size", offsetof(struct rpc_bdev_lvol_create_lvstore_ctx, md_page_size), spdk_json_decode_uint32, true},
 };
@@ -93,9 +93,8 @@ static void
 rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_lvol_create_lvstore_ctx req = {};
+	struct rpc_bdev_lvol_create_lvstore_ctx req = {.clear_method = RPC_LVS_CLEAR_METHOD_UNMAP};
 	int rc = 0;
-	enum lvs_clear_method clear_method;
 
 	if (spdk_json_decode_object(params, rpc_bdev_lvol_create_lvstore_decoders,
 				    SPDK_COUNTOF(rpc_bdev_lvol_create_lvstore_decoders),
@@ -106,22 +105,8 @@ rpc_bdev_lvol_create_lvstore(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.clear_method != NULL) {
-		if (!strcasecmp(req.clear_method, "none")) {
-			clear_method = LVS_CLEAR_WITH_NONE;
-		} else if (!strcasecmp(req.clear_method, "unmap")) {
-			clear_method = LVS_CLEAR_WITH_UNMAP;
-		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
-			clear_method = LVS_CLEAR_WITH_WRITE_ZEROES;
-		} else {
-			spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid clear_method parameter");
-			goto cleanup;
-		}
-	} else {
-		clear_method = LVS_CLEAR_WITH_UNMAP;
-	}
-
-	rc = vbdev_lvs_create_ext(req.bdev_name, req.lvs_name, req.cluster_sz, clear_method,
+	rc = vbdev_lvs_create_ext(req.bdev_name, req.lvs_name, req.cluster_sz,
+				  (enum lvs_clear_method)req.clear_method,
 				  req.num_md_pages_per_cluster_ratio, req.md_page_size,
 				  rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
@@ -247,7 +232,7 @@ static const struct spdk_json_object_decoder rpc_bdev_lvol_create_decoders[] = {
 	{"lvol_name", offsetof(struct rpc_bdev_lvol_create_ctx, lvol_name), spdk_json_decode_string},
 	{"size_in_mib", offsetof(struct rpc_bdev_lvol_create_ctx, size_in_mib), spdk_json_decode_uint64},
 	{"thin_provision", offsetof(struct rpc_bdev_lvol_create_ctx, thin_provision), spdk_json_decode_bool, true},
-	{"clear_method", offsetof(struct rpc_bdev_lvol_create_ctx, clear_method), spdk_json_decode_string, true},
+	{"clear_method", offsetof(struct rpc_bdev_lvol_create_ctx, clear_method), rpc_decode_lvol_clear_method, true},
 };
 
 static void
@@ -274,8 +259,7 @@ static void
 rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
-	struct rpc_bdev_lvol_create_ctx req = {};
-	enum lvol_clear_method clear_method;
+	struct rpc_bdev_lvol_create_ctx req = {.clear_method = RPC_LVOL_CLEAR_METHOD_DEFAULT};
 	int rc = 0;
 	struct spdk_lvol_store *lvs = NULL;
 
@@ -296,23 +280,9 @@ rpc_bdev_lvol_create(struct spdk_jsonrpc_request *request,
 		goto cleanup;
 	}
 
-	if (req.clear_method != NULL) {
-		if (!strcasecmp(req.clear_method, "none")) {
-			clear_method = LVOL_CLEAR_WITH_NONE;
-		} else if (!strcasecmp(req.clear_method, "unmap")) {
-			clear_method = LVOL_CLEAR_WITH_UNMAP;
-		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
-			clear_method = LVOL_CLEAR_WITH_WRITE_ZEROES;
-		} else {
-			spdk_jsonrpc_send_error_response(request, -EINVAL, "Invalid clean_method option");
-			goto cleanup;
-		}
-	} else {
-		clear_method = LVOL_CLEAR_WITH_DEFAULT;
-	}
-
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size_in_mib * 1024 * 1024,
-			       req.thin_provision, clear_method, rpc_bdev_lvol_create_cb, request);
+			       req.thin_provision, (enum lvol_clear_method)req.clear_method,
+			       rpc_bdev_lvol_create_cb, request);
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		goto cleanup;

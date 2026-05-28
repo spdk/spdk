@@ -26,8 +26,8 @@ def add_parser(subparsers):
     p.add_argument('bdev_name', help='base bdev name')
     p.add_argument('lvs_name', help='name for lvol store')
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int)
-    p.add_argument('--clear-method', help="""Change clear method for data region.
-        Available: none, unmap, write_zeroes""")
+    p.add_argument('--clear-method', help='Change clear method for data region.',
+                   choices=['none', 'unmap', 'write_zeroes'])
     p.add_argument('-m', '--md-pages-per-cluster-ratio', dest='num_md_pages_per_cluster_ratio',
                    help='reserved metadata pages for each cluster', type=int)
     p.add_argument('-s', '--md-page-size', help='size of metadata page (in bytes)', type=int)
@@ -67,8 +67,8 @@ def add_parser(subparsers):
     p.add_argument('-u', '--uuid', help='lvol store UUID')
     p.add_argument('-l', '--lvs-name', help='lvol store name')
     p.add_argument('-t', '--thin-provision', action='store_true', help='create lvol bdev as thin provisioned')
-    p.add_argument('-c', '--clear-method', help="""Change default data clusters clear method.
-        Available: none, unmap, write_zeroes""")
+    p.add_argument('-c', '--clear-method', help='Change default data clusters clear method.',
+                   choices=['default', 'none', 'unmap', 'write_zeroes'])
     p.add_argument('lvol_name', help='name for this lvol')
     p.add_argument('size_in_mib', help='size in MiB for this bdev', type=int)
     p.set_defaults(func=bdev_lvol_create)
