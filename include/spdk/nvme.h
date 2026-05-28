@@ -3366,6 +3366,8 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
 /**
  * Get the format index of the given namespace.
  *
+ * \deprecated Use spdk_nvme_ns_get_active_format_index instead.
+ *
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
  *
@@ -3374,6 +3376,18 @@ uint32_t spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns);
  * \return the format index of the given namespace.
  */
 uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
+
+/**
+ * Get the active format index of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace.
+ *
+ * \return the format index of the given namespace.
+ */
+uint32_t spdk_nvme_ns_get_active_format_index(const struct spdk_nvme_ns *ns);
 
 /**
  * Copy a single LBA format entry from a namespace.

@@ -223,8 +223,8 @@ DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t, (const struct spdk_bdev *bde
 DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), ZONE_SIZE);
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 
-DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
-	    (const struct spdk_nvme_ns_data *nsdata), 0);
+DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t, (const struct spdk_nvme_ns_data *nsdata), 0);
+DEFINE_STUB(spdk_nvme_ns_get_active_format_index, uint32_t, (const struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB(spdk_nvmf_subsystem_is_discovery, bool, (struct spdk_nvmf_subsystem *subsystem), false);
 DEFINE_STUB(nvmf_subsystem_host_auth_required, bool, (struct spdk_nvmf_subsystem *s, const char *n),

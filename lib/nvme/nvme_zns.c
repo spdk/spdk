@@ -16,10 +16,7 @@ uint64_t
 spdk_nvme_zns_ns_get_zone_size_sectors(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_zns_ns_data *nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
-	uint32_t format_index;
-
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	uint32_t format_index = spdk_nvme_ns_get_active_format_index(ns);
 
 	return nsdata_zns->lbafe[format_index].zsze;
 }

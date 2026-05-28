@@ -159,7 +159,7 @@ display_namespace(struct spdk_nvme_ns *ns)
 	uint32_t				format_index;
 
 	nsdata = spdk_nvme_ns_get_data(ns);
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	format_index = spdk_nvme_ns_get_active_format_index(ns);
 
 	printf("Namespace ID:%d\n", spdk_nvme_ns_get_id(ns));
 

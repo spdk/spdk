@@ -245,8 +245,8 @@ DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t,
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t,
-	    (const struct spdk_nvme_ns_data *nsdata), 0);
+DEFINE_STUB(spdk_nvme_ns_get_format_index, uint32_t, (const struct spdk_nvme_ns_data *nsdata), 0);
+DEFINE_STUB(spdk_nvme_ns_get_active_format_index, uint32_t, (const struct spdk_nvme_ns *ns), 0);
 
 DEFINE_STUB(spdk_sock_get_impl_name, const char *, (struct spdk_sock *sock), "");
 

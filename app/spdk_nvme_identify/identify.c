@@ -1187,7 +1187,6 @@ print_zns_zone(uint8_t *report, uint32_t index, uint32_t zdes)
 static void
 get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair)
 {
-	const struct spdk_nvme_ns_data *nsdata;
 	const struct spdk_nvme_zns_ns_data *nsdata_zns;
 	uint8_t *report_buf;
 	size_t report_bufsize;
@@ -1203,13 +1202,12 @@ get_and_print_zns_zone_report(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 
 	outstanding_commands = 0;
 
-	nsdata = spdk_nvme_ns_get_data(ns);
 	nsdata_zns = spdk_nvme_zns_ns_get_data(ns);
 
 	zrs = sizeof(struct spdk_nvme_zns_zone_report);
 	zds = sizeof(struct spdk_nvme_zns_zone_desc);
 
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	format_index = spdk_nvme_ns_get_active_format_index(ns);
 	zdes = nsdata_zns->lbafe[format_index].zdes * 64;
 	zones_to_print = g_zone_report_limit ? spdk_min(total_zones, (uint64_t)g_zone_report_limit) : \
 			 total_zones;
@@ -1468,7 +1466,7 @@ print_namespace(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("Protection Information Transferred as: %s\n",
 		       nsdata->dps.md_start ? "First 8/16 Bytes" : "Last 8/16 Bytes");
 	}
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	format_index = spdk_nvme_ns_get_active_format_index(ns);
 	if (nsdata->lbaf[format_index].ms > 0) {
 		printf("Metadata Transferred as:               %s\n",
 		       nsdata->flbas.extended ? "Extended Data LBA" : "Separate Metadata Buffer");

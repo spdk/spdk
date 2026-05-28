@@ -30,7 +30,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	nsdata_nvm = ns->nsdata_nvm;
 
 	ns->flags = 0x0000;
-	format_index = spdk_nvme_ns_get_format_index(nsdata);
+	format_index = spdk_nvme_ns_get_active_format_index(ns);
 	spdk_nvme_ns_get_format(ns, format_index, &lbaf);
 
 	ns->sector_size = 1 << lbaf.lbads;
@@ -430,14 +430,34 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 	return ns->md_size;
 }
 
-uint32_t
-spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
+static inline uint32_t
+nvme_ns_get_active_format_index(const struct spdk_nvme_ns_data *nsdata)
 {
 	if (nsdata->nlbaf < 16) {
 		return nsdata->flbas.format;
-	} else {
-		return ((nsdata->flbas.msb_format << 4) + nsdata->flbas.format);
 	}
+
+	return (nsdata->flbas.msb_format << 4) + nsdata->flbas.format;
+}
+
+uint32_t
+spdk_nvme_ns_get_active_format_index(const struct spdk_nvme_ns *ns)
+{
+	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data((struct spdk_nvme_ns *)ns);
+
+	return nvme_ns_get_active_format_index(nsdata);
+}
+
+SPDK_LOG_DEPRECATION_REGISTER(nvme_ns_get_format_index,
+			      "use spdk_nvme_ns_get_active_format_index instead",
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
+
+uint32_t
+spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
+{
+	SPDK_LOG_DEPRECATED(nvme_ns_get_format_index);
+
+	return nvme_ns_get_active_format_index(nsdata);
 }
 
 int

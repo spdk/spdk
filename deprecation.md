@@ -88,6 +88,11 @@ Use `spdk_nvme_cpl_get_status_string_ext`, `spdk_nvme_print_completion_ext`, and
 to correctly distinguish fabric command-specific status codes from NVMe command-specific
 status codes.
 
+#### `nvme_ns_get_format_index`
+
+`spdk_nvme_ns_get_format_index` is deprecated and will be removed in v27.01.
+Use `spdk_nvme_ns_get_active_format_index` instead.
+
 ### nvmf
 
 `spdk_nvmf_subsystem_create`, `spdk_nvmf_subsystem_set_sn`, `spdk_nvmf_subsystem_set_mn`,
