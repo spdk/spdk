@@ -1,5 +1,9 @@
 # Performance Reports {#performance_reports}
 
+## Release 26.01
+
+- [SPDK 26.01 NVMe-oF RDMA Performance Report (NVIDIA BlueField3)](https://review.spdk.io/download/performance-reports/SPDK_rdma_nvda_perf_report_2601.pdf)
+
 ## Release 24.05
 
 - [SPDK 24.05 NVMe Bdev Performance Report](https://review.spdk.io/download/performance-reports/SPDK_nvme_bdev_perf_report_2405.pdf)
