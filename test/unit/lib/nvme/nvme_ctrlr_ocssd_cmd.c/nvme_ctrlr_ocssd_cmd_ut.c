@@ -61,6 +61,12 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return ns;
 }
 
+const void *
+spdk_nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_get_vendor_specific(ns);
+}
+
 int
 nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
 {
@@ -104,13 +110,14 @@ test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns ns = {};
+	uint8_t *vendor_specific = nvme_ns_get_vendor_specific(&ns);
 	bool rc;
 
 	RB_INIT(&ctrlr.ns);
 	ns.id = 1;
 	RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns);
 
-	ns.nsdata.vendor_specific[0] = 1;
+	vendor_specific[0] = 1;
 	ctrlr.quirks |= NVME_QUIRK_OCSSD;
 	ctrlr.cdata.vid = SPDK_PCI_VID_CNEXLABS;
 	ctrlr.cdata.nn = 1;

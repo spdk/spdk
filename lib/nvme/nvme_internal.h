@@ -1468,6 +1468,12 @@ nvme_ns_get_data(struct spdk_nvme_ns *ns)
 	return &ns->nsdata;
 }
 
+static inline uint8_t *
+nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns)
+{
+	return ns->nsdata.vendor_specific;
+}
+
 int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int	nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int	nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);

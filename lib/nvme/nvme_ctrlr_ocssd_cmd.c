@@ -20,6 +20,7 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		 */
 		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
 			uint32_t nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+			const uint8_t *vendor_specific;
 			struct spdk_nvme_ns *ns;
 
 			if (nsid == 0) {
@@ -27,12 +28,21 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 			}
 
 			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			if (!ns) {
+				return false;
+			}
 
-			if (ns && ns->nsdata.vendor_specific[0] == 0x1) {
+			vendor_specific = spdk_nvme_ns_get_vendor_specific(ns);
+			if (!vendor_specific) {
+				return false;
+			}
+
+			if (vendor_specific[0] == 0x1) {
 				return true;
 			}
 		}
 	}
+
 	return false;
 }
 

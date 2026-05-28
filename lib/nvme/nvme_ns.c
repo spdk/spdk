@@ -480,6 +480,12 @@ spdk_nvme_ns_get_format(struct spdk_nvme_ns *ns, uint8_t format_index,
 	return 0;
 }
 
+const void *
+spdk_nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_get_vendor_specific(ns);
+}
+
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {

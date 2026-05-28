@@ -3390,6 +3390,18 @@ uint32_t spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata);
 uint32_t spdk_nvme_ns_get_active_format_index(const struct spdk_nvme_ns *ns);
 
 /**
+ * Get the vendor-specific portion of the Identify Namespace data for a namespace.
+ *
+ * Returns a pointer to the vendor_specific payload. The pointer is owned
+ * by the namespace and remains valid for the lifetime of the namespace handle.
+ *
+ * \param ns Namespace.
+ *
+ * \return Pointer to the vendor-specific bytes, or NULL if not available.
+ */
+const void *spdk_nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns);
+
+/**
  * Copy a single LBA format entry from a namespace.
  *
  * \param ns Namespace.
