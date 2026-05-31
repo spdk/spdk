@@ -1462,6 +1462,12 @@ int nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     spdk_nvme_req_next_sge_cb next_sge_fn, void *metadata,
 				     uint16_t apptag_mask, uint16_t apptag);
 
+static inline struct spdk_nvme_ns_data *
+nvme_ns_get_data(struct spdk_nvme_ns *ns)
+{
+	return &ns->nsdata;
+}
+
 int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int	nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int	nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);

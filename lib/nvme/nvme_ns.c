@@ -5,12 +5,6 @@
 
 #include "nvme_internal.h"
 
-static inline struct spdk_nvme_ns_data *
-_nvme_ns_get_data(struct spdk_nvme_ns *ns)
-{
-	return &ns->nsdata;
-}
-
 /**
  * Update Namespace flags based on Identify Controller
  * and Identify Namespace.  This can be also used for
@@ -21,11 +15,9 @@ void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data	*nsdata;
+	struct spdk_nvme_ns_data	*nsdata = nvme_ns_get_data(ns);
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	uint32_t			format_index;
-
-	nsdata = _nvme_ns_get_data(ns);
 
 	ns->identify_pending = false;
 	ns->active = spdk_nvme_ns_is_active(ns);
@@ -110,7 +102,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status	*status;
 	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data		*nsdata;
+	struct spdk_nvme_ns_data		*nsdata = nvme_ns_get_data(ns);
 	int					rc;
 
 	status = calloc(1, sizeof(*status));
@@ -119,7 +111,6 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return -ENOMEM;
 	}
 
-	nsdata = _nvme_ns_get_data(ns);
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
 				     nsdata, sizeof(*nsdata),
 				     nvme_completion_poll_cb, status);
@@ -344,7 +335,7 @@ spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 bool
 spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = NULL;
+	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
 
 	/*
 	 * According to the spec, valid NS has non-zero id.
@@ -352,8 +343,6 @@ spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 	if (ns->id == 0) {
 		return false;
 	}
-
-	nsdata = _nvme_ns_get_data(ns);
 
 	/*
 	 * According to the spec, Identify Namespace will return a zero-filled structure for
@@ -390,7 +379,7 @@ spdk_nvme_ns_get_extended_sector_size(struct spdk_nvme_ns *ns)
 uint64_t
 spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 {
-	return _nvme_ns_get_data(ns)->nsze;
+	return nvme_ns_get_data(ns)->nsze;
 }
 
 uint64_t
@@ -452,7 +441,7 @@ spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
 const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
-	return _nvme_ns_get_data(ns);
+	return nvme_ns_get_data(ns);
 }
 
 const struct spdk_nvme_nvm_ns_data *
@@ -470,12 +459,12 @@ spdk_nvme_ns_get_dealloc_logical_block_read_value(
 	struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	const struct spdk_nvme_ns_data *data = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
 
 	if (ctrlr->quirks & NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE) {
 		return SPDK_NVME_DEALLOC_READ_00;
 	} else {
-		return data->dlfeat.bits.read_value;
+		return nsdata->dlfeat.bits.read_value;
 	}
 }
 
@@ -739,13 +728,12 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 void
 nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
-	struct spdk_nvme_ns_data *nsdata;
+	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
 
 	if (!ns->id) {
 		return;
 	}
 
-	nsdata = _nvme_ns_get_data(ns);
 	memset(nsdata, 0, sizeof(*nsdata));
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 	nvme_ns_free_iocs_specific_data(ns);
