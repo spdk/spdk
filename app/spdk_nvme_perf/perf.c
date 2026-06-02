@@ -233,7 +233,7 @@ static bool g_monitor_perf_cores = false;
 
 static uint32_t g_io_align = 0x200;
 static bool g_io_align_specified;
-static uint32_t g_io_size_bytes;
+static uint32_t g_max_io_size_bytes;
 static uint32_t g_max_io_md_size;
 static uint32_t g_max_io_size_blocks;
 static uint32_t g_metacfg_pract_flag;
@@ -410,8 +410,8 @@ uring_setup_payload(struct perf_task *task, uint8_t pattern)
 	task->iovcnt = 1;
 
 	iov = &task->iovs[0];
-	iov->iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	iov->iov_len = g_io_size_bytes;
+	iov->iov_base = spdk_dma_zmalloc(g_max_io_size_bytes, g_io_align, NULL);
+	iov->iov_len = g_max_io_size_bytes;
 	if (iov->iov_base == NULL) {
 		fprintf(stderr, "spdk_dma_zmalloc() for task->iovs[0].iov_base failed\n");
 		free(task->iovs);
@@ -546,8 +546,8 @@ aio_setup_payload(struct perf_task *task, uint8_t pattern)
 	task->iovcnt = 1;
 
 	iov = &task->iovs[0];
-	iov->iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	iov->iov_len = g_io_size_bytes;
+	iov->iov_base = spdk_dma_zmalloc(g_max_io_size_bytes, g_io_align, NULL);
+	iov->iov_len = g_max_io_size_bytes;
 	if (iov->iov_base == NULL) {
 		fprintf(stderr, "spdk_dma_zmalloc() for task->iovs[0].iov_base failed\n");
 		free(task->iovs);
@@ -740,8 +740,8 @@ register_file(const char *path)
 		entry->u.aio.fd = fd;
 #endif
 	}
-	entry->size_in_ios = size / g_io_size_bytes;
-	entry->io_size_blocks = g_io_size_bytes / blklen;
+	entry->size_in_ios = size / g_max_io_size_bytes;
+	entry->io_size_blocks = g_max_io_size_bytes / blklen;
 
 	if (g_is_random) {
 		if (g_zipf_theta > 0) {
@@ -789,9 +789,9 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 	numa_id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
 
 	/* maximum extended lba format size from all active namespace,
-	 * it's same with g_io_size_bytes for namespace without metadata.
+	 * it's same with g_max_io_size_bytes for namespace without metadata.
 	 */
-	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
+	max_io_size_bytes = g_max_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
 	buf = spdk_dma_zmalloc_socket(max_io_size_bytes, g_io_align, NULL, numa_id);
 	if (buf == NULL) {
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
@@ -1203,11 +1203,11 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	ns_size = spdk_nvme_ns_get_size(ns);
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 
-	if (ns_size < g_io_size_bytes || sector_size > g_io_size_bytes) {
+	if (ns_size < g_max_io_size_bytes || sector_size > g_max_io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
-		       ns_size, spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		       ns_size, spdk_nvme_ns_get_sector_size(ns), g_max_io_size_bytes);
 		g_warn = true;
 		return;
 	}
@@ -1218,7 +1218,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 * stripe size and maximum transfer size, we assume
 	 * 1 more entry be used for stripe.
 	 */
-	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+	entries = (g_max_io_size_bytes - 1) / max_xfer_size + 2;
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
 		printf("Controller IO queue size %u, less than required.\n",
 		       opts.io_queue_size);
@@ -1242,8 +1242,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->u.nvme.ns = ns;
 	entry->num_io_requests = entries * spdk_divide_round_up(g_queue_depth, g_nr_io_queues_per_ns);
 
-	entry->size_in_ios = ns_size / g_io_size_bytes;
-	entry->io_size_blocks = g_io_size_bytes / sector_size;
+	entry->size_in_ios = ns_size / g_max_io_size_bytes;
+	entry->io_size_blocks = g_max_io_size_bytes / sector_size;
 
 	if (g_is_random) {
 		if (g_zipf_theta > 0) {
@@ -1274,9 +1274,9 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		entry->block_size = spdk_nvme_ns_get_sector_size(ns);
 	}
 
-	if (g_io_size_bytes % entry->block_size != 0) {
+	if (g_max_io_size_bytes % entry->block_size != 0) {
 		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
-		       " Removing this ns from test\n", g_io_size_bytes, spdk_nvme_ns_get_id(ns), entry->block_size);
+		       " Removing this ns from test\n", g_max_io_size_bytes, spdk_nvme_ns_get_id(ns), entry->block_size);
 		g_warn = true;
 		spdk_zipf_free(&entry->zipf);
 		free(entry);
@@ -1620,7 +1620,7 @@ print_periodic_performance(bool warmup)
 			core_idle_tsc += idle_tsc;
 		}
 	}
-	mb_this_second = (double)io_this_second * g_io_size_bytes / (1024 * 1024);
+	mb_this_second = (double)io_this_second * g_max_io_size_bytes / (1024 * 1024);
 
 	printf("%s%9ju IOPS, %8.2f MiB/s", warmup ? "[warmup] " : "", io_this_second, mb_this_second);
 	if (g_monitor_perf_cores) {
@@ -2006,7 +2006,7 @@ print_performance(void)
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			if (ns_ctx->stats.io_completed != 0) {
 				io_per_second = (double)ns_ctx->stats.io_completed * 1000 * 1000 / g_elapsed_time_in_usec;
-				mb_per_second = io_per_second * g_io_size_bytes / (1024 * 1024);
+				mb_per_second = io_per_second * g_max_io_size_bytes / (1024 * 1024);
 				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) * 1000 * 1000 /
 						  g_tsc_rate;
 				min_latency = (double)ns_ctx->stats.min_tsc * 1000 * 1000 / g_tsc_rate;
@@ -2527,7 +2527,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 			switch (op) {
 			case PERF_IO_SIZE:
-				g_io_size_bytes = (uint32_t)val_u64;
+				g_max_io_size_bytes = (uint32_t)val_u64;
 				break;
 			case PERF_IO_UNIT_SIZE:
 				g_io_unit_size = (uint32_t)val_u64;
@@ -2798,7 +2798,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		usage(argv[0]);
 		return 1;
 	}
-	if (!g_io_size_bytes) {
+	if (!g_max_io_size_bytes) {
 		fprintf(stderr, "missing -o (--io-size) operand\n");
 		usage(argv[0]);
 		return 1;
