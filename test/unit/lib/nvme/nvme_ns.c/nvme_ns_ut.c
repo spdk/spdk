@@ -101,6 +101,17 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	return -1;
 }
 
+/* Append an NS Identification Descriptor at desc and return where the next descriptor would start. */
+static struct spdk_nvme_ns_id_desc *
+ut_append_id_desc(struct spdk_nvme_ns_id_desc *desc, enum spdk_nvme_nidt nidt,
+		  uint8_t nidl, const void *nid)
+{
+	desc->nidt = nidt;
+	desc->nidl = nidl;
+	memcpy(desc->nid, nid, nidl);
+	return (struct spdk_nvme_ns_id_desc *)(desc->nid + nidl);
+}
+
 static void
 test_nvme_ns_identify(void)
 {
@@ -120,8 +131,12 @@ test_nvme_ns_uuid(void)
 	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
 	const struct spdk_uuid *uuid;
 	struct spdk_uuid expected_uuid;
+	uint8_t nguid[16];
+	struct spdk_nvme_ns_id_desc *first = (struct spdk_nvme_ns_id_desc *)ns->id_desc_list;
+	struct spdk_nvme_ns_id_desc *next;
 
 	memset(&expected_uuid, 0xA5, sizeof(expected_uuid));
+	memset(nguid, 0xCC, sizeof(nguid));
 
 	/* Empty list - no UUID should be found */
 	nvme_ns_identify(ns);
@@ -131,18 +146,14 @@ test_nvme_ns_uuid(void)
 
 	/* NGUID only (no UUID in list) */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x02; /* NIDT == NGUID */
-	ns->id_desc_list[1] = 0x10; /* NIDL */
-	memset(&ns->id_desc_list[4], 0xCC, 0x10);
+	ut_append_id_desc(first, SPDK_NVME_NIDT_NGUID, sizeof(nguid), nguid);
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	CU_ASSERT(uuid == NULL);
 	nvme_ns_clear(ns);
 
 	/* Just UUID in the list */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x03; /* NIDT == UUID */
-	ns->id_desc_list[1] = 0x10; /* NIDL */
-	memcpy(&ns->id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
+	ut_append_id_desc(first, SPDK_NVME_NIDT_UUID, sizeof(expected_uuid), &expected_uuid);
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
@@ -150,12 +161,8 @@ test_nvme_ns_uuid(void)
 
 	/* UUID followed by NGUID */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x03; /* NIDT == UUID */
-	ns->id_desc_list[1] = 0x10; /* NIDL */
-	memcpy(&ns->id_desc_list[4], &expected_uuid, sizeof(expected_uuid));
-	ns->id_desc_list[20] = 0x02; /* NIDT == NGUID */
-	ns->id_desc_list[21] = 0x10; /* NIDL */
-	memset(&ns->id_desc_list[24], 0xCC, 0x10);
+	next = ut_append_id_desc(first, SPDK_NVME_NIDT_UUID, sizeof(expected_uuid), &expected_uuid);
+	ut_append_id_desc(next, SPDK_NVME_NIDT_NGUID, sizeof(nguid), nguid);
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
@@ -163,12 +170,8 @@ test_nvme_ns_uuid(void)
 
 	/* NGUID followed by UUID */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x02; /* NIDT == NGUID */
-	ns->id_desc_list[1] = 0x10; /* NIDL */
-	memset(&ns->id_desc_list[4], 0xCC, 0x10);
-	ns->id_desc_list[20] = 0x03; /* NIDT = UUID */
-	ns->id_desc_list[21] = 0x10; /* NIDL */
-	memcpy(&ns->id_desc_list[24], &expected_uuid, sizeof(expected_uuid));
+	next = ut_append_id_desc(first, SPDK_NVME_NIDT_NGUID, sizeof(nguid), nguid);
+	ut_append_id_desc(next, SPDK_NVME_NIDT_UUID, sizeof(expected_uuid), &expected_uuid);
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	SPDK_CU_ASSERT_FATAL(uuid != NULL);
 	CU_ASSERT(memcmp(uuid, &expected_uuid, sizeof(*uuid)) == 0);
@@ -182,45 +185,39 @@ test_nvme_ns_csi(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
-	enum spdk_nvme_csi csi;
+	uint8_t nguid[16];
+	uint8_t csi;
+	struct spdk_nvme_ns_id_desc *first = (struct spdk_nvme_ns_id_desc *)ns->id_desc_list;
+	struct spdk_nvme_ns_id_desc *next;
+
+	memset(nguid, 0xCC, sizeof(nguid));
 
 	/* Empty list - SPDK_NVME_CSI_NVM should be returned */
 	nvme_ns_identify(ns);
-	csi = nvme_ns_get_csi(ns);
-	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+	CU_ASSERT(nvme_ns_get_csi(ns) == SPDK_NVME_CSI_NVM);
 	nvme_ns_clear(ns);
 
 	/* NVM CSI - SPDK_NVME_CSI_NVM should be returned */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x4; /* NIDT == CSI */
-	ns->id_desc_list[1] = 0x1; /* NIDL */
-	ns->id_desc_list[4] = 0x0; /* SPDK_NVME_CSI_NVM */
-	csi = nvme_ns_get_csi(ns);
-	CU_ASSERT(csi == SPDK_NVME_CSI_NVM);
+	csi = SPDK_NVME_CSI_NVM;
+	ut_append_id_desc(first, SPDK_NVME_NIDT_CSI, sizeof(csi), &csi);
+	CU_ASSERT(nvme_ns_get_csi(ns) == SPDK_NVME_CSI_NVM);
 	nvme_ns_clear(ns);
 
 	/* NGUID followed by ZNS CSI - SPDK_NVME_CSI_ZNS should be returned */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x02; /* NIDT == NGUID */
-	ns->id_desc_list[1] = 0x10; /* NIDL */
-	memset(&ns->id_desc_list[4], 0xCC, 0x10);
-	ns->id_desc_list[20] = 0x4; /* NIDT == CSI */
-	ns->id_desc_list[21] = 0x1; /* NIDL */
-	ns->id_desc_list[24] = 0x2; /* SPDK_NVME_CSI_ZNS */
-	csi = nvme_ns_get_csi(ns);
-	CU_ASSERT(csi == SPDK_NVME_CSI_ZNS);
+	next = ut_append_id_desc(first, SPDK_NVME_NIDT_NGUID, sizeof(nguid), nguid);
+	csi = SPDK_NVME_CSI_ZNS;
+	ut_append_id_desc(next, SPDK_NVME_NIDT_CSI, sizeof(csi), &csi);
+	CU_ASSERT(nvme_ns_get_csi(ns) == SPDK_NVME_CSI_ZNS);
 	nvme_ns_clear(ns);
 
 	/* KV CSI followed by NGUID - SPDK_NVME_CSI_KV should be returned */
 	nvme_ns_identify(ns);
-	ns->id_desc_list[0] = 0x4; /* NIDT == CSI */
-	ns->id_desc_list[1] = 0x1; /* NIDL */
-	ns->id_desc_list[4] = 0x1; /* SPDK_NVME_CSI_KV */
-	ns->id_desc_list[5] = 0x02; /* NIDT == NGUID */
-	ns->id_desc_list[6] = 0x10; /* NIDL */
-	memset(&ns->id_desc_list[9], 0xCC, 0x10);
-	csi = nvme_ns_get_csi(ns);
-	CU_ASSERT(csi == SPDK_NVME_CSI_KV);
+	csi = SPDK_NVME_CSI_KV;
+	next = ut_append_id_desc(first, SPDK_NVME_NIDT_CSI, sizeof(csi), &csi);
+	ut_append_id_desc(next, SPDK_NVME_NIDT_NGUID, sizeof(nguid), nguid);
+	CU_ASSERT(nvme_ns_get_csi(ns) == SPDK_NVME_CSI_KV);
 	nvme_ns_clear(ns);
 
 	ut_ns_free(ns);
