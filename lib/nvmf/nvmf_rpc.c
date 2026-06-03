@@ -2007,62 +2007,10 @@ rpc_nvmf_subsystem_allow_any_host(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_allow_any_host", rpc_nvmf_subsystem_allow_any_host,
 		  SPDK_RPC_RUNTIME)
 
-
-static int
-decode_discovery_filter(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *_filter = out;
-	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
-	char *tokens = spdk_json_strdup(val);
-	char *tok;
-	char *sp = NULL;
-	int rc = -EINVAL;
-	bool all_specified = false;
-
-	if (!tokens) {
-		return -ENOMEM;
-	}
-
-	tok = strtok_r(tokens, ",", &sp);
-	while (tok) {
-		if (strncmp(tok, "match_any", 9) == 0) {
-			if (filter != SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY) {
-				goto out;
-			}
-			filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
-			all_specified = true;
-		} else {
-			if (all_specified) {
-				goto out;
-			}
-			if (strncmp(tok, "transport", 9) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE);
-			} else if (strncmp(tok, "address", 7) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
-			} else if (strncmp(tok, "svcid", 5) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
-			} else {
-				SPDK_ERRLOG("Invalid value %s\n", tok);
-				goto out;
-			}
-		}
-
-		tok = strtok_r(NULL, ",", &sp);
-	}
-
-	rc = 0;
-	*_filter = filter;
-
-out:
-	free(tokens);
-
-	return rc;
-}
-
 static const struct spdk_json_object_decoder rpc_nvmf_create_target_decoders[] = {
 	{"name", offsetof(struct rpc_nvmf_create_target_ctx, name), spdk_json_decode_string},
 	{"max_subsystems", offsetof(struct rpc_nvmf_create_target_ctx, max_subsystems), spdk_json_decode_uint32, true},
-	{"discovery_filter", offsetof(struct rpc_nvmf_create_target_ctx, discovery_filter), decode_discovery_filter, true},
+	{"discovery_filter", offsetof(struct rpc_nvmf_create_target_ctx, discovery_filter), rpc_decode_nvmf_discovery_filters, true},
 	{"dup_host_policy", offsetof(struct rpc_nvmf_create_target_ctx, dup_host_policy), rpc_decode_nvmf_dup_host_policy, true},
 };
 

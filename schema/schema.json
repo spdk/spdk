@@ -234,6 +234,14 @@
       ]
     },
     {
+      "name": "nvmf_discovery_filter",
+      "fields": [
+        {"name": "transport", "value": "SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE"},
+        {"name": "address", "value": "SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS"},
+        {"name": "svcid", "value": "SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID"}
+      ]
+    },
+    {
       "name": "kill_signal",
       "fields": [
         {"name": "SIGINT",  "value": "SIGINT"},
@@ -616,6 +624,12 @@
       "enum": "fuses_feature",
       "mode": "clear",
       "width": 16
+    },
+    {
+      "name": "nvmf_discovery_filters",
+      "enum": "nvmf_discovery_filter",
+      "mode": "set",
+      "width": 32
     }
   ],
   "methods": [
@@ -3836,7 +3850,8 @@
         },
         {
           "name": "discovery_filter",
-          "type": "uint32",
+          "type": "bitmask",
+          "class": "nvmf_discovery_filters",
           "description": "Comma-separated list of discovery filters: transport, address, svcid"
         },
         {
