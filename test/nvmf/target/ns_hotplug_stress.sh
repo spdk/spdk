@@ -41,6 +41,13 @@ run_app_bg "$SPDK_BIN_DIR/spdk_nvme_perf" -c 0x1 -r "trtype:$TEST_TRANSPORT adrf
 	-t 30 -q 128 -w randread -o 512 -Q 1000
 PERF_PID=$!
 
+# Wait for the host to connect before mutating the namespace list. Removing a
+# namespace before the controller attaches would let it connect to a different
+# set of namespaces than intended.
+while kill -0 $PERF_PID && [ "$($rpc_py nvmf_subsystem_get_controllers nqn.2016-06.io.spdk:cnode1 | jq 'length')" -eq 0 ]; do
+	sleep 1
+done
+
 while kill -0 $PERF_PID; do
 	$rpc_py nvmf_subsystem_remove_ns nqn.2016-06.io.spdk:cnode1 1
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Delay0
