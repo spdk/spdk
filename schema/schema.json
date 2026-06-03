@@ -4649,7 +4649,14 @@
         {
           "name": "discovery_filter",
           "type": "string",
-          "description": "Set discovery filter, possible values are: `match_any` (default) or comma separated values: `transport`, `address`, `svcid`"
+          "deprecated": true,
+          "description": "Deprecated, use discovery_filters instead"
+        },
+        {
+          "name": "discovery_filters",
+          "type": "bitmask",
+          "class": "nvmf_discovery_filters",
+          "description": "Comma-separated list of discovery filters"
         },
         {
           "name": "dhchap_digests",

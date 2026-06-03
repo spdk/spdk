@@ -862,27 +862,19 @@ nvmf_subsystem_init(void)
 static void
 nvmf_subsystem_dump_discover_filter(struct spdk_json_write_ctx *w)
 {
-	static char const *const answers[] = {
-		"match_any",
-		"transport",
-		"address",
-		"transport,address",
-		"svcid",
-		"transport,svcid",
-		"address,svcid",
-		"transport,address,svcid"
-	};
+	uint32_t filter = g_spdk_nvmf_tgt_conf.opts.discovery_filter;
 
-	if ((g_spdk_nvmf_tgt_conf.opts.discovery_filter & ~(SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE) |
-			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS) |
-			SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID))) != 0) {
-		SPDK_ERRLOG("Incorrect discovery filter %d\n", g_spdk_nvmf_tgt_conf.opts.discovery_filter);
-		assert(0);
-		return;
+	spdk_json_write_named_array_begin(w, "discovery_filters");
+	if (filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE)) {
+		spdk_json_write_string(w, "transport");
 	}
-
-	spdk_json_write_named_string(w, "discovery_filter",
-				     answers[g_spdk_nvmf_tgt_conf.opts.discovery_filter]);
+	if (filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS)) {
+		spdk_json_write_string(w, "address");
+	}
+	if (filter & SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID)) {
+		spdk_json_write_string(w, "svcid");
+	}
+	spdk_json_write_array_end(w);
 }
 
 static const char *

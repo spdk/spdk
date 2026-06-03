@@ -119,6 +119,11 @@ added, a transport that disagrees with an already-attached namespace's setting w
 rejected; create the transport (or set the desired value on an existing one) before adding
 namespaces.
 
+#### `nvmf_set_config_discovery_filter`
+
+The `discovery_filter` parameter of the `nvmf_set_config` RPC is deprecated and will be
+removed in v27.01. Use `discovery_filters` instead.
+
 #### `nvmf_transport.h`
 
 `struct spdk_nvmf_dif_info`, `struct spdk_nvmf_stripped_data`, `spdk_nvmf_request_get_dif_ctx`,

@@ -42,6 +42,10 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
+SPDK_LOG_DEPRECATION_REGISTER(nvmf_set_config_discovery_filter,
+			      "use discovery_filters instead of discovery_filter", "v27.01",
+			      SPDK_LOG_DEPRECATION_EVERY_24H);
+
 static int
 decode_discovery_filter(const struct spdk_json_val *val, void *out)
 {
@@ -52,6 +56,8 @@ decode_discovery_filter(const struct spdk_json_val *val, void *out)
 	char *sp = NULL;
 	int rc = -EINVAL;
 	bool all_specified = false;
+
+	SPDK_LOG_DEPRECATED(nvmf_set_config_discovery_filter);
 
 	if (!tokens) {
 		return -ENOMEM;
@@ -143,6 +149,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders_manual
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
 	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
+	{"discovery_filters", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), rpc_decode_nvmf_discovery_filters, true},
 	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests, true},
 	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups, true},
 	{"dup_host_policy", offsetof(struct spdk_nvmf_tgt_conf, opts.dup_host_policy), rpc_decode_nvmf_dup_host_policy, true},

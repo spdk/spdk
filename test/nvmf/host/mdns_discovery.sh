@@ -28,7 +28,7 @@ nvmftestinit
 
 nvmfappstart -m 0x2 --wait-for-rpc
 
-$rpc_py nvmf_set_config --discovery-filter=$DISCOVERY_FILTER
+$rpc_py nvmf_set_config --discovery-filters=$DISCOVERY_FILTER
 $rpc_py framework_start_init
 $rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
 $rpc_py nvmf_subsystem_add_listener $DISCOVERY_NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
