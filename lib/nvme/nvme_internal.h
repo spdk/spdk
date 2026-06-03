@@ -1502,7 +1502,7 @@ void	nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests);
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
-void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns);
+void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, size_t buf_len);
 void	nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns);

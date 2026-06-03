@@ -574,32 +574,30 @@ test_nvme_ctrlr_identify_id_desc(void)
 static void
 test_nvme_ns_find_id_desc(void)
 {
-	struct spdk_nvme_ns ns = {};
-	struct spdk_nvme_ns_id_desc *desc = NULL;
-	const uint8_t *csi = NULL;
-	size_t length = 0;
+	uint8_t buf[SPDK_NVME_IDENTIFY_BUFLEN] = {};
+	struct spdk_nvme_ns_id_desc *desc = (void *)buf;
+	const struct spdk_nvme_ns_id_desc *found;
 
-	desc = (void *)ns.id_desc_list;
 	desc->nidl = 4;
 	desc->nidt = SPDK_NVME_NIDT_CSI;
 
 	/* Case 1: get id descriptor successfully */
-	csi = nvme_ns_find_id_desc(&ns, SPDK_NVME_NIDT_CSI, &length);
-	CU_ASSERT(csi == desc->nid);
-	CU_ASSERT(length == 4);
+	found = nvme_ns_find_id_desc(buf, sizeof(buf), SPDK_NVME_NIDT_CSI);
+	CU_ASSERT(found == desc);
+	CU_ASSERT(found->nidl == 4);
 
 	/* Case 2: ns_id length invalid, expect fail */
 	desc->nidl = 0;
 
-	csi = nvme_ns_find_id_desc(&ns, SPDK_NVME_NIDT_CSI, &length);
-	CU_ASSERT(csi == NULL);
+	found = nvme_ns_find_id_desc(buf, sizeof(buf), SPDK_NVME_NIDT_CSI);
+	CU_ASSERT(found == NULL);
 
 	/* Case 3: No correct id descriptor type entry, expect fail */
 	desc->nidl = 4;
 	desc->nidt = SPDK_NVME_NIDT_CSI;
 
-	csi = nvme_ns_find_id_desc(&ns, SPDK_NVME_NIDT_UUID, &length);
-	CU_ASSERT(csi == NULL);
+	found = nvme_ns_find_id_desc(buf, sizeof(buf), SPDK_NVME_NIDT_UUID);
+	CU_ASSERT(found == NULL);
 }
 
 int
