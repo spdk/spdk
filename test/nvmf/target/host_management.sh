@@ -166,7 +166,7 @@ function nvmf_host_management_tc2() {
 # Add a host on delay device, start I/O, remove host with tight timeout and check the time
 function nvmf_host_management_tc3() {
 	# Remove host with timeout = 1000ms, expected fail
-	run_io_and_calculate_remove_time fail --timeout_ms 1000
+	run_io_and_calculate_remove_time fail --timeout-ms 1000
 
 	echo "Remove host time was $remove_host_time"
 	# Timeout is set to 1s so we should have time of operation less than 2s.
