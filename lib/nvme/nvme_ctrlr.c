@@ -3381,16 +3381,18 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 	spdk_free(async_event);
 }
 
-static uint32_t *
-nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
+static int
+nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr, uint32_t **changed_ns_list_out)
 {
 	struct nvme_completion_poll_status	*status;
-	int		rc;
+	int		rc = -ENOMEM;
 	uint32_t	*changed_ns_list;
 	size_t		changed_ns_list_length = SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t);
 
+	*changed_ns_list_out = NULL;
+
 	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
-		return NULL;
+		return 0;
 	}
 
 	changed_ns_list = calloc(1, changed_ns_list_length);
@@ -3432,11 +3434,12 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr)
 		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log is empty despite NS_ATTR_CHANGED AER.\n");
 	}
 
-	return changed_ns_list;
+	*changed_ns_list_out = changed_ns_list;
+	return 0;
 
 out:
 	free(changed_ns_list);
-	return NULL;
+	return rc;
 }
 
 static void
@@ -3459,7 +3462,17 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 	switch (event.bits.async_event_info) {
 	case SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED:
-		async_event->log_page.changed_ns_list = nvme_ctrlr_clear_changed_ns_log(ctrlr);
+		rc = nvme_ctrlr_clear_changed_ns_log(ctrlr, &async_event->log_page.changed_ns_list);
+		if (rc == -ECANCELED || rc == -ENXIO) {
+			/*
+			 * Return early as we either failed to submit or complete the get changed
+			 * ns log page request. This would be because of a transport/device error
+			 * or timer expired.
+			 */
+			spdk_free(async_event);
+			return;
+		}
+
 		if (!async_event->log_page.changed_ns_list) {
 			/* Log page is not used, go over all namespaces pending identification. */
 			rc = nvme_ctrlr_identify_active_ns(ctrlr);
