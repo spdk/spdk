@@ -324,6 +324,22 @@ test_gen_trid(struct spdk_nvme_transport_id *trid, enum spdk_nvme_transport_type
 }
 
 static void
+test_gen_referral(struct spdk_nvmf_referral *ref,
+		  const struct spdk_nvme_transport_id *trid)
+{
+	ref->trid = *trid;
+	ref->entry.trtype = trid->trtype;
+	ref->entry.adrfam = trid->adrfam;
+	ref->entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	ref->entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
+	ref->entry.cntlid = 0xffff;
+	ref->allow_any_host = true;
+	memcpy(ref->entry.trsvcid, trid->trsvcid, sizeof(ref->entry.trsvcid));
+	memcpy(ref->entry.traddr, trid->traddr, sizeof(ref->entry.traddr));
+	snprintf(ref->entry.subnqn, sizeof(ref->entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+}
+
+static void
 test_discovery_log(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -521,29 +537,8 @@ test_discovery_log_with_filters(void)
 
 	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 
-	ref1.trid = rdma_trid_4;
-
-	ref1.entry.trtype = rdma_trid_4.trtype;
-	ref1.entry.adrfam = rdma_trid_4.adrfam;
-	ref1.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
-	ref1.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
-	ref1.entry.cntlid = 0xffff;
-	ref1.allow_any_host = true;
-	memcpy(ref1.entry.trsvcid, rdma_trid_4.trsvcid, sizeof(ref1.entry.trsvcid));
-	memcpy(ref1.entry.traddr, rdma_trid_4.traddr, sizeof(ref1.entry.traddr));
-	snprintf(ref1.entry.subnqn, sizeof(ref1.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
-
-	ref2.trid = tcp_trid_4;
-
-	ref2.entry.trtype = tcp_trid_4.trtype;
-	ref2.entry.adrfam = tcp_trid_4.adrfam;
-	ref2.entry.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
-	ref2.entry.treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED;
-	ref2.entry.cntlid = 0xffff;
-	ref2.allow_any_host = true;
-	memcpy(ref2.entry.trsvcid, tcp_trid_4.trsvcid, sizeof(ref2.entry.trsvcid));
-	memcpy(ref2.entry.traddr, tcp_trid_4.traddr, sizeof(ref2.entry.traddr));
-	snprintf(ref2.entry.subnqn, sizeof(ref2.entry.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
+	test_gen_referral(&ref1, &rdma_trid_4);
+	test_gen_referral(&ref2, &tcp_trid_4);
 
 	TAILQ_INSERT_HEAD(&tgt.referrals, &ref1, link);
 	TAILQ_INSERT_HEAD(&tgt.referrals, &ref2, link);
