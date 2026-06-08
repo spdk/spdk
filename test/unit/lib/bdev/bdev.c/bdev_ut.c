@@ -5560,6 +5560,56 @@ bdev_quiesce(void)
 }
 
 static void
+bdev_unregister_during_quiesced_range_unlock(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	int rc;
+
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	g_lock_lba_range_done = false;
+	rc = spdk_bdev_quiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_quiesce_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(g_lock_lba_range_done == true);
+
+	g_unlock_lba_range_done = false;
+	rc = spdk_bdev_unquiesce_range(bdev, &bdev_ut_if, 20, 10, bdev_unquiesce_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	g_unregister_arg = NULL;
+	g_unregister_rc = -1;
+	spdk_bdev_unregister(bdev, bdev_unregister_cb, (void *)0x12345678);
+
+	poll_thread_times(0, 3);
+	CU_ASSERT(g_unlock_lba_range_done == true);
+	CU_ASSERT(bdev->internal.status == SPDK_BDEV_STATUS_UNREGISTERING);
+
+	poll_thread_times(0, 1);
+	CU_ASSERT(bdev->internal.status == SPDK_BDEV_STATUS_REMOVING);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+
+	poll_threads();
+
+	CU_ASSERT(g_unregister_arg == (void *)0x12345678);
+	CU_ASSERT(g_unregister_rc == 0);
+
+	free(bdev);
+	ut_fini_bdev();
+}
+
+static void
 abort_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	g_abort_done = true;
@@ -8296,6 +8346,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, lock_lba_range_overlapped);
 	CU_ADD_TEST(suite, lock_lba_range_with_split_io);
 	CU_ADD_TEST(suite, bdev_quiesce);
+	CU_ADD_TEST(suite, bdev_unregister_during_quiesced_range_unlock);
 	CU_ADD_TEST(suite, bdev_io_abort);
 	CU_ADD_TEST(suite, bdev_unmap);
 	CU_ADD_TEST(suite, bdev_write_zeroes_split_test);

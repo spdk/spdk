@@ -8686,6 +8686,15 @@ bdev_unregister(struct spdk_bdev *bdev, void *_ctx, int status)
 
 	spdk_spin_lock(&g_bdev_mgr.spinlock);
 	spdk_spin_lock(&bdev->internal.spinlock);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+		/* The bdev has already been moved to REMOVING by a prior call.
+		 * This can happen when bdev_unlock_lba_range_cb queues a
+		 * _bdev_unregister message that races with the unregister
+		 * for_each_channel completion. Nothing left to do. */
+		spdk_spin_unlock(&bdev->internal.spinlock);
+		spdk_spin_unlock(&g_bdev_mgr.spinlock);
+		return;
+	}
 	if (!TAILQ_EMPTY(&bdev->internal.locked_ranges)) {
 		/* Unregister will be continued after all ranges are unlocked. */
 		spdk_spin_unlock(&bdev->internal.spinlock);
