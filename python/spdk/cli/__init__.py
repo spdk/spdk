@@ -4,6 +4,7 @@
 from . import accel as accel
 from . import app as app
 from . import bdev as bdev
+from . import bdev_nvme as bdev_nvme
 from . import fsdev as fsdev
 from . import iobuf as iobuf
 from . import iscsi as iscsi
