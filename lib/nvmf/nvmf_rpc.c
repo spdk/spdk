@@ -555,6 +555,7 @@ struct nvmf_rpc_listener_ctx {
 	struct rpc_nvmf_listen_address	address;
 	enum spdk_nvme_ana_state	ana_state;
 	uint32_t			anagrpid;
+	int32_t				numa_id;
 
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvme_transport_id	trid;
@@ -577,6 +578,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_add_listener_dec
 	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
 	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state, true},
 	{"sock_impl", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.sock_impl), spdk_json_decode_string, true},
+	{"numa_id", offsetof(struct nvmf_rpc_listener_ctx, numa_id), spdk_json_decode_int32, true},
 };
 
 static void
@@ -1722,6 +1724,7 @@ static const struct spdk_json_object_decoder rpc_nvmf_subsystem_add_host_decoder
 	{"nqn", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, nqn), spdk_json_decode_string},
 	{"host", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, host), spdk_json_decode_string},
 	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, tgt_name), spdk_json_decode_string, true},
+	{"psk", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, psk), spdk_json_decode_string, true},
 	{"dhchap_key", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, dhchap_key), spdk_json_decode_string, true},
 	{"dhchap_ctrlr_key", offsetof(struct rpc_nvmf_subsystem_add_host_ctx, dhchap_ctrlr_key), spdk_json_decode_string, true},
 };
