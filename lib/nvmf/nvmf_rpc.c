@@ -676,7 +676,7 @@ nvmf_rpc_set_ana_state_done(void *cb_arg, int status)
 }
 
 static void
-nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
+rpc_nvmf_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 		       void *cb_arg, int status)
 {
 	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
@@ -700,7 +700,7 @@ nvmf_rpc_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 			break;
 		}
 
-		spdk_nvmf_subsystem_add_listener_ext(ctx->subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
+		spdk_nvmf_subsystem_add_listener_ext(subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
 						     &ctx->listener_opts);
 		return;
 	case NVMF_RPC_LISTEN_REMOVE:
@@ -847,7 +847,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->opts.sock_impl = ctx->listener_opts.sock_impl;
 
-	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
+	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_listen_paused, ctx);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_listener_ctx_free(ctx);
@@ -915,7 +915,7 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 
 	ctx->op = NVMF_RPC_LISTEN_REMOVE;
 
-	rc = spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx);
+	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_listen_paused, ctx);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
 		nvmf_rpc_listener_ctx_free(ctx);
@@ -1187,7 +1187,7 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 	ctx->op = NVMF_RPC_LISTEN_SET_ANA_STATE;
 
 	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
-				      nvmf_rpc_listen_paused, ctx, &ctx->subsystem, &ctx->tgt)) {
+				      rpc_nvmf_listen_paused, ctx, &ctx->subsystem, &ctx->tgt)) {
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -2654,75 +2654,111 @@ dump_nvmf_subsystem_listener(struct spdk_json_write_ctx *w,
 	spdk_json_write_object_end(w);
 }
 
-/* TODO: replace with rpc_nvmf_subsystem_get_controllers_ctx */
-struct rpc_subsystem_query_ctx {
-	char *nqn;
-	char *tgt_name;
-	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_jsonrpc_request *request;
-	struct spdk_json_write_ctx *w;
+static const struct spdk_json_object_decoder rpc_nvmf_subsystem_get_controllers_decoders[] = {
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_get_controllers_ctx, nqn), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_get_controllers_ctx, tgt_name), spdk_json_decode_string, true},
 };
-
-static const struct spdk_json_object_decoder rpc_subsystem_query_decoders[] = {
-	{"nqn", offsetof(struct rpc_subsystem_query_ctx, nqn), spdk_json_decode_string},
-	{"tgt_name", offsetof(struct rpc_subsystem_query_ctx, tgt_name), spdk_json_decode_string, true},
-};
-
-/* TODO: replace with free_rpc_nvmf_subsystem_get_controllers */
-static void
-free_rpc_subsystem_query_ctx(struct rpc_subsystem_query_ctx *ctx)
-{
-	free(ctx->nqn);
-	free(ctx->tgt_name);
-	free(ctx);
-}
 
 static void
 rpc_nvmf_get_controllers_paused(struct spdk_nvmf_subsystem *subsystem,
 				void *cb_arg, int status)
 {
-	struct rpc_subsystem_query_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_get_controllers_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_ctrlr *ctrlr;
 
 	w = spdk_jsonrpc_begin_result(ctx->request);
 
 	spdk_json_write_array_begin(w);
-	TAILQ_FOREACH(ctrlr, &ctx->subsystem->ctrlrs, link) {
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		dump_nvmf_ctrlr(w, ctrlr);
 	}
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(ctx->request, w);
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, NULL, NULL)) {
+	if (spdk_nvmf_subsystem_resume(subsystem, NULL, NULL)) {
 		SPDK_ERRLOG("Resuming subsystem with NQN %s failed\n", ctx->nqn);
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_subsystem_query_ctx(ctx);
+	free_rpc_nvmf_subsystem_get_controllers(ctx);
+	free(ctx);
+}
+
+static void
+rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
+				   const struct spdk_json_val *params)
+{
+	struct rpc_nvmf_subsystem_get_controllers_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Out of memory");
+		return;
+	}
+
+	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_get_controllers_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_subsystem_get_controllers_decoders),
+				    ctx)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		free_rpc_nvmf_subsystem_get_controllers(ctx);
+		free(ctx);
+		return;
+	}
+	ctx->request = request;
+
+	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
+				      rpc_nvmf_get_controllers_paused, ctx, NULL, NULL)) {
+		free_rpc_nvmf_subsystem_get_controllers(ctx);
+		free(ctx);
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_get_controllers", rpc_nvmf_subsystem_get_controllers,
+		  SPDK_RPC_RUNTIME);
+
+struct rpc_nvmf_subsystem_get_qpairs_ext {
+	struct rpc_nvmf_subsystem_get_qpairs_ctx	req;
+	struct spdk_nvmf_subsystem			*subsystem;
+	struct spdk_json_write_ctx			*w;
+};
+
+static const struct spdk_json_object_decoder rpc_nvmf_subsystem_get_qpairs_decoders[] = {
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_get_qpairs_ctx, nqn), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_get_qpairs_ctx, tgt_name), spdk_json_decode_string, true},
+};
+
+static void
+free_rpc_nvmf_subsystem_get_qpairs_ext(struct rpc_nvmf_subsystem_get_qpairs_ext *ereq)
+{
+	free_rpc_nvmf_subsystem_get_qpairs(&ereq->req);
+	free(ereq);
 }
 
 static void
 rpc_nvmf_get_qpairs_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct rpc_subsystem_query_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_nvmf_subsystem_get_qpairs_ext *ereq = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_nvmf_subsystem_get_qpairs_ctx *req = &ereq->req;
 
-	spdk_json_write_array_end(ctx->w);
-	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+	spdk_json_write_array_end(ereq->w);
+	spdk_jsonrpc_end_result(req->request, ereq->w);
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, NULL, NULL)) {
-		SPDK_ERRLOG("Resuming subsystem with NQN %s failed\n", ctx->nqn);
+	if (spdk_nvmf_subsystem_resume(ereq->subsystem, NULL, NULL)) {
+		SPDK_ERRLOG("Resuming subsystem with NQN %s failed\n", req->nqn);
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_subsystem_query_ctx(ctx);
+	free_rpc_nvmf_subsystem_get_qpairs_ext(ereq);
 }
 
 static void
 rpc_nvmf_get_qpairs(struct spdk_io_channel_iter *i)
 {
-	struct rpc_subsystem_query_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct rpc_nvmf_subsystem_get_qpairs_ext *ereq = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
 	struct spdk_nvmf_qpair *qpair;
@@ -2731,8 +2767,8 @@ rpc_nvmf_get_qpairs(struct spdk_io_channel_iter *i)
 	group = spdk_io_channel_get_ctx(ch);
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
-		if (qpair->ctrlr && qpair->ctrlr->subsys == ctx->subsystem) {
-			dump_nvmf_qpair(ctx->w, qpair);
+		if (qpair->ctrlr && qpair->ctrlr->subsys == ereq->subsystem) {
+			dump_nvmf_qpair(ereq->w, qpair);
 		}
 	}
 
@@ -2743,23 +2779,61 @@ static void
 rpc_nvmf_get_qpairs_paused(struct spdk_nvmf_subsystem *subsystem,
 			   void *cb_arg, int status)
 {
-	struct rpc_subsystem_query_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_get_qpairs_ext *ereq = cb_arg;
 
-	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	ereq->w = spdk_jsonrpc_begin_result(ereq->req.request);
 
-	spdk_json_write_array_begin(ctx->w);
+	spdk_json_write_array_begin(ereq->w);
 
-	spdk_for_each_channel(ctx->subsystem->tgt,
+	spdk_for_each_channel(subsystem->tgt,
 			      rpc_nvmf_get_qpairs,
-			      ctx,
+			      ereq,
 			      rpc_nvmf_get_qpairs_done);
 }
+
+static void
+rpc_nvmf_subsystem_get_qpairs(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_nvmf_subsystem_get_qpairs_ext *ereq;
+	struct rpc_nvmf_subsystem_get_qpairs_ctx *req;
+
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Out of memory");
+		return;
+	}
+	req = &ereq->req;
+
+	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_get_qpairs_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_subsystem_get_qpairs_decoders),
+				    req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		free_rpc_nvmf_subsystem_get_qpairs_ext(ereq);
+		return;
+	}
+	req->request = request;
+
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, 0,
+				      rpc_nvmf_get_qpairs_paused, ereq, &ereq->subsystem, NULL)) {
+		free_rpc_nvmf_subsystem_get_qpairs_ext(ereq);
+	}
+}
+SPDK_RPC_REGISTER("nvmf_subsystem_get_qpairs", rpc_nvmf_subsystem_get_qpairs, SPDK_RPC_RUNTIME);
+
+static const struct spdk_json_object_decoder rpc_nvmf_subsystem_get_listeners_decoders[] = {
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_get_listeners_ctx, nqn), spdk_json_decode_string},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_get_listeners_ctx, tgt_name), spdk_json_decode_string, true},
+};
 
 static void
 rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
 			      void *cb_arg, int status)
 {
-	struct rpc_subsystem_query_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_get_listeners_ctx *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvmf_subsystem_listener *listener;
 
@@ -2778,20 +2852,20 @@ rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	spdk_jsonrpc_end_result(ctx->request, w);
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, NULL, NULL)) {
+	if (spdk_nvmf_subsystem_resume(subsystem, NULL, NULL)) {
 		SPDK_ERRLOG("Resuming subsystem with NQN %s failed\n", ctx->nqn);
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_subsystem_query_ctx(ctx);
+	free_rpc_nvmf_subsystem_get_listeners(ctx);
+	free(ctx);
 }
 
 static void
-_rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params,
-			  spdk_nvmf_subsystem_state_change_done cb_fn)
+rpc_nvmf_subsystem_get_listeners(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
 {
-	struct rpc_subsystem_query_ctx *ctx;
+	struct rpc_nvmf_subsystem_get_listeners_ctx *ctx;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -2800,46 +2874,23 @@ _rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	ctx->request = request;
-
-	if (spdk_json_decode_object(params, rpc_subsystem_query_decoders,
-				    SPDK_COUNTOF(rpc_subsystem_query_decoders),
+	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_get_listeners_decoders,
+				    SPDK_COUNTOF(rpc_nvmf_subsystem_get_listeners_decoders),
 				    ctx)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		free_rpc_subsystem_query_ctx(ctx);
+		free_rpc_nvmf_subsystem_get_listeners(ctx);
+		free(ctx);
 		return;
 	}
+	ctx->request = request;
 
 	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
-				      cb_fn, ctx, &ctx->subsystem, NULL)) {
-		free_rpc_subsystem_query_ctx(ctx);
+				      rpc_nvmf_get_listeners_paused, ctx, NULL, NULL)) {
+		free_rpc_nvmf_subsystem_get_listeners(ctx);
+		free(ctx);
 	}
-}
-
-static void
-rpc_nvmf_subsystem_get_controllers(struct spdk_jsonrpc_request *request,
-				   const struct spdk_json_val *params)
-{
-	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_controllers_paused);
-}
-SPDK_RPC_REGISTER("nvmf_subsystem_get_controllers", rpc_nvmf_subsystem_get_controllers,
-		  SPDK_RPC_RUNTIME);
-
-static void
-rpc_nvmf_subsystem_get_qpairs(struct spdk_jsonrpc_request *request,
-			      const struct spdk_json_val *params)
-{
-	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_qpairs_paused);
-}
-SPDK_RPC_REGISTER("nvmf_subsystem_get_qpairs", rpc_nvmf_subsystem_get_qpairs, SPDK_RPC_RUNTIME);
-
-static void
-rpc_nvmf_subsystem_get_listeners(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
-{
-	_rpc_nvmf_subsystem_query(request, params, rpc_nvmf_get_listeners_paused);
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_get_listeners", rpc_nvmf_subsystem_get_listeners,
 		  SPDK_RPC_RUNTIME);

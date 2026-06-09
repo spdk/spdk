@@ -4472,7 +4472,6 @@
     },
     {
       "name": "nvmf_subsystem_get_controllers",
-      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4489,7 +4488,6 @@
     },
     {
       "name": "nvmf_subsystem_get_qpairs",
-      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",
@@ -4506,7 +4504,6 @@
     },
     {
       "name": "nvmf_subsystem_get_listeners",
-      "decoder": "rpc_subsystem_query_decoders",
       "params": [
         {
           "name": "nqn",

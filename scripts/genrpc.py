@@ -39,7 +39,6 @@ def lint_json_examples() -> None:
 def lint_c_code(schema: Dict[str, Any]) -> None:
     schema_methods = set(method["name"] for method in schema['methods'])
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
-    schema_decoders = {method["name"]:method["decoder"] for method in schema['methods'] if "decoder" in method}
     schema_aliases = {method["name"]:method["alias"] for method in schema['methods'] if "alias" in method}
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     schema_arrays = {obj["name"]: obj for obj in schema['arrays']}
@@ -71,7 +70,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             c_code_free.update(free_functions)
             decoders = re.findall(r"static\s+const\s+struct\s+spdk_json_object_decoder\s+(.+?)\[\]\s+=\s+{(.+?)};",
                                   data, re.MULTILINE | re.DOTALL)
-            struct_names = {schema_decoders.get(name, f"rpc_{name}_decoders") for name, _ in methods}
+            struct_names = {f"rpc_{name}_decoders" for name, _ in methods}
             decoder_names = {name for name, _ in decoders}
             invalid = decoder_names - exceptions_decoders - struct_names
             if invalid:
@@ -90,7 +89,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
              'spdk_json_decode_uint64':'uint64', 'spdk_json_decode_uuid': 'uuid',
              }
     for method in schema['methods']:
-        decoder_name = schema_decoders.get(method['name'], f"rpc_{method['name']}_decoders")
+        decoder_name = f"rpc_{method['name']}_decoders"
         schema_params = set(parameter["name"] for parameter in method['params'])
         # if there are no params, there will be no decoder
         if not schema_params and decoder_name not in c_code_methods:
@@ -109,7 +108,7 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         if not c_code_methods.get(decoder_name, {}):
             raise ValueError(f"Decoder of '{method['name']}' named '{decoder_name}' was not found. Update decoder names or exception list.")
         has_string_params = any(parameter["type"] == "string" for parameter in method['params'])
-        if has_string_params and method['name'] not in schema_decoders and f"free_rpc_{method['name']}" not in c_code_free:
+        if has_string_params and f"free_rpc_{method['name']}" not in c_code_free:
             # print(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
             # raise ValueError(f"Free function of '{method['name']}' was not found. Update free function names or exception list.")
             pass
