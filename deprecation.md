@@ -103,16 +103,6 @@ Use `spdk_nvmf_subsystem_create_ext` with subsystem options instead.
 `spdk_nvmf_subsystem_get_max_namespaces`, `spdk_nvmf_subsystem_get_ana_reporting`, `spdk_nvmf_subsystem_get_type`
 are deprecated and will be removed in v26.09. Use `spdk_nvmf_subsystem_get_opts` instead.
 
-#### `nvmf_create_subsystem_max_discard_size_kib`
-
-The `max_discard_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
-removed in v26.09. Use `dmrsl` instead.
-
-#### `nvmf_create_subsystem_max_write_zeroes_size_kib`
-
-The `max_write_zeroes_size_kib` parameter of `nvmf_create_subsystem` RPC is deprecated and will be
-removed in v26.09. Use `wzsl` instead.
-
 #### `nvmf_namespace_hide_metadata`
 
 The `hide_metadata` parameter of `nvmf_subsystem_add_ns` RPC is deprecated and will be removed in

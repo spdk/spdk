@@ -4127,26 +4127,14 @@
           "description": "Maximum controller ID. Default: 0xffef"
         },
         {
-          "name": "max_discard_size_kib",
-          "type": "uint64",
-          "deprecated": true,
-          "description": "Maximum discard size (Kib). Default: 0"
-        },
-        {
-          "name": "max_write_zeroes_size_kib",
-          "type": "uint64",
-          "deprecated": true,
-          "description": "Maximum write_zeroes size (Kib). Default: 0"
-        },
-        {
           "name": "dmrsl",
           "type": "uint32",
-          "description": "Dataset Management Range Size Limit in logical block units. Default: 2097152 (1 GiB). Mutually exclusive with max_discard_size_kib."
+          "description": "Dataset Management Range Size Limit in logical block units. Default: 2097152 (1 GiB)."
         },
         {
           "name": "wzsl",
           "type": "uint8",
-          "description": "Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size. Default: 12 (16 MiB). Mutually exclusive with max_write_zeroes_size_kib."
+          "description": "Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size. Default: 12 (16 MiB)."
         },
         {
           "name": "passthrough",

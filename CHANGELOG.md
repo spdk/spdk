@@ -2,6 +2,11 @@
 
 ## v26.09: (Upcoming Release)
 
+### nvmf
+
+Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
+`nvmf_create_subsystem` RPC. Use `dmrsl` and `wzsl` instead.
+
 ## v26.05
 
 ### accel
