@@ -83,6 +83,34 @@ _rpc_nvmf_get_subsystem(struct spdk_jsonrpc_request *request,
 	return subsystem;
 }
 
+static int
+_rpc_nvmf_subsystem_pause(struct spdk_jsonrpc_request *request,
+			  const char *tgt_name, const char *nqn, uint32_t nsid,
+			  spdk_nvmf_subsystem_state_change_done pause_cb,
+			  void *cb_arg,
+			  struct spdk_nvmf_subsystem **subsystem_out,
+			  struct spdk_nvmf_tgt **tgt_out)
+{
+	struct spdk_nvmf_subsystem *subsystem;
+
+	subsystem = _rpc_nvmf_get_subsystem(request, tgt_name, nqn, tgt_out);
+	if (!subsystem) {
+		return -ENODEV;
+	}
+
+	if (subsystem_out) {
+		*subsystem_out = subsystem;
+	}
+
+	if (spdk_nvmf_subsystem_pause(subsystem, nsid, pause_cb, cb_arg)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Internal error");
+		return -EIO;
+	}
+
+	return 0;
+}
+
 static const struct spdk_json_object_decoder rpc_nvmf_get_subsystems_decoders[] = {
 	{"nqn", offsetof(struct rpc_nvmf_get_subsystems_ctx, nqn), spdk_json_decode_string, true},
 	{"tgt_name", offsetof(struct rpc_nvmf_get_subsystems_ctx, tgt_name), spdk_json_decode_string, true},
@@ -1129,8 +1157,6 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct nvmf_rpc_listener_ctx *ctx;
-	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_tgt *tgt;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -1151,14 +1177,6 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = _rpc_nvmf_get_subsystem(request, ctx->tgt_name, ctx->nqn, &tgt);
-	if (!subsystem) {
-		nvmf_rpc_listener_ctx_free(ctx);
-		return;
-	}
-	ctx->tgt = tgt;
-	ctx->subsystem = subsystem;
-
 	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
@@ -1168,9 +1186,8 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 
 	ctx->op = NVMF_RPC_LISTEN_SET_ANA_STATE;
 
-	if (spdk_nvmf_subsystem_pause(subsystem, 0, nvmf_rpc_listen_paused, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
+				      nvmf_rpc_listen_paused, ctx, &ctx->subsystem, &ctx->tgt)) {
 		nvmf_rpc_listener_ctx_free(ctx);
 	}
 }
@@ -1319,8 +1336,6 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_nvmf_subsystem_add_ns_ext *ereq;
 	struct rpc_nvmf_subsystem_add_ns_ctx *req;
-	struct spdk_nvmf_subsystem *subsystem;
-	int rc;
 
 	ereq = calloc(1, sizeof(*ereq));
 	if (!ereq) {
@@ -1341,16 +1356,8 @@ rpc_nvmf_subsystem_add_ns(struct spdk_jsonrpc_request *request,
 	ereq->params = params;
 	ereq->response_sent = false;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, req->tgt_name, req->nqn, NULL);
-	if (!subsystem) {
-		free_rpc_nvmf_subsystem_add_ns_ext(ereq);
-		return;
-	}
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->namespace.nsid, rpc_nvmf_subsystem_add_ns_paused,
-				       ereq);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, req->namespace.nsid,
+				      rpc_nvmf_subsystem_add_ns_paused, ereq, NULL, NULL)) {
 		free_rpc_nvmf_subsystem_add_ns_ext(ereq);
 	}
 }
@@ -1420,8 +1427,6 @@ rpc_nvmf_subsystem_set_ns_ana_group(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_nvmf_subsystem_set_ns_ana_group_ext *ereq;
 	struct rpc_nvmf_subsystem_set_ns_ana_group_ctx *req;
-	struct spdk_nvmf_subsystem *subsystem;
-	int rc;
 
 	ereq = calloc(1, sizeof(*ereq));
 	if (!ereq) {
@@ -1441,15 +1446,8 @@ rpc_nvmf_subsystem_set_ns_ana_group(struct spdk_jsonrpc_request *request,
 	req->request = request;
 	ereq->response_sent = false;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, req->tgt_name, req->nqn, NULL);
-	if (!subsystem) {
-		free_rpc_nvmf_subsystem_set_ns_ana_group_ext(ereq);
-		return;
-	}
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->nsid, nvmf_rpc_ana_group, ereq);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, req->nsid,
+				      nvmf_rpc_ana_group, ereq, NULL, NULL)) {
 		free_rpc_nvmf_subsystem_set_ns_ana_group_ext(ereq);
 	}
 }
@@ -1519,8 +1517,6 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_nvmf_subsystem_remove_ns_ext *ereq;
 	struct rpc_nvmf_subsystem_remove_ns_ctx *req;
-	struct spdk_nvmf_subsystem *subsystem;
-	int rc;
 
 	ereq = calloc(1, sizeof(*ereq));
 	if (!ereq) {
@@ -1541,15 +1537,8 @@ rpc_nvmf_subsystem_remove_ns(struct spdk_jsonrpc_request *request,
 	req->request = request;
 	ereq->response_sent = false;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, req->tgt_name, req->nqn, NULL);
-	if (!subsystem) {
-		free_rpc_nvmf_subsystem_remove_ns_ext(ereq);
-		return;
-	}
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->nsid, rpc_nvmf_subsystem_remove_ns_paused, ereq);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, req->nsid,
+				      rpc_nvmf_subsystem_remove_ns_paused, ereq, NULL, NULL)) {
 		free_rpc_nvmf_subsystem_remove_ns_ext(ereq);
 	}
 }
@@ -1618,8 +1607,6 @@ rpc_nvmf_ns_add_host(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_nvmf_ns_add_host_ext *ereq;
 	struct rpc_nvmf_ns_add_host_ctx *req;
-	struct spdk_nvmf_subsystem *subsystem;
-	int rc;
 
 	ereq = calloc(1, sizeof(*ereq));
 	if (!ereq) {
@@ -1637,15 +1624,8 @@ rpc_nvmf_ns_add_host(struct spdk_jsonrpc_request *request,
 	}
 	req->request = request;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, req->tgt_name, req->nqn, NULL);
-	if (!subsystem) {
-		free_rpc_nvmf_ns_add_host_ext(ereq);
-		return;
-	}
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->nsid, rpc_nvmf_ns_add_host_paused, ereq);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, req->nsid,
+				      rpc_nvmf_ns_add_host_paused, ereq, NULL, NULL)) {
 		free_rpc_nvmf_ns_add_host_ext(ereq);
 	}
 }
@@ -1714,8 +1694,6 @@ rpc_nvmf_ns_remove_host(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_nvmf_ns_remove_host_ext *ereq;
 	struct rpc_nvmf_ns_remove_host_ctx *req;
-	struct spdk_nvmf_subsystem *subsystem;
-	int rc;
 
 	ereq = calloc(1, sizeof(*ereq));
 	if (!ereq) {
@@ -1733,15 +1711,8 @@ rpc_nvmf_ns_remove_host(struct spdk_jsonrpc_request *request,
 	}
 	req->request = request;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, req->tgt_name, req->nqn, NULL);
-	if (!subsystem) {
-		free_rpc_nvmf_ns_remove_host_ext(ereq);
-		return;
-	}
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, req->nsid, rpc_nvmf_ns_remove_host_paused, ereq);
-	if (rc != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
+	if (_rpc_nvmf_subsystem_pause(request, req->tgt_name, req->nqn, req->nsid,
+				      rpc_nvmf_ns_remove_host_paused, ereq, NULL, NULL)) {
 		free_rpc_nvmf_ns_remove_host_ext(ereq);
 	}
 }
@@ -2821,7 +2792,6 @@ _rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
 			  spdk_nvmf_subsystem_state_change_done cb_fn)
 {
 	struct rpc_subsystem_query_ctx *ctx;
-	struct spdk_nvmf_subsystem *subsystem;
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
@@ -2842,19 +2812,9 @@ _rpc_nvmf_subsystem_query(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	subsystem = _rpc_nvmf_get_subsystem(request, ctx->tgt_name, ctx->nqn, NULL);
-	if (!subsystem) {
+	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
+				      cb_fn, ctx, &ctx->subsystem, NULL)) {
 		free_rpc_subsystem_query_ctx(ctx);
-		return;
-	}
-
-	ctx->subsystem = subsystem;
-
-	if (spdk_nvmf_subsystem_pause(subsystem, 0, cb_fn, ctx)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
-		free_rpc_subsystem_query_ctx(ctx);
-		return;
 	}
 }
 
