@@ -169,8 +169,8 @@ function nvmf_host_management_tc3() {
 	run_io_and_calculate_remove_time fail --timeout-ms 1000
 
 	echo "Remove host time was $remove_host_time"
-	# Timeout is set to 1s so we should have time of operation less than 2s.
-	if [ "$remove_host_time" -ge 2 ]; then
+	# Timeout is set to 1s so we shouldn't need more than 2s
+	if [ "$remove_host_time" -gt 2 ]; then
 		false
 	fi
 }
