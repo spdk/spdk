@@ -759,10 +759,6 @@ vhost_session_mem_unregister(struct rte_vhost_memory *mem)
 
 	for (i = 0; i < mem->nregions; i++) {
 		vhost_session_mem_region_calc(&previous_start, &start, &end, &len, &mem->regions[i]);
-		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
-			continue; /* region has not been registered */
-		}
-
 		spdk_mem_unregister((void *)start, len);
 	}
 }
