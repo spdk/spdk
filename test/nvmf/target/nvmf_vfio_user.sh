@@ -98,9 +98,16 @@ function aer_test() {
 	wait $aerpid
 }
 
+function concurrent_test() {
+	local r1=$1 r2=$2
+	run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "$r1" -r "$r2" -s 256 -g -q 128 -o 4096 -w randrw -M 50 -t 5 -c 0x3
+}
+
 function polling_test() {
 	local subnqn1=nqn.2019-07.io.spdk:cnode1
+	local subnqn2=nqn.2019-07.io.spdk:cnode2
 	local r1="trtype:$TEST_TRANSPORT traddr:/var/run/vfio-user/domain/vfio-user1/1 subnqn:$subnqn1"
+	local r2="trtype:$TEST_TRANSPORT traddr:/var/run/vfio-user/domain/vfio-user2/2 subnqn:$subnqn2"
 
 	setup_nvmf_vfio_user '' ''
 
@@ -108,6 +115,7 @@ function polling_test() {
 	run_test "nvmf_vfio_user_perf" perf_test "$r1"
 	run_test "nvmf_vfio_user_examples" examples_test "$r1"
 	run_test "nvmf_vfio_user_aer" aer_test "$r1" "$subnqn1" 2
+	run_test "nvmf_vfio_user_concurrent" concurrent_test "$r1" "$r2"
 
 	teardown_nvmf_vfio_user
 }
