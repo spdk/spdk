@@ -55,7 +55,7 @@ function setup_nvmf_vfio_user() {
 	local nvmf_app_args=$1
 	local transport_args=$2
 
-	"${NVMF_APP[@]}" -m '[0,1,2,3]' $nvmf_app_args &
+	"${NVMF_APP[@]}" -m '[2,3]' $nvmf_app_args &
 	nvmfpid=$!
 
 	echo "Process pid: $nvmfpid"
@@ -85,9 +85,9 @@ function run_nvmf_vfio_user() {
 		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
 		test_subnqn=nqn.2019-07.io.spdk:cnode$i
 		run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
-		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5 -c 0x2
-		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5 -c 0x2
-		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0xE
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5
+		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0x3
 		$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
 		$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 		$nvmeappdir/overhead/overhead -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
