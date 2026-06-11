@@ -212,6 +212,7 @@ fi
 run_test "unittest_accel" $valgrind $testdir/lib/accel/accel.c/accel_ut
 run_test "unittest_ioat" $valgrind $testdir/lib/ioat/ioat.c/ioat_ut
 run_test "unittest_ae4dma" $valgrind $testdir/lib/ae4dma/ae4dma.c/ae4dma_ut
+run_test "unittest_ntb_amd" $valgrind $testdir/lib/ntb_amd/ntb_amd.c/ntb_amd_ut
 if [[ $CONFIG_IDXD == y ]]; then
 	run_test "unittest_idxd_user" $valgrind $testdir/lib/idxd/idxd_user.c/idxd_user_ut
 fi
