@@ -503,7 +503,6 @@ SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_R
 enum nvmf_rpc_listen_op {
 	NVMF_RPC_LISTEN_ADD,
 	NVMF_RPC_LISTEN_REMOVE,
-	NVMF_RPC_LISTEN_SET_ANA_STATE,
 };
 
 /* TODO: replace with rpc_nvmf_subsystem_add_listener_ctx */
@@ -607,26 +606,65 @@ nvmf_rpc_stop_listen_async_done(void *cb_arg, int status)
 	}
 }
 
+struct rpc_nvmf_subsystem_listener_set_ana_state_ext {
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ctx	req;
+	struct spdk_nvmf_subsystem				*subsystem;
+	struct spdk_nvme_transport_id				trid;
+};
+
+static void
+free_rpc_nvmf_subsystem_listener_set_ana_state_ext(
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ext *ereq)
+{
+	free_rpc_nvmf_subsystem_listener_set_ana_state(&ereq->req);
+	free(ereq);
+}
+
+static void
+nvmf_rpc_set_ana_state_resumed(struct spdk_nvmf_subsystem *subsystem,
+			       void *cb_arg, int status)
+{
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ext *ereq = cb_arg;
+
+	if (ereq->req.request) {
+		spdk_jsonrpc_send_bool_response(ereq->req.request, true);
+	}
+
+	free_rpc_nvmf_subsystem_listener_set_ana_state_ext(ereq);
+}
+
 static void
 nvmf_rpc_set_ana_state_done(void *cb_arg, int status)
 {
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ext *ereq = cb_arg;
 
 	if (status) {
 		SPDK_ERRLOG("Unable to set ANA state.\n");
-		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response_fmt(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "error setting ANA state: %d", status);
-		ctx->request = NULL;
+		ereq->req.request = NULL;
 	}
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		if (ctx->request) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+	if (spdk_nvmf_subsystem_resume(ereq->subsystem, nvmf_rpc_set_ana_state_resumed, ereq)) {
+		if (ereq->req.request) {
+			spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "Internal error");
 		}
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_listener_set_ana_state_ext(ereq);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
+}
+
+static void
+rpc_nvmf_set_ana_state_paused(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
+{
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ext *ereq = cb_arg;
+
+	spdk_nvmf_subsystem_set_ana_state(subsystem, &ereq->trid,
+					  (enum spdk_nvme_ana_state)ereq->req.ana_state,
+					  ereq->req.anagrpid,
+					  nvmf_rpc_set_ana_state_done, ereq);
 }
 
 static void
@@ -669,10 +707,6 @@ rpc_nvmf_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 
 		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, subsystem,
 						      nvmf_rpc_stop_listen_async_done, ctx);
-		return;
-	case NVMF_RPC_LISTEN_SET_ANA_STATE:
-		spdk_nvmf_subsystem_set_ana_state(subsystem, &ctx->trid, ctx->ana_state, ctx->anagrpid,
-						  nvmf_rpc_set_ana_state_done, ctx);
 		return;
 	default:
 		SPDK_UNREACHABLE();
@@ -1096,48 +1130,47 @@ SPDK_RPC_REGISTER("nvmf_discovery_get_referrals", rpc_nvmf_discovery_get_referra
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_listener_set_ana_state_decoders[] =
 {
-	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
-	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state},
-	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
-	{"anagrpid", offsetof(struct nvmf_rpc_listener_ctx, anagrpid), spdk_json_decode_uint32, true},
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_listener_set_ana_state_ctx, nqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct rpc_nvmf_subsystem_listener_set_ana_state_ctx, listen_address), rpc_decode_nvmf_listen_address},
+	{"ana_state", offsetof(struct rpc_nvmf_subsystem_listener_set_ana_state_ctx, ana_state), rpc_decode_nvme_ana_state},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_listener_set_ana_state_ctx, tgt_name), spdk_json_decode_string, true},
+	{"anagrpid", offsetof(struct rpc_nvmf_subsystem_listener_set_ana_state_ctx, anagrpid), spdk_json_decode_uint32, true},
 };
 
 static void
 rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_listener_ctx *ctx;
+	struct rpc_nvmf_subsystem_listener_set_ana_state_ext *ereq;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Out of memory");
 		return;
 	}
 
-	ctx->request = request;
+	ereq->req.request = request;
 
 	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_listener_set_ana_state_decoders,
 				    SPDK_COUNTOF(rpc_nvmf_subsystem_listener_set_ana_state_decoders),
-				    ctx)) {
+				    &ereq->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_listener_set_ana_state_ext(ereq);
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(request, &ctx->address, &ctx->trid)) {
-		nvmf_rpc_listener_ctx_free(ctx);
+	if (rpc_listen_address_to_trid(request, &ereq->req.listen_address, &ereq->trid)) {
+		free_rpc_nvmf_subsystem_listener_set_ana_state_ext(ereq);
 		return;
 	}
 
-	ctx->op = NVMF_RPC_LISTEN_SET_ANA_STATE;
-
-	if (_rpc_nvmf_subsystem_pause(request, ctx->tgt_name, ctx->nqn, 0,
-				      rpc_nvmf_listen_paused, ctx, &ctx->subsystem, &ctx->tgt)) {
-		nvmf_rpc_listener_ctx_free(ctx);
+	if (_rpc_nvmf_subsystem_pause(request, ereq->req.tgt_name, ereq->req.nqn, 0,
+				      rpc_nvmf_set_ana_state_paused, ereq,
+				      &ereq->subsystem, NULL)) {
+		free_rpc_nvmf_subsystem_listener_set_ana_state_ext(ereq);
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_listener_set_ana_state",
