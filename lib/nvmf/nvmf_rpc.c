@@ -690,7 +690,8 @@ rpc_nvmf_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static int
-rpc_listen_address_to_trid(const struct rpc_nvmf_listen_address *address,
+rpc_listen_address_to_trid(struct spdk_jsonrpc_request *request,
+			   const struct rpc_nvmf_listen_address *address,
 			   struct spdk_nvme_transport_id *trid)
 {
 	size_t len;
@@ -699,18 +700,18 @@ rpc_listen_address_to_trid(const struct rpc_nvmf_listen_address *address,
 
 	if (spdk_nvme_transport_id_populate_trstring(trid, address->trtype)) {
 		SPDK_ERRLOG("Invalid trtype string: %s\n", address->trtype);
-		return -EINVAL;
+		goto err;
 	}
 
 	if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, address->trtype)) {
 		SPDK_ERRLOG("Invalid trtype type: %s\n", address->trtype);
-		return -EINVAL;
+		goto err;
 	}
 
 	if (address->adrfam) {
 		if (spdk_nvme_transport_id_parse_adrfam(&trid->adrfam, address->adrfam)) {
 			SPDK_ERRLOG("Invalid adrfam: %s\n", address->adrfam);
-			return -EINVAL;
+			goto err;
 		}
 	} else if (trid->trtype == SPDK_NVME_TRANSPORT_TCP || trid->trtype == SPDK_NVME_TRANSPORT_RDMA) {
 		/**
@@ -723,7 +724,7 @@ rpc_listen_address_to_trid(const struct rpc_nvmf_listen_address *address,
 	if (len > sizeof(trid->traddr) - 1) {
 		SPDK_ERRLOG("Transport address longer than %zu characters: %s\n",
 			    sizeof(trid->traddr) - 1, address->traddr);
-		return -EINVAL;
+		goto err;
 	}
 	memcpy(trid->traddr, address->traddr, len + 1);
 
@@ -733,12 +734,16 @@ rpc_listen_address_to_trid(const struct rpc_nvmf_listen_address *address,
 		if (len > sizeof(trid->trsvcid) - 1) {
 			SPDK_ERRLOG("Transport service id longer than %zu characters: %s\n",
 				    sizeof(trid->trsvcid) - 1, address->trsvcid);
-			return -EINVAL;
+			goto err;
 		}
 		memcpy(trid->trsvcid, address->trsvcid, len + 1);
 	}
 
 	return 0;
+err:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	return -EINVAL;
 }
 
 static void
@@ -777,9 +782,7 @@ rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 	ctx->tgt = tgt;
 	ctx->subsystem = subsystem;
 
-	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+	if (rpc_listen_address_to_trid(ctx->request, &ctx->address, &ctx->trid)) {
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
@@ -850,9 +853,7 @@ rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 	ctx->tgt = tgt;
 	ctx->subsystem = subsystem;
 
-	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+	if (rpc_listen_address_to_trid(ctx->request, &ctx->address, &ctx->trid)) {
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
@@ -913,9 +914,7 @@ rpc_nvmf_discovery_add_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(&ctx.address, &trid)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+	if (rpc_listen_address_to_trid(request, &ctx.address, &trid)) {
 		free_rpc_nvmf_discovery_add_referral(&ctx);
 		return;
 	}
@@ -994,9 +993,7 @@ rpc_nvmf_discovery_remove_referral(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(&ctx.address, &trid)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+	if (rpc_listen_address_to_trid(request, &ctx.address, &trid)) {
 		free_rpc_nvmf_discovery_remove_referral(&ctx);
 		return;
 	}
@@ -1131,9 +1128,7 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	if (rpc_listen_address_to_trid(&ctx->address, &ctx->trid)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+	if (rpc_listen_address_to_trid(request, &ctx->address, &ctx->trid)) {
 		nvmf_rpc_listener_ctx_free(ctx);
 		return;
 	}
