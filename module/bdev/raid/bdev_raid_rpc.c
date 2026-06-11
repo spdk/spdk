@@ -99,8 +99,7 @@ rpc_bdev_raid_create_cb(void *_ctx, int status)
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
 
-	free_rpc_bdev_raid_create(ctx);
-	free(ctx);
+	free_rpc_bdev_raid_create_heap(ctx);
 }
 
 /*
@@ -160,8 +159,7 @@ rpc_bdev_raid_create(struct spdk_jsonrpc_request *request,
 
 	return;
 cleanup:
-	free_rpc_bdev_raid_create(ctx);
-	free(ctx);
+	free_rpc_bdev_raid_create_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_create", rpc_bdev_raid_create, SPDK_RPC_RUNTIME)
 
@@ -196,8 +194,7 @@ bdev_raid_delete_done(void *cb_arg, int rc)
 
 	spdk_jsonrpc_send_bool_response(ctx->request, true);
 exit:
-	free_rpc_bdev_raid_delete(ctx);
-	free(ctx);
+	free_rpc_bdev_raid_delete_heap(ctx);
 }
 
 /*
@@ -247,8 +244,7 @@ rpc_bdev_raid_delete(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_raid_delete(ctx);
-	free(ctx);
+	free_rpc_bdev_raid_delete_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_raid_delete", rpc_bdev_raid_delete, SPDK_RPC_RUNTIME)
 

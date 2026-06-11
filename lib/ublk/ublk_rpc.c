@@ -89,8 +89,7 @@ rpc_ublk_start_disk_done(void *cb_arg, int rc)
 		spdk_jsonrpc_send_error_response(req->request, rc, spdk_strerror(-rc));
 	}
 
-	free_rpc_ublk_start_disk(req);
-	free(req);
+	free_rpc_ublk_start_disk_heap(req);
 }
 
 static void
@@ -140,8 +139,7 @@ rpc_ublk_stop_disk_done(void *cb_arg, int rc)
 	struct rpc_ublk_stop_disk_ctx *req = cb_arg;
 
 	spdk_jsonrpc_send_bool_response(req->request, true);
-	free_rpc_ublk_stop_disk(req);
-	free(req);
+	free_rpc_ublk_stop_disk_heap(req);
 }
 
 static void
@@ -267,8 +265,7 @@ rpc_ublk_recover_disk_done(void *cb_arg, int rc)
 		spdk_jsonrpc_send_error_response(req->request, rc, spdk_strerror(-rc));
 	}
 
-	free_rpc_ublk_recover_disk(req);
-	free(req);
+	free_rpc_ublk_recover_disk_heap(req);
 }
 
 static void

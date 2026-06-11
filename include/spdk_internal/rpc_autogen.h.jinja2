@@ -274,6 +274,13 @@ free_rpc_{{ method.name }}(struct rpc_{{ method.name }}_ctx *req)
 {%- endfor %}
 }
 
+static inline void
+free_rpc_{{ method.name }}_heap(struct rpc_{{ method.name }}_ctx *req)
+{
+	free_rpc_{{ method.name }}(req);
+	free(req);
+}
+
 static const struct spdk_json_object_decoder rpc_{{ method.name }}_decoders_autogen[] = {
     {%- for param in method.params %}
     {%- set field_name = "is_private" if param.name == "private" else param.name %}

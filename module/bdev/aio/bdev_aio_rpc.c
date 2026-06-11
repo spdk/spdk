@@ -29,8 +29,7 @@ rpc_bdev_aio_create_cb(void *cb_arg)
 	w = spdk_jsonrpc_begin_result(ctx->request);
 	spdk_json_write_string(w, ctx->name);
 	spdk_jsonrpc_end_result(ctx->request, w);
-	free_rpc_bdev_aio_create(ctx);
-	free(ctx);
+	free_rpc_bdev_aio_create_heap(ctx);
 }
 
 static void

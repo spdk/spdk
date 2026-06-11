@@ -149,8 +149,7 @@ rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, size_t
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(req->request, w);
 
-	free_rpc_bdev_virtio_attach_controller(req);
-	free(req);
+	free_rpc_bdev_virtio_attach_controller_heap(req);
 }
 
 static void
@@ -234,8 +233,7 @@ rpc_bdev_virtio_attach_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_virtio_attach_controller(req);
-	free(req);
+	free_rpc_bdev_virtio_attach_controller_heap(req);
 }
 SPDK_RPC_REGISTER("bdev_virtio_attach_controller",
 		  rpc_bdev_virtio_attach_controller, SPDK_RPC_RUNTIME);

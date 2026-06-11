@@ -1593,8 +1593,7 @@ rpc_bdev_nvme_start_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	free_rpc_bdev_nvme_start_discovery(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_start_discovery_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_start_discovery", rpc_bdev_nvme_start_discovery,
 		  SPDK_RPC_RUNTIME)
@@ -1609,8 +1608,7 @@ rpc_bdev_nvme_stop_discovery_done(void *cb_ctx)
 	struct rpc_bdev_nvme_stop_discovery_ctx *ctx = cb_ctx;
 
 	spdk_jsonrpc_send_bool_response(ctx->request, true);
-	free_rpc_bdev_nvme_stop_discovery(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_stop_discovery_heap(ctx);
 }
 
 static void
@@ -1645,8 +1643,7 @@ rpc_bdev_nvme_stop_discovery(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_nvme_stop_discovery(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_stop_discovery_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_stop_discovery", rpc_bdev_nvme_stop_discovery,
 		  SPDK_RPC_RUNTIME)
@@ -1687,8 +1684,7 @@ rpc_add_error_injection_done(struct nvme_ctrlr *nvme_ctrlr, void *_ctx, int stat
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
 
-	free_rpc_bdev_nvme_add_error_injection(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_add_error_injection_heap(ctx);
 }
 
 static void
@@ -1764,8 +1760,7 @@ rpc_bdev_nvme_add_error_injection(
 	}
 
 cleanup:
-	free_rpc_bdev_nvme_add_error_injection(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_add_error_injection_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_add_error_injection", rpc_bdev_nvme_add_error_injection,
 		  SPDK_RPC_RUNTIME)
@@ -1788,8 +1783,7 @@ rpc_remove_error_injection_done(struct nvme_ctrlr *nvme_ctrlr, void *_ctx, int s
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
 
-	free_rpc_bdev_nvme_remove_error_injection(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_remove_error_injection_heap(ctx);
 }
 
 static void
@@ -1851,8 +1845,7 @@ rpc_bdev_nvme_remove_error_injection(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	free_rpc_bdev_nvme_remove_error_injection(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_remove_error_injection_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_remove_error_injection", rpc_bdev_nvme_remove_error_injection,
 		  SPDK_RPC_RUNTIME)
@@ -1972,8 +1965,7 @@ rpc_bdev_nvme_set_preferred_path_done(void *cb_arg, int rc)
 		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
 	}
 
-	free_rpc_bdev_nvme_set_preferred_path(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_set_preferred_path_heap(ctx);
 }
 
 static void
@@ -2004,8 +1996,7 @@ rpc_bdev_nvme_set_preferred_path(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_nvme_set_preferred_path(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_set_preferred_path_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_preferred_path", rpc_bdev_nvme_set_preferred_path,
 		  SPDK_RPC_RUNTIME)
@@ -2028,8 +2019,7 @@ rpc_bdev_nvme_set_multipath_policy_done(void *cb_arg, int rc)
 		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
 	}
 
-	free_rpc_bdev_nvme_set_multipath_policy(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_set_multipath_policy_heap(ctx);
 }
 
 static void
@@ -2080,8 +2070,7 @@ rpc_bdev_nvme_set_multipath_policy(struct spdk_jsonrpc_request *request,
 	return;
 
 cleanup:
-	free_rpc_bdev_nvme_set_multipath_policy(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_set_multipath_policy_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_set_multipath_policy", rpc_bdev_nvme_set_multipath_policy,
 		  SPDK_RPC_RUNTIME)
@@ -2131,8 +2120,7 @@ rpc_bdev_nvme_start_mdns_discovery(struct spdk_jsonrpc_request *request,
 	}
 
 cleanup:
-	free_rpc_bdev_nvme_start_mdns_discovery(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_start_mdns_discovery_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_start_mdns_discovery", rpc_bdev_nvme_start_mdns_discovery,
 		  SPDK_RPC_RUNTIME)
@@ -2173,8 +2161,7 @@ rpc_bdev_nvme_stop_mdns_discovery(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_send_bool_response(ctx->request, true);
 
 cleanup:
-	free_rpc_bdev_nvme_stop_mdns_discovery(ctx);
-	free(ctx);
+	free_rpc_bdev_nvme_stop_mdns_discovery_heap(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_stop_mdns_discovery", rpc_bdev_nvme_stop_mdns_discovery,
 		  SPDK_RPC_RUNTIME)

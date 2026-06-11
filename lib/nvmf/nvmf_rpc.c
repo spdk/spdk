@@ -1334,8 +1334,7 @@ nvmf_rpc_anagrpid_resumed(struct spdk_nvmf_subsystem *subsystem,
 		spdk_jsonrpc_send_bool_response(req->request, true);
 	}
 
-	free_rpc_nvmf_subsystem_set_ns_ana_group(req);
-	free(req);
+	free_rpc_nvmf_subsystem_set_ns_ana_group_heap(req);
 }
 
 static void
@@ -1412,8 +1411,7 @@ rpc_nvmf_subsystem_remove_ns_resumed(struct spdk_nvmf_subsystem *subsystem,
 		spdk_jsonrpc_send_bool_response(req->request, true);
 	}
 
-	free_rpc_nvmf_subsystem_remove_ns(req);
-	free(req);
+	free_rpc_nvmf_subsystem_remove_ns_heap(req);
 }
 
 static void
@@ -1491,8 +1489,7 @@ rpc_nvmf_ns_add_host_resumed(struct spdk_nvmf_subsystem *subsystem,
 		spdk_jsonrpc_send_bool_response(req->request, true);
 	}
 
-	free_rpc_nvmf_ns_add_host(req);
-	free(req);
+	free_rpc_nvmf_ns_add_host_heap(req);
 }
 
 static void
@@ -1567,8 +1564,7 @@ rpc_nvmf_ns_remove_host_resumed(struct spdk_nvmf_subsystem *subsystem,
 		spdk_jsonrpc_send_bool_response(req->request, true);
 	}
 
-	free_rpc_nvmf_ns_remove_host(req);
-	free(req);
+	free_rpc_nvmf_ns_remove_host_heap(req);
 }
 
 static void
@@ -1712,8 +1708,7 @@ rpc_nvmf_subsystem_remove_host_done(void *_ctx, int status)
 	} else {
 		spdk_jsonrpc_send_bool_response(ctx->request, true);
 	}
-	free_rpc_nvmf_subsystem_remove_host(ctx);
-	free(ctx);
+	free_rpc_nvmf_subsystem_remove_host_heap(ctx);
 }
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_host_decoders[] = {
@@ -2591,8 +2586,7 @@ rpc_nvmf_get_controllers_paused(struct spdk_nvmf_subsystem *subsystem,
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_nvmf_subsystem_get_controllers(ctx);
-	free(ctx);
+	free_rpc_nvmf_subsystem_get_controllers_heap(ctx);
 }
 
 static void
@@ -2766,8 +2760,7 @@ rpc_nvmf_get_listeners_paused(struct spdk_nvmf_subsystem *subsystem,
 		/* FIXME: RPC should fail if resuming the subsystem failed. */
 	}
 
-	free_rpc_nvmf_subsystem_get_listeners(ctx);
-	free(ctx);
+	free_rpc_nvmf_subsystem_get_listeners_heap(ctx);
 }
 
 static void

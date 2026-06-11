@@ -409,8 +409,7 @@ rpc_iscsi_delete_target_node_done(void *cb_arg, int rc)
 	} else {
 		spdk_jsonrpc_send_error_response(ctx->request, rc, spdk_strerror(-rc));
 	}
-	free_rpc_iscsi_delete_target_node(ctx);
-	free(ctx);
+	free_rpc_iscsi_delete_target_node_heap(ctx);
 }
 
 static void
@@ -446,8 +445,7 @@ rpc_iscsi_delete_target_node(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_iscsi_delete_target_node(ctx);
-	free(ctx);
+	free_rpc_iscsi_delete_target_node_heap(ctx);
 }
 SPDK_RPC_REGISTER("iscsi_delete_target_node", rpc_iscsi_delete_target_node, SPDK_RPC_RUNTIME)
 
