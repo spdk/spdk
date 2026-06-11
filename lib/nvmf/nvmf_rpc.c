@@ -502,7 +502,6 @@ SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_R
 
 enum nvmf_rpc_listen_op {
 	NVMF_RPC_LISTEN_ADD,
-	NVMF_RPC_LISTEN_REMOVE,
 };
 
 /* TODO: replace with rpc_nvmf_subsystem_add_listener_ctx */
@@ -584,25 +583,87 @@ nvmf_rpc_subsystem_listen(void *cb_arg, int status)
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
+struct rpc_nvmf_subsystem_remove_listener_ext {
+	struct rpc_nvmf_subsystem_remove_listener_ctx	req;
+	struct spdk_nvmf_transport			*transport;
+	struct spdk_nvmf_subsystem			*subsystem;
+	struct spdk_nvme_transport_id			trid;
+};
+
+static void
+free_rpc_nvmf_subsystem_remove_listener_ext(
+	struct rpc_nvmf_subsystem_remove_listener_ext *ereq)
+{
+	free_rpc_nvmf_subsystem_remove_listener(&ereq->req);
+	free(ereq);
+}
+
+static void
+nvmf_rpc_remove_listener_resumed(struct spdk_nvmf_subsystem *subsystem,
+				 void *cb_arg, int status)
+{
+	struct rpc_nvmf_subsystem_remove_listener_ext *ereq = cb_arg;
+
+	if (ereq->req.request) {
+		spdk_jsonrpc_send_bool_response(ereq->req.request, true);
+	}
+
+	free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
+}
+
 static void
 nvmf_rpc_stop_listen_async_done(void *cb_arg, int status)
 {
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_remove_listener_ext *ereq = cb_arg;
 
 	if (status) {
 		SPDK_ERRLOG("Unable to stop listener.\n");
-		spdk_jsonrpc_send_error_response_fmt(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response_fmt(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "error stopping listener: %d", status);
-		ctx->request = NULL;
+		ereq->req.request = NULL;
 	}
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		if (ctx->request) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+	if (spdk_nvmf_subsystem_resume(ereq->subsystem, nvmf_rpc_remove_listener_resumed, ereq)) {
+		if (ereq->req.request) {
+			spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "Internal error");
 		}
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
+	}
+}
+
+static void
+rpc_nvmf_remove_listener_paused(struct spdk_nvmf_subsystem *subsystem,
+				void *cb_arg, int status)
+{
+	struct rpc_nvmf_subsystem_remove_listener_ext *ereq = cb_arg;
+	int rc;
+
+	rc = spdk_nvmf_subsystem_remove_listener(subsystem, &ereq->trid);
+	if (rc) {
+		SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);
+		spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto err;
+	}
+
+	rc = spdk_nvmf_transport_stop_listen_async(ereq->transport, &ereq->trid, subsystem,
+			nvmf_rpc_stop_listen_async_done, ereq);
+	if (rc) {
+		SPDK_ERRLOG("Unable to stop listener, rc %d\n", rc);
+		spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Internal error");
+		goto err;
+	}
+
+	return;
+
+err:
+	ereq->req.request = NULL;
+
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_remove_listener_resumed, ereq)) {
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 	}
 }
 
@@ -694,19 +755,6 @@ rpc_nvmf_listen_paused(struct spdk_nvmf_subsystem *subsystem,
 
 		spdk_nvmf_subsystem_add_listener_ext(subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
 						     &ctx->listener_opts);
-		return;
-	case NVMF_RPC_LISTEN_REMOVE:
-		rc = spdk_nvmf_subsystem_remove_listener(subsystem, &ctx->trid);
-		if (rc) {
-			SPDK_ERRLOG("Unable to remove listener, rc %d\n", rc);
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			ctx->request = NULL;
-			break;
-		}
-
-		spdk_nvmf_transport_stop_listen_async(ctx->transport, &ctx->trid, subsystem,
-						      nvmf_rpc_stop_listen_async_done, ctx);
 		return;
 	default:
 		SPDK_UNREACHABLE();
@@ -848,66 +896,63 @@ SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", rpc_nvmf_subsystem_add_listener
 		  SPDK_RPC_RUNTIME);
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_remove_listener_decoders[] = {
-	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
-	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_remove_listener_ctx, nqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct rpc_nvmf_subsystem_remove_listener_ctx, listen_address), rpc_decode_nvmf_listen_address},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_remove_listener_ctx, tgt_name), spdk_json_decode_string, true},
 };
 
 static void
 rpc_nvmf_subsystem_remove_listener(struct spdk_jsonrpc_request *request,
 				   const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_listener_ctx *ctx;
+	struct rpc_nvmf_subsystem_remove_listener_ext *ereq;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		return;
 	}
 
-	ctx->request = request;
+	ereq->req.request = request;
 
 	if (spdk_json_decode_object(params, rpc_nvmf_subsystem_remove_listener_decoders,
 				    SPDK_COUNTOF(rpc_nvmf_subsystem_remove_listener_decoders),
-				    ctx)) {
+				    &ereq->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 		return;
 	}
 
-	subsystem = _rpc_nvmf_get_subsystem(request, ctx->tgt_name, ctx->nqn, &tgt);
+	subsystem = _rpc_nvmf_get_subsystem(request, ereq->req.tgt_name, ereq->req.nqn, &tgt);
 	if (!subsystem) {
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 		return;
 	}
-	ctx->tgt = tgt;
-	ctx->subsystem = subsystem;
+	ereq->subsystem = subsystem;
 
-	if (rpc_listen_address_to_trid(ctx->request, &ctx->address, &ctx->trid)) {
-		nvmf_rpc_listener_ctx_free(ctx);
+	if (rpc_listen_address_to_trid(request, &ereq->req.listen_address, &ereq->trid)) {
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 		return;
 	}
 
-	ctx->transport = spdk_nvmf_tgt_get_transport(tgt, ctx->trid.trstring);
-	if (!ctx->transport) {
+	ereq->transport = spdk_nvmf_tgt_get_transport(tgt, ereq->trid.trstring);
+	if (!ereq->transport) {
 		SPDK_ERRLOG("Unable to find %s transport. The transport must be created first also make sure it is properly registered.\n",
-			    ctx->trid.trstring);
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+			    ereq->trid.trstring);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 		return;
 	}
 
-	ctx->op = NVMF_RPC_LISTEN_REMOVE;
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_listen_paused, ctx);
+	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_remove_listener_paused, ereq);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_remove_listener", rpc_nvmf_subsystem_remove_listener,
