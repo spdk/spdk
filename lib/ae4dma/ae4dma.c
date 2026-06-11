@@ -26,6 +26,29 @@ static struct ae4dma_driver g_ae4dma_driver = {
 };
 
 /**
+ * Result of a DMA address translation.
+ * Contains the hardware-ready addresses (IOVA's) for AE4DMA engine.
+ */
+struct ae4dma_iova_descriptor {
+	uint64_t src_iova;
+	uint64_t dst_iova;
+	int status; /* 0 on success, or negative errno */
+};
+
+/*
+ * Internal encoding of how the source/destination endpoints of a copy are
+ * addressed. Derived in spdk_ae4dma_build_copy() from the caller-supplied
+ * memory domains and used to drive both the address translation and the
+ * descriptor's DWORD0 memory-type bits, so the two can never disagree.
+ */
+enum ae4dma_mem_type {
+	AE4DMA_MEM_MEM_MEM = 0,
+	AE4DMA_MEM_MEM_DEV,
+	AE4DMA_MEM_DEV_MEM,
+	AE4DMA_MEM_DEV_DEV,
+};
+
+/**
  * DMA engine capability flags
  */
 enum spdk_ae4dma_dma_capability_flags {
@@ -74,9 +97,39 @@ spdk_ae4dma_flush(struct spdk_ae4dma_chan *ae4dma, int hwq_id)
 	spdk_mmio_write_4(&ae4dma->cmd_q[hwq_id].regs->write_idx, write_idx);
 }
 
+/*
+ * Translate the copy type into the DWORD0 source/destination memory-type
+ * bits. DEV endpoints are already-resolved IOVAs that address device
+ * (IO) memory -- e.g. a peer NTB BAR window -- so the engine must be told
+ * to treat them as IO memory rather than host memory.
+ */
+static uint8_t
+ae4dma_dword0_mem_type(enum ae4dma_mem_type type)
+{
+	uint8_t byte0 = 0;
+
+	switch (type) {
+	case AE4DMA_MEM_MEM_MEM:
+		break;
+	case AE4DMA_MEM_MEM_DEV:
+		byte0 |= AE4DMA_DWORD0_DESTINATION_MEMORY_TYPE_IOMEMORY;
+		break;
+	case AE4DMA_MEM_DEV_MEM:
+		byte0 |= AE4DMA_DWORD0_SOURCE_MEMEORY_TYPE_IOMEMORY;
+		break;
+	case AE4DMA_MEM_DEV_DEV:
+		byte0 |= AE4DMA_DWORD0_DESTINATION_MEMORY_TYPE_IOMEMORY;
+		byte0 |= AE4DMA_DWORD0_SOURCE_MEMEORY_TYPE_IOMEMORY;
+		break;
+	}
+
+	return byte0;
+}
+
 static struct ae4dma_descriptor *
 ae4dma_prep_copy(struct spdk_ae4dma_chan *ae4dma, uint64_t dst,
-		 uint64_t src, uint32_t len, uint32_t hwq_index)
+		 uint64_t src, uint32_t len, uint32_t hwq_index,
+		 enum ae4dma_mem_type type)
 {
 	struct ae4dma_descriptor *desc;
 	struct spdk_ae4dma_desc dma_desc;
@@ -96,7 +149,7 @@ ae4dma_prep_copy(struct spdk_ae4dma_chan *ae4dma, uint64_t dst,
 
 	dma_desc = ae4dma->cmd_q[hwq].qbase_addr[desc_index];
 
-	dma_desc.dw0.byte0 = 0;
+	dma_desc.dw0.byte0 = ae4dma_dword0_mem_type(type);
 	dma_desc.dw1.status = 0;
 	dma_desc.dw1.err_code = 0;
 	dma_desc.dw1.desc_id  = 0;
@@ -115,22 +168,79 @@ ae4dma_prep_copy(struct spdk_ae4dma_chan *ae4dma, uint64_t dst,
 	return desc;
 }
 
+static struct ae4dma_iova_descriptor
+ae4dma_get_iova(const void *src, uint64_t *src_len, const void *dst, uint64_t *dst_len,
+		enum ae4dma_mem_type type)
+{
+	struct ae4dma_iova_descriptor iova_desc = {0, 0, 0};
+
+	switch (type) {
+	case AE4DMA_MEM_MEM_MEM:
+		iova_desc.src_iova = spdk_vtophys(src, src_len);
+		iova_desc.dst_iova = spdk_vtophys(dst, dst_len);
+		break;
+
+	case AE4DMA_MEM_MEM_DEV:
+		iova_desc.src_iova = spdk_vtophys(src, src_len);
+		iova_desc.dst_iova = (uint64_t)dst;
+		break;
+
+	case AE4DMA_MEM_DEV_MEM:
+		iova_desc.src_iova = (uint64_t)src;
+		iova_desc.dst_iova = spdk_vtophys(dst, dst_len);
+		break;
+
+	case AE4DMA_MEM_DEV_DEV:
+		iova_desc.src_iova = (uint64_t)src;
+		iova_desc.dst_iova = (uint64_t)dst;
+		break;
+
+	default:
+		iova_desc.status = -EINVAL;
+		return iova_desc;
+	}
+
+	if (iova_desc.src_iova == SPDK_VTOPHYS_ERROR || iova_desc.dst_iova == SPDK_VTOPHYS_ERROR) {
+		iova_desc.status = -EFAULT;
+	}
+
+	return iova_desc;
+}
 
 int
 spdk_ae4dma_build_copy(struct spdk_ae4dma_chan *ae4dma, int hwq_id, void *cb_arg,
 		       spdk_ae4dma_req_cb cb_fn,
 		       struct iovec *diov, uint32_t diovcnt,
-		       struct iovec *siov, uint32_t siovcnt)
+		       struct spdk_memory_domain *dst_domain,
+		       struct iovec *siov, uint32_t siovcnt,
+		       struct spdk_memory_domain *src_domain)
 {
 	struct ae4dma_descriptor        *cb_desc = NULL;
 	struct ae4dma_descriptor        *last_desc = NULL;
 	struct spdk_ioviter iter;
+	struct ae4dma_iova_descriptor iova_addr;
+	enum ae4dma_mem_type type;
 	uint64_t        pdst_addr, psrc_addr;
 	void *src, *dst;
 	uint64_t len, seg_len;
 
 	if (!ae4dma || !diov || !siov) {
 		return -EINVAL;
+	}
+
+	/*
+	 * A NULL domain means host memory (translated via spdk_vtophys); a
+	 * non-NULL domain means the address is already resolved in a device
+	 * memory domain (e.g. a peer NTB BAR window).
+	 */
+	if (src_domain != NULL && dst_domain != NULL) {
+		type = AE4DMA_MEM_DEV_DEV;
+	} else if (dst_domain != NULL) {
+		type = AE4DMA_MEM_MEM_DEV;
+	} else if (src_domain != NULL) {
+		type = AE4DMA_MEM_DEV_MEM;
+	} else {
+		type = AE4DMA_MEM_MEM_MEM;
 	}
 
 	for (len = spdk_ioviter_first(&iter, siov, siovcnt, diov, diovcnt, &src, &dst);
@@ -142,13 +252,13 @@ spdk_ae4dma_build_copy(struct spdk_ae4dma_chan *ae4dma, int hwq_id, void *cb_arg
 			uint64_t src_len = remain;
 			uint64_t dst_len = remain;
 
-			psrc_addr = spdk_vtophys(src, &src_len);
-			pdst_addr = spdk_vtophys(dst, &dst_len);
-
-			if (psrc_addr == SPDK_VTOPHYS_ERROR || pdst_addr == SPDK_VTOPHYS_ERROR) {
-				SPDK_ERRLOG("Error: vtophys translation failed\n");
-				return -EFAULT;
+			iova_addr = ae4dma_get_iova(src, &src_len, dst, &dst_len, type);
+			if (iova_addr.status != 0) {
+				SPDK_ERRLOG("Error: ae4dma_get_iova\n");
+				return iova_addr.status;
 			}
+			psrc_addr = iova_addr.src_iova;
+			pdst_addr = iova_addr.dst_iova;
 
 			seg_len = spdk_min(src_len, dst_len);
 			if (seg_len == 0) {
@@ -162,7 +272,7 @@ spdk_ae4dma_build_copy(struct spdk_ae4dma_chan *ae4dma, int hwq_id, void *cb_arg
 				return 1;
 			}
 
-			cb_desc = ae4dma_prep_copy(ae4dma, pdst_addr, psrc_addr, seg_len, hwq_id);
+			cb_desc = ae4dma_prep_copy(ae4dma, pdst_addr, psrc_addr, seg_len, hwq_id, type);
 			if (!cb_desc) {
 				SPDK_ERRLOG("Error: Out of descriptors\n");
 				return -ENOMEM;
@@ -372,7 +482,13 @@ ae4dma_attach(uint8_t hw_queues, struct spdk_pci_device *device)
 	ae4dma->device = device;
 
 	if (ae4dma_channel_start(hw_queues, ae4dma) != 0) {
-		ae4dma_channel_destruct(hw_queues, ae4dma);
+		/*
+		 * channel_start() may have populated some cmd_q[] entries
+		 * before failing partway through. Tear down only those that
+		 * were actually started; cmd_q_count is incremented per
+		 * successful queue init.
+		 */
+		ae4dma_channel_destruct(ae4dma->cmd_q_count, ae4dma);
 		free(ae4dma);
 		return NULL;
 	}
@@ -384,6 +500,7 @@ struct ae4dma_enum_ctx {
 	spdk_ae4dma_probe_cb probe_cb;
 	spdk_ae4dma_attach_cb attach_cb;
 	void *cb_ctx;
+	uint8_t hw_queues_per_device;
 };
 
 static int
@@ -408,8 +525,13 @@ ae4dma_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		 * Since AE4DMA init is relatively quick, just perform the full init during probing.
 		 *  If this turns out to be a bottleneck later, this can be changed to work like
 		 *  NVMe with a list of devices to initialize in parallel.
+		 *
+		 * Honor the caller-requested hw_queues_per_device. Previously
+		 * this was hard-coded to AE4DMA_MAX_HW_QUEUES, which silently
+		 * ignored callers asking for fewer queues (e.g. ntb_perf -l1)
+		 * and burned descriptor-ring memory on every device.
 		 */
-		ae4dma = ae4dma_attach(AE4DMA_MAX_HW_QUEUES, pci_dev);
+		ae4dma = ae4dma_attach(enum_ctx->hw_queues_per_device, pci_dev);
 		if (ae4dma == NULL) {
 			SPDK_ERRLOG("ae4dma_attach() failed\n");
 			return -1;
@@ -424,16 +546,38 @@ ae4dma_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 }
 
 int
-spdk_ae4dma_probe(void *cb_ctx, spdk_ae4dma_probe_cb probe_cb, spdk_ae4dma_attach_cb attach_cb)
+spdk_ae4dma_probe(uint8_t hw_queues_per_device, void *cb_ctx,
+		  spdk_ae4dma_probe_cb probe_cb, spdk_ae4dma_attach_cb attach_cb)
 {
 	int rc;
 	struct ae4dma_enum_ctx enum_ctx;
+
+	/*
+	 * 0 means "use the library default (= AE4DMA_MAX_HW_QUEUES)" so
+	 * existing callers that have no opinion can pass 0 instead of having
+	 * to import the implementation constant.
+	 *
+	 * Values larger than AE4DMA_MAX_HW_QUEUES are clamped: the device
+	 * itself also clamps and the read-after-write in ae4dma_channel_start()
+	 * would expose any over-request, but rejecting at the API boundary
+	 * makes the caller's intent unambiguous in logs.
+	 */
+	if (hw_queues_per_device == 0) {
+		hw_queues_per_device = AE4DMA_MAX_HW_QUEUES;
+	}
+	if (hw_queues_per_device > AE4DMA_MAX_HW_QUEUES) {
+		SPDK_WARNLOG("Requested %u hw queues per device exceeds "
+			     "AE4DMA_MAX_HW_QUEUES (%u); clamping.\n",
+			     hw_queues_per_device, AE4DMA_MAX_HW_QUEUES);
+		hw_queues_per_device = AE4DMA_MAX_HW_QUEUES;
+	}
 
 	pthread_mutex_lock(&g_ae4dma_driver.lock);
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.attach_cb = attach_cb;
 	enum_ctx.cb_ctx = cb_ctx;
+	enum_ctx.hw_queues_per_device = hw_queues_per_device;
 
 	rc = spdk_pci_enumerate(spdk_pci_ae4dma_get_driver(), ae4dma_enum_cb, &enum_ctx);
 
@@ -447,6 +591,10 @@ spdk_ae4dma_detach(struct spdk_ae4dma_chan *ae4dma)
 {
 	struct ae4dma_driver *driver = &g_ae4dma_driver;
 
+	if (ae4dma == NULL) {
+		return;
+	}
+
 	/* ae4dma should be in the free list (not registered to a thread)
 	 * when calling ae4dma_detach().
 	 */
@@ -454,7 +602,13 @@ spdk_ae4dma_detach(struct spdk_ae4dma_chan *ae4dma)
 	TAILQ_REMOVE(&driver->attached_chans, ae4dma, tailq);
 	pthread_mutex_unlock(&driver->lock);
 
-	ae4dma_channel_destruct(AE4DMA_MAX_HW_QUEUES, ae4dma);
+	/*
+	 * Tear down only the queues we actually started. cmd_q_count is
+	 * incremented per-queue in ae4dma_channel_start(); using it here
+	 * instead of AE4DMA_MAX_HW_QUEUES means a device attached with -l1
+	 * doesn't try to free 15 never-allocated descriptor rings.
+	 */
+	ae4dma_channel_destruct(ae4dma->cmd_q_count, ae4dma);
 	free(ae4dma);
 }
 

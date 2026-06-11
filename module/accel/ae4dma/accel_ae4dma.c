@@ -138,8 +138,8 @@ ae4dma_submit_copy(struct ae4dma_io_channel *ae4dma_ch, struct spdk_accel_task *
 {
 
 	return spdk_ae4dma_build_copy(ae4dma_ch->ae4dma_ch, ae4dma_ch->ae4dma_chan_id, task, ae4dma_done,
-				      task->d.iovs, task->d.iovcnt, task->s.iovs, task->s.iovcnt
-				     );
+				      task->d.iovs, task->d.iovcnt, NULL,
+				      task->s.iovs, task->s.iovcnt, NULL);
 }
 
 static int
@@ -271,7 +271,14 @@ accel_ae4dma_init(void)
 		return 0;
 	}
 
-	if (spdk_ae4dma_probe(NULL, probe_cb, attach_cb) != 0) {
+	/*
+	 * 0 = "library default" (= AE4DMA_MAX_HW_QUEUES); preserves the
+	 * pre-API-rev behaviour of the accel module, which always opened the
+	 * full set of hardware queues. The accel layer doesn't currently
+	 * expose a knob to override this; if it ever needs to, plumb the
+	 * value through here.
+	 */
+	if (spdk_ae4dma_probe(0, NULL, probe_cb, attach_cb) != 0) {
 		SPDK_ERRLOG("spdk_ae4dma_probe() failed\n");
 		return -1;
 	}
