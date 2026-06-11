@@ -99,7 +99,7 @@ function usage() {
 	echo "                  Use with caution."
 	echo "DEV_TYPE"
 	echo "                  Perform action only against selected type of devices. Supported:"
-	echo "                    IOAT|AE4DMA|DSA|IAA|VIRTIO|VMD|NVME."
+	echo "                    IOAT|AE4DMA|DSA|IAA|VIRTIO|VMD|NTB|NVME."
 	echo "                  Default is to select all types."
 	echo "FORCE_NIC_UIO_REBIND"
 	echo "                  When set to 'yes', an attempt to reload nic_uio will be made regardless"
@@ -362,6 +362,7 @@ function collect_driver() {
 		[[ -n ${virtio_d["$bdf"]} ]] && driver=virtio-pci
 		[[ -n ${vmd_d["$bdf"]} ]] && driver=vmd
 		[[ -n ${ae4dma_d["$bdf"]} ]] && driver=ae4dma
+		[[ -n ${ntb_d["$bdf"]} ]] && driver=ntb_hw_amd
 	fi 2> /dev/null
 	echo "$driver"
 }
@@ -752,6 +753,7 @@ function status_linux() {
 		desc=${desc:-${virtio_d["$bdf"]:+virtio}}
 		desc=${desc:-${vmd_d["$bdf"]:+VMD}}
 		desc=${desc:-${ae4dma_d["$bdf"]:+AE4DMA}}
+		desc=${desc:-${ntb_d["$bdf"]:+NTB}}
 
 		printf '%-25s %-15s %-6s %-6s %-7s %-16s %-10s %s\n' \
 			"$desc" "$bdf" "${pci_ids_vendor["$bdf"]#0x}" "${pci_ids_device["$bdf"]#0x}" \
@@ -808,6 +810,7 @@ function status_freebsd() {
 	status_print "IAA" "${!iaa_d[@]}"
 	status_print "VMD" "${!vmd_d[@]}"
 	status_print "AE4DMA" "${!ae4dma_d[@]}"
+	status_print "NTB" "${!ntb_d[@]}"
 }
 
 function configure_freebsd_pci() {
@@ -857,7 +860,7 @@ function warn_unsupported_nic_uio_hw() {
 }
 
 function configure_freebsd() {
-	_configure_freebsd "${!nvme_d[@]}" "${!ioat_d[@]}" "${!dsa_d[@]}" "${!iaa_d[@]}" "${!vmd_d[@]}" "${!ae4dma_d[@]}"
+	_configure_freebsd "${!nvme_d[@]}" "${!ioat_d[@]}" "${!dsa_d[@]}" "${!iaa_d[@]}" "${!vmd_d[@]}" "${!ae4dma_d[@]}" "${!ntb_d[@]}"
 }
 
 function _configure_freebsd() {

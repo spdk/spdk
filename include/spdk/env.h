@@ -832,6 +832,17 @@ struct spdk_pci_driver *spdk_pci_idxd_get_driver(void);
 struct spdk_pci_driver *spdk_pci_ae4dma_get_driver(void);
 
 /**
+ * Get the AMD EPYC 4th-generation NTB PCI driver object.
+ *
+ * The PCI driver is registered under the name "ntb_amd" (subsystem first,
+ * vendor last), leaving the generic "ntb" name available for future
+ * NTB implementations from other vendors.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_ntb_amd_get_driver(void);
+
+/**
  * Get the Virtio PCI driver object.
  *
  * \return PCI driver.

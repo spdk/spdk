@@ -7,11 +7,11 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SO_VER := 17
-SO_MINOR := 0
+SO_MINOR := 1
 
 CFLAGS += $(ENV_CFLAGS)
 C_SRCS = env.c memory.c pci.c init.c threads.c
-C_SRCS += pci_ioat.c pci_virtio.c pci_idxd.c pci_ae4dma.c
+C_SRCS += pci_ioat.c pci_virtio.c pci_idxd.c pci_ae4dma.c pci_ntb_amd.c
 C_SRCS += pci_event.c sigbus_handler.c pci_dpdk.c
 C_SRCS += pci_dpdk_2207.c pci_dpdk_2211.c pci_dpdk_2607.c stubs.c
 LIBNAME = env_dpdk
