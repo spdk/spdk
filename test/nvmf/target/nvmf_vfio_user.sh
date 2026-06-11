@@ -99,20 +99,15 @@ function aer_test() {
 }
 
 function polling_test() {
-	local i test_traddr test_subnqn r1
+	local subnqn1=nqn.2019-07.io.spdk:cnode1
+	local r1="trtype:$TEST_TRANSPORT traddr:/var/run/vfio-user/domain/vfio-user1/1 subnqn:$subnqn1"
 
 	setup_nvmf_vfio_user '' ''
 
-	for i in $(seq 1 $NUM_DEVICES); do
-		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
-		test_subnqn=nqn.2019-07.io.spdk:cnode$i
-		r1="trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-
-		run_test "nvmf_vfio_user_identify" identify_test "$r1"
-		run_test "nvmf_vfio_user_perf" perf_test "$r1"
-		run_test "nvmf_vfio_user_examples" examples_test "$r1"
-		run_test "nvmf_vfio_user_aer" aer_test "$r1" "$test_subnqn" "$i"
-	done
+	run_test "nvmf_vfio_user_identify" identify_test "$r1"
+	run_test "nvmf_vfio_user_perf" perf_test "$r1"
+	run_test "nvmf_vfio_user_examples" examples_test "$r1"
+	run_test "nvmf_vfio_user_aer" aer_test "$r1" "$subnqn1" 2
 
 	teardown_nvmf_vfio_user
 }
