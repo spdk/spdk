@@ -8,6 +8,7 @@ rootdir=$(readlink -f $testdir/../../..)
 nvmeappdir=$(readlink -f $rootdir/test/nvme)
 source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+source $rootdir/test/interrupt/common.sh
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -120,10 +121,27 @@ function polling_test() {
 	teardown_nvmf_vfio_user
 }
 
+function check_reactors_idle() {
+	local pid=$1
+	local first=$2
+	local last=$3
+	local i
+
+	for ((i = first; i <= last; i++)); do
+		reactor_is_idle $pid $i
+	done
+}
+
+function interrupt_test() {
+	setup_nvmf_vfio_user '--interrupt-mode' '-M -I'
+
+	# FIXME: nvme vfio-user initiator unconditionally mmaps BAR0, which fails with -M
+	check_reactors_idle $nvmfpid 2 3
+
+	teardown_nvmf_vfio_user
+}
+
 rm -rf /var/run/vfio-user
 
 run_test "nvmf_vfio_user_polling" polling_test
-
-# Start the target in interrupt mode
-setup_nvmf_vfio_user '--interrupt-mode' '-M -I'
-teardown_nvmf_vfio_user
+run_test "nvmf_vfio_user_interrupt" interrupt_test
