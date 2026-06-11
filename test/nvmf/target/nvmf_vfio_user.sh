@@ -29,7 +29,7 @@ function aer_vfio_user() {
 	$rpc_py nvmf_get_subsystems
 
 	# Namespace Attribute Notice Tests
-	run_app_bg "$rootdir/test/nvme/aer/aer" -r "\
+	run_app_bg "$nvmeappdir/aer/aer" -r "\
 		trtype:$TEST_TRANSPORT \
 		traddr:$traddr \
 		subnqn:$subnqn" -n $NUM_DEVICES -g -t $aer_socket
@@ -80,6 +80,7 @@ function setup_nvmf_vfio_user() {
 }
 
 function run_nvmf_vfio_user() {
+	local i test_traddr test_subnqn
 
 	for i in $(seq 1 $NUM_DEVICES); do
 		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
@@ -87,10 +88,10 @@ function run_nvmf_vfio_user() {
 		run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
 		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5
 		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5
-		$SPDK_EXAMPLE_DIR/reconnect -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0x3
-		$SPDK_EXAMPLE_DIR/arbitration -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
-		$SPDK_EXAMPLE_DIR/hello_world -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-		$nvmeappdir/overhead/overhead -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+		run_app "$SPDK_EXAMPLE_DIR/reconnect" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0x3
+		run_app "$SPDK_EXAMPLE_DIR/arbitration" -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
+		run_app "$SPDK_EXAMPLE_DIR/hello_world" -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+		run_app "$nvmeappdir/overhead/overhead" -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
 		aer_vfio_user $test_traddr $test_subnqn $i
 	done
 }
