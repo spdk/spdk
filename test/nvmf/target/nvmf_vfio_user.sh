@@ -22,17 +22,13 @@ aer_socket="$output_dir/spdk_aer_vfio.sock"
 aer_rpc_py="$rpc_py -s $aer_socket --plugin aer_plugin"
 
 function aer_vfio_user() {
-
-	local traddr=$1
+	local r1=$1
 	local subnqn=$2
 	local malloc_num=Malloc$(($3 + NUM_DEVICES))
 	$rpc_py nvmf_get_subsystems
 
 	# Namespace Attribute Notice Tests
-	run_app_bg "$nvmeappdir/aer/aer" -r "\
-		trtype:$TEST_TRANSPORT \
-		traddr:$traddr \
-		subnqn:$subnqn" -n $NUM_DEVICES -g -t $aer_socket
+	run_app_bg "$nvmeappdir/aer/aer" -r "$r1" -n $NUM_DEVICES -g -t $aer_socket
 	aerpid=$!
 	trap 'killprocess $aerpid; killprocess $nvmfpid; exit 1' SIGINT SIGTERM EXIT
 
@@ -80,19 +76,21 @@ function setup_nvmf_vfio_user() {
 }
 
 function run_nvmf_vfio_user() {
-	local i test_traddr test_subnqn
+	local i test_traddr test_subnqn r1
 
 	for i in $(seq 1 $NUM_DEVICES); do
 		test_traddr=/var/run/vfio-user/domain/vfio-user$i/$i
 		test_subnqn=nqn.2019-07.io.spdk:cnode$i
-		run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -L nvme -L nvme_vfio -L vfio_pci
-		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w read -t 5
-		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -s 256 -g -q 128 -o 4096 -w write -t 5
-		run_app "$SPDK_EXAMPLE_DIR/reconnect" -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0x3
-		run_app "$SPDK_EXAMPLE_DIR/arbitration" -t 3 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn" -d 256 -g
-		run_app "$SPDK_EXAMPLE_DIR/hello_world" -d 256 -g -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-		run_app "$nvmeappdir/overhead/overhead" -o 4096 -t 1 -H -g -d 256 -r "trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
-		aer_vfio_user $test_traddr $test_subnqn $i
+		r1="trtype:$TEST_TRANSPORT traddr:$test_traddr subnqn:$test_subnqn"
+
+		run_app "$SPDK_BIN_DIR/spdk_nvme_identify" -r "$r1" -g -L nvme -L nvme_vfio -L vfio_pci
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "$r1" -s 256 -g -q 128 -o 4096 -w read -t 5
+		run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -r "$r1" -s 256 -g -q 128 -o 4096 -w write -t 5
+		run_app "$SPDK_EXAMPLE_DIR/reconnect" -r "$r1" -g -q 32 -o 4096 -w randrw -M 50 -t 5 -c 0x3
+		run_app "$SPDK_EXAMPLE_DIR/arbitration" -r "$r1" -t 3 -d 256 -g
+		run_app "$SPDK_EXAMPLE_DIR/hello_world" -r "$r1" -d 256 -g
+		run_app "$nvmeappdir/overhead/overhead" -r "$r1" -o 4096 -t 1 -H -g -d 256
+		aer_vfio_user "$r1" "$test_subnqn" "$i"
 	done
 }
 
