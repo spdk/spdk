@@ -1,0 +1,48 @@
+{
+	global:
+
+	/*
+	 * Public API of libspdk_ntb_amd.
+	 *
+	 * The complete list of *exported* symbols from this library lives
+	 * here (and only here). Anything else defined in lib/ntb_amd/ is
+	 * automatically caught by `local: *;` below and stays internal. Two
+	 * rules to keep this map honest as the driver evolves:
+	 *
+	 *   1. Every name listed here MUST start with `spdk_ntb_amd_` —
+	 *      bare `ntb_*` would collide with a future Linux-style generic
+	 *      NTB framework, and unprefixed `read_config` / `find_*` style
+	 *      helpers would collide with anything else linking the .a.
+	 *
+	 *   2. Every name listed here MUST also be declared in the public
+	 *      header include/spdk/ntb_amd.h. Internal helpers (declared in
+	 *      ntb_amd_internal.h) stay out of the map even though they
+	 *      have the spdk_ntb_amd_ prefix, so the unit test (which
+	 *      includes the .c directly) can still see them while shared-
+	 *      library consumers cannot.
+	 */
+
+	/* lifecycle */
+	spdk_ntb_amd_probe;
+	spdk_ntb_amd_detach;
+
+	/* device-level configuration / introspection */
+	spdk_ntb_amd_attr_get;
+	spdk_ntb_amd_set_active_mw;
+	spdk_ntb_amd_get_peer_mw;
+	spdk_ntb_amd_peer_ready_get;
+	spdk_ntb_amd_peer_ready_set;
+
+	/* link-up bring-up sequence */
+	spdk_ntb_amd_handshake_work;
+	spdk_ntb_amd_dev_start;
+
+	/* register-level helpers used by the example app */
+	spdk_ntb_amd_get_link_status;
+	spdk_ntb_amd_spad_read;
+	spdk_ntb_amd_db_read;
+	spdk_ntb_amd_db_clear;
+	spdk_ntb_amd_peer_db_set;
+
+	local: *;
+};

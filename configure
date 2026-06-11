@@ -90,6 +90,8 @@ function usage() {
 	echo " --without-rbd             No path required."
 	echo " --with-ublk               Build ublk library."
 	echo " --without-ublk            No path required."
+	echo " --with-amd-ntb            Build AMD EPYC 4th-gen NTB user-space driver (Linux only)."
+	echo " --without-amd-ntb         No path required."
 	echo " --with-rdma[=PROVIDER]    Build RDMA transport for NVMf target and initiator."
 	echo " --without-rdma            Accepts optional RDMA provider name. Can be \"verbs\" or \"mlx5_dv\"."
 	echo "                           If no provider specified, \"verbs\" provider is used by default."
@@ -474,6 +476,12 @@ for i in "$@"; do
 			;;
 		--without-ublk)
 			CONFIG[UBLK]=n
+			;;
+		--with-amd-ntb)
+			CONFIG[AMD_NTB]=y
+			;;
+		--without-amd-ntb)
+			CONFIG[AMD_NTB]=n
 			;;
 		--with-rbd)
 			CONFIG[RBD]=y

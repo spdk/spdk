@@ -120,6 +120,9 @@ CONFIG_DAOS_DIR=
 # Build UBLK support
 CONFIG_UBLK=n
 
+# Build AMD EPYC 4th-gen NTB user-space driver support (Linux only)
+CONFIG_AMD_NTB=y
+
 # Build vhost library.
 CONFIG_VHOST=y
 

@@ -16,6 +16,10 @@ DIRS-y += nbd ftl vfio_user
 ifeq ($(CONFIG_UBLK),y)
 DIRS-y += ublk
 endif
+# The AMD NTB driver currently relies on Linux-specific PCI sysfs/uio paths
+# in env_dpdk for resource discovery and BAR mapping. Restrict it to Linux
+# until those dependencies are made portable.
+DIRS-$(CONFIG_AMD_NTB) += ntb_amd
 endif
 
 # The ut library is used by unit tests and some functional tests, so build it only when either of
