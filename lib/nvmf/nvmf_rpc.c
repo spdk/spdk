@@ -500,89 +500,76 @@ invalid_custom_response:
 }
 SPDK_RPC_REGISTER("nvmf_delete_subsystem", rpc_nvmf_delete_subsystem, SPDK_RPC_RUNTIME)
 
-enum nvmf_rpc_listen_op {
-	NVMF_RPC_LISTEN_ADD,
+struct rpc_nvmf_subsystem_add_listener_ext {
+	struct rpc_nvmf_subsystem_add_listener_ctx	req;
+	struct spdk_nvmf_tgt				*tgt;
+	struct spdk_nvmf_subsystem			*subsystem;
+	struct spdk_nvmf_listen_opts			opts;
+	struct spdk_nvmf_listener_opts			listener_opts;
+	struct spdk_nvme_transport_id			trid;
 };
 
-/* TODO: replace with rpc_nvmf_subsystem_add_listener_ctx */
-struct nvmf_rpc_listener_ctx {
-	char				*nqn;
-	char				*tgt_name;
-	struct spdk_nvmf_tgt		*tgt;
-	struct spdk_nvmf_transport	*transport;
-	struct spdk_nvmf_subsystem	*subsystem;
-	struct rpc_nvmf_listen_address	address;
-	enum spdk_nvme_ana_state	ana_state;
-	uint32_t			anagrpid;
-	int32_t				numa_id;
-	struct spdk_jsonrpc_request	*request;
-	struct spdk_nvme_transport_id	trid;
-	enum nvmf_rpc_listen_op		op;
-	struct spdk_nvmf_listen_opts	opts;
-	/* Additional options for listener creation.
-	 * Must be 8-byte aligned. */
-	struct spdk_nvmf_listener_opts	listener_opts;
-};
-
-SPDK_STATIC_ASSERT(offsetof(struct nvmf_rpc_listener_ctx, listener_opts) % 8 == 0,
+SPDK_STATIC_ASSERT(offsetof(struct rpc_nvmf_subsystem_add_listener_ext, listener_opts) % 8 == 0,
 		   "listener_opts must be 8-byte aligned");
 
 static const struct spdk_json_object_decoder rpc_nvmf_subsystem_add_listener_decoders[] = {
-	{"nqn", offsetof(struct nvmf_rpc_listener_ctx, nqn), spdk_json_decode_string},
-	{"listen_address", offsetof(struct nvmf_rpc_listener_ctx, address), rpc_decode_nvmf_listen_address},
-	{"tgt_name", offsetof(struct nvmf_rpc_listener_ctx, tgt_name), spdk_json_decode_string, true},
-	{"secure_channel", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.secure_channel), spdk_json_decode_bool, true},
-	{"ana_state", offsetof(struct nvmf_rpc_listener_ctx, ana_state), rpc_decode_nvme_ana_state, true},
-	{"sock_impl", offsetof(struct nvmf_rpc_listener_ctx, listener_opts.sock_impl), spdk_json_decode_string, true},
-	{"numa_id", offsetof(struct nvmf_rpc_listener_ctx, numa_id), spdk_json_decode_int32, true},
+	{"nqn", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, nqn), spdk_json_decode_string},
+	{"listen_address", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, listen_address), rpc_decode_nvmf_listen_address},
+	{"tgt_name", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, tgt_name), spdk_json_decode_string, true},
+	{"secure_channel", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, secure_channel), spdk_json_decode_bool, true},
+	{"ana_state", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, ana_state), rpc_decode_nvme_ana_state, true},
+	{"sock_impl", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, sock_impl), spdk_json_decode_string, true},
+	{"numa_id", offsetof(struct rpc_nvmf_subsystem_add_listener_ctx, numa_id), spdk_json_decode_int32, true},
 };
 
 static void
-nvmf_rpc_listener_ctx_free(struct nvmf_rpc_listener_ctx *ctx)
+free_rpc_nvmf_subsystem_add_listener_ext(
+	struct rpc_nvmf_subsystem_add_listener_ext *ereq)
 {
-	free(ctx->nqn);
-	free(ctx->tgt_name);
-	free_rpc_nvmf_listen_address(&ctx->address);
-	free(ctx);
+	free_rpc_nvmf_subsystem_add_listener(&ereq->req);
+	free(ereq);
 }
 
 static void
-nvmf_rpc_listen_resumed(struct spdk_nvmf_subsystem *subsystem,
-			void *cb_arg, int status)
+nvmf_rpc_add_listener_resumed(struct spdk_nvmf_subsystem *subsystem,
+			      void *cb_arg, int status)
 {
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_add_listener_ext *ereq = cb_arg;
 
-	if (ctx->request) {
-		spdk_jsonrpc_send_bool_response(ctx->request, true);
+	if (ereq->req.request) {
+		spdk_jsonrpc_send_bool_response(ereq->req.request, true);
 	}
 
-	nvmf_rpc_listener_ctx_free(ctx);
+	free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 }
 
 static void
-nvmf_rpc_subsystem_listen(void *cb_arg, int status)
+nvmf_rpc_add_listener_done(void *cb_arg, int status)
 {
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_add_listener_ext *ereq = cb_arg;
+
+	/* Subsystem listener now owns sock_impl; detach to avoid double-free. */
+	ereq->listener_opts.sock_impl = NULL;
 
 	if (status) {
 		/* Destroy the listener that we just created. Ignore the error code because
 		 * the RPC is failing already anyway. */
-		spdk_nvmf_tgt_stop_listen(ctx->tgt, &ctx->trid);
-
-		spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+		spdk_nvmf_tgt_stop_listen(ereq->tgt, &ereq->trid);
+		spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		ctx->request = NULL;
+		ereq->req.request = NULL;
 	}
 
-	if (spdk_nvmf_subsystem_resume(ctx->subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		if (ctx->request) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+	if (spdk_nvmf_subsystem_resume(ereq->subsystem, nvmf_rpc_add_listener_resumed, ereq)) {
+		if (ereq->req.request) {
+			spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "Internal error");
 		}
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
+
 struct rpc_nvmf_subsystem_remove_listener_ext {
 	struct rpc_nvmf_subsystem_remove_listener_ctx	req;
 	struct spdk_nvmf_transport			*transport;
@@ -664,6 +651,7 @@ err:
 
 	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_remove_listener_resumed, ereq)) {
 		free_rpc_nvmf_subsystem_remove_listener_ext(ereq);
+		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
 
@@ -729,44 +717,38 @@ rpc_nvmf_set_ana_state_paused(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-rpc_nvmf_listen_paused(struct spdk_nvmf_subsystem *subsystem,
-		       void *cb_arg, int status)
+rpc_nvmf_add_listener_paused(struct spdk_nvmf_subsystem *subsystem,
+			     void *cb_arg, int status)
 {
-	struct nvmf_rpc_listener_ctx *ctx = cb_arg;
+	struct rpc_nvmf_subsystem_add_listener_ext *ereq = cb_arg;
 	int rc;
 
-	switch (ctx->op) {
-	case NVMF_RPC_LISTEN_ADD:
-		if (nvmf_subsystem_find_listener(subsystem, &ctx->trid)) {
-			SPDK_ERRLOG("Listener already exists\n");
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			ctx->request = NULL;
-			break;
-		}
-
-		rc = spdk_nvmf_tgt_listen_ext(ctx->tgt, &ctx->trid, &ctx->opts);
-		if (rc) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							 "Invalid parameters");
-			ctx->request = NULL;
-			break;
-		}
-
-		spdk_nvmf_subsystem_add_listener_ext(subsystem, &ctx->trid, nvmf_rpc_subsystem_listen, ctx,
-						     &ctx->listener_opts);
-		return;
-	default:
-		SPDK_UNREACHABLE();
+	if (nvmf_subsystem_find_listener(subsystem, &ereq->trid)) {
+		SPDK_ERRLOG("Listener already exists\n");
+		spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto err;
 	}
 
-	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_listen_resumed, ctx)) {
-		if (ctx->request) {
-			spdk_jsonrpc_send_error_response(ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-							 "Internal error");
-		}
+	rc = spdk_nvmf_tgt_listen_ext(ereq->tgt, &ereq->trid, &ereq->opts);
+	if (rc) {
+		spdk_jsonrpc_send_error_response(ereq->req.request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto err;
+	}
 
-		nvmf_rpc_listener_ctx_free(ctx);
+	spdk_nvmf_subsystem_add_listener_ext(subsystem, &ereq->trid, nvmf_rpc_add_listener_done,
+					     ereq, &ereq->listener_opts);
+	/* Listener now owns sock_impl via listener_opts; detach from req
+	 * so the autogenerated free does not release it. */
+	ereq->req.sock_impl = NULL;
+	return;
+
+err:
+	ereq->req.request = NULL;
+
+	if (spdk_nvmf_subsystem_resume(subsystem, nvmf_rpc_add_listener_resumed, ereq)) {
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		/* Can't really do anything to recover here - subsystem will remain paused. */
 	}
 }
@@ -832,64 +814,63 @@ static void
 rpc_nvmf_subsystem_add_listener(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
-	struct nvmf_rpc_listener_ctx *ctx;
+	struct rpc_nvmf_subsystem_add_listener_ext *ereq;
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_tgt *tgt;
 	int rc;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
+	ereq = calloc(1, sizeof(*ereq));
+	if (!ereq) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		return;
 	}
 
-	ctx->request = request;
+	ereq->req.request = request;
 
-	spdk_nvmf_subsystem_listener_opts_init(&ctx->listener_opts, sizeof(ctx->listener_opts));
+	spdk_nvmf_subsystem_listener_opts_init(&ereq->listener_opts, sizeof(ereq->listener_opts));
+	ereq->req.secure_channel = ereq->listener_opts.secure_channel;
+	ereq->req.ana_state = (enum rpc_nvme_ana_state)ereq->listener_opts.ana_state;
+	ereq->req.sock_impl = ereq->listener_opts.sock_impl;
 
 	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_subsystem_add_listener_decoders,
 					    SPDK_COUNTOF(rpc_nvmf_subsystem_add_listener_decoders),
-					    ctx)) {
+					    &ereq->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		return;
 	}
+	ereq->listener_opts.secure_channel = ereq->req.secure_channel;
+	ereq->listener_opts.ana_state = (enum spdk_nvme_ana_state)ereq->req.ana_state;
+	ereq->listener_opts.sock_impl = ereq->req.sock_impl;
 
-	subsystem = _rpc_nvmf_get_subsystem(request, ctx->tgt_name, ctx->nqn, &tgt);
+	subsystem = _rpc_nvmf_get_subsystem(request, ereq->req.tgt_name, ereq->req.nqn, &ereq->tgt);
 	if (!subsystem) {
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		return;
 	}
-	ctx->tgt = tgt;
-	ctx->subsystem = subsystem;
+	ereq->subsystem = subsystem;
 
-	if (rpc_listen_address_to_trid(ctx->request, &ctx->address, &ctx->trid)) {
-		nvmf_rpc_listener_ctx_free(ctx);
+	if (rpc_listen_address_to_trid(request, &ereq->req.listen_address, &ereq->trid)) {
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		return;
 	}
 
-	ctx->op = NVMF_RPC_LISTEN_ADD;
-	spdk_nvmf_listen_opts_init(&ctx->opts, sizeof(ctx->opts));
-	ctx->opts.transport_specific = params;
-	if (spdk_nvmf_subsystem_get_allow_any_host(subsystem) && ctx->listener_opts.secure_channel) {
+	if (spdk_nvmf_subsystem_get_allow_any_host(subsystem) && ereq->req.secure_channel) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Cannot establish secure channel, when 'allow_any_host' is set");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 		return;
 	}
-	ctx->opts.secure_channel = ctx->listener_opts.secure_channel;
 
-	if (ctx->ana_state) {
-		ctx->listener_opts.ana_state = ctx->ana_state;
-	}
+	spdk_nvmf_listen_opts_init(&ereq->opts, sizeof(ereq->opts));
+	ereq->opts.transport_specific = params;
+	ereq->opts.secure_channel = ereq->req.secure_channel;
+	ereq->opts.sock_impl = ereq->req.sock_impl;
 
-	ctx->opts.sock_impl = ctx->listener_opts.sock_impl;
-
-	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_listen_paused, ctx);
+	rc = spdk_nvmf_subsystem_pause(subsystem, 0, rpc_nvmf_add_listener_paused, ereq);
 	if (rc != 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Internal error");
-		nvmf_rpc_listener_ctx_free(ctx);
+		free_rpc_nvmf_subsystem_add_listener_ext(ereq);
 	}
 }
 SPDK_RPC_REGISTER("nvmf_subsystem_add_listener", rpc_nvmf_subsystem_add_listener,
