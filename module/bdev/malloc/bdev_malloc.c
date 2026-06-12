@@ -696,6 +696,15 @@ bdev_malloc_get_io_channel(void *ctx)
 static void
 bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
+	bool md_interleave = bdev->md_interleave;
+	uint32_t md_size = bdev->md_len;
+	uint32_t block_size = bdev->blocklen;
+
+	/* interleaved metadata size is added to the blocklen */
+	if (md_interleave) {
+		block_size -= md_size;
+	}
+
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_string(w, "method", "bdev_malloc_create");
@@ -703,11 +712,12 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
 	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
-	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
+	spdk_json_write_named_uint32(w, "block_size", block_size);
 	spdk_json_write_named_uint32(w, "physical_block_size", bdev->phys_blocklen);
 	spdk_json_write_named_uuid(w, "uuid", &bdev->uuid);
 	spdk_json_write_named_uint32(w, "optimal_io_boundary", bdev->optimal_io_boundary);
-	spdk_json_write_named_uint32(w, "md_size", bdev->md_len);
+	spdk_json_write_named_uint32(w, "md_size", md_size);
+	spdk_json_write_named_bool(w, "md_interleave", md_interleave);
 	spdk_json_write_named_uint32(w, "dif_type", bdev->dif_type);
 	spdk_json_write_named_bool(w, "dif_is_head_of_md", bdev->dif_is_head_of_md);
 	spdk_json_write_named_uint32(w, "dif_pi_format", bdev->dif_pi_format);
