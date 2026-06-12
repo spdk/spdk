@@ -391,11 +391,6 @@ rpc_framework_get_reactors(struct spdk_jsonrpc_request *request,
 
 SPDK_RPC_REGISTER("framework_get_reactors", rpc_framework_get_reactors, SPDK_RPC_RUNTIME)
 
-static const struct spdk_json_object_decoder rpc_framework_set_scheduler_decoders_manual[] = {
-	{"name", offsetof(struct rpc_framework_set_scheduler_ctx, name), spdk_json_decode_string},
-	{"period", offsetof(struct rpc_framework_set_scheduler_ctx, period), spdk_json_decode_uint64, true},
-};
-
 static void
 rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
@@ -405,19 +400,16 @@ rpc_framework_set_scheduler(struct spdk_jsonrpc_request *request,
 	bool has_custom_opts = false;
 	int ret;
 
-	ret = spdk_json_decode_object(params, rpc_framework_set_scheduler_decoders_manual,
-				      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders_manual),
-				      &req);
-	if (ret) {
-		has_custom_opts = true;
-		ret = spdk_json_decode_object_relaxed(params, rpc_framework_set_scheduler_decoders_manual,
-						      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders_manual),
-						      &req);
-	}
+	ret = spdk_json_decode_object_relaxed(params, rpc_framework_set_scheduler_decoders,
+					      SPDK_COUNTOF(rpc_framework_set_scheduler_decoders),
+					      &req);
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
 		goto end;
+	} else {
+		has_custom_opts = (req.load_limit != 0 || req.core_limit != 0 ||
+				   req.core_busy != 0 || req.mappings != NULL);
 	}
 
 	if (req.period != 0) {
