@@ -13,6 +13,7 @@
 #include "spdk/dma.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
+#include "spdk/thread.h"
 
 #include "spdk/log.h"
 
@@ -33,6 +34,7 @@ struct malloc_task {
 struct malloc_channel {
 	struct spdk_io_channel		*accel_channel;
 	struct spdk_poller		*completion_poller;
+	struct spdk_thread		*thread;
 	TAILQ_HEAD(, malloc_task)	completed_tasks;
 };
 
@@ -244,12 +246,22 @@ malloc_done(void *ref, int status)
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
 }
 
+static void malloc_completion_msg(void *ctx);
+
 static void
 malloc_complete_task(struct malloc_task *task, struct malloc_channel *mch,
 		     enum spdk_bdev_io_status status)
 {
+	bool was_empty = TAILQ_EMPTY(&mch->completed_tasks);
+
 	task->status = status;
 	TAILQ_INSERT_TAIL(&mch->completed_tasks, task, tailq);
+
+	/* One message drains the queue; later completions coalesce until it runs. */
+	if (mch->thread && was_empty) {
+		assert(spdk_interrupt_mode_is_enabled());
+		spdk_thread_send_msg(mch->thread, malloc_completion_msg, mch);
+	}
 }
 
 static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_malloc_disks);
@@ -1049,12 +1061,18 @@ malloc_completion_poller(void *ctx)
 
 	while (!TAILQ_EMPTY(&completed_tasks)) {
 		task = TAILQ_FIRST(&completed_tasks);
-		TAILQ_REMOVE(&completed_tasks, task, tailq);
+		TAILQ_REMOVE_CLEAR(&completed_tasks, task, tailq);
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), task->status);
 		num_completions++;
 	}
 
 	return num_completions > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+}
+
+static void
+malloc_completion_msg(void *ctx)
+{
+	malloc_completion_poller(ctx);
 }
 
 static int
@@ -1068,14 +1086,20 @@ malloc_create_channel_cb(void *io_device, void *ctx)
 		return -ENOMEM;
 	}
 
+	TAILQ_INIT(&ch->completed_tasks);
+
+	if (spdk_interrupt_mode_is_enabled()) {
+		/* A period-0 poller would keep the reactor runnable. */
+		ch->thread = spdk_get_thread();
+		return 0;
+	}
+
 	ch->completion_poller = SPDK_POLLER_REGISTER(malloc_completion_poller, ch, 0);
 	if (!ch->completion_poller) {
 		SPDK_ERRLOG("Failed to register malloc completion poller\n");
 		spdk_put_io_channel(ch->accel_channel);
 		return -ENOMEM;
 	}
-
-	TAILQ_INIT(&ch->completed_tasks);
 
 	return 0;
 }
