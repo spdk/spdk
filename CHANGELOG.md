@@ -2,6 +2,12 @@
 
 ## v26.09: (Upcoming Release)
 
+### nvme
+
+Added initiator-side interrupt mode support for the RDMA transport. Applications can now enable
+interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
+a completion channel instead of continuously polling.
+
 ### nvmf
 
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
