@@ -1860,6 +1860,13 @@ nvme_ctrlr_reinitialize_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme
 	return rc;
 }
 
+static void
+nvme_ctrlr_free_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
+{
+	RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
+	spdk_free(ns);
+}
+
 /**
  * This function will be called when the controller is being reinitialized.
  * Note: the ctrlr_lock must be held when calling this function.
@@ -1917,8 +1924,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
 		if (!ns->active) {
-			RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
-			spdk_free(ns);
+			nvme_ctrlr_free_ns(ctrlr, ns);
 		}
 	}
 
@@ -4685,8 +4691,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
 		nvme_ns_clear(ns);
-		RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
-		spdk_free(ns);
+		nvme_ctrlr_free_ns(ctrlr, ns);
 	}
 
 	spdk_bit_array_free(&ctrlr->free_io_qids);
