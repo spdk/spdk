@@ -786,7 +786,9 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
-	ns->active = ns->nsdata.ncap != 0;
+	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+
+	ns->active = nsdata->ncap != 0;
 	ns->identify_pending = false;
 }
 

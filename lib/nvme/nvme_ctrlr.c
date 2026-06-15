@@ -2785,14 +2785,12 @@ static int
 nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data *nsdata;
-
-	nsdata = &ns->nsdata;
+	uint8_t *nsdata = ns->nsdata;
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 			     ctrlr->opts.admin_timeout_ms);
 	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
-				       nsdata, sizeof(*nsdata),
+				       nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
 				       nvme_ctrlr_identify_ns_async_done, ns);
 }
 
@@ -4990,9 +4988,9 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 
 	tmp.id = nsid;
 	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-
 	if (ns == NULL) {
-		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns) + nvme_ctrlr_get_nsdata_size(ctrlr),
+				  SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ns == NULL) {
 			nvme_ctrlr_unlock(ctrlr);
 			return NULL;

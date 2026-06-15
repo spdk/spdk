@@ -607,9 +607,6 @@ struct spdk_nvme_ns {
 	uint32_t			ana_group_id;
 	enum spdk_nvme_ana_state	ana_state;
 
-	/* Identify Namespace data. */
-	struct spdk_nvme_ns_data	nsdata;
-
 	/* I/O Command Set Specific Identify Namespace data. */
 	union {
 		void				*nsdata_iocs;
@@ -619,7 +616,12 @@ struct spdk_nvme_ns {
 	};
 
 	RB_ENTRY(spdk_nvme_ns)		node;
+
+	/* Identify Namespace data, co-allocated with the struct. */
+	uint8_t				nsdata[];
 };
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_ns, nsdata) % 8 == 0,
+		   "nsdata[] must be 8-byte aligned");
 
 #define NVME_CTRLR_LOG_FMT "%s%s%s%s%s,cntlid:%u"
 #define NVME_CTRLR_LOG_ARGS(ctrlr) \
@@ -1327,6 +1329,12 @@ nvme_ctrlr_unlock(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
+static inline size_t
+nvme_ctrlr_get_nsdata_size(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return SPDK_NVME_IDENTIFY_BUFLEN;
+}
+
 /* Poll group management functions. */
 int nvme_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair);
 int nvme_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair);
@@ -1466,13 +1474,19 @@ int nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 static inline struct spdk_nvme_ns_data *
 nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
-	return &ns->nsdata;
+	return (struct spdk_nvme_ns_data *)ns->nsdata;
 }
 
 static inline uint8_t *
 nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns)
 {
-	return ns->nsdata.vendor_specific;
+	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+
+	if (!nsdata) {
+		return NULL;
+	}
+
+	return nsdata->vendor_specific;
 }
 
 int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);

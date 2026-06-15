@@ -560,7 +560,7 @@ nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, si
 const uint8_t *
 spdk_nvme_ns_get_nguid(const struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = &ns->nsdata;
+	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data((struct spdk_nvme_ns *)ns);
 
 	if (spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		return NULL;
@@ -634,7 +634,7 @@ nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 void
 nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns)
 {
-	struct spdk_nvme_ns_data *nsdata = &ns->nsdata;
+	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	const void *val;
 	size_t val_size;

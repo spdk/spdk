@@ -39,7 +39,7 @@ ut_ns_alloc(uint32_t id, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ns *ns;
 
-	ns = calloc(1, sizeof(*ns));
+	ns = calloc(1, sizeof(*ns) + nvme_ctrlr_get_nsdata_size(ctrlr));
 	SPDK_CU_ASSERT_FATAL(ns != NULL);
 	ns->id = id;
 	ns->ctrlr = ctrlr;
