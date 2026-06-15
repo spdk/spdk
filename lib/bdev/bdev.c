@@ -8417,6 +8417,11 @@ bdev_register(struct spdk_bdev *bdev)
 		return -EINVAL;
 	}
 
+	if (!bdev->blocklen) {
+		SPDK_ERRLOG("Bdev block length must be non-zero\n");
+		return -EINVAL;
+	}
+
 	/* Users often register their own I/O devices using the bdev name. In
 	 * order to avoid conflicts, prepend bdev_. */
 	bdev_name = spdk_sprintf_alloc("bdev_%s", bdev->name);

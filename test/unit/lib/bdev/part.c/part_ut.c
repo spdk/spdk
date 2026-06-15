@@ -254,6 +254,7 @@ part_test(void)
 	int rc;
 
 	bdev_base.name = "base";
+	bdev_base.blocklen = 512;
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
@@ -298,6 +299,7 @@ part_free_test(void)
 	int rc;
 
 	bdev_base.name = "base";
+	bdev_base.blocklen = 512;
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
@@ -399,6 +401,7 @@ part_construct_ext(void)
 	int rc;
 
 	bdev_base.name = "base";
+	bdev_base.blocklen = 512;
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = &bdev_ut_if;
 	rc = spdk_bdev_register(&bdev_base);
