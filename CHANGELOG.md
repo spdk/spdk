@@ -70,6 +70,22 @@ Added `spdk_nvme_ns_get_data_head()` which returns the header struct in all
 modes; `spdk_nvme_ns_get_data()` returns NULL when `ns_data_alloc_mode` is
 `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD` or `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4`.
 
+Added `spdk_nvme_ns_get_format()` to copy a single LBA format entry by index,
+`spdk_nvme_ns_get_active_format_index()` to obtain the active format index
+directly from a namespace handle, and `spdk_nvme_ns_get_vendor_specific()`
+to reach the vendor-specific payload (NULL in the same modes as `spdk_nvme_ns_get_data()`).
+
+`spdk_nvme_ns_get_format_index()` is deprecated and will be removed in v27.01;
+use `spdk_nvme_ns_get_active_format_index()` instead.
+
+`spdk_nvme_ns_get_nguid()` is deprecated and will be removed in v27.01; read
+`nguid` directly from `spdk_nvme_ns_get_data_head(ns)`.
+
+The default value of `spdk_nvme_ctrlr_opts.ns_data_alloc_mode` will flip from
+`FULL` to `HEAD` in v27.01. Applications consuming `vendor_specific[]` must
+set the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` explicitly to retain
+current behavior.
+
 ### nvmf
 
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
