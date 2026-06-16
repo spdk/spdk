@@ -42,6 +42,7 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 	     spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 DEFINE_STUB_V(nvme_ns_set_id_desc_list_data, (struct spdk_nvme_ns *ns, const uint8_t *buf,
 		size_t buf_len));
+DEFINE_STUB_V(nvme_ns_reset_id_desc_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_ns_free_iocs_specific_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,

@@ -297,11 +297,10 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_ctrlr                  *ctrlr = ns->ctrlr;
 	int                                     rc;
 
-	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
-
 	if ((ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
 	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
+		nvme_ns_reset_id_desc_data(ns);
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
 	}
@@ -312,9 +311,11 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 		return -ENOMEM;
 	}
 
+	nvme_ctrlr_clear_identify_scratch(ctrlr);
+
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Attempting to retrieve NS ID Descriptor List\n");
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
-				     0, ns->id_desc_list, sizeof(ns->id_desc_list),
+				     0, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN,
 				     nvme_completion_poll_cb, status);
 	if (rc < 0) {
 		free(status);
@@ -324,10 +325,10 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
 		NVME_CTRLR_WARNLOG(ctrlr, "Failed to retrieve NS ID Descriptor List\n");
-		memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+		nvme_ctrlr_clear_identify_scratch(ctrlr);
 	}
 
-	nvme_ns_set_id_desc_list_data(ns, ns->id_desc_list, sizeof(ns->id_desc_list));
+	nvme_ns_set_id_desc_list_data(ns, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN);
 	return rc;
 }
 
@@ -614,35 +615,7 @@ nvme_ns_backfill_nsdata(const struct spdk_nvme_ns_id_desc *desc, void *dst, size
 const struct spdk_uuid *
 spdk_nvme_ns_get_uuid(const struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_id_desc *desc;
-
-	desc = nvme_ns_find_id_desc(ns->id_desc_list, sizeof(ns->id_desc_list), SPDK_NVME_NIDT_UUID);
-	if (desc && !nvme_ns_check_desc_len(desc, sizeof(struct spdk_uuid), "UUID", ns->ctrlr)) {
-		return NULL;
-	}
-
-	return desc ? (const struct spdk_uuid *)desc->nid : NULL;
-}
-
-static enum spdk_nvme_csi
-nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
-	const struct spdk_nvme_ns_id_desc *desc;
-
-	desc = nvme_ns_find_id_desc(ns->id_desc_list, sizeof(ns->id_desc_list), SPDK_NVME_NIDT_CSI);
-	if (desc && !nvme_ns_check_desc_len(desc, sizeof(uint8_t), "CSI", ns->ctrlr))
-	{
-		return SPDK_NVME_CSI_NVM;
-	}
-
-	if (!desc)
-	{
-		if (ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS) {
-			NVME_CTRLR_WARNLOG(ns->ctrlr, "CSI not reported for NSID: %" PRIu32 "\n", ns->id);
-		}
-		return SPDK_NVME_CSI_NVM;
-	}
-
-	return desc->nid[0];
+	return ns->has_uuid ? &ns->uuid : NULL;
 }
 
 void
@@ -652,7 +625,7 @@ nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, size_
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	const struct spdk_nvme_ns_id_desc *desc;
 
-	ns->csi = nvme_ns_get_csi(ns);
+	ns->has_uuid = false;
 
 	desc = nvme_ns_find_id_desc(buf, buf_len, SPDK_NVME_NIDT_NGUID);
 	if (desc && nvme_ns_check_desc_len(desc, sizeof(nsdata->nguid), "NGUID", ctrlr)) {
@@ -662,6 +635,22 @@ nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, size_
 	desc = nvme_ns_find_id_desc(buf, buf_len, SPDK_NVME_NIDT_EUI64);
 	if (desc && nvme_ns_check_desc_len(desc, sizeof(nsdata->eui64), "EUI64", ctrlr)) {
 		nvme_ns_backfill_nsdata(desc, &nsdata->eui64, sizeof(nsdata->eui64), "EUI64", ctrlr);
+	}
+
+	desc = nvme_ns_find_id_desc(buf, buf_len, SPDK_NVME_NIDT_UUID);
+	if (desc && nvme_ns_check_desc_len(desc, sizeof(ns->uuid), "UUID", ctrlr)) {
+		memcpy(&ns->uuid, desc->nid, sizeof(ns->uuid));
+		ns->has_uuid = true;
+	}
+
+	desc = nvme_ns_find_id_desc(buf, buf_len, SPDK_NVME_NIDT_CSI);
+	if (!desc && ns->ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS) {
+		NVME_CTRLR_WARNLOG(ns->ctrlr, "CSI not reported for NSID: %" PRIu32 "\n", ns->id);
+	}
+
+	ns->csi = SPDK_NVME_CSI_NVM;
+	if (desc && nvme_ns_check_desc_len(desc, sizeof(uint8_t), "CSI", ctrlr)) {
+		ns->csi = desc->nid[0];
 	}
 }
 
@@ -787,6 +776,14 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 }
 
 void
+nvme_ns_reset_id_desc_data(struct spdk_nvme_ns *ns)
+{
+	ns->has_uuid = false;
+	memset(&ns->uuid, 0, sizeof(ns->uuid));
+	ns->csi = SPDK_NVME_CSI_NVM;
+}
+
+void
 nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
 	if (!ns->id) {
@@ -794,7 +791,7 @@ nvme_ns_clear(struct spdk_nvme_ns *ns)
 	}
 
 	memset(ns->nsdata, 0, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
-	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+	nvme_ns_reset_id_desc_data(ns);
 	nvme_ns_free_iocs_specific_data(ns);
 	ns->sector_size = 0;
 	ns->extended_lba_size = 0;
@@ -804,7 +801,6 @@ nvme_ns_clear(struct spdk_nvme_ns *ns)
 	ns->sectors_per_max_io_no_md = 0;
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
-	ns->csi = SPDK_NVME_CSI_NVM;
 	ns->active = false;
 	ns->identify_pending = false;
 }

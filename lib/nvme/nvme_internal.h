@@ -601,8 +601,9 @@ struct spdk_nvme_ns {
 	/* Command Set Identifier */
 	enum spdk_nvme_csi		csi;
 
-	/* Namespace Identification Descriptor List (CNS = 03h) */
-	uint8_t				id_desc_list[4096];
+	/* Parsed from Namespace Identification Descriptor List (CNS = 03h). */
+	struct spdk_uuid		uuid;
+	bool				has_uuid;
 
 	uint32_t			ana_group_id;
 	enum spdk_nvme_ana_state	ana_state;
@@ -1509,6 +1510,7 @@ void	nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
 bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_identify(struct spdk_nvme_ns *ns);
+void	nvme_ns_reset_id_desc_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_clear(struct spdk_nvme_ns *ns);
 int	nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 					void *buffer, void *metadata, uint64_t zslba,

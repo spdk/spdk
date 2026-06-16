@@ -3042,10 +3042,11 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 		 */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
+		nvme_ns_reset_id_desc_data(ns);
 		return;
 	}
 
-	nvme_ns_set_id_desc_list_data(ns, ns->id_desc_list, sizeof(ns->id_desc_list));
+	nvme_ns_set_id_desc_list_data(ns, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN);
 
 	/* move on to the next active NS */
 	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
@@ -3067,12 +3068,12 @@ nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
+	nvme_ctrlr_clear_identify_scratch(ctrlr);
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS,
 			     ctrlr->opts.admin_timeout_ms);
 	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST,
-				       0, ns->id, 0, ns->id_desc_list, sizeof(ns->id_desc_list),
+				       0, ns->id, 0, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN,
 				       nvme_ctrlr_identify_id_desc_async_done, ns);
 }
 
