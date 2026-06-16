@@ -4585,6 +4585,14 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
+	ctrlr->identify_scratch = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
+					       SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!ctrlr->identify_scratch) {
+		pthread_mutex_destroy(&ctrlr->ctrlr_lock);
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate identify scratch\n");
+		return -ENOMEM;
+	}
+
 	TAILQ_INIT(&ctrlr->active_procs);
 	STAILQ_INIT(&ctrlr->register_operations);
 
@@ -4625,6 +4633,9 @@ void
 nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc;
+
+	spdk_free(ctrlr->identify_scratch);
+	ctrlr->identify_scratch = NULL;
 
 	if (ctrlr->lock_depth > 0) {
 		NVME_CTRLR_ERRLOG(ctrlr, "lock currently held (depth=%d)!\n", ctrlr->lock_depth);

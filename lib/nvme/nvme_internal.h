@@ -1155,6 +1155,8 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
 	struct spdk_nvme_kv_ctrlr_data	*cdata_kv;
 
+	uint8_t				*identify_scratch;
+
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
