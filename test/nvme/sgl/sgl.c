@@ -325,16 +325,17 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	struct io_request *req;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
-	const struct spdk_nvme_ns_data *nsdata;
+	const struct spdk_nvme_ns_data_head *nsdata;
 
 	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
 	if (!ns) {
 		fprintf(stderr, "Null namespace\n");
 		return 0;
 	}
-	nsdata = spdk_nvme_ns_get_data(ns);
-	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
-		fprintf(stderr, "Empty nsdata or wrong sector size\n");
+
+	nsdata = spdk_nvme_ns_get_data_head(ns);
+	if (!spdk_nvme_ns_get_sector_size(ns)) {
+		fprintf(stderr, "Wrong sector size\n");
 		return 0;
 	}
 

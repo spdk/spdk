@@ -446,7 +446,6 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 	struct io_request *req;
 	struct spdk_nvme_ns *ns;
 	struct spdk_nvme_qpair *qpair;
-	const struct spdk_nvme_ns_data *nsdata;
 
 	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
 	if (!ns) {
@@ -458,9 +457,8 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 		return 0;
 	}
 
-	nsdata = spdk_nvme_ns_get_data(ns);
-	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
-		fprintf(stderr, "Empty nsdata or wrong sector size\n");
+	if (!spdk_nvme_ns_get_sector_size(ns)) {
+		fprintf(stderr, "Wrong sector size\n");
 		return -EINVAL;
 	}
 

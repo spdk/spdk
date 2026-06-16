@@ -224,6 +224,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		}
 	}
 
+	/* This plugin only reads header fields of the Identify NS data. */
+	opts->ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
+
 	return true;
 }
 
@@ -323,7 +326,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns;
-	const struct spdk_nvme_ns_data	*nsdata;
+	const struct spdk_nvme_ns_data_head	*nsdata;
 	struct fio_file		*f = ctx->f;
 	uint32_t		ns_id;
 	char			*p;
@@ -379,7 +382,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		g_error = true;
 		return;
 	}
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	TAILQ_FOREACH(fio_qpair, &fio_thread->fio_qpair, link) {
 		if ((fio_qpair->f == f) ||

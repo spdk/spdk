@@ -4537,6 +4537,10 @@ nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx)
 	return rc;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(nvme_ctrlr_opts_ns_data_alloc_mode_default,
+			      "spdk_nvme_ctrlr_opts.ns_data_alloc_mode default flips to HEAD",
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -4568,6 +4572,10 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 				  "admin_queue_size %u is less than minimum defined by NVMe spec, use min value\n",
 				  ctrlr->opts.admin_queue_size);
 		ctrlr->opts.admin_queue_size = SPDK_NVME_ADMIN_QUEUE_MIN_ENTRIES;
+	}
+
+	if (ctrlr->opts.ns_data_alloc_mode == SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT) {
+		SPDK_LOG_DEPRECATED(nvme_ctrlr_opts_ns_data_alloc_mode_default);
 	}
 
 	ctrlr->flags = 0;

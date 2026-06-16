@@ -2863,6 +2863,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 	memcpy(opts->hostnqn, g_hostnqn, sizeof(opts->hostnqn));
+	/* This app may read vendor_specific data, keep full-nsdata allocation. */
+	opts->ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_FULL;
 	return true;
 }
 
@@ -2918,6 +2920,9 @@ main(int argc, char **argv)
 		if (g_hostnqn[0] != '\0') {
 			memcpy(opts.hostnqn, g_hostnqn, sizeof(opts.hostnqn));
 		}
+
+		/* This app may read vendor_specific data, keep full-nsdata allocation. */
+		opts.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_FULL;
 		ctrlr = spdk_nvme_connect(&g_trid.trid, &opts, sizeof(opts));
 		if (!ctrlr) {
 			fprintf(stderr, "spdk_nvme_connect() failed\n");

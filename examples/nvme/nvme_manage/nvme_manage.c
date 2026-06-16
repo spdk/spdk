@@ -46,6 +46,8 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	/* This app may read vendor_specific data, keep full-nsdata allocation. */
+	opts->ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_FULL;
 	return true;
 }
 

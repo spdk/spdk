@@ -228,7 +228,7 @@ get_fdp(struct spdk_nvme_ns *ns)
 	int ret;
 	uint32_t cdw11;
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	g_outstanding_commands = 0;
 	g_fdp_command_result = -1;
@@ -448,7 +448,7 @@ get_fdp_cfg_log_page(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_fdp_cfg_log_page *fdp_cfg_log_page;
 	struct spdk_nvme_fdp_cfg_descriptor *cfg_desc;
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 	void *log;
 
 	g_outstanding_commands = 0;
@@ -565,7 +565,7 @@ get_fdp_ruhu_log_page(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_fdp_ruhu_log_page *fdp_ruhu_log_page;
 	struct spdk_nvme_fdp_ruhu_descriptor *ruhu_desc;
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	g_outstanding_commands = 0;
 	g_fdp_command_result = -1;
@@ -651,7 +651,7 @@ get_fdp_stats_log_page(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_fdp_stats_log_page fdp_stats_log_page;
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	g_outstanding_commands = 0;
 	g_fdp_command_result = -1;
@@ -699,7 +699,7 @@ get_fdp_events_log_page(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_fdp_event *event;
 	struct spdk_nvme_fdp_event_media_reallocated *media_reallocated;
 	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	g_outstanding_commands = 0;
 	g_fdp_command_result = -1;
@@ -892,7 +892,7 @@ static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
-	const struct spdk_nvme_ns_data *nsdata = spdk_nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	entry = malloc(sizeof(struct ns_entry));
 	if (entry == NULL) {

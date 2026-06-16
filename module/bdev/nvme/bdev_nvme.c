@@ -4190,7 +4190,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 	const struct spdk_nvme_ctrlr_data *cdata;
 	const struct spdk_nvme_transport_id *trid;
 	union spdk_nvme_vs_register vs;
-	const struct spdk_nvme_ns_data *nsdata;
+	const struct spdk_nvme_ns_data_head *nsdata;
 	char buf[128];
 
 	ns = nvme_ns->ns;
@@ -4274,7 +4274,7 @@ nvme_namespace_info_json(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_end(w);
 
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	spdk_json_write_named_object_begin(w, "ns_data");
 
@@ -4939,11 +4939,11 @@ nvme_bdev_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns)
 static bool
 bdev_nvme_compare_ns(struct spdk_nvme_ns *ns1, struct spdk_nvme_ns *ns2)
 {
-	const struct spdk_nvme_ns_data *nsdata1, *nsdata2;
+	const struct spdk_nvme_ns_data_head *nsdata1, *nsdata2;
 	const struct spdk_uuid *uuid1, *uuid2;
 
-	nsdata1 = spdk_nvme_ns_get_data(ns1);
-	nsdata2 = spdk_nvme_ns_get_data(ns2);
+	nsdata1 = spdk_nvme_ns_get_data_head(ns1);
+	nsdata2 = spdk_nvme_ns_get_data_head(ns2);
 	uuid1 = spdk_nvme_ns_get_uuid(ns1);
 	uuid2 = spdk_nvme_ns_get_uuid(ns2);
 
@@ -5189,11 +5189,11 @@ static int
 nvme_bdev_add_ns(struct nvme_bdev *nbdev, struct nvme_ns *nvme_ns)
 {
 	struct nvme_ns *tmp_ns;
-	const struct spdk_nvme_ns_data *nsdata;
+	const struct spdk_nvme_ns_data_head *nsdata;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	nsdata = spdk_nvme_ns_get_data(nvme_ns->ns);
+	nsdata = spdk_nvme_ns_get_data_head(nvme_ns->ns);
 	if (!nsdata->nmic.shrns) {
 		NVME_NS_ERRLOG(nvme_ns, "Namespace cannot be shared.\n");
 		return -EINVAL;
@@ -7141,6 +7141,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	ctx->drv_opts.keep_alive_timeout_ms = g_opts.keep_alive_timeout_ms;
 	ctx->drv_opts.disable_read_ana_log_page = true;
 	ctx->drv_opts.transport_tos = g_opts.transport_tos;
+	/* This module only reads header fields of the Identify NS data. */
+	ctx->drv_opts.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE ||

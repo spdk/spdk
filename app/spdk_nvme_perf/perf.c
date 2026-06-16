@@ -1254,7 +1254,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
 	entry->md_size = spdk_nvme_ns_get_md_size(ns);
 	entry->md_interleave = spdk_nvme_ns_supports_extended_lba(ns);
-	entry->pi_loc = spdk_nvme_ns_get_data(ns)->dps.md_start;
+	entry->pi_loc = spdk_nvme_ns_get_data_head(ns)->dps.md_start;
 	entry->pi_type = spdk_nvme_ns_get_pi_type(ns);
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
@@ -3011,6 +3011,9 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	if (opts->num_io_queues < g_num_workers * g_nr_io_queues_per_ns) {
 		opts->num_io_queues = g_num_workers * g_nr_io_queues_per_ns;
 	}
+
+	/* This app only reads header fields of the Identify NS data. */
+	opts->ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
 
 	return true;
 }

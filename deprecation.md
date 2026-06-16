@@ -83,6 +83,19 @@ Use `spdk_nvme_ns_get_active_format_index` instead.
 `spdk_nvme_ns_get_nguid()` is deprecated and will be removed in v27.01. Read `nguid` directly from
 `spdk_nvme_ns_get_data_head(ns)` (compatible with both full and head-only nsdata allocations).
 
+#### `nvme_ctrlr_opts_ns_data_alloc_mode_default`
+
+`spdk_nvme_ctrlr_opts.ns_data_alloc_mode` defaults to `SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT`,
+which today resolves to `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` (the legacy 4 KB per-namespace
+allocation including `vendor_specific[]`). The default will flip to
+`SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD` in v27.01 to reduce the per-namespace memory footprint.
+
+Applications that read `vendor_specific[]` via `spdk_nvme_ns_get_vendor_specific()` must set the
+field to `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` explicitly to retain current behavior; setting it
+explicitly also silences this deprecation log. All other applications should switch to
+`spdk_nvme_ns_get_data_head()` and either rely on the upcoming default flip or opt in early by
+setting the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`.
+
 ### nvmf
 
 #### `nvmf_namespace_hide_metadata`
