@@ -58,6 +58,11 @@ enum spdk_nvme_ns_data_alloc_mode {
 	 * the cost of vendor_specific[] visibility.
 	 */
 	SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD,
+	/**
+	 * Like HEAD, but only the first 4 LBA formats (saves 240 B). Formats beyond 0..3 are
+	 * truncated with a warning; an active format index >= 4 marks the namespace inactive.
+	 */
+	SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4,
 };
 
 /**
@@ -3283,8 +3288,7 @@ void spdk_nvme_poll_group_free_stats(struct spdk_nvme_poll_group *group,
  *
  * \param ns Namespace.
  *
- * \return a pointer to the namespace data, or NULL when ns_data_alloc_mode is
- * SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD.
+ * \return a pointer to the namespace data, or NULL in non-FULL mode.
  */
 const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns);
 
@@ -3497,8 +3501,12 @@ const void *spdk_nvme_ns_get_vendor_specific(struct spdk_nvme_ns *ns);
 /**
  * Copy a single LBA format entry from a namespace.
  *
+ * Indexing constraints depend on ns_data_alloc_mode:
+ *   - FULL / HEAD: index must be <= min(nlbaf, 63)
+ *   - HEAD_LBAF_4: index must be <= min(nlbaf, 3)
+ *
  * \param ns Namespace.
- * \param format_index Index into the lbaf array. Must satisfy format_index <= nlbaf.
+ * \param format_index Index into the lbaf array. See indexing constraints above.
  * \param lbaf Output buffer that receives the copy. Must be non-NULL.
  *
  * \return 0 on success, negative errno on failure.

@@ -648,8 +648,7 @@ struct spdk_nvme_ns {
 
 	/*
 	 * Identify Namespace data, co-allocated with the struct.
-	 * In head-only mode holds struct spdk_nvme_ns_data_head immediately followed
-	 * by spdk_nvme_ns_data_lbaf[SPDK_NVME_NS_MAX_LBA_FORMATS] entries.
+	 * In subset modes: spdk_nvme_ns_data_head followed by N LBAF entries.
 	 */
 	uint8_t				nsdata[];
 };
@@ -1367,13 +1366,23 @@ nvme_ctrlr_unlock(struct spdk_nvme_ctrlr *ctrlr)
 static inline bool
 nvme_ctrlr_nsdata_subset(const struct spdk_nvme_ctrlr *ctrlr)
 {
-	return ctrlr->opts.ns_data_alloc_mode == SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
+	uint8_t mode = ctrlr->opts.ns_data_alloc_mode;
+
+	return mode == SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD ||
+	       mode == SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4;
 }
+
+#define NVME_NS_DATA_LBAF_INLINE 4
+
+SPDK_STATIC_ASSERT(NVME_NS_DATA_LBAF_INLINE <= SPDK_NVME_NS_MAX_LBA_FORMATS,
+		   "Inline LBAF count exceeds spec maximum");
 
 static inline uint8_t
 nvme_ctrlr_nsdata_lbaf_inline_count(const struct spdk_nvme_ctrlr *ctrlr)
 {
-	(void)ctrlr;
+	if (ctrlr->opts.ns_data_alloc_mode == SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4) {
+		return NVME_NS_DATA_LBAF_INLINE;
+	}
 
 	return SPDK_NVME_NS_MAX_LBA_FORMATS;
 }

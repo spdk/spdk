@@ -93,7 +93,9 @@ Applications that read `vendor_specific[]` via `spdk_nvme_ns_get_vendor_specific
 field to `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` explicitly to retain current behavior; setting it
 explicitly also silences this deprecation log. All other applications should switch to
 `spdk_nvme_ns_get_data_head()` and either rely on the upcoming default flip or opt in early by
-setting the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`.
+setting the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`. Applications that scale namespace
+count aggressively and can guarantee attached controllers advertise `NLBAF` < 4 can opt in to
+`SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4` for a further 240 B per-namespace saving over HEAD.
 
 ### nvmf
 

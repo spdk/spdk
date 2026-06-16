@@ -431,6 +431,68 @@ test_nvme_ns_data_alloc_mode(void)
 	CU_ASSERT(spdk_nvme_ns_get_data_head(ns) == nsdata);
 	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1234);
 
+	/* LBAF_4: spdk_nvme_ns_get_data() returns NULL just like HEAD. */
+	ctrlr.opts.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4;
+	CU_ASSERT(spdk_nvme_ns_get_data(ns) == NULL);
+	CU_ASSERT(spdk_nvme_ns_get_data_head(ns) == nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1234);
+
+	ut_ns_free(ns);
+}
+
+static void
+test_nvme_ns_data_alloc_mode_lbaf_4(void)
+{
+	uint8_t identify[SPDK_NVME_IDENTIFY_BUFLEN] = {};
+	struct spdk_nvme_ctrlr ctrlr = {.opts = {.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4}};
+	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
+	struct spdk_nvme_ns_data_head *nsdata = (void *)identify;
+	struct spdk_nvme_ns_data_lbaf *lbaf_array = (void *)(identify +
+			sizeof(struct spdk_nvme_ns_data_head));
+	struct spdk_nvme_ns_data_lbaf lbaf;
+	uint32_t i;
+
+	CU_ASSERT(nvme_ctrlr_nsdata_subset(&ctrlr) == true);
+	CU_ASSERT(nvme_ctrlr_nsdata_lbaf_inline_count(&ctrlr) == NVME_NS_DATA_LBAF_INLINE);
+	CU_ASSERT(nvme_ctrlr_get_nsdata_size(&ctrlr) == sizeof(struct spdk_nvme_ns_data_head) +
+		  NVME_NS_DATA_LBAF_INLINE * sizeof(struct spdk_nvme_ns_data_lbaf));
+
+	/* Drive nvme_ns_set_identify_data advertising nlbaf=8. */
+	nsdata->nlbaf = 8;
+	nsdata->ncap = 1;
+	nsdata->flbas.format = 0;
+	for (i = 0; i < SPDK_NVME_NS_MAX_LBA_FORMATS; i++) {
+		lbaf_array[i].lbads = 9 + i;
+		lbaf_array[i].ms = i;
+	}
+
+	/* Production subset path copies only nsdata_size bytes from the 4 KB Identify buffer. */
+	memcpy(ns->nsdata, identify, nvme_ctrlr_get_nsdata_size(&ctrlr));
+	nvme_ns_set_identify_data(ns);
+
+	/* Only formats 0..3 are reachable through the accessor. */
+	for (i = 0; i < NVME_NS_DATA_LBAF_INLINE; i++) {
+		memset(&lbaf, 0xFF, sizeof(lbaf));
+		CU_ASSERT(spdk_nvme_ns_get_format(ns, i, &lbaf) == 0);
+		CU_ASSERT(lbaf.lbads == 9 + i);
+		CU_ASSERT(lbaf.ms == i);
+	}
+
+	memset(&lbaf, 0xFF, sizeof(lbaf));
+	CU_ASSERT(spdk_nvme_ns_get_format(ns, NVME_NS_DATA_LBAF_INLINE, &lbaf) == -EINVAL);
+	CU_ASSERT(spdk_nvme_ns_get_format(ns, SPDK_NVME_NS_MAX_LBA_FORMATS - 1, &lbaf) == -EINVAL);
+
+	/* Active format index itself unreachable. */
+	nsdata->flbas.format = NVME_NS_DATA_LBAF_INLINE;
+
+	memcpy(ns->nsdata, identify, nvme_ctrlr_get_nsdata_size(&ctrlr));
+	nvme_ns_set_identify_data(ns);
+
+	CU_ASSERT(ns->active == false);
+	CU_ASSERT(spdk_nvme_ns_is_active(ns) == false);
+	CU_ASSERT(ns->sector_size == 0);
+	CU_ASSERT(ns->md_size == 0);
+
 	ut_ns_free(ns);
 }
 
@@ -614,6 +676,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_csi);
 	CU_ADD_TEST(suite, test_nvme_ns_data);
 	CU_ADD_TEST(suite, test_nvme_ns_data_alloc_mode);
+	CU_ADD_TEST(suite, test_nvme_ns_data_alloc_mode_lbaf_4);
 	CU_ADD_TEST(suite, test_nvme_ns_set_identify_data);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_get_values);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_is_active);

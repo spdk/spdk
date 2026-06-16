@@ -51,17 +51,24 @@ Removed the deprecated named `bits` alias from `spdk_nvme_cdata_ctratt`. Use the
 bitfields directly.
 
 Added `spdk_nvme_ctrlr_opts.ns_data_alloc_mode` and the matching
-`enum spdk_nvme_ns_data_alloc_mode` with three values:
+`enum spdk_nvme_ns_data_alloc_mode` with four values:
 
 - `SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT` (current behavior; today FULL),
 - `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` (legacy 4 KB Identify Namespace allocation
-  including `vendor_specific[]`), and
+  including `vendor_specific[]`),
 - `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD` (header subset `struct spdk_nvme_ns_data_head`
-  plus `lbaf[]`, ~3.6 KB smaller per namespace, no `vendor_specific[]`).
+  plus `lbaf[]`, ~3.6 KB smaller per namespace, no `vendor_specific[]`), and
+- `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4` (header subset plus only the first
+  4 `lbaf[]` entries, saving an additional 240 B per namespace versus HEAD; intended
+  for deployments that scale namespace count and can guarantee attached controllers
+  advertise `NLBAF < 4`. If a controller exposes more formats a warning is logged
+  and only formats 0..3 remain reachable through `spdk_nvme_ns_get_format()`. If a
+  namespace's active format index itself is `>= 4`, an error is logged and that
+  namespace is marked inactive rather than exposed with invalid geometry).
 
 Added `spdk_nvme_ns_get_data_head()` which returns the header struct in all
 modes; `spdk_nvme_ns_get_data()` returns NULL when `ns_data_alloc_mode` is
-`SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`.
+`SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD` or `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4`.
 
 ### nvmf
 

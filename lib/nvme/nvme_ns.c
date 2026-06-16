@@ -19,6 +19,14 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	struct spdk_nvme_ns_data_lbaf	lbaf;
 	uint32_t			format_index;
+	uint8_t				inline_count = nvme_ctrlr_nsdata_lbaf_inline_count(ctrlr);
+
+	if (nsdata->nlbaf >= inline_count) {
+		NVME_CTRLR_WARNLOG(ctrlr,
+				   "ns %u advertises nlbaf=%" PRIu8 " but only %" PRIu8 " lbaf entries are "
+				   "retained; only formats 0..%" PRIu8 " are accessible\n",
+				   ns->id, nsdata->nlbaf, inline_count, inline_count - 1);
+	}
 
 	ns->identify_pending = false;
 	ns->active = spdk_nvme_ns_is_active(ns);
@@ -31,6 +39,14 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 
 	ns->flags = 0x0000;
 	format_index = spdk_nvme_ns_get_active_format_index(ns);
+	if (format_index >= inline_count) {
+		NVME_CTRLR_ERRLOG(ctrlr,
+				  "ns %u active format %" PRIu32 " is beyond inline lbaf "
+				  "cap %" PRIu8 "; marking namespace inactive\n",
+				  ns->id, format_index, inline_count);
+		nvme_ns_clear(ns);
+		return;
+	}
 	spdk_nvme_ns_get_format(ns, format_index, &lbaf);
 
 	ns->sector_size = 1 << lbaf.lbads;
