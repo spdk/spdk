@@ -193,6 +193,12 @@ function confirm_abi_deps() {
 			name = spdk_nvme_ctrlr_opts
 			soname_regexp = ^libspdk_nvme\\.so\\.18\\.*$|^libspdk_bdev_nvme\\.so\\.9\\.*$
 			has_data_member_regexp = ^(reserved610|disable_sq_flow_control)$
+		[suppress_type]
+			label = Added ns_data_alloc_mode field using reserved610 space
+			name = spdk_nvme_ctrlr_opts
+			soname_regexp = ^libspdk_nvme\\.so\\.18\\.*$|^libspdk_bdev_nvme\\.so\\.9\\.*$
+			has_data_member_regexp = ^(reserved610|ns_data_alloc_mode)$
+			has_size_change = no
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

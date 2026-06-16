@@ -15,7 +15,7 @@ void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data	*nsdata = nvme_ns_get_data(ns);
+	struct spdk_nvme_ns_data_head	*nsdata = nvme_ns_get_data_head(ns);
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	struct spdk_nvme_ns_data_lbaf	lbaf;
 	uint32_t			format_index;
@@ -104,7 +104,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status	*status;
 	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data		*nsdata = nvme_ns_get_data(ns);
+	uint8_t					*nsdata;
 	int					rc;
 
 	status = calloc(1, sizeof(*status));
@@ -113,8 +113,10 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return -ENOMEM;
 	}
 
+	nsdata = nvme_ctrlr_prepare_nsdata_buf(ctrlr, ns);
+
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
-				     nsdata, sizeof(*nsdata),
+				     nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
 		free(status);
@@ -128,6 +130,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 				   spdk_strerror(abs(rc)));
 	}
 
+	nvme_ctrlr_finalize_nsdata_buf(ctrlr, ns);
 	nvme_ns_set_identify_data(ns);
 	return 0;
 }
@@ -337,7 +340,7 @@ spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 bool
 spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
 
 	/*
 	 * According to the spec, valid NS has non-zero id.
@@ -381,7 +384,7 @@ spdk_nvme_ns_get_extended_sector_size(struct spdk_nvme_ns *ns)
 uint64_t
 spdk_nvme_ns_get_num_sectors(struct spdk_nvme_ns *ns)
 {
-	return nvme_ns_get_data(ns)->nsze;
+	return nvme_ns_get_data_head(ns)->nsze;
 }
 
 uint64_t
@@ -431,7 +434,7 @@ spdk_nvme_ns_get_md_size(struct spdk_nvme_ns *ns)
 }
 
 static inline uint32_t
-nvme_ns_get_active_format_index(const struct spdk_nvme_ns_data *nsdata)
+nvme_ns_get_active_format_index(const struct spdk_nvme_ns_data_head *nsdata)
 {
 	if (nsdata->nlbaf < 16) {
 		return nsdata->flbas.format;
@@ -443,7 +446,7 @@ nvme_ns_get_active_format_index(const struct spdk_nvme_ns_data *nsdata)
 uint32_t
 spdk_nvme_ns_get_active_format_index(const struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data((struct spdk_nvme_ns *)ns);
+	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head((struct spdk_nvme_ns *)ns);
 
 	return nvme_ns_get_active_format_index(nsdata);
 }
@@ -457,14 +460,16 @@ spdk_nvme_ns_get_format_index(const struct spdk_nvme_ns_data *nsdata)
 {
 	SPDK_LOG_DEPRECATED(nvme_ns_get_format_index);
 
-	return nvme_ns_get_active_format_index(nsdata);
+	return nvme_ns_get_active_format_index((const struct spdk_nvme_ns_data_head *)nsdata);
 }
 
 int
 spdk_nvme_ns_get_format(struct spdk_nvme_ns *ns, uint8_t format_index,
 			struct spdk_nvme_ns_data_lbaf *lbaf)
 {
-	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
+	struct spdk_nvme_ns_data_lbaf *lbaf_array;
+	uint8_t lbaf_max;
 
 	if (!lbaf) {
 		return -EINVAL;
@@ -472,11 +477,13 @@ spdk_nvme_ns_get_format(struct spdk_nvme_ns *ns, uint8_t format_index,
 
 	memset(lbaf, 0, sizeof(*lbaf));
 
-	if (format_index > spdk_min(nsdata->nlbaf, SPDK_NVME_NS_MAX_LBA_FORMATS - 1)) {
+	lbaf_max = nvme_ctrlr_nsdata_lbaf_inline_count(ns->ctrlr);
+	if (format_index > spdk_min(nsdata->nlbaf, lbaf_max - 1)) {
 		return -EINVAL;
 	}
 
-	*lbaf = nsdata->lbaf[format_index];
+	lbaf_array = nvme_ns_get_lbaf_array(ns);
+	*lbaf = lbaf_array[format_index];
 	return 0;
 }
 
@@ -490,6 +497,12 @@ const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return nvme_ns_get_data(ns);
+}
+
+const struct spdk_nvme_ns_data_head *
+spdk_nvme_ns_get_data_head(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_get_data_head(ns);
 }
 
 const struct spdk_nvme_nvm_ns_data *
@@ -507,7 +520,7 @@ spdk_nvme_ns_get_dealloc_logical_block_read_value(
 	struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
 
 	if (ctrlr->quirks & NVME_QUIRK_READ_ZERO_AFTER_DEALLOCATE) {
 		return SPDK_NVME_DEALLOC_READ_00;
@@ -560,7 +573,7 @@ nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, si
 const uint8_t *
 spdk_nvme_ns_get_nguid(const struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data((struct spdk_nvme_ns *)ns);
+	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head((struct spdk_nvme_ns *)ns);
 
 	if (spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		return NULL;
@@ -634,7 +647,7 @@ nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 void
 nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns)
 {
-	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
+	struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	const void *val;
 	size_t val_size;
@@ -776,13 +789,11 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 void
 nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
-	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
-
 	if (!ns->id) {
 		return;
 	}
 
-	memset(nsdata, 0, sizeof(*nsdata));
+	memset(ns->nsdata, 0, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
 	memset(ns->id_desc_list, 0, sizeof(ns->id_desc_list));
 	nvme_ns_free_iocs_specific_data(ns);
 	ns->sector_size = 0;

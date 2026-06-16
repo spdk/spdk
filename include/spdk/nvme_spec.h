@@ -3414,6 +3414,12 @@ struct spdk_nvme_ns_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ns_data) == 4096, "Incorrect size");
 
+/* spdk_nvme_ns_data_head must stay the header prefix of spdk_nvme_ns_data: lbaf[]
+ * begins exactly where the header subset ends. Keep the two definitions in sync. */
+SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_ns_data, lbaf) ==
+		   sizeof(struct spdk_nvme_ns_data_head),
+		   "spdk_nvme_ns_data_head must cover everything before lbaf[]");
+
 enum spdk_nvme_pi_format {
 	SPDK_NVME_16B_GUARD_PI	= 0,
 	SPDK_NVME_32B_GUARD_PI	= 1,

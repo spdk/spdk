@@ -109,7 +109,7 @@ test_geometry_cmd(void)
 static void
 test_spdk_nvme_ctrlr_is_ocssd_supported(void)
 {
-	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ctrlr ctrlr = {.opts = {.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_FULL}};
 	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
 	uint8_t *vendor_specific = nvme_ns_get_vendor_specific(ns);
 	bool rc;

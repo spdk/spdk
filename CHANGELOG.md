@@ -26,6 +26,19 @@ Removed the deprecated `spdk_nvme_cpl_get_status_string()`, `spdk_nvme_print_com
 Removed the deprecated named `bits` alias from `spdk_nvme_cdata_ctratt`. Use the anonymous NVMe 2.3
 bitfields directly.
 
+Added `spdk_nvme_ctrlr_opts.ns_data_alloc_mode` and the matching
+`enum spdk_nvme_ns_data_alloc_mode` with three values:
+
+- `SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT` (current behavior; today FULL),
+- `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` (legacy 4 KB Identify Namespace allocation
+  including `vendor_specific[]`), and
+- `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD` (header subset `struct spdk_nvme_ns_data_head`
+  plus `lbaf[]`, ~3.6 KB smaller per namespace, no `vendor_specific[]`).
+
+Added `spdk_nvme_ns_get_data_head()` which returns the header struct in all
+modes; `spdk_nvme_ns_get_data()` returns NULL when `ns_data_alloc_mode` is
+`SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`.
+
 ### nvmf
 
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the

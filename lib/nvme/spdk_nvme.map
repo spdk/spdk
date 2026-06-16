@@ -140,6 +140,7 @@
 	spdk_nvme_poll_group_set_interrupt_callback;
 
 	spdk_nvme_ns_get_data;
+	spdk_nvme_ns_get_data_head;
 	spdk_nvme_ns_get_id;
 	spdk_nvme_ns_get_ctrlr;
 	spdk_nvme_ns_is_active;

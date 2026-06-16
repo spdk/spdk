@@ -214,6 +214,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	SET_FIELD(fabrics_connect_timeout_us, NVME_FABRIC_CONNECT_COMMAND_TIMEOUT);
 	SET_FIELD(disable_read_ana_log_page, false);
 	SET_FIELD(disable_read_changed_ns_list_log_page, false);
+	SET_FIELD(ns_data_alloc_mode, SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT);
 	SET_FIELD(tls_psk, NULL);
 	SET_FIELD(dhchap_key, NULL);
 	SET_FIELD(dhchap_ctrlr_key, NULL);
@@ -2761,6 +2762,8 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int rc;
 
+	nvme_ctrlr_finalize_nsdata_buf(ctrlr, ns);
+
 	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2785,7 +2788,7 @@ static int
 nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	uint8_t *nsdata = ns->nsdata;
+	uint8_t *nsdata = nvme_ctrlr_prepare_nsdata_buf(ctrlr, ns);
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 			     ctrlr->opts.admin_timeout_ms);

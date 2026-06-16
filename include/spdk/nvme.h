@@ -40,6 +40,27 @@ extern "C" {
 struct spdk_nvme_ctrlr;
 
 /**
+ * Allocation mode for the per-namespace Identify Namespace buffer.
+ */
+enum spdk_nvme_ns_data_alloc_mode {
+	/**
+	 * Default. Currently behaves like SPDK_NVME_NS_DATA_ALLOC_MODE_FULL.
+	 */
+	SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT = 0,
+	/**
+	 * Allocate the full 4 KB Identify Namespace buffer including vendor_specific[].
+	 * Required by consumers of spdk_nvme_ns_get_vendor_specific().
+	 */
+	SPDK_NVME_NS_DATA_ALLOC_MODE_FULL,
+	/**
+	 * Allocate only the header subset (struct spdk_nvme_ns_data_head) plus the
+	 * lbaf[SPDK_NVME_NS_MAX_LBA_FORMATS] array. Saves ~3.6 KB per namespace at
+	 * the cost of vendor_specific[] visibility.
+	 */
+	SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD,
+};
+
+/**
  * NVMe controller initialization options.
  *
  * A pointer to this structure will be provided for each probe callback from spdk_nvme_probe() to
@@ -270,11 +291,14 @@ struct spdk_nvme_ctrlr_opts {
 	 */
 	bool disable_read_ana_log_page;
 
-	/* Hole at bytes 610-615. */
-	uint8_t reserved610[6];
+	/* Hole at bytes 610-614. */
+	uint8_t reserved610[5];
 
 	/* Disable SQ flow control. Default: false (SQ flow control enabled) */
 	bool disable_sq_flow_control;
+
+	/** Values from enum spdk_nvme_ns_data_alloc_mode. */
+	uint8_t ns_data_alloc_mode;
 
 	/**
 	 * Disable reading CHANGED_NS_LIST log page in response to an NS_ATTR_CHANGED AEN
@@ -3215,11 +3239,34 @@ void spdk_nvme_poll_group_free_stats(struct spdk_nvme_poll_group *group,
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
  *
+ * Users that consume vendor_specific data must set
+ * spdk_nvme_ctrlr_opts.ns_data_alloc_mode to SPDK_NVME_NS_DATA_ALLOC_MODE_FULL.
+ *
  * \param ns Namespace.
  *
- * \return a pointer to the namespace data.
+ * \return a pointer to the namespace data, or NULL when ns_data_alloc_mode is
+ * SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD.
  */
 const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns);
+
+/**
+ * Get the header subset of the identify namespace data.
+ *
+ * This function is thread safe and can be called at any point while the
+ * controller is attached to the SPDK NVMe driver and returns a valid pointer
+ * regardless of spdk_nvme_ctrlr_opts.ns_data_alloc_mode.
+ *
+ * Users that consume lbaf data should use spdk_nvme_ns_get_format.
+ *
+ * Users that do not consume vendor_specific data should prefer this getter
+ * and set spdk_nvme_ctrlr_opts.ns_data_alloc_mode to
+ * SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD to save memory.
+ *
+ * \param ns Namespace.
+ *
+ * \return a pointer to the header subset of namespace data.
+ */
+const struct spdk_nvme_ns_data_head *spdk_nvme_ns_get_data_head(struct spdk_nvme_ns *ns);
 
 /**
  * Get the I/O command set specific identify namespace data for NVM command set

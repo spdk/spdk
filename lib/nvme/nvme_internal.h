@@ -617,7 +617,11 @@ struct spdk_nvme_ns {
 
 	RB_ENTRY(spdk_nvme_ns)		node;
 
-	/* Identify Namespace data, co-allocated with the struct. */
+	/*
+	 * Identify Namespace data, co-allocated with the struct.
+	 * In head-only mode holds struct spdk_nvme_ns_data_head immediately followed
+	 * by spdk_nvme_ns_data_lbaf[SPDK_NVME_NS_MAX_LBA_FORMATS] entries.
+	 */
 	uint8_t				nsdata[];
 };
 SPDK_STATIC_ASSERT(offsetof(struct spdk_nvme_ns, nsdata) % 8 == 0,
@@ -1331,10 +1335,54 @@ nvme_ctrlr_unlock(struct spdk_nvme_ctrlr *ctrlr)
 	return nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 }
 
-static inline size_t
-nvme_ctrlr_get_nsdata_size(struct spdk_nvme_ctrlr *ctrlr)
+static inline bool
+nvme_ctrlr_nsdata_subset(const struct spdk_nvme_ctrlr *ctrlr)
 {
+	return ctrlr->opts.ns_data_alloc_mode == SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
+}
+
+static inline uint8_t
+nvme_ctrlr_nsdata_lbaf_inline_count(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	(void)ctrlr;
+
+	return SPDK_NVME_NS_MAX_LBA_FORMATS;
+}
+
+static inline size_t
+nvme_ctrlr_get_nsdata_size(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (nvme_ctrlr_nsdata_subset(ctrlr)) {
+		return sizeof(struct spdk_nvme_ns_data_head) +
+		       nvme_ctrlr_nsdata_lbaf_inline_count(ctrlr) * sizeof(struct spdk_nvme_ns_data_lbaf);
+	}
+
 	return SPDK_NVME_IDENTIFY_BUFLEN;
+}
+
+static inline uint8_t *
+nvme_ctrlr_clear_identify_scratch(struct spdk_nvme_ctrlr *ctrlr)
+{
+	memset(ctrlr->identify_scratch, 0, SPDK_NVME_IDENTIFY_BUFLEN);
+	return ctrlr->identify_scratch;
+}
+
+static inline uint8_t *
+nvme_ctrlr_prepare_nsdata_buf(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
+{
+	if (nvme_ctrlr_nsdata_subset(ctrlr)) {
+		return nvme_ctrlr_clear_identify_scratch(ctrlr);
+	}
+
+	return ns->nsdata;
+}
+
+static inline void
+nvme_ctrlr_finalize_nsdata_buf(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
+{
+	if (nvme_ctrlr_nsdata_subset(ctrlr)) {
+		memcpy(ns->nsdata, ctrlr->identify_scratch, nvme_ctrlr_get_nsdata_size(ctrlr));
+	}
 }
 
 /* Poll group management functions. */
@@ -1476,7 +1524,23 @@ int nvme_ns_cmd_zone_appendv_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 static inline struct spdk_nvme_ns_data *
 nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
+	if (nvme_ctrlr_nsdata_subset(ns->ctrlr)) {
+		return NULL;
+	}
+
 	return (struct spdk_nvme_ns_data *)ns->nsdata;
+}
+
+static inline struct spdk_nvme_ns_data_head *
+nvme_ns_get_data_head(struct spdk_nvme_ns *ns)
+{
+	return (struct spdk_nvme_ns_data_head *)ns->nsdata;
+}
+
+static inline struct spdk_nvme_ns_data_lbaf *
+nvme_ns_get_lbaf_array(struct spdk_nvme_ns *ns)
+{
+	return (struct spdk_nvme_ns_data_lbaf *)(ns->nsdata + sizeof(struct spdk_nvme_ns_data_head));
 }
 
 static inline uint8_t *

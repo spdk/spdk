@@ -392,6 +392,35 @@ test_spdk_nvme_ns_get_values(void)
 }
 
 static void
+test_nvme_ns_data_alloc_mode(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {.opts = {.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_FULL}};
+	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
+	struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
+
+	nsdata->nsze = 1234;
+
+	/* FULL: spdk_nvme_ns_get_data() returns the full nsdata pointer. */
+	CU_ASSERT(spdk_nvme_ns_get_data(ns) == (struct spdk_nvme_ns_data *)nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_data_head(ns) == nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1234);
+
+	/* DEFAULT: behaves like FULL. */
+	ctrlr.opts.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_DEFAULT;
+	CU_ASSERT(spdk_nvme_ns_get_data(ns) == (struct spdk_nvme_ns_data *)nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_data_head(ns) == nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1234);
+
+	/* HEAD: spdk_nvme_ns_get_data() returns NULL; head accessor still works. */
+	ctrlr.opts.ns_data_alloc_mode = SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD;
+	CU_ASSERT(spdk_nvme_ns_get_data(ns) == NULL);
+	CU_ASSERT(spdk_nvme_ns_get_data_head(ns) == nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1234);
+
+	ut_ns_free(ns);
+}
+
+static void
 test_spdk_nvme_ns_is_active(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
@@ -570,6 +599,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_uuid);
 	CU_ADD_TEST(suite, test_nvme_ns_csi);
 	CU_ADD_TEST(suite, test_nvme_ns_data);
+	CU_ADD_TEST(suite, test_nvme_ns_data_alloc_mode);
 	CU_ADD_TEST(suite, test_nvme_ns_set_identify_data);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_get_values);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_is_active);
