@@ -578,6 +578,8 @@ struct spdk_nvme_transport_poll_group {
 
 struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
+	uint32_t			id;
+
 	uint32_t			sector_size;
 
 	/*
@@ -587,25 +589,24 @@ struct spdk_nvme_ns {
 	 */
 	uint32_t			extended_lba_size;
 
-	uint16_t			md_size;
-	uint8_t				pi_type			: 3;	/* \ref spdk_nvme_pi_type */
-	uint8_t				pi_format		: 2;	/* \ref spdk_nvme_pi_format */
 	uint32_t			sectors_per_max_io;
 	uint32_t			sectors_per_max_io_no_md;
 	uint32_t			sectors_per_stripe;
-	uint32_t			id;
 	uint16_t			flags;
+	uint16_t			md_size;
+	uint32_t			ana_group_id;
+	uint8_t				ana_state;			/* \ref spdk_nvme_ana_state */
+	uint8_t				pi_type			: 3;	/* \ref spdk_nvme_pi_type */
+	uint8_t				pi_format		: 2;	/* \ref spdk_nvme_pi_format */
 	uint8_t				active			: 1;
 	uint8_t				identify_pending	: 1;
 	uint8_t				has_uuid		: 1;
-
 	uint8_t				csi;				/* \ref spdk_nvme_csi */
 
 	/* Parsed from Namespace Identification Descriptor List (CNS = 03h). */
 	struct spdk_uuid		uuid;
 
-	uint32_t			ana_group_id;
-	uint8_t				ana_state;			/* \ref spdk_nvme_ana_state */
+	uint8_t				reserved59[5];
 
 	/* I/O Command Set Specific Identify Namespace data. */
 	union {
