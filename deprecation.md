@@ -78,6 +78,11 @@ a bdev of the correct size.
 `spdk_nvme_ns_get_format_index` is deprecated and will be removed in v27.01.
 Use `spdk_nvme_ns_get_active_format_index` instead.
 
+#### `spdk_nvme_ns_get_nguid`
+
+`spdk_nvme_ns_get_nguid()` is deprecated and will be removed in v27.01. Read `nguid` directly from
+`spdk_nvme_ns_get_data_head(ns)` (compatible with both full and head-only nsdata allocations).
+
 ### nvmf
 
 #### `nvmf_namespace_hide_metadata`

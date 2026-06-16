@@ -3534,6 +3534,9 @@ uint32_t spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns);
 /**
  * Get the NGUID for the given namespace.
  *
+ * \deprecated Read `nguid` directly from `spdk_nvme_ns_get_data_head(ns)`; per the
+ * NVMe spec an all-zero NGUID means "not present".
+ *
  * \param ns Namespace to query.
  *
  * \return a pointer to namespace NGUID, or NULL if ns does not have a NGUID.

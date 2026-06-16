@@ -258,8 +258,6 @@ DEFINE_STUB(spdk_nvme_zns_reset_zone, int,
 	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
 	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
 
-DEFINE_STUB(spdk_nvme_ns_get_nguid, const uint8_t *, (const struct spdk_nvme_ns *ns), NULL);
-
 DEFINE_STUB(spdk_nvme_zns_offline_zone, int,
 	    (struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, uint64_t slba,
 	     bool select_all, spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
@@ -1103,6 +1101,12 @@ const struct spdk_nvme_ns_data *
 spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns)
 {
 	return _nvme_ns_get_data(ns);
+}
+
+const struct spdk_nvme_ns_data_head *
+spdk_nvme_ns_get_data_head(struct spdk_nvme_ns *ns)
+{
+	return (const struct spdk_nvme_ns_data_head *)_nvme_ns_get_data(ns);
 }
 
 uint64_t

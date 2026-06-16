@@ -4691,9 +4691,8 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	     struct spdk_bdev_nvme_ctrlr_opts *bdev_opts, void *ctx)
 {
 	const struct spdk_uuid		*uuid;
-	const uint8_t *nguid;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	const struct spdk_nvme_ns_data	*nsdata;
+	const struct spdk_nvme_ns_data_head	*nsdata;
 	const struct spdk_nvme_ctrlr_opts *opts;
 	enum spdk_nvme_csi		csi;
 	uint32_t atomic_bs, phys_bs, bs;
@@ -4703,6 +4702,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 	csi = spdk_nvme_ns_get_csi(ns);
 	opts = spdk_nvme_ctrlr_get_opts(ctrlr);
+	nsdata = spdk_nvme_ns_get_data_head(ns);
 
 	disk->csi = csi;
 
@@ -4731,8 +4731,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 		return -ENOTSUP;
 	}
 
-	nguid = spdk_nvme_ns_get_nguid(ns);
-	if (!nguid) {
+	if (spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		uuid = spdk_nvme_ns_get_uuid(ns);
 		if (uuid) {
 			disk->uuid = *uuid;
@@ -4745,7 +4744,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 			}
 		}
 	} else {
-		memcpy(&disk->uuid, nguid, sizeof(disk->uuid));
+		memcpy(&disk->uuid, nsdata->nguid, sizeof(disk->uuid));
 	}
 
 	disk->name = spdk_sprintf_alloc("%sn%d", base_name, spdk_nvme_ns_get_id(ns));
@@ -4790,7 +4789,6 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 	}
 	disk->optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 
-	nsdata = spdk_nvme_ns_get_data(ns);
 	bs = spdk_nvme_ns_get_sector_size(ns);
 	atomic_bs = bs;
 	phys_bs = bs;

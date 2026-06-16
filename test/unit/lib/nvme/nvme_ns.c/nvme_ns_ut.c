@@ -235,7 +235,7 @@ test_nvme_ns_data(void)
 		.nsze = 1000,
 		.ncap = 1000,
 	};
-	const struct spdk_nvme_ns_data *nsdata;
+	const struct spdk_nvme_ns_data_head *nsdata;
 
 	fake_nsdata = &expected_nsdata;
 	SPDK_CU_ASSERT_FATAL(nvme_ns_identify(ns) == 0);
@@ -244,9 +244,23 @@ test_nvme_ns_data(void)
 	CU_ASSERT(spdk_nvme_ns_get_id(ns) == 1);
 	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1000);
 
-	nsdata = spdk_nvme_ns_get_data(ns);
+	nsdata = spdk_nvme_ns_get_data_head(ns);
 	CU_ASSERT(nsdata != NULL);
 	CU_ASSERT(nsdata->ncap == 1000);
+
+	/* spdk_nvme_ns_get_nguid() returns NULL when nguid is all-zero. */
+	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) == NULL);
+
+	/* Populate nguid and verify spdk_nvme_ns_get_nguid() returns a pointer
+	 * into the head data carrying the populated value.
+	 */
+	memset(expected_nsdata.nguid, 0xCC, sizeof(expected_nsdata.nguid));
+	fake_nsdata = &expected_nsdata;
+	SPDK_CU_ASSERT_FATAL(nvme_ns_identify(ns) == 0);
+	fake_nsdata = NULL;
+	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) == nsdata->nguid);
+	CU_ASSERT(memcmp(spdk_nvme_ns_get_nguid(ns), expected_nsdata.nguid,
+			 sizeof(expected_nsdata.nguid)) == 0);
 
 	nvme_ns_clear(ns);
 
@@ -255,7 +269,10 @@ test_nvme_ns_data(void)
 	CU_ASSERT(spdk_nvme_ns_get_id(ns) == 1);
 	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 0);
 	CU_ASSERT(nsdata->ncap == 0);
-	CU_ASSERT(nsdata == spdk_nvme_ns_get_data(ns));
+	CU_ASSERT(nsdata == spdk_nvme_ns_get_data_head(ns));
+
+	/* After clear, NGUID is all-zero again so the deprecated getter returns NULL. */
+	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) == NULL);
 
 	ut_ns_free(ns);
 }

@@ -570,10 +570,16 @@ nvme_ns_find_id_desc(const struct spdk_nvme_ns *ns, enum spdk_nvme_nidt type, si
 	return NULL;
 }
 
+SPDK_LOG_DEPRECATION_REGISTER(spdk_nvme_ns_get_nguid,
+			      "use spdk_nvme_ns_get_data_head(ns)->nguid instead",
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
+
 const uint8_t *
 spdk_nvme_ns_get_nguid(const struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head((struct spdk_nvme_ns *)ns);
+
+	SPDK_LOG_DEPRECATED(spdk_nvme_ns_get_nguid);
 
 	if (spdk_mem_all_zero(nsdata->nguid, sizeof(nsdata->nguid))) {
 		return NULL;
