@@ -1926,28 +1926,6 @@ struct rpc_nvmf_create_transport_ext {
 	int					status;
 };
 
-/**
- * `max_qpairs_per_ctrlr` represents both admin and IO qpairs, that confuses
- * users when they configure a transport using RPC. So it was decided to
- * deprecate `max_qpairs_per_ctrlr` RPC parameter and use `max_io_qpairs_per_ctrlr`
- * But internal logic remains unchanged and SPDK expects that
- * spdk_nvmf_transport_opts::max_qpairs_per_ctrlr includes an admin qpair.
- * This function parses the number of IO qpairs and adds +1 for admin qpair.
- */
-static int
-nvmf_rpc_decode_max_io_qpairs(const struct spdk_json_val *val, void *out)
-{
-	uint16_t *i = out;
-	int rc;
-
-	rc = spdk_json_number_to_uint16(val, i);
-	if (rc == 0) {
-		(*i)++;
-	}
-
-	return rc;
-}
-
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
 			      "Use iobuf_large_cache_size and iobuf_small_cache_size instead", "v26.09",
 			      SPDK_LOG_DEPRECATION_ALWAYS);
@@ -1961,7 +1939,7 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders_manual[] = {
 	{"trtype", offsetof(struct rpc_nvmf_create_transport_ctx, trtype), spdk_json_decode_string},
 	{"max_queue_depth", offsetof(struct rpc_nvmf_create_transport_ctx, max_queue_depth), spdk_json_decode_uint16, true},
-	{"max_io_qpairs_per_ctrlr", offsetof(struct rpc_nvmf_create_transport_ctx, max_io_qpairs_per_ctrlr), nvmf_rpc_decode_max_io_qpairs, true},
+	{"max_io_qpairs_per_ctrlr", offsetof(struct rpc_nvmf_create_transport_ctx, max_io_qpairs_per_ctrlr), spdk_json_decode_uint16, true},
 	{"in_capsule_data_size", offsetof(struct rpc_nvmf_create_transport_ctx, in_capsule_data_size), spdk_json_decode_uint32, true},
 	{"max_io_size", offsetof(struct rpc_nvmf_create_transport_ctx, max_io_size), spdk_json_decode_uint32, true},
 	{"io_unit_size", offsetof(struct rpc_nvmf_create_transport_ctx, io_unit_size), rpc_decode_io_unit_size, true},
@@ -1987,8 +1965,11 @@ static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders_
 /*
  * X-macro list of fields shared between rpc_nvmf_create_transport_ctx
  * and spdk_nvmf_transport_opts.  Each entry is X(field).
- * max_io_qpairs_per_ctrlr, masked_oncs, and masked_fuses are excluded
- * because they have different names / need a sub-field access.
+ *
+ * Excluded (handled explicitly after the macro):
+ *   max_io_qpairs_per_ctrlr - different name in opts (max_qpairs_per_ctrlr)
+ *                              and needs +1/-1 for the admin qpair.
+ *   masked_oncs / masked_fuses - opts uses sub-struct (oncs.raw / fuses.raw).
  */
 #define NVMF_CREATE_TRANSPORT_FIELDS(X) \
 	X(max_queue_depth)              \
@@ -2118,7 +2099,9 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 #define X(f) req->f = opts.f;
 	NVMF_CREATE_TRANSPORT_FIELDS(X)
 #undef X
-	req->max_io_qpairs_per_ctrlr = opts.max_qpairs_per_ctrlr;
+	/* opts.max_qpairs_per_ctrlr counts admin + IO; req stores IO-only */
+	assert(opts.max_qpairs_per_ctrlr >= 1);
+	req->max_io_qpairs_per_ctrlr = opts.max_qpairs_per_ctrlr - 1;
 	req->masked_oncs = opts.oncs.raw;
 	req->masked_fuses = opts.fuses.raw;
 
@@ -2134,7 +2117,16 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 #define X(f) opts.f = req->f;
 	NVMF_CREATE_TRANSPORT_FIELDS(X)
 #undef X
-	opts.max_qpairs_per_ctrlr = req->max_io_qpairs_per_ctrlr;
+	/* Convert IO-only qpair count back to total (admin + IO) */
+	if (req->max_io_qpairs_per_ctrlr > UINT16_MAX - 1) {
+		SPDK_ERRLOG("max_io_qpairs_per_ctrlr %" PRIu16 " too large\n",
+			    req->max_io_qpairs_per_ctrlr);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "max_io_qpairs_per_ctrlr too large");
+		free_rpc_nvmf_create_transport_ext(ereq);
+		return;
+	}
+	opts.max_qpairs_per_ctrlr = req->max_io_qpairs_per_ctrlr + 1;
 	opts.oncs.raw = req->masked_oncs;
 	opts.fuses.raw = req->masked_fuses;
 
