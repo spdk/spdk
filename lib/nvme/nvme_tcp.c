@@ -1517,12 +1517,13 @@ nvme_tcp_c2h_data_payload_handle(struct nvme_tcp_qpair *tqpair,
 }
 
 static const char *spdk_nvme_tcp_term_req_fes_str[] = {
-	"Invalid PDU Header Field",
-	"PDU Sequence Error",
-	"Header Digest Error",
-	"Data Transfer Out of Range",
-	"Data Transfer Limit Exceeded",
-	"Unsupported parameter",
+	[0] = "Unknown",
+	[SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD] = "Invalid PDU Header Field",
+	[SPDK_NVME_TCP_TERM_REQ_FES_PDU_SEQUENCE_ERROR] = "PDU Sequence Error",
+	[SPDK_NVME_TCP_TERM_REQ_FES_HDGST_ERROR] = "Header Digest Error",
+	[SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_OUT_OF_RANGE] = "Data Transfer Out of Range",
+	[SPDK_NVME_TCP_TERM_REQ_FES_DATA_TRANSFER_LIMIT_EXCEEDED] = "Data Transfer Limit Exceeded",
+	[SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER] = "Unsupported parameter",
 };
 
 static void
