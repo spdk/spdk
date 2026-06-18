@@ -1936,32 +1936,6 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_buf_cache_size,
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
 
-static const struct spdk_json_object_decoder rpc_nvmf_create_transport_decoders_manual[] = {
-	{"trtype", offsetof(struct rpc_nvmf_create_transport_ctx, trtype), spdk_json_decode_string},
-	{"max_queue_depth", offsetof(struct rpc_nvmf_create_transport_ctx, max_queue_depth), spdk_json_decode_uint16, true},
-	{"max_io_qpairs_per_ctrlr", offsetof(struct rpc_nvmf_create_transport_ctx, max_io_qpairs_per_ctrlr), spdk_json_decode_uint16, true},
-	{"in_capsule_data_size", offsetof(struct rpc_nvmf_create_transport_ctx, in_capsule_data_size), spdk_json_decode_uint32, true},
-	{"max_io_size", offsetof(struct rpc_nvmf_create_transport_ctx, max_io_size), spdk_json_decode_uint32, true},
-	{"io_unit_size", offsetof(struct rpc_nvmf_create_transport_ctx, io_unit_size), rpc_decode_io_unit_size, true},
-	{"max_aq_depth", offsetof(struct rpc_nvmf_create_transport_ctx, max_aq_depth), spdk_json_decode_uint32, true},
-	{"num_shared_buffers", offsetof(struct rpc_nvmf_create_transport_ctx, num_shared_buffers), rpc_decode_num_shared_buffers, true},
-	{"buf_cache_size", offsetof(struct rpc_nvmf_create_transport_ctx, iobuf_small_cache_size), rpc_decode_buf_cache_size, true},
-	{"iobuf_small_cache_size", offsetof(struct rpc_nvmf_create_transport_ctx, iobuf_small_cache_size), spdk_json_decode_uint32, true},
-	{"iobuf_large_cache_size", offsetof(struct rpc_nvmf_create_transport_ctx, iobuf_large_cache_size), spdk_json_decode_uint32, true},
-	{"dif_insert_or_strip", offsetof(struct rpc_nvmf_create_transport_ctx, dif_insert_or_strip), spdk_json_decode_bool, true},
-	{"abort_timeout_sec", offsetof(struct rpc_nvmf_create_transport_ctx, abort_timeout_sec), spdk_json_decode_uint32, true},
-	{"zcopy", offsetof(struct rpc_nvmf_create_transport_ctx, zcopy), spdk_json_decode_bool, true},
-	{"tgt_name", offsetof(struct rpc_nvmf_create_transport_ctx, tgt_name), spdk_json_decode_string, true},
-	{"acceptor_poll_rate", offsetof(struct rpc_nvmf_create_transport_ctx, acceptor_poll_rate), spdk_json_decode_uint32, true},
-	{"ack_timeout", offsetof(struct rpc_nvmf_create_transport_ctx, ack_timeout), spdk_json_decode_uint32, true},
-	{"data_wr_pool_size", offsetof(struct rpc_nvmf_create_transport_ctx, data_wr_pool_size), spdk_json_decode_uint32, true},
-	{"disable_command_passthru", offsetof(struct rpc_nvmf_create_transport_ctx, disable_command_passthru), spdk_json_decode_bool, true},
-	{"kas", offsetof(struct rpc_nvmf_create_transport_ctx, kas), spdk_json_decode_uint16, true},
-	{"min_kato", offsetof(struct rpc_nvmf_create_transport_ctx, min_kato), spdk_json_decode_uint32, true},
-	{"masked_oncs", offsetof(struct rpc_nvmf_create_transport_ctx, masked_oncs), rpc_decode_oncs_features, true},
-	{"masked_fuses", offsetof(struct rpc_nvmf_create_transport_ctx, masked_fuses), rpc_decode_fuses_features, true},
-};
-
 /*
  * X-macro list of fields shared between rpc_nvmf_create_transport_ctx
  * and spdk_nvmf_transport_opts.  Each entry is X(field).
@@ -2064,8 +2038,8 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	req = &ereq->req;
 
 	/* Decode parameters the first time to get the transport type */
-	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders_manual,
-					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders_manual),
+	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders),
 					    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -2105,13 +2079,18 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 	req->masked_oncs = opts.oncs.raw;
 	req->masked_fuses = opts.fuses.raw;
 
-	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders_manual,
-					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders_manual),
+	if (spdk_json_decode_object_relaxed(params, rpc_nvmf_create_transport_decoders,
+					    SPDK_COUNTOF(rpc_nvmf_create_transport_decoders),
 					    req)) {
 		SPDK_ERRLOG("spdk_json_decode_object_relaxed failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		free_rpc_nvmf_create_transport_ext(ereq);
 		return;
+	}
+
+	/* buf_cache_size is a deprecated alias for iobuf_small_cache_size */
+	if (req->buf_cache_size != 0) {
+		req->iobuf_small_cache_size = req->buf_cache_size;
 	}
 
 #define X(f) opts.f = req->f;

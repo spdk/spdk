@@ -49,7 +49,6 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         "bdev_nvme_send_cmd",
         "bdev_rbd_create",
         "bdev_rbd_register_cluster",
-        "nvmf_create_transport",
         "nvmf_set_config",
     }
     manual_decoder_names = {f"rpc_{name}_decoders_manual" for name in manual_decoders}
@@ -109,17 +108,11 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
         missing_in_cli = schema_params - cli_params
         missing_in_schema = cli_params - schema_params
         if missing_in_cli:
-            # TODO: handle this case later and fix issues raised by it
-            cli_exceptions = {'nvmf_create_transport', 'vhost_create_blk_controller'}
-            if method['name'] not in cli_exceptions:
-                raise ValueError(f"Params of '{method['name']}' defined in schema but missing in CLI: {sorted(missing_in_cli)}")
+            raise ValueError(f"Params of '{method['name']}' defined in schema but missing in c-decoders: {sorted(missing_in_cli)}")
         if missing_in_schema:
             raise ValueError(f"Params of '{method['name']}' defined in CLI but missing in schema: {sorted(missing_in_schema)}")
         for parameter in method['params']:
             optional = ['true' in optional for name, _, _, optional in c_code_methods[decoder_name] if name == parameter['name']]
-            if not optional and method['name'] in cli_exceptions:
-                # TODO: handle this case later and fix issues raised by it
-                continue
             if parameter.get('required', False) != (not optional[0]):
                 raise ValueError(f"For method {method['name']}: parameter '{parameter['name']}': 'required' field is mismatched")
             has_class = 'class' in parameter
@@ -130,9 +123,6 @@ def lint_c_code(schema: Dict[str, Any]) -> None:
             if has_class and parameter['class'] not in schema_by_type[parameter['type']]:
                 raise ValueError(msg)
             code_type = [ctype for name, _, ctype, _ in c_code_methods[decoder_name] if name == parameter['name']]
-            if not code_type and method['name'] in cli_exceptions:
-                # TODO: handle this case later and fix issues raised by it
-                continue
             if has_class:
                 decoder = f"rpc_decode_{parameter['class']}"
                 msg = f"For method {method['name']}: parameter '{parameter['name']}': decoder '{decoder}' not found in {code_type}"
