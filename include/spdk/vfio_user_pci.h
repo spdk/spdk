@@ -21,6 +21,9 @@ int spdk_vfio_user_pci_bar_access(struct vfio_device *dev, uint32_t index,
 void *spdk_vfio_user_get_bar_addr(struct vfio_device *dev, uint32_t index,
 				  uint64_t offset, uint32_t len);
 
+/* Return the size of a PCI region (BAR) or 0 if the device does not expose this region. */
+uint64_t spdk_vfio_user_get_bar_size(struct vfio_device *dev, uint32_t index);
+
 struct vfio_device *spdk_vfio_user_setup(const char *path);
 
 void spdk_vfio_user_release(struct vfio_device *dev);

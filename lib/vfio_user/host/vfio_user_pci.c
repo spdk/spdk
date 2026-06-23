@@ -427,6 +427,16 @@ spdk_vfio_user_get_bar_addr(struct vfio_device *dev, uint32_t index, uint64_t of
 	return NULL;
 }
 
+uint64_t
+spdk_vfio_user_get_bar_size(struct vfio_device *dev, uint32_t index)
+{
+	if (index >= dev->pci_regions) {
+		return 0;
+	}
+
+	return dev->regions[index].size;
+}
+
 /* For fuzzing only */
 int
 spdk_vfio_user_dev_send_request(struct vfio_device *dev, enum vfio_user_command command,
