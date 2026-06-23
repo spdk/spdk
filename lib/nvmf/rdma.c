@@ -4396,13 +4396,19 @@ nvmf_rdma_poller_destroy(struct spdk_nvmf_rdma_poller *poller)
 	}
 
 	spdk_interrupt_unregister(&poller->cq_intr);
-	if (poller->comp_channel) {
-		ibv_destroy_comp_channel(poller->comp_channel);
-	}
 	if (poller->cq) {
 		rc = ibv_destroy_cq(poller->cq);
 		if (rc != 0) {
 			SPDK_ERRLOG("Destroy cq return %d, error: %s\n", rc, strerror(errno));
+		}
+	}
+
+	/* The completion channel must be destroyed after the CQ. ibv_destroy_comp_channel()
+	 * fails with EBUSY (and leaks the channel) while a CQ is still associated with it. */
+	if (poller->comp_channel) {
+		rc = ibv_destroy_comp_channel(poller->comp_channel);
+		if (rc != 0) {
+			SPDK_ERRLOG("Destroy comp channel return %d, error: %s\n", rc, strerror(errno));
 		}
 	}
 
