@@ -23,11 +23,18 @@ ut_event_fn(int rc, void *arg1)
 }
 
 static void
+set_up_subsystem_ext(struct spdk_subsystem *subsystem, const char *name,
+		     void (*init)(void), void (*fini)(void))
+{
+	subsystem->init = init;
+	subsystem->fini = fini;
+	subsystem->name = name;
+}
+
+static void
 set_up_subsystem(struct spdk_subsystem *subsystem, const char *name)
 {
-	subsystem->init = NULL;
-	subsystem->fini = NULL;
-	subsystem->name = name;
+	set_up_subsystem_ext(subsystem, name, NULL, NULL);
 }
 
 static void
@@ -203,6 +210,89 @@ subsystem_sort_test_missing_dependency(void)
 
 }
 
+static int g_subsystem_fini_calls[2];
+static bool g_subsystem1_init_fail;
+
+static void
+subsystem0_init(void)
+{
+	spdk_subsystem_init_next(0);
+}
+
+static void
+subsystem0_fini(void)
+{
+	g_subsystem_fini_calls[0]++;
+	spdk_subsystem_fini_next();
+}
+
+static void
+subsystem1_init(void)
+{
+	spdk_subsystem_init_next(g_subsystem1_init_fail ? -1 : 0);
+}
+
+static void
+subsystem1_fini(void)
+{
+	g_subsystem_fini_calls[1]++;
+	spdk_subsystem_fini_next();
+}
+
+static void
+subsystem_fini_stop_fn(void *arg)
+{
+}
+
+static void
+subsystem_fini_setup(void)
+{
+	subsystem_clear();
+	g_subsystems_initialized = false;
+	g_subsystems_init_interrupted = false;
+	g_next_subsystem = NULL;
+	memset(g_subsystem_fini_calls, 0, sizeof(g_subsystem_fini_calls));
+
+	set_up_subsystem_ext(&g_ut_subsystems[0], "0", subsystem0_init, subsystem0_fini);
+	set_up_subsystem_ext(&g_ut_subsystems[1], "1", subsystem1_init, subsystem1_fini);
+	spdk_add_subsystem(&g_ut_subsystems[0]);
+	spdk_add_subsystem(&g_ut_subsystems[1]);
+
+	/* subsystem 1 depends on subsystem 0, so subsystem 0 is initialized first */
+	set_up_depends(&g_ut_subsystem_deps[0], "1", "0");
+	spdk_add_subsystem_depend(&g_ut_subsystem_deps[0]);
+}
+
+static void
+subsystem_fini_test(void)
+{
+	/* When init succeeds, both subsystems' fini callbacks are called */
+	subsystem_fini_setup();
+	g_subsystem1_init_fail = false;
+
+	global_rc = -1;
+	spdk_subsystem_init(ut_event_fn, NULL);
+	CU_ASSERT(global_rc == 0);
+
+	spdk_subsystem_fini(subsystem_fini_stop_fn, NULL);
+	CU_ASSERT(g_subsystem_fini_calls[0] == 1);
+	CU_ASSERT(g_subsystem_fini_calls[1] == 1);
+
+	/* When the second subsystem fails its init, its fini callback must not be
+	 * called, but the first subsystem still needs to be de-initialized
+	 */
+	subsystem_fini_setup();
+	g_subsystem1_init_fail = true;
+
+	global_rc = 0;
+	spdk_subsystem_init(ut_event_fn, NULL);
+	CU_ASSERT(global_rc != 0);
+
+	spdk_subsystem_fini(subsystem_fini_stop_fn, NULL);
+	CU_ASSERT(g_subsystem_fini_calls[0] == 1);
+	CU_ASSERT(g_subsystem_fini_calls[1] == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -221,6 +311,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, subsystem_sort_test_depends_on_single);
 	CU_ADD_TEST(suite, subsystem_sort_test_depends_on_multiple);
 	CU_ADD_TEST(suite, subsystem_sort_test_missing_dependency);
+	CU_ADD_TEST(suite, subsystem_fini_test);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

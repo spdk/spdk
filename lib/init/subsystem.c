@@ -218,11 +218,11 @@ spdk_subsystem_fini_next(void)
 			g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 		}
 	} else {
-		if (g_subsystems_initialized || g_subsystems_init_interrupted) {
-			g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
-		} else {
+		if (!g_subsystems_initialized) {
 			g_subsystems_init_interrupted = true;
 		}
+
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
 	while (g_next_subsystem) {
