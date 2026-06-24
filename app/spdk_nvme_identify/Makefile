@@ -12,7 +12,10 @@ APP = spdk_nvme_identify
 
 C_SRCS := identify.c
 
-SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme
+ifeq ($(CONFIG_VMD),y)
+SPDK_LIB_LIST += vmd
+endif
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 

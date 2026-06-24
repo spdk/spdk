@@ -50,6 +50,8 @@ static struct spdk_subsystem g_spdk_subsystem_bdev = {
 SPDK_SUBSYSTEM_REGISTER(g_spdk_subsystem_bdev);
 SPDK_SUBSYSTEM_DEPEND(bdev, accel)
 SPDK_SUBSYSTEM_DEPEND(bdev, keyring)
+#ifdef SPDK_CONFIG_VMD
 SPDK_SUBSYSTEM_DEPEND(bdev, vmd)
+#endif
 SPDK_SUBSYSTEM_DEPEND(bdev, sock)
 SPDK_SUBSYSTEM_DEPEND(bdev, iobuf)

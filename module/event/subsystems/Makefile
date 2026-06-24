@@ -6,7 +6,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev accel scheduler iscsi nvmf scsi vmd sock iobuf keyring
+DIRS-y += bdev accel scheduler iscsi nvmf scsi sock iobuf keyring
 
 ifeq ($(OS),Linux)
 DIRS-y += nbd
@@ -18,13 +18,14 @@ endif
 DIRS-$(CONFIG_VHOST) += vhost_blk vhost_scsi
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 DIRS-$(CONFIG_FSDEV) += fsdev
+DIRS-$(CONFIG_VMD) += vmd
 
 # These dependencies are not based specifically on symbols, but rather
 # the subsystem dependency tree defined within the event subsystem C files
 # themselves. Should that tree change, these dependencies should change
 # accordingly.
 DEPDIRS-accel := iobuf
-DEPDIRS-bdev := accel vmd sock iobuf keyring
+DEPDIRS-bdev := accel sock iobuf keyring
 DEPDIRS-iscsi := scsi
 DEPDIRS-nbd := bdev
 DEPDIRS-ublk := bdev iobuf
@@ -34,6 +35,9 @@ DEPDIRS-vhost_scsi := scsi
 DEPDIRS-vfu_tgt := bdev scsi
 ifeq ($(CONFIG_FSDEV),y)
 DEPDIRS-vfu_tgt += fsdev
+endif
+ifeq ($(CONFIG_VMD),y)
+DEPDIRS-bdev += vmd
 endif
 
 .PHONY: all clean $(DIRS-y)

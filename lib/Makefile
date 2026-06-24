@@ -9,7 +9,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.lib_deps.mk
 
 DIRS-y += bdev blob conf dma accel event json jsonrpc \
-          log lvol rpc sock thread trace util nvme vmd nvmf scsi \
+          log lvol rpc sock thread trace util nvme nvmf scsi \
           ioat ut_mock iscsi notify init trace_parser keyring ae4dma
 ifeq ($(OS),Linux)
 DIRS-y += nbd ftl vfio_user
@@ -33,6 +33,7 @@ DIRS-$(CONFIG_RDMA) += rdma_provider
 DIRS-$(CONFIG_RDMA) += rdma_utils
 DIRS-$(CONFIG_VFIO_USER) += vfu_tgt
 DIRS-$(CONFIG_FSDEV) += fsdev fuse_dispatcher
+DIRS-$(CONFIG_VMD) += vmd
 
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 DIRS-y += mlx5

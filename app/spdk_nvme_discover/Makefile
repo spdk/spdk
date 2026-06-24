@@ -12,7 +12,7 @@ APP = spdk_nvme_discover
 
 C_SRCS := discovery_aer.c
 
-SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme vmd
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 

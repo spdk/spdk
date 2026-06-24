@@ -3,6 +3,7 @@
  *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  */
 
+#include "spdk/config.h"
 #include "spdk/stdinc.h"
 
 #include "spdk/nvme.h"
@@ -662,8 +663,14 @@ spdk_fio_setup(struct thread_data *td)
 			SPDK_ERRLOG("Unable to spawn a thread to poll admin queues. They won't be polled.\n");
 		}
 
-		if (fio_options->enable_vmd && spdk_vmd_init()) {
-			SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
+		if (fio_options->enable_vmd) {
+#ifndef SPDK_CONFIG_VMD
+			SPDK_ERRLOG("enable_vmd requires CONFIG_VMD=y\n");
+#else
+			if (spdk_vmd_init() != 0) {
+				SPDK_ERRLOG("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
+			}
+#endif
 		}
 	}
 	pthread_mutex_unlock(&g_mutex);
@@ -1702,9 +1709,11 @@ spdk_fio_cleanup(struct thread_data *td)
 			spdk_nvme_detach_poll(detach_ctx);
 		}
 
+#ifdef SPDK_CONFIG_VMD
 		if (fio_options->enable_vmd) {
 			spdk_vmd_fini();
 		}
+#endif
 	}
 	pthread_mutex_unlock(&g_mutex);
 	if (TAILQ_EMPTY(&g_ctrlrs)) {

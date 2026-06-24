@@ -3,6 +3,7 @@
  *   All rights reserved.
  */
 
+#include "spdk/config.h"
 #include "spdk/stdinc.h"
 #include "spdk/env.h"
 #include "spdk/vmd.h"
@@ -68,10 +69,11 @@ main(int argc, char **argv)
 		printf("Unable to initialize SPDK env\n");
 		return 1;
 	}
-
+#ifdef SPDK_CONFIG_VMD
 	if (spdk_vmd_init()) {
 		printf("Failed to initialize VMD. Some NVMe devices can be unavailable.\n");
 	}
+#endif
 
 	if (spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pci_enum_cb, NULL)) {
 		printf("Unable to enumerate PCI nvme driver\n");
@@ -83,7 +85,9 @@ main(int argc, char **argv)
 	spdk_pci_for_each_device(NULL, print_pci_dev);
 
 exit:
+#ifdef SPDK_CONFIG_VMD
 	spdk_vmd_fini();
+#endif
 	spdk_env_fini();
 
 	return rc;

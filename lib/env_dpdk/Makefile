@@ -11,10 +11,14 @@ SO_MINOR := 0
 
 CFLAGS += $(ENV_CFLAGS)
 C_SRCS = env.c memory.c pci.c init.c threads.c
-C_SRCS += pci_ioat.c pci_virtio.c pci_vmd.c pci_idxd.c pci_ae4dma.c
+C_SRCS += pci_ioat.c pci_virtio.c pci_idxd.c pci_ae4dma.c
 C_SRCS += pci_event.c sigbus_handler.c pci_dpdk.c
-C_SRCS += pci_dpdk_2207.c pci_dpdk_2211.c
+C_SRCS += pci_dpdk_2207.c pci_dpdk_2211.c stubs.c
 LIBNAME = env_dpdk
+
+ifeq ($(CONFIG_VMD),y)
+C_SRCS += pci_vmd.c
+endif
 
 SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_env_dpdk.map)
 

@@ -2651,7 +2651,14 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 #endif
 			break;
 		case PERF_ENABLE_VMD:
+#ifndef SPDK_CONFIG_VMD
+			fprintf(stderr, "%s -V requires CONFIG_VMD=y\n", argv[0]);
+			usage(argv[0]);
+			g_vmd = false;
+			return 1;
+#else
 			g_vmd = true;
+#endif
 			break;
 		case PERF_DISABLE_KTLS:
 			ssl_used = true;
@@ -3027,11 +3034,12 @@ register_controllers(void)
 
 	printf("Initializing NVMe Controllers\n");
 
+#ifdef SPDK_CONFIG_VMD
 	if (g_vmd && spdk_vmd_init()) {
 		fprintf(stderr, "Failed to initialize VMD."
 			" Some NVMe devices can be unavailable.\n");
 	}
-
+#endif
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
 		if (spdk_nvme_probe(&trid_entry->entry.trid, &trid_entry->entry, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
@@ -3075,10 +3083,11 @@ unregister_controllers(void)
 	if (detach_ctx) {
 		spdk_nvme_detach_poll(detach_ctx);
 	}
-
+#ifdef SPDK_CONFIG_VMD
 	if (g_vmd) {
 		spdk_vmd_fini();
 	}
+#endif
 }
 
 static int

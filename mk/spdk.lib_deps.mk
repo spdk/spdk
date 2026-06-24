@@ -179,7 +179,10 @@ DEPDIRS-fsdev_aio := $(FSDEV_DEPS_THREAD)
 DEPDIRS-event_accel := init accel event_iobuf
 DEPDIRS-event_vmd := init vmd $(JSON_LIBS) log thread util
 
-DEPDIRS-event_bdev := init bdev event_accel event_vmd event_sock event_iobuf event_keyring
+DEPDIRS-event_bdev := init bdev event_accel event_sock event_iobuf event_keyring
+ifeq ($(CONFIG_VMD),y)
+DEPDIRS-event_bdev += event_vmd
+endif
 
 DEPDIRS-event_scheduler := event init json log
 

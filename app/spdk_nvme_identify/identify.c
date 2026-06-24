@@ -3,6 +3,7 @@
  *   Copyright (c) 2020 Mellanox Technologies LTD. All rights reserved.
  */
 
+#include "spdk/config.h"
 #include "spdk/stdinc.h"
 
 #include "spdk/endian.h"
@@ -2821,7 +2822,14 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
 		case 'V':
+#ifndef SPDK_CONFIG_VMD
+			fprintf(stderr, "%s -V requires CONFIG_VMD=y\n", argv[0]);
+			usage(argv[0]);
+			g_vmd = false;
+			return 1;
+#else
 			g_vmd = true;
+#endif
 			break;
 		case 'S':
 			rc = spdk_sock_set_default_impl(optarg);
@@ -2896,12 +2904,12 @@ main(int argc, char **argv)
 		fprintf(stderr, "Unable to initialize SPDK env\n");
 		return 1;
 	}
-
+#ifdef SPDK_CONFIG_VMD
 	if (g_vmd && spdk_vmd_init()) {
 		fprintf(stderr, "Failed to initialize VMD."
 			" Some NVMe devices can be unavailable.\n");
 	}
-
+#endif
 	/* A specific trid is required. */
 	if (strlen(g_trid.trid.traddr) != 0) {
 		struct spdk_nvme_ctrlr_opts opts;
@@ -2935,10 +2943,11 @@ main(int argc, char **argv)
 	}
 
 exit:
+#ifdef SPDK_CONFIG_VMD
 	if (g_vmd) {
 		spdk_vmd_fini();
 	}
-
+#endif
 	spdk_env_fini();
 
 	return rc;
