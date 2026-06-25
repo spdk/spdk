@@ -107,7 +107,9 @@ that show as `X` (failed). Common job names include:
 | `Common tests / autorun / *` | Core functional tests |
 | `Common tests / pkgdep / *` | Package dependency tests |
 | `Common tests / checkout_spdk` | Source checkout |
-| `NVMe-oF RDMA tests / hpe-nvmf-rdma` | NVMe-oF RDMA on HPE hardware |
+| `HPE NVMe-oF tests / hpe-nvmf-rdma` | NVMe-oF RDMA on HPE hardware |
+| `Nvidia NVMe-oF tests / nvidia-nvmf-rdma` | NVMe-oF RDMA on NVIDIA hardware |
+| `Nvidia NVMe-oF tests / nvidia-nvmf-tcp` | NVMe-oF TCP on NVIDIA hardware |
 | `Job summary / merge_outputs` | Result aggregation (secondary failure) |
 | `Job summary / report` | Result reporting (secondary failure) |
 
@@ -133,8 +135,9 @@ List the contents to find the failed job's log file:
 unzip -l /tmp/ci_logs_${RUN_ID}.zip
 ```
 
-Log files are named like `26_NVMe-oF RDMA tests _ hpe-nvmf-rdma.txt`. Find
-the one matching the failed job from Step 2.
+Log files are named like `4_HPE NVMe-oF tests _ hpe-nvmf-rdma.txt` or
+`2_Nvidia NVMe-oF tests _ nvidia-nvmf-rdma.txt`. Find the one matching the
+failed job from Step 2.
 
 **Important**: The **tail** of the log contains the actual failure. Early lines
 contain expected test errors (e.g. memory map tests, lock contention tests)
@@ -167,7 +170,7 @@ From the logs, identify:
 1. **Error signature** -- the key error message, e.g.
    `nvme_qpair.c:722 nvme_qpair_abort_queued_reqs *ERROR*`
 1. **Failure context** -- what was happening when the failure occurred
-1. **Job/runner name** -- e.g. `hpe-nvmf-rdma`, `autorun-bdev-vm`
+1. **Job/runner name** -- e.g. `hpe-nvmf-rdma`, `nvidia-nvmf-rdma`, `nvidia-nvmf-tcp`, `autorun-bdev-vm`
 
 Build a set of **search keywords** from this analysis. Good keywords include:
 
@@ -201,6 +204,10 @@ Try multiple keyword combinations:
 gh issue list -R spdk/spdk \
   -l "Intermittent Failure" \
   --search "hpe-nvmf-rdma" --state open
+# or for NVIDIA jobs
+gh issue list -R spdk/spdk \
+  -l "Intermittent Failure" \
+  --search "nvidia-nvmf-rdma" --state open
 # By test name
 gh issue list -R spdk/spdk \
   -l "Intermittent Failure" \
@@ -268,7 +275,8 @@ Examples of good titles (from existing issues):
 - `[fio_dif_rand_params] heap-use-after-free in uring_sock_group_impl_poll`
 - `[nvmf_target_disconnect_tc2] Unable to reset the controller`
 - `[build failure] Unable to acquire the dpkg frontend lock`
-- `NVMe-oF RDMA tests / hpe-nvmf-rdma` (job-level failure)
+- `HPE NVMe-oF tests / hpe-nvmf-rdma` (job-level failure)
+- `Nvidia NVMe-oF tests / nvidia-nvmf-rdma` (job-level failure)
 
 **Body format** (following existing convention from issues like #3902):
 
@@ -347,4 +355,8 @@ false positive: 3902
 # With brief context (optional)
 false positive: 3902
 hpe-nvmf-rdma nvmf_ns_hotplug_stress -- qpair abort
+
+# NVIDIA job example
+false positive: 4100
+nvidia-nvmf-rdma nvmf_target_disconnect_tc2 -- controller reset
 ```
