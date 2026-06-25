@@ -117,6 +117,38 @@ Note: `Job summary / merge_outputs` and `Job summary / report` failures are
 usually **secondary** -- they fail because an upstream job failed. Focus on the
 **primary** failed job (the test job that actually ran tests).
 
+### Get error details from annotations first
+
+Before downloading the full logs (Step 3), try the check-run **annotations**
+API -- it is the cleanest primary signal and often contains the exact error
+text without any log noise. Get the failed job IDs for this run+attempt
+(`cancelled` jobs are included so they can be enumerated, but see the caveat
+below -- they fall through to the full-log path):
+
+```bash
+gh run view "$RUN_ID" --attempt "$ATTEMPT" -R spdk/spdk-ci --json jobs \
+  | jq -r '.jobs[]
+      | select(.conclusion == "failure" or .conclusion == "cancelled")
+      | "\(.databaseId)\t\(.name)"'
+```
+
+The first column is the job's `databaseId`, which for GitHub Actions equals the
+check-run ID. For each failed job ID (set `JOB_ID` to that `databaseId`), fetch
+its failure annotations:
+
+```bash
+gh api "repos/spdk/spdk-ci/check-runs/${JOB_ID}/annotations" \
+  | jq -r '.[] | select(.annotation_level == "failure") | .message'
+```
+
+Annotations with `annotation_level: "failure"` contain the error text (e.g.
+`Failed to FinalizeArtifact: ...`). This is the primary signal for matching in
+Step 5/6.
+
+Only when annotations are **empty or insufficient** -- or for **cancelled**
+jobs, which never produce failure annotations -- fall back to downloading the
+full logs in Step 3.
+
 ---
 
 ## Step 3: Download Failed Job Logs
