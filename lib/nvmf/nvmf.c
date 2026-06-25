@@ -1717,6 +1717,25 @@ spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	return nvmf_transport_qpair_get_listen_trid(qpair, trid);
 }
 
+static inline void
+nvmf_poll_group_ns_info_clear(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid,
+			      struct spdk_nvmf_subsystem_pg_ns_info *ns_info)
+{
+	/* Clearing an ns_info that still has I/O outstanding zeroes
+	 * io_outstanding while requests are in flight; their later completion
+	 * underflows the counter and trips the assert in _nvmf_request_complete().
+	 * It also means the namespace was modified without being drained first.
+	 * Catch that here instead of letting it corrupt state silently.
+	 */
+	if (spdk_unlikely(ns_info->io_outstanding != 0)) {
+		SPDK_ERRLOG("Clearing poll group ns_info for subsystem %s nsid %u with %" PRIu64
+			    " I/O still outstanding; the namespace was not drained before being "
+			    "modified.\n", subsystem->subnqn, nsid, ns_info->io_outstanding);
+		assert(ns_info->io_outstanding == 0);
+	}
+	memset(ns_info, 0, sizeof(*ns_info));
+}
+
 static int
 poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_subsystem *subsystem)
@@ -1775,7 +1794,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			/* A namespace was here before, but was replaced by a new one. */
 			ns_changed = true;
 			spdk_put_io_channel(ns_info->channel);
-			memset(ns_info, 0, sizeof(*ns_info));
+			nvmf_poll_group_ns_info_clear(subsystem, i + 1, ns_info);
 
 			ch = spdk_bdev_get_io_channel(ns->desc);
 			if (ch == NULL) {
@@ -1806,7 +1825,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		}
 
 		if (ns == NULL) {
-			memset(ns_info, 0, sizeof(*ns_info));
+			nvmf_poll_group_ns_info_clear(subsystem, i + 1, ns_info);
 		} else {
 			ns_info->uuid = *spdk_bdev_get_uuid(ns->bdev);
 			ns_info->num_blocks = spdk_bdev_get_num_blocks(ns->bdev);
