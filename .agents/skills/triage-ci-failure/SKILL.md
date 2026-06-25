@@ -317,7 +317,23 @@ patch-independent).
 
 ### 6a. If a matching issue was found
 
-Print the Gerrit comment for the user to post on the patch:
+The keyword search in Step 5b can match a **closed** issue (a previously fixed
+failure that has regressed). SPDK CI rejects `false positive` reports against
+closed issues, so reopen the issue first if needed:
+
+```bash
+ISSUE=<issue_number>  # the matching issue found in Step 5
+state=$(gh issue view "$ISSUE" -R spdk/spdk --json state -q .state)
+if [ "$state" = "CLOSED" ]; then
+  gh issue reopen "$ISSUE" -R spdk/spdk
+fi
+```
+
+If reopening fails (e.g. the token lacks write access), tell the user to reopen
+it manually at `https://github.com/spdk/spdk/issues/${ISSUE}` and confirm before
+posting the comment.
+
+Then print the Gerrit comment for the user to post on the patch:
 
 ```text
 false positive: ISSUE_NUMBER
