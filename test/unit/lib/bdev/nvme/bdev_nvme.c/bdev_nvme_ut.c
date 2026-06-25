@@ -428,7 +428,7 @@ static size_t g_ut_attach_bdev_count;
 static int g_ut_register_bdev_status;
 static struct spdk_bdev *g_ut_registered_bdev;
 static uint16_t g_ut_cntlid;
-static struct spdk_nvme_path_id g_any_path = {};
+static struct spdk_bdev_nvme_path_id g_any_path = {};
 static int g_ut_pause_process_adminq;
 static bool g_ut_alloc_io_qpair_fail;
 
@@ -1499,7 +1499,7 @@ test_reset_ctrlr(void)
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *curr_trid;
+	struct nvme_path_id *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	bool detect_remove;
@@ -1711,7 +1711,7 @@ test_failover_ctrlr(void)
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *curr_trid, *next_trid;
+	struct nvme_path_id *curr_trid, *next_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	int rc;
 
@@ -1849,7 +1849,7 @@ test_race_between_failover_and_add_secondary_trid(void)
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *path_id1, *path_id2, *path_id3;
+	struct nvme_path_id *path_id1, *path_id2, *path_id3;
 	struct spdk_io_channel *ch1, *ch2;
 	int rc;
 
@@ -2587,13 +2587,13 @@ test_submit_nvme_cmd(void)
 static void
 test_add_remove_trid(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {}, path3 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2, *ctrlr3;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
-	struct spdk_nvme_path_id *ctrid;
+	struct nvme_path_id *ctrid;
 	int rc;
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
 
@@ -3565,7 +3565,7 @@ test_reconnect_qpair(void)
 static void
 test_create_bdev_ctrlr(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -3698,7 +3698,7 @@ _nvme_bdev_get_ns(struct nvme_bdev *nbdev, struct nvme_ctrlr *nvme_ctrlr)
 static void
 test_add_multi_ns_to_bdev(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_ctrlr *nvme_ctrlr1, *nvme_ctrlr2;
@@ -3888,7 +3888,7 @@ test_add_multi_ns_to_bdev(void)
 static void
 test_add_multi_io_paths_to_nbdev_ch(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {}, path3 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2, *ctrlr3;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -4023,7 +4023,7 @@ test_add_multi_io_paths_to_nbdev_ch(void)
 static void
 test_add_multi_io_paths_to_nbdev_ch_fail(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -4125,7 +4125,7 @@ test_add_multi_io_paths_to_nbdev_ch_fail(void)
 static void
 test_admin_path(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -4243,12 +4243,12 @@ ut_get_io_path_by_ctrlr(struct nvme_bdev_channel *nbdev_ch,
 static void
 test_reset_bdev_ctrlr(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr1, *nvme_ctrlr2;
-	struct spdk_nvme_path_id *curr_path1, *curr_path2;
+	struct nvme_path_id *curr_path1, *curr_path2;
 	const int STRING_SIZE = 32;
 	const char *attached_names[STRING_SIZE];
 	struct nvme_bdev *nbdev;
@@ -4753,7 +4753,7 @@ test_find_io_path(void)
 static void
 test_retry_io_if_ana_state_is_updating(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -4877,7 +4877,7 @@ test_retry_io_if_ana_state_is_updating(void)
 static void
 test_retry_io_for_io_path_error(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -5078,7 +5078,7 @@ test_retry_io_for_io_path_error(void)
 static void
 test_retry_io_count(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -5376,7 +5376,7 @@ test_concurrent_read_ana_log_page(void)
 static void
 test_retry_io_for_ana_error(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -5553,7 +5553,7 @@ test_check_io_error_resiliency_params(void)
 static void
 test_retry_io_if_ctrlr_is_resetting(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -5876,11 +5876,11 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 
-static struct spdk_nvme_path_id *
+static struct nvme_path_id *
 ut_get_path_id_by_trid(struct nvme_ctrlr *nvme_ctrlr,
 		       const struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_nvme_path_id *p;
+	struct nvme_path_id *p;
 
 	TAILQ_FOREACH(p, &nvme_ctrlr->trids, link) {
 		if (spdk_nvme_transport_id_compare(&p->trid, trid) == 0) {
@@ -5897,7 +5897,7 @@ test_retry_failover_ctrlr(void)
 	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *path_id1, *path_id2, *path_id3;
+	struct nvme_path_id *path_id1, *path_id2, *path_id3;
 	struct spdk_io_channel *ch;
 	struct nvme_ctrlr_channel *ctrlr_ch;
 	int rc;
@@ -6010,7 +6010,7 @@ test_retry_failover_ctrlr(void)
 static void
 test_fail_path(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -6268,7 +6268,7 @@ _set_preferred_path_cb(void *cb_arg, int rc)
 static void
 test_set_preferred_path(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {}, path3 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2, *ctrlr3;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -6526,7 +6526,7 @@ test_find_io_path_min_qd(void)
 static void
 test_disable_auto_failback(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -6674,7 +6674,7 @@ ut_set_multipath_policy_done(void *cb_arg, int rc)
 static void
 test_set_multipath_policy(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -6822,7 +6822,7 @@ test_uuid_generation(void)
 static void
 test_retry_io_to_same_path(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -7039,7 +7039,7 @@ test_race_between_reset_and_disconnected(void)
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *curr_trid;
+	struct nvme_path_id *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	int rc;
@@ -7174,7 +7174,7 @@ test_ctrlr_op_rpc(void)
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *curr_trid;
+	struct nvme_path_id *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	int ctrlr_op_rc;
@@ -7288,7 +7288,7 @@ test_bdev_ctrlr_op_rpc(void)
 	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
 	struct nvme_ctrlr *nvme_ctrlr1 = NULL, *nvme_ctrlr2 = NULL;
-	struct spdk_nvme_path_id *curr_trid1, *curr_trid2;
+	struct nvme_path_id *curr_trid1, *curr_trid2;
 	struct spdk_io_channel *ch11, *ch12, *ch21, *ch22;
 	struct nvme_ctrlr_channel *ctrlr_ch11, *ctrlr_ch12, *ctrlr_ch21, *ctrlr_ch22;
 	int ctrlr_op_rc;
@@ -7447,7 +7447,7 @@ test_disable_enable_ctrlr(void)
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
-	struct spdk_nvme_path_id *curr_trid;
+	struct nvme_path_id *curr_trid;
 	struct spdk_io_channel *ch1, *ch2;
 	struct nvme_ctrlr_channel *ctrlr_ch1, *ctrlr_ch2;
 	int rc;
@@ -7660,7 +7660,7 @@ test_delete_ctrlr_done(void)
 static void
 test_ns_remove_during_reset(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_bdev_nvme_ctrlr_opts opts = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
@@ -8005,7 +8005,7 @@ test_bdev_reset_abort_io(void)
 static void
 test_race_between_clear_pending_resets_and_reset_ctrlr_complete(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts = {.hostnqn = UT_HOSTNQN};
 	struct nvme_bdev_ctrlr *nbdev_ctrlr;
@@ -8348,7 +8348,7 @@ ut_detach_ctrlr_on_failure(struct spdk_nvme_ctrlr *ctrlr)
 static void
 test_multipath_opts_mismatch(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {};
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
 	struct spdk_nvme_ctrlr *ctrlr1, *ctrlr2;
 	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
@@ -8435,7 +8435,7 @@ test_multipath_opts_mismatch(void)
 static void
 test_multipath_opts_validation(void)
 {
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
 	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -8489,7 +8489,7 @@ test_multipath_opts_validation(void)
 static void
 test_bdev_nvme_ctrlr_iterators(void)
 {
-	struct spdk_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {}, path3 = {};
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};

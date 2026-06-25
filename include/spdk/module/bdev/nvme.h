@@ -57,7 +57,23 @@ struct spdk_bdev_nvme_ctrlr_opts {
 	uint32_t multipath_min_io;
 };
 
-struct spdk_nvme_path_id;
+/**
+ * Identifies an NVMe controller path for spdk_bdev_nvme_delete().
+ *
+ * Callers construct this structure to select which controller, and optionally
+ * which specific path, an operation applies to. It is matched against the paths
+ * tracked internally by the bdev nvme module using a "match any" model, where an
+ * unset (zeroed) field matches any value.
+ *
+ * The structure MUST be fully zero-initialized before any field is populated,
+ */
+struct spdk_bdev_nvme_path_id {
+	/* Transport id of the NVMe-oF endpoint; zeroed sub-fields act as wildcards. */
+	struct spdk_nvme_transport_id trid;
+
+	/* Host id used to reach the endpoint; zeroed sub-fields act as wildcards. */
+	struct spdk_nvme_host_id hostid;
+};
 
 enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
@@ -159,7 +175,7 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
  * this function returns success.
  *
  * \param name NVMe controller name.
- * \param path_id The specified path to remove (optional).
+ * \param path_id The specified path to remove.
  * \param delete_cb	Callback function on delete complete (optional).
  * \param cb_ctx Context passed to callback (optional).
  * \return zero on success,
@@ -167,7 +183,7 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
  *		-ENODEV if controller is not found or
  *		-ENOMEM on no memory
  */
-int spdk_bdev_nvme_delete(const char *name, const struct spdk_nvme_path_id *path_id,
+int spdk_bdev_nvme_delete(const char *name, const struct spdk_bdev_nvme_path_id *path_id,
 			  spdk_bdev_nvme_delete_cb delete_cb, void *cb_ctx);
 
 /**

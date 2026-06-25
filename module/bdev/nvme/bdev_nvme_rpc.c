@@ -540,7 +540,7 @@ rpc_bdev_nvme_detach_controller(struct spdk_jsonrpc_request *request,
 				const struct spdk_json_val *params)
 {
 	struct rpc_bdev_nvme_detach_controller_ctx req = {};
-	struct spdk_nvme_path_id path = {};
+	struct spdk_bdev_nvme_path_id path = {};
 	size_t len, maxlen;
 	int rc = 0;
 

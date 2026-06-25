@@ -83,10 +83,10 @@ struct nvme_io_path;
 struct nvme_ctrlr_channel_iter;
 struct nvme_bdev_channel_iter;
 
-struct spdk_nvme_path_id {
+struct nvme_path_id {
 	struct spdk_nvme_transport_id		trid;
 	struct spdk_nvme_host_id		hostid;
-	TAILQ_ENTRY(spdk_nvme_path_id)		link;
+	TAILQ_ENTRY(nvme_path_id)		link;
 	uint64_t				last_failed_tsc;
 };
 
@@ -124,7 +124,7 @@ struct nvme_ctrlr {
 	 *  target for CONTROLLER IDENTIFY command during initialization
 	 */
 	struct spdk_nvme_ctrlr			*ctrlr;
-	struct spdk_nvme_path_id		*active_path_id;
+	struct nvme_path_id			*active_path_id;
 	int					ref;
 
 	uint32_t				resetting : 1;
@@ -164,7 +164,7 @@ struct nvme_ctrlr {
 	TAILQ_ENTRY(nvme_ctrlr)			tailq;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
-	TAILQ_HEAD(nvme_paths, spdk_nvme_path_id)	trids;
+	TAILQ_HEAD(nvme_paths, nvme_path_id)	trids;
 
 	uint32_t				max_ana_log_page_size;
 	struct spdk_nvme_ana_page		*ana_log_page;
