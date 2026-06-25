@@ -22,7 +22,7 @@ rpc_bdev_error_create(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_bdev_error_create_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
@@ -61,7 +61,7 @@ rpc_bdev_error_delete(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_error_delete_decoders,
 				    SPDK_COUNTOF(rpc_bdev_error_delete_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
@@ -85,7 +85,7 @@ rpc_bdev_error_inject_error(struct spdk_jsonrpc_request *request,
 				    SPDK_COUNTOF(rpc_bdev_error_inject_error_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
@@ -133,7 +133,7 @@ rpc_bdev_error_resume_pending(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_bdev_error_resume_pending_decoders,
 				    SPDK_COUNTOF(rpc_bdev_error_resume_pending_decoders),
 				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "spdk_json_decode_object failed");
 		goto cleanup;
 	}
