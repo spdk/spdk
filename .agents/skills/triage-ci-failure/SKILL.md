@@ -17,7 +17,8 @@ Use this skill when a Gerrit patch has a CI failure that needs to be triaged.
 Given a Gerrit change number (e.g. `28816`), the skill walks through:
 
 1. Fetching the change details and finding the failed build
-1. Downloading and analyzing the failed job logs
+1. Downloading and analyzing the failed job logs, including whether the patch
+   itself caused the failure (which is not a false positive)
 1. Searching GitHub issues for a matching known failure
 1. Drafting a new issue if no match exists
 1. Printing the Gerrit comment to post
@@ -211,6 +212,38 @@ Build a set of **search keywords** from this analysis. Good keywords include:
 - The failed job name
 - Key error strings (timeout, assertion, signal name)
 
+### Determine if the failure was caused by the patch
+
+Part of analyzing the failure is deciding whether the patch itself caused it. A
+failure caused by the patch is **not** a false positive and must not be reported
+as one. Fetch the patch content to see which files it touches:
+
+```bash
+# PATCHSET is the revision number captured in Step 1
+curl -s "https://review.spdk.io/changes/${CHANGE}/revisions/${PATCHSET}/patch" \
+  | base64 -d > /tmp/gerrit_patch_${CHANGE}.txt
+```
+
+Check for these signals:
+
+- **Format/lint failures**: if a `check-format` job failed, look for a
+  shfmt/checkpatch/format diff in its output. If the diff references files
+  touched by the patch, the patch caused it.
+- **Build failures**: if a build/compile job failed and the compiler error
+  references files the patch modified, the patch likely caused it.
+- **Test failures in patch-added/modified tests**: if the failing test is one
+  the patch adds or changes (e.g. the patch adds `rpc_batch_delete.sh` and that
+  test fails), the patch likely caused it.
+- **Cascade cancellations**: if exactly one job is `failure` and all others are
+  `cancelled`, focus on the single root-cause job -- the cancellations are a
+  downstream consequence, not independent failures.
+
+If the failure was caused by the patch, report the specific error to the user
+with actionable detail (the format diff, the compiler error, the test output)
+and **stop** -- do not match against intermittent issues and do not print a
+`false positive` comment. Only continue to Step 5 if the failure appears
+unrelated to the patch.
+
 ---
 
 ## Step 5: Search GitHub Issues
@@ -358,7 +391,8 @@ Triage Workflow:
   2. Extract failed build -- parse spdk-bot "Build failed" message
   3. Identify failed job  -- gh run view {RUN_ID} --attempt {ATTEMPT}
   4. Download logs        -- gh api .../logs > zip; unzip | tail
-  5. Analyze failure      -- error signature, test name, context
+  5. Analyze failure      -- error signature, test name, context;
+                             patch-caused? if yes, report + stop (not a false positive)
   6. Search GitHub issues -- gh issue list -l "Intermittent Failure"
   7. Match or draft issue -- compare signatures; draft if new
   8. Print Gerrit comment -- "false positive: ISSUE_NUMBER"
