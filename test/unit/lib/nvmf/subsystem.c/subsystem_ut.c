@@ -40,7 +40,24 @@ DEFINE_STUB(spdk_bdev_io_type_supported, bool,
 
 DEFINE_STUB_V(spdk_nvmf_send_discovery_log_notice,
 	      (struct spdk_nvmf_tgt *tgt, const char *hostnqn));
-DEFINE_STUB(spdk_nvmf_qpair_disconnect, int, (struct spdk_nvmf_qpair *qpair), 0);
+
+static int g_qpair_disconnect_rc;
+static size_t g_qpair_disconnect_count;
+static bool g_qpair_disconnect_remove_ctrlr;
+static struct spdk_nvmf_qpair *g_qpair_disconnected[8];
+
+int
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair)
+{
+	SPDK_CU_ASSERT_FATAL(g_qpair_disconnect_count < SPDK_COUNTOF(g_qpair_disconnected));
+	g_qpair_disconnected[g_qpair_disconnect_count++] = qpair;
+
+	if (g_qpair_disconnect_remove_ctrlr && qpair->ctrlr != NULL) {
+		TAILQ_REMOVE(&qpair->ctrlr->subsys->ctrlrs, qpair->ctrlr, link);
+	}
+
+	return g_qpair_disconnect_rc;
+}
 
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
@@ -3697,6 +3714,337 @@ test_nvmf_subsystem_state_change(void)
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
+struct disconnect_host_cb_ctx {
+	int status;
+	uint32_t count;
+};
+
+static void
+ut_disconnect_host_cb(void *cb_arg, int status)
+{
+	struct disconnect_host_cb_ctx *ctx = cb_arg;
+
+	ctx->status = status;
+	ctx->count++;
+}
+
+static int
+nvmf_tgt_disconnect_create_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *pg = ctx_buf;
+
+	pg->thread = spdk_get_thread();
+	TAILQ_INIT(&pg->qpairs);
+
+	return 0;
+}
+
+static void
+nvmf_tgt_disconnect_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+}
+
+static struct spdk_io_channel *
+ut_disconnect_host_setup_poll_group(struct spdk_nvmf_tgt *tgt,
+				    struct spdk_nvmf_qpair **qpairs, size_t num_qpairs)
+{
+	struct spdk_nvmf_poll_group *pg;
+	struct spdk_io_channel *ch;
+	size_t i;
+
+	spdk_io_device_register(tgt,
+				nvmf_tgt_disconnect_create_poll_group,
+				nvmf_tgt_disconnect_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group),
+				NULL);
+	ch = spdk_get_io_channel(tgt);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+	pg = spdk_io_channel_get_ctx(ch);
+
+	for (i = 0; i < num_qpairs; i++) {
+		TAILQ_INSERT_TAIL(&pg->qpairs, qpairs[i], link);
+	}
+
+	return ch;
+}
+
+static void
+ut_disconnect_host_teardown_poll_group(struct spdk_nvmf_tgt *tgt, struct spdk_io_channel *ch)
+{
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(tgt, NULL);
+	poll_threads();
+}
+
+static void
+ut_disconnect_host_reset(void)
+{
+	g_qpair_disconnect_rc = 0;
+	g_qpair_disconnect_count = 0;
+	g_qpair_disconnect_remove_ctrlr = false;
+	memset(g_qpair_disconnected, 0, sizeof(g_qpair_disconnected));
+}
+
+static void
+test_nvmf_subsystem_disconnect_host_immediate_success(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.tgt = &tgt,
+		.thread = spdk_get_thread(),
+	};
+	struct spdk_nvmf_subsystem other_subsystem = {
+		.thread = spdk_get_thread(),
+	};
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_ctrlr ctrlr_a = {
+		.subsys = &subsystem,
+	};
+	struct spdk_nvmf_ctrlr ctrlr_b = {
+		.subsys = &subsystem,
+	};
+	struct spdk_nvmf_ctrlr ctrlr_other_subsystem = {
+		.subsys = &other_subsystem,
+	};
+	struct spdk_nvmf_qpair qpair_a = {
+		.ctrlr = &ctrlr_a,
+	};
+	struct spdk_nvmf_qpair qpair_b = {
+		.ctrlr = &ctrlr_b,
+	};
+	struct spdk_nvmf_qpair qpair_other_subsystem = {
+		.ctrlr = &ctrlr_other_subsystem,
+	};
+	struct spdk_nvmf_qpair *qpairs[] = {
+		&qpair_a,
+		&qpair_b,
+		&qpair_other_subsystem,
+	};
+	struct disconnect_host_cb_ctx cb_ctx = {};
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(subsystem.thread != NULL);
+
+	/* Build controller lists matching the qpair ownership below. */
+	TAILQ_INIT(&subsystem.ctrlrs);
+	TAILQ_INIT(&other_subsystem.ctrlrs);
+	snprintf(ctrlr_a.hostnqn, sizeof(ctrlr_a.hostnqn), "%s", "nqn.2016-06.io.spdk:host1");
+	snprintf(ctrlr_b.hostnqn, sizeof(ctrlr_b.hostnqn), "%s", "nqn.2016-06.io.spdk:host2");
+	snprintf(ctrlr_other_subsystem.hostnqn, sizeof(ctrlr_other_subsystem.hostnqn), "%s",
+		 "nqn.2016-06.io.spdk:host1");
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr_a, link);
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr_b, link);
+	TAILQ_INSERT_TAIL(&other_subsystem.ctrlrs, &ctrlr_other_subsystem, link);
+
+	/* Simulate the matching controller being removed when its qpair disconnects. */
+	ut_disconnect_host_reset();
+	g_qpair_disconnect_remove_ctrlr = true;
+
+	/* Build a poll group with one matching qpair and two qpairs that must be ignored. */
+	ch = ut_disconnect_host_setup_poll_group(&tgt, qpairs, SPDK_COUNTOF(qpairs));
+
+	/* Disconnect host1 from subsystem; phase 1 removes the matching controller. */
+	rc = spdk_nvmf_subsystem_disconnect_host(&subsystem, ctrlr_a.hostnqn, ut_disconnect_host_cb,
+			&cb_ctx, 10);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+	CU_ASSERT(g_qpair_disconnected[0] == &qpair_a);
+	CU_ASSERT(cb_ctx.count == 0);
+
+	/* The wait phase always completes through at least one poller execution. */
+	spdk_delay_us(NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US);
+	poll_threads();
+
+	/* Only qpair_a matches both the requested hostnqn and subsystem. */
+	CU_ASSERT(cb_ctx.count == 1);
+	CU_ASSERT(cb_ctx.status == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+	CU_ASSERT(g_qpair_disconnected[0] == &qpair_a);
+
+	/* Remove controllers that were intentionally left connected. */
+	g_qpair_disconnect_remove_ctrlr = false;
+	TAILQ_REMOVE(&subsystem.ctrlrs, &ctrlr_b, link);
+	TAILQ_REMOVE(&other_subsystem.ctrlrs, &ctrlr_other_subsystem, link);
+	ut_disconnect_host_teardown_poll_group(&tgt, ch);
+}
+
+static void
+test_nvmf_subsystem_disconnect_host_waits_for_ctrlr_removal(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.tgt = &tgt,
+		.thread = spdk_get_thread(),
+	};
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem,
+	};
+	struct spdk_nvmf_qpair qpair = {
+		.ctrlr = &ctrlr,
+	};
+	struct spdk_nvmf_qpair *qpairs[] = {
+		&qpair,
+	};
+	struct disconnect_host_cb_ctx cb_ctx = {};
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(subsystem.thread != NULL);
+
+	/* Build a subsystem with one matching controller that remains connected. */
+	TAILQ_INIT(&subsystem.ctrlrs);
+	snprintf(ctrlr.hostnqn, sizeof(ctrlr.hostnqn), "%s", "nqn.2016-06.io.spdk:host1");
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr, link);
+	ut_disconnect_host_reset();
+
+	/* Build a poll group with one qpair owned by the matching controller. */
+	ch = ut_disconnect_host_setup_poll_group(&tgt, qpairs, SPDK_COUNTOF(qpairs));
+
+	/* Start disconnect_host; phase 1 disconnects the qpair but leaves the ctrlr present. */
+	rc = spdk_nvmf_subsystem_disconnect_host(&subsystem, ctrlr.hostnqn, ut_disconnect_host_cb,
+			&cb_ctx, 10);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The wait poller should defer completion while the matching ctrlr still exists. */
+	CU_ASSERT(cb_ctx.count == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+	CU_ASSERT(g_qpair_disconnected[0] == &qpair);
+
+	/* Remove the controller and advance time enough for the 5ms poller to run. */
+	TAILQ_REMOVE(&subsystem.ctrlrs, &ctrlr, link);
+	spdk_delay_us(NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US);
+	poll_threads();
+
+	/* Completion should fire once the controller-list check observes no match. */
+	CU_ASSERT(cb_ctx.count == 1);
+	CU_ASSERT(cb_ctx.status == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+
+	/* Release the poll group resources used by this test. */
+	ut_disconnect_host_teardown_poll_group(&tgt, ch);
+}
+
+static void
+test_nvmf_subsystem_disconnect_host_timeout(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.tgt = &tgt,
+		.thread = spdk_get_thread(),
+	};
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem,
+	};
+	struct spdk_nvmf_qpair qpair = {
+		.ctrlr = &ctrlr,
+	};
+	struct spdk_nvmf_qpair *qpairs[] = {
+		&qpair,
+	};
+	struct disconnect_host_cb_ctx cb_ctx = {};
+	uint64_t timeout_ms = NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US * 3 / 1000;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(subsystem.thread != NULL);
+
+	/* Build a subsystem with one matching controller that will never be removed in time. */
+	TAILQ_INIT(&subsystem.ctrlrs);
+	snprintf(ctrlr.hostnqn, sizeof(ctrlr.hostnqn), "%s", "nqn.2016-06.io.spdk:host1");
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr, link);
+	ut_disconnect_host_reset();
+
+	/* Build a poll group with one qpair so phase 1 has work to disconnect. */
+	ch = ut_disconnect_host_setup_poll_group(&tgt, qpairs, SPDK_COUNTOF(qpairs));
+
+	/* Start disconnect_host with a timeout spanning multiple poller intervals. */
+	rc = spdk_nvmf_subsystem_disconnect_host(&subsystem, ctrlr.hostnqn, ut_disconnect_host_cb,
+			&cb_ctx, timeout_ms);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	CU_ASSERT(cb_ctx.count == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+	CU_ASSERT(g_qpair_disconnected[0] == &qpair);
+
+	/* Let the first periodic check run before the timeout expires. */
+	spdk_delay_us(NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US);
+	poll_threads();
+	CU_ASSERT(cb_ctx.count == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+
+	/* Let a second periodic check run while the controller is still present. */
+	spdk_delay_us(NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US);
+	poll_threads();
+	CU_ASSERT(cb_ctx.count == 0);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+
+	/* The third periodic check reaches the timeout with the matching controller still present. */
+	spdk_delay_us(NVMF_SUBSYSTEM_DISCONNECT_HOST_POLL_PERIOD_US);
+	poll_threads();
+	CU_ASSERT(cb_ctx.count == 1);
+	CU_ASSERT(cb_ctx.status == -ETIMEDOUT);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+
+	/* Remove the lingering controller and release test resources. */
+	TAILQ_REMOVE(&subsystem.ctrlrs, &ctrlr, link);
+	ut_disconnect_host_teardown_poll_group(&tgt, ch);
+}
+
+static void
+test_nvmf_subsystem_disconnect_host_qpair_error(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {
+		.tgt = &tgt,
+		.thread = spdk_get_thread(),
+	};
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_ctrlr ctrlr = {
+		.subsys = &subsystem,
+	};
+	struct spdk_nvmf_qpair qpair = {
+		.ctrlr = &ctrlr,
+	};
+	struct spdk_nvmf_qpair *qpairs[] = {
+		&qpair,
+	};
+	struct disconnect_host_cb_ctx cb_ctx = {};
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(subsystem.thread != NULL);
+
+	/* Build a subsystem with one matching controller. */
+	TAILQ_INIT(&subsystem.ctrlrs);
+	snprintf(ctrlr.hostnqn, sizeof(ctrlr.hostnqn), "%s", "nqn.2016-06.io.spdk:host1");
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &ctrlr, link);
+
+	/* Force phase 1 qpair disconnect to return a real error. */
+	ut_disconnect_host_reset();
+	g_qpair_disconnect_rc = -EINVAL;
+
+	/* Build a poll group with one qpair owned by the matching controller. */
+	ch = ut_disconnect_host_setup_poll_group(&tgt, qpairs, SPDK_COUNTOF(qpairs));
+
+	/* Start disconnect_host; the qpair error should complete the request immediately. */
+	rc = spdk_nvmf_subsystem_disconnect_host(&subsystem, ctrlr.hostnqn, ut_disconnect_host_cb,
+			&cb_ctx, 10);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	/* The wait poller must not be started after a phase 1 disconnect error. */
+	CU_ASSERT(cb_ctx.count == 1);
+	CU_ASSERT(cb_ctx.status == -EINVAL);
+	CU_ASSERT(g_qpair_disconnect_count == 1);
+	CU_ASSERT(g_qpair_disconnected[0] == &qpair);
+
+	/* Restore the qpair stub and release the controller and poll group resources. */
+	g_qpair_disconnect_rc = 0;
+	TAILQ_REMOVE(&subsystem.ctrlrs, &ctrlr, link);
+	ut_disconnect_host_teardown_poll_group(&tgt, ch);
+}
+
 static bool
 ut_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
 {
@@ -3878,6 +4226,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_nqn_is_valid);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_restore);
 	CU_ADD_TEST(suite, test_nvmf_subsystem_state_change);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_disconnect_host_immediate_success);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_disconnect_host_waits_for_ctrlr_removal);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_disconnect_host_timeout);
+	CU_ADD_TEST(suite, test_nvmf_subsystem_disconnect_host_qpair_error);
 	CU_ADD_TEST(suite, test_nvmf_reservation_custom_ops);
 	CU_ADD_TEST(suite, test_nvmf_ns_reservation_add_max_registrants);
 
