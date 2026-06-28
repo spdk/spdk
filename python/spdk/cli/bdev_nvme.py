@@ -209,9 +209,7 @@ def add_parser(subparsers):
                    less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
                    type=int)
     p.add_argument('-k', '--psk',
-                   help="""Set PSK and enable TCP SSL socket implementation.  The PSK can either be a
-                   name of a key attached to the keyring or a path to a file containing the key.  The
-                   latter method is deprecated.""")
+                   help='Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)')
     p.add_argument('-m', '--max-bdevs', type=int,
                    help='The size of the name array for newly created bdevs. Default is 128')
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')

@@ -380,7 +380,8 @@ def add_parser(subparsers):
     p.add_argument('nqn', help='NVMe-oF subsystem NQN')
     p.add_argument('host', help='Host NQN to allow')
     p.add_argument('-t', '--tgt-name', help='The name of the parent NVMe-oF target (optional)', type=str)
-    p.add_argument('--psk', help='Path to PSK file for TLS authentication (optional). Only applicable for TCP transport.', type=str)
+    p.add_argument('--psk', help=('Name of the pre-shared key to be used for TLS (Enables SSL socket implementation '
+                                  'for TCP). Only applicable for TCP transport.'), type=str)
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name (optional)')
     p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name (optional)')
     p.set_defaults(func=nvmf_subsystem_add_host)

@@ -295,12 +295,12 @@ format (see NVMe TCP transport specification 1.0c, section 3.6.1.5).
 
 The target supports assigning different keys for each host connecting to a given subsystem. It is
 also possible for a single host to use different keys for different subsystems. The keys are
-expected to be placed in separate files (with permissions configured only to allow read/write
-access to the owner) and can be configured using the `--psk` option in the `nvmf_subsystem_add_host`
-RPC. Additionally, to allow establishing TLS connections on a given listener, it must be created
-with `--secure-channel` option enabled. It's also worth noting that this option is mutually
-exclusive with `--allow-any-host` subsystem option and trying to add a listener to such a subsystem
-will result in an error.
+expected to be loaded into the keyring (e.g. via the `keyring_file_add_key` RPC) and can be
+referenced by name using the `--psk` option in the `nvmf_subsystem_add_host` RPC. Additionally,
+to allow establishing TLS connections on a given listener, it must be created with
+`--secure-channel` option enabled. It's also worth noting that this option is mutually exclusive
+with `--allow-any-host` subsystem option and trying to add a listener to such a subsystem will
+result in an error.
 
 On the initiator side, the key can be specified using `--psk` option in the
 `bdev_nvme_attach_controller` RPC.
@@ -323,12 +323,13 @@ cat key.txt
 NVMeTLSkey-1:01:MDAxMTIyMzM0NDU1NjY3Nzg4OTlhYWJiY2NkZGVlZmZwJEiQ:
 
 build/bin/nvmf_tgt &
+scripts/rpc.py keyring_file_add_key nvme_tls_key key.txt
 scripts/rpc.py nvmf_create_transport -t TCP
 scripts/rpc.py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -s SPDK00000000000001 -m 10
 scripts/rpc.py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t tcp -a 127.0.0.1 -s 4420 \
                --secure-channel
 scripts/rpc.py nvmf_subsystem_add_host nqn.2016-06.io.spdk:cnode1 nqn.2016-06.io.spdk:host1 \
-               --psk key.txt
+               --psk nvme_tls_key
 ~~~
 
 ### Initiator setup
@@ -341,9 +342,10 @@ cat key.txt
 NVMeTLSkey-1:01:MDAxMTIyMzM0NDU1NjY3Nzg4OTlhYWJiY2NkZGVlZmZwJEiQ:
 
 build/examples/bdevperf -m 0x2 -z -r /var/tmp/bdevperf.sock -q 128 -o 4096 -w verify -t 10 &
+scripts/rpc.py -s /var/tmp/bdevperf.sock keyring_file_add_key nvme_tls_key key.txt
 scripts/rpc.py -s /var/tmp/bdevperf.sock bdev_nvme_attach_controller -b TLSTEST -t tcp -a 127.0.0.1 \
                -s 4420 -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -q nqn.2016-06.io.spdk:host1 \
-               --psk key.txt
+               --psk nvme_tls_key
 ~~~
 
 First of the two commands will launch bdevperf, the second one will attempt to construct NVMe bdev

@@ -4363,7 +4363,7 @@
         {
           "name": "psk",
           "type": "string",
-          "description": "Path to a file containing PSK for TLS connection"
+          "description": "Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)"
         },
         {
           "name": "dhchap_key",
