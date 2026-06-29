@@ -1,0 +1,23 @@
+{
+global:
+    spdk_hot_upgrade_init;
+    spdk_hot_upgrade_set_state;
+    spdk_hot_upgrade_get_state;
+    spdk_hot_upgrade_state_transition_valid;
+    spdk_hot_upgrade_state_str;
+    spdk_hot_upgrade_is_initialized;
+    spdk_hot_upgrade_is_primary;
+    spdk_hot_upgrade_set_process_role;
+    spdk_hot_upgrade_sigusr1_received;
+    spdk_hot_upgrade_clear_sigusr1;
+    spdk_hot_upgrade_create_ipc_sock;
+    spdk_hot_upgrade_connect_ipc_sock;
+    spdk_hot_upgrade_get_ipc_sock;
+    spdk_hot_upgrade_send_fd;
+    spdk_hot_upgrade_recv_fd;
+    spdk_hot_upgrade_state_save;
+    spdk_hot_upgrade_state_load;
+    spdk_hot_upgrade_state_file_cleanup;
+
+local: *;
+};

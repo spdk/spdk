@@ -10,6 +10,7 @@
 #include "spdk/queue.h"
 #include "spdk/thread.h"
 
+#include "spdk_internal/init.h"
 #include "spdk/env.h"
 
 #include "spdk/json.h"
@@ -28,6 +29,7 @@ static spdk_subsystem_init_fn g_subsystem_start_fn = NULL;
 static void *g_subsystem_start_arg = NULL;
 static spdk_msg_fn g_subsystem_stop_fn = NULL;
 static void *g_subsystem_stop_arg = NULL;
+static struct spdk_thread *g_fini_thread = NULL;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -59,14 +61,6 @@ struct spdk_subsystem *
 subsystem_find(const char *name)
 {
 	return _subsystem_find(&g_subsystems, name);
-}
-
-bool
-spdk_subsystem_exists(const char *name)
-{
-	assert(spdk_thread_is_app_thread(NULL));
-
-	return subsystem_find(name) != NULL;
 }
 
 struct spdk_subsystem *
@@ -205,10 +199,10 @@ spdk_subsystem_init(spdk_subsystem_init_fn cb_fn, void *cb_arg)
 	spdk_subsystem_init_next(0);
 }
 
-void
-spdk_subsystem_fini_next(void)
+static void
+subsystem_fini_next(void *arg1)
 {
-	assert(spdk_thread_is_app_thread(NULL));
+	assert(g_fini_thread == spdk_get_thread());
 
 	if (!g_next_subsystem) {
 		/* If the initialized flag is false, then we've failed to initialize
@@ -238,12 +232,22 @@ spdk_subsystem_fini_next(void)
 }
 
 void
+spdk_subsystem_fini_next(void)
+{
+	if (g_fini_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(g_fini_thread, subsystem_fini_next, NULL);
+	} else {
+		subsystem_fini_next(NULL);
+	}
+}
+
+void
 spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 {
-	assert(spdk_thread_is_app_thread(NULL));
-
 	g_subsystem_stop_fn = cb_fn;
 	g_subsystem_stop_arg = cb_arg;
+
+	g_fini_thread = spdk_get_thread();
 
 	spdk_subsystem_fini_next();
 }
@@ -256,4 +260,103 @@ subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subs
 	} else {
 		spdk_json_write_null(w);
 	}
+}
+
+/* ======== Hot Upgrade Subsystem Traversal ======== */
+
+static struct spdk_subsystem *g_hu_next_subsystem;
+static spdk_subsystem_fini_fn g_hu_init_cb_fn;
+static void *g_hu_init_cb_arg;
+static spdk_subsystem_fini_fn g_hu_fini_cb_fn;
+static void *g_hu_fini_cb_arg;
+
+static void _hu_start_traversal(spdk_subsystem_fini_fn cb_fn, void *cb_arg)
+{
+	subsystem_sort();
+	g_hu_fini_cb_fn = cb_fn;
+	g_hu_fini_cb_arg = cb_arg;
+	g_hu_next_subsystem = TAILQ_FIRST(&g_subsystems);
+}
+
+void spdk_subsystem_primary_drain_io(spdk_subsystem_fini_fn cb_fn, void *cb_arg) {
+	_hu_start_traversal(cb_fn, cb_arg);
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->primary_drain_io) { s->primary_drain_io(cb_arg); return; }
+	}
+	if (cb_fn) { cb_fn(cb_arg); g_hu_fini_cb_fn = NULL; g_hu_fini_cb_arg = NULL; }
+}
+
+void spdk_subsystem_primary_drain_io_next(int rc) {
+	if (rc != 0) { SPDK_ERRLOG("drain_io failed rc=%d\n", rc); if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; } return; }
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->primary_drain_io) { s->primary_drain_io(g_hu_fini_cb_arg); return; }
+	}
+	if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; }
+}
+
+void spdk_subsystem_primary_suspend(spdk_subsystem_fini_fn cb_fn, void *cb_arg) {
+	_hu_start_traversal(cb_fn, cb_arg);
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->primary_suspend) { s->primary_suspend(cb_arg); return; }
+	}
+	if (cb_fn) { cb_fn(cb_arg); g_hu_fini_cb_fn = NULL; g_hu_fini_cb_arg = NULL; }
+}
+
+void spdk_subsystem_primary_suspend_next(int rc) {
+	if (rc != 0) { SPDK_ERRLOG("suspend failed rc=%d\n", rc); if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; } return; }
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->primary_suspend) { s->primary_suspend(g_hu_fini_cb_arg); return; }
+	}
+	if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; }
+}
+
+void spdk_subsystem_secondary_pre_init(spdk_subsystem_fini_fn cb_fn, void *cb_arg) {
+	subsystem_sort();
+	g_hu_init_cb_fn = cb_fn;
+	g_hu_init_cb_arg = cb_arg;
+	g_hu_next_subsystem = TAILQ_FIRST(&g_subsystems);
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->secondary_pre_init) { s->secondary_pre_init(cb_arg); return; }
+	}
+	if (cb_fn) { cb_fn(cb_arg); g_hu_init_cb_fn = NULL; g_hu_init_cb_arg = NULL; }
+}
+
+void spdk_subsystem_secondary_pre_init_next(int rc) {
+	if (rc != 0) { SPDK_ERRLOG("pre_init failed rc=%d\n", rc); if (g_hu_init_cb_fn) { g_hu_init_cb_fn(g_hu_init_cb_arg); g_hu_init_cb_fn = NULL; } return; }
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->secondary_pre_init) { s->secondary_pre_init(g_hu_init_cb_arg); return; }
+	}
+	if (g_hu_init_cb_fn) { g_hu_init_cb_fn(g_hu_init_cb_arg); g_hu_init_cb_fn = NULL; }
+}
+
+void spdk_subsystem_secondary_takeover(spdk_subsystem_fini_fn cb_fn, void *cb_arg) {
+	_hu_start_traversal(cb_fn, cb_arg);
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->secondary_takeover) { s->secondary_takeover(cb_arg); return; }
+	}
+	if (cb_fn) { cb_fn(cb_arg); g_hu_fini_cb_fn = NULL; g_hu_fini_cb_arg = NULL; }
+}
+
+void spdk_subsystem_secondary_takeover_next(int rc) {
+	if (rc != 0) { SPDK_ERRLOG("takeover failed rc=%d\n", rc); if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; } return; }
+	while (g_hu_next_subsystem) {
+		struct spdk_subsystem *s = g_hu_next_subsystem;
+		g_hu_next_subsystem = TAILQ_NEXT(s, tailq);
+		if (s->secondary_takeover) { s->secondary_takeover(g_hu_fini_cb_arg); return; }
+	}
+	if (g_hu_fini_cb_fn) { g_hu_fini_cb_fn(g_hu_fini_cb_arg); g_hu_fini_cb_fn = NULL; }
 }

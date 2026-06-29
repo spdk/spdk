@@ -8,11 +8,16 @@
 	spdk_app_start_shutdown;
 	spdk_app_stop;
 	spdk_app_get_shm_id;
+	spdk_app_get_base_virtaddr;
+	spdk_app_get_rpc_addr;
+	spdk_app_secondary_pre_init;
+	spdk_app_secondary_full_init;
+	spdk_reactor_hu_pause;
+	spdk_reactor_hu_resume;
 	spdk_app_parse_core_mask;
 	spdk_app_get_core_mask;
 	spdk_app_parse_args;
 	spdk_app_usage;
-	spdk_app_setup_trace;
 	spdk_event_allocate;
 	spdk_event_call;
 	spdk_framework_enable_context_switch_monitor;
@@ -24,8 +29,6 @@
 	spdk_scheduler_register;
 	spdk_scheduler_set_period;
 	spdk_scheduler_get_period;
-	spdk_scheduler_get_scheduling_lcore;
-	spdk_scheduler_set_scheduling_lcore;
 	spdk_governor_set;
 	spdk_governor_get;
 	spdk_governor_register;

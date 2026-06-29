@@ -17,7 +17,6 @@
 
 #include "spdk/bdev.h"
 #include "spdk/bdev_zone.h"
-#include "spdk/log.h"
 #include "spdk/queue.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/thread.h"
@@ -143,6 +142,12 @@ struct spdk_bdev_module {
 	bool async_fini_start;
 
 	/**
+	 * Hot upgrade: function table for this module's bdevs.
+	 * Secondary process uses this to fixup inherited bdevs' fn_table pointer.
+	 */
+	const struct spdk_bdev_fn_table *fn_table;
+
+	/**
 	 * Fields that are used by the internal bdev subsystem. Bdev modules
 	 *  must not read or write to these fields.
 	 */
@@ -220,8 +225,16 @@ struct spdk_bdev_claim_opts {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bdev_claim_opts) == 48, "Incorrect size");
 
 /**
- * Retrieve the name of the bdev module claim type.
- * See function definition for mapping claims types to name.
+ * Retrieve the name of the bdev module claim type. The mapping between claim types and their names
+ * is:
+ *
+ *   SPDK_BDEV_CLAIM_NONE			"not_claimed"
+ *   SPDK_BDEV_CLAIM_EXCL_WRITE			"exclusive_write"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_ONE	"read_many_write_one"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_NONE	"read_many_write_none"
+ *   SPDK_BDEV_CLAIM_READ_MANY_WRITE_SHARED	"read_many_write_shared"
+ *
+ * Any other value will return "invalid_claim".
  *
  * \param claim_type The claim type.
  * \return A string that describes the claim type.
@@ -297,12 +310,7 @@ typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
  * calls for I/O via submit_request.
  */
 struct spdk_bdev_fn_table {
-	/** Destroy the backend block device object. If the destruct process
-	 *  for the bdev is asynchronous, return 1 from this function, and
-	 *  then call spdk_bdev_destruct_done() once the async work is
-	 *  complete. If the destruct process is synchronous, return 0 if
-	 *  successful, or <0 if unsuccessful.
-	 */
+	/** Destroy the backend block device object */
 	int (*destruct)(void *ctx);
 
 	/** Process the IO. */
@@ -348,17 +356,10 @@ struct spdk_bdev_fn_table {
 	void *(*get_module_ctx)(void *ctx);
 
 	/** Get memory domains used by bdev. Optional - may be NULL.
-	 * Deprecated: use get_memory_domain_types instead. Will be removed in v26.09.
 	 * Vbdev module implementation should call \ref spdk_bdev_get_memory_domains for underlying bdev.
 	 * Vbdev module must inspect types of memory domains returned by base bdev and report only those
 	 * memory domains that it can work with. */
 	int (*get_memory_domains)(void *ctx, struct spdk_memory_domain **domains, int array_size);
-
-	/** Get memory domain types used by bdev. Optional - may be NULL.
-	 * Vbdev module implementation should call \ref spdk_bdev_get_memory_domain_types for underlying
-	 * bdev. Vbdev module must inspect types of memory domains returned by base bdev and report only
-	 * those types that it can work with. */
-	int (*get_memory_domain_types)(void *ctx, enum spdk_dma_device_type *types, uint32_t array_size);
 
 	/**
 	 * Reset I/O statistics specific for this bdev context.
@@ -398,9 +399,6 @@ enum spdk_bdev_io_status {
 	 */
 	SPDK_MIN_BDEV_IO_STATUS = SPDK_BDEV_IO_STATUS_AIO_ERROR,
 };
-
-/* We have to use the typedef in the function declaration to appease astyle. */
-typedef enum spdk_bdev_io_status spdk_bdev_io_status_t;
 
 struct spdk_bdev_name {
 	char *name;
@@ -446,70 +444,22 @@ struct spdk_bdev {
 	/** Size in bytes of a physical block for the backend */
 	uint32_t phys_blocklen;
 
-	/** Bitmap of supported io types */
-	uint32_t io_type_supported;
-
 	/** Number of blocks */
 	uint64_t blockcnt;
 
-	struct {
-		/**
-		 * Specifies whether the write_unit_size is mandatory or
-		 * only advisory. If set to true, the bdev layer will split
-		 * WRITE I/O that span the write_unit_size before
-		 * submitting them to the bdev module.
-		 *
-		 * This field takes precedence over split_on_optimal_io_boundary
-		 * for WRITE I/O if both are set to true.
-		 *
-		 * Note that this field cannot be used to force splitting of
-		 * UNMAP, WRITE_ZEROES or FLUSH I/O.
-		 */
-		uint32_t split_on_write_unit : 1;
-
-		/**
-		 * Specifies whether the optimal_io_boundary is mandatory or
-		 * only advisory.  If set to true, the bdev layer will split
-		 * READ and WRITE I/O that span the optimal_io_boundary before
-		 * submitting them to the bdev module.
-		 *
-		 * Note that this field cannot be used to force splitting of
-		 * UNMAP, WRITE_ZEROES or FLUSH I/O.
-		 */
-		uint32_t split_on_optimal_io_boundary : 1;
-
-		/**
-		 * Specify metadata location and set to true if metadata is interleaved
-		 * with block data or false if metadata is separated with block data.
-		 *
-		 * Note that this field is valid only if there is metadata.
-		 */
-		uint32_t md_interleave : 1;
-
-		/*
-		 * DIF location.
-		 *
-		 * Set to true if DIF is set in the first 8/16 bytes of metadata or false
-		 * if DIF is set in the last 8/16 bytes of metadata.
-		 *
-		 * Note that this field is valid only if DIF is enabled.
-		 */
-		uint32_t dif_is_head_of_md : 1;
-
-		/**
-		 * Specify whether bdev is zoned device.
-		 */
-		uint32_t zoned : 1;
-
-		/**
-		 * Specifies whether bdev supports media management events.
-		 */
-		uint32_t media_events : 1;
-
-		uint32_t memory_domains_supported : 1;
-
-		uint32_t reserved : 25;
-	};
+	/**
+	 * Specifies whether the write_unit_size is mandatory or
+	 * only advisory. If set to true, the bdev layer will split
+	 * WRITE I/O that span the write_unit_size before
+	 * submitting them to the bdev module.
+	 *
+	 * This field takes precedence over split_on_optimal_io_boundary
+	 * for WRITE I/O if both are set to true.
+	 *
+	 * Note that this field cannot be used to force splitting of
+	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
+	 */
+	bool split_on_write_unit;
 
 	/** Number of blocks required for write */
 	uint32_t write_unit_size;
@@ -526,27 +476,21 @@ struct spdk_bdev {
 	 */
 	uint8_t required_alignment;
 
-	uint8_t reserved1;
+	/**
+	 * Specifies whether the optimal_io_boundary is mandatory or
+	 * only advisory.  If set to true, the bdev layer will split
+	 * READ and WRITE I/O that span the optimal_io_boundary before
+	 * submitting them to the bdev module.
+	 *
+	 * Note that this field cannot be used to force splitting of
+	 * UNMAP, WRITE_ZEROES or FLUSH I/O.
+	 */
+	bool split_on_optimal_io_boundary;
 
 	/**
 	 * Optimal I/O boundary in blocks, or 0 for no value reported.
 	 */
 	uint32_t optimal_io_boundary;
-
-	/** Size in blocks of the preferred write alignment for the backend */
-	uint32_t preferred_write_alignment;
-
-	/** Size in blocks of the preferred write granularity for the backend */
-	uint32_t preferred_write_granularity;
-
-	/** Size in blocks of the optimal write size for the backend */
-	uint32_t optimal_write_size;
-
-	/** Size in blocks of the preferred unmap alignment for the backend */
-	uint32_t preferred_unmap_alignment;
-
-	/** Size in blocks of the preferred unmap granularity for the backend */
-	uint32_t preferred_unmap_granularity;
 
 	/**
 	 * Max io size in bytes of a single segment
@@ -590,7 +534,13 @@ struct spdk_bdev {
 	/** Size in bytes of a metadata for the backend */
 	uint32_t md_len;
 
-	uint8_t reserved2[4];
+	/**
+	 * Specify metadata location and set to true if metadata is interleaved
+	 * with block data or false if metadata is separated with block data.
+	 *
+	 * Note that this field is valid only if there is metadata.
+	 */
+	bool md_interleave;
 
 	/**
 	 * DIF type for this bdev.
@@ -599,22 +549,25 @@ struct spdk_bdev {
 	 */
 	enum spdk_dif_type dif_type;
 
-	/**
-	 * DIF protection information format for this bdev.
+	/*
+	 * DIF location.
 	 *
-	 * Note that this field is valid only if there is metadata and dif_type is
-	 * not SPDK_DIF_DISABLE.
+	 * Set to true if DIF is set in the first 8/16 bytes of metadata or false
+	 * if DIF is set in the last 8/16 bytes of metadata.
+	 *
+	 * Note that this field is valid only if DIF is enabled.
 	 */
-	enum spdk_dif_pi_format dif_pi_format;
-
-	uint8_t reserved3[4];
+	bool dif_is_head_of_md;
 
 	/**
 	 * Specify whether each DIF check type is enabled.
 	 */
 	uint32_t dif_check_flags;
 
-	uint8_t reserved4[8];
+	/**
+	 * Specify whether bdev is zoned device.
+	 */
+	bool zoned;
 
 	/**
 	 * Default size of each zone (in blocks).
@@ -641,23 +594,10 @@ struct spdk_bdev {
 	 */
 	uint32_t optimal_open_zones;
 
-	uint8_t reserved6[4];
-
 	/**
-	 * Specifies the bdev nvme controller attributes.
+	 * Specifies whether bdev supports media management events.
 	 */
-	union spdk_bdev_nvme_ctratt ctratt;
-
-	/**
-	 * NVMe namespace ID.
-	 */
-	uint32_t nsid;
-
-	/**
-	 * NVMe I/O Command Set Identifier.
-	 * Only meaningful when nsid != 0. Defaults to SPDK_NVME_CSI_NVM.
-	 */
-	enum spdk_nvme_csi csi;
+	bool media_events;
 
 	/* Upon receiving a reset request, this is the amount of time in seconds
 	 * to wait for all I/O to complete before moving forward with the reset.
@@ -678,21 +618,6 @@ struct spdk_bdev {
 	 * sent down to the device, without any delays and waiting for outstanding IO. */
 	uint16_t reset_io_drain_timeout;
 
-	uint8_t reserved7[2];
-
-	struct {
-		/** Is numa.id valid? Needed to know whether numa.id == 0 was
-		 *  explicitly set by bdev module or implicitly set when
-		 *  calloc()'ing the structure.
-		 */
-		uint32_t id_valid : 1;
-		/** NUMA node ID for the bdev */
-		int32_t id : 31;
-	} numa;
-
-	/** Bitmap of supported io types */
-	uint32_t accel_sequence_supported;
-
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
@@ -710,9 +635,6 @@ struct spdk_bdev {
 
 		/** True if the state of the QoS is being modified */
 		bool qos_mod_in_progress;
-
-		/** Trace ID for this bdev. */
-		uint16_t trace_id;
 
 		/**
 		 * SPDK spinlock protecting many of the internal fields of this structure. If
@@ -767,6 +689,9 @@ struct spdk_bdev {
 		/** Unregister call context */
 		void *unregister_ctx;
 
+		/** Thread that issued the unregister.  The cb must be called on this thread. */
+		struct spdk_thread *unregister_td;
+
 		/** List of open descriptors for this block device. */
 		TAILQ_HEAD(, spdk_bdev_desc) open_descs;
 
@@ -774,9 +699,6 @@ struct spdk_bdev {
 
 		/** points to a reset bdev_io if one is in progress. */
 		struct spdk_bdev_io *reset_in_progress;
-
-		/** List of reset bdev_ios that are not submitted to the underlying device. */
-		bdev_io_tailq_t		queued_resets;
 
 		/** poller for tracking the queue_depth of a device, NULL if not tracking */
 		struct spdk_poller *qd_poller;
@@ -809,12 +731,8 @@ struct spdk_bdev {
 		bool	qd_poll_in_progress;
 
 		/** histogram enabled on this bdev */
-		bool	 histogram_enabled;
-		bool	 histogram_in_progress;
-		uint8_t	 histogram_io_type;
-		uint8_t	 histogram_granularity;
-		uint64_t histogram_min_val;
-		uint64_t histogram_max_val;
+		bool	histogram_enabled;
+		bool	histogram_in_progress;
 
 		/** Currently locked ranges for this bdev.  Used to populate new channels. */
 		lba_range_tailq_t locked_ranges;
@@ -855,287 +773,6 @@ typedef void (*spdk_bdev_io_get_aux_buf_cb)(struct spdk_io_channel *ch,
 /* Maximum number of IOVs used for I/O splitting */
 #define SPDK_BDEV_IO_NUM_CHILD_IOV 32
 
-struct spdk_bdev_io_block_params {
-	/** For SG buffer cases, array of iovecs to transfer. */
-	struct iovec *iovs;
-
-	/** For SG buffer cases, number of iovecs in iovec array. */
-	int iovcnt;
-
-	/** Total size of data to be transferred. */
-	uint64_t num_blocks;
-
-	/** Starting offset (in blocks) of the bdev for this I/O. */
-	uint64_t offset_blocks;
-
-	/** Memory domain and its context to be used by bdev modules */
-	struct spdk_memory_domain *memory_domain;
-	void *memory_domain_ctx;
-
-	/* Sequence of accel operations */
-	struct spdk_accel_sequence *accel_sequence;
-
-	/* Metadata buffer */
-	void *md_buf;
-
-	/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
-	 *  for the second operation.
-	 */
-	struct iovec *fused_iovs;
-
-	/** Number of iovecs in fused_iovs. */
-	int fused_iovcnt;
-
-	/** Specify whether each DIF check type is enabled. */
-	uint32_t dif_check_flags;
-
-	/** defined by \ref spdk_bdev_nvme_cdw12 */
-	union spdk_bdev_nvme_cdw12 nvme_cdw12;
-
-	/** defined by \ref spdk_bdev_nvme_cdw13 */
-	union spdk_bdev_nvme_cdw13 nvme_cdw13;
-
-	struct {
-		/** Whether the buffer should be populated with the real data */
-		uint8_t populate : 1;
-
-		/** Whether the buffer should be committed back to disk */
-		uint8_t commit : 1;
-
-		/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
-		uint8_t start : 1;
-	} zcopy;
-
-	struct {
-		/** The callback argument for the outstanding request which this abort
-		 *  attempts to cancel.
-		 */
-		void *bio_cb_arg;
-	} abort;
-
-	struct {
-		/** The offset of next data/hole.  */
-		uint64_t offset;
-	} seek;
-
-	struct {
-		/** Starting source offset (in blocks) of the bdev for copy I/O. */
-		uint64_t src_offset_blocks;
-	} copy;
-
-	/** DIF context */
-	struct spdk_dif_ctx dif_ctx;
-
-	/** DIF error information */
-	struct spdk_dif_error dif_err;
-};
-
-struct spdk_bdev_io_reset_params {
-	/** Channel reference held while messages for this reset are in progress. */
-	struct spdk_io_channel *ch_ref;
-	struct {
-		/* Handle to timed poller that checks each channel for outstanding IO. */
-		struct spdk_poller *poller;
-		/* Store calculated time value, when a poller should stop its work. */
-		uint64_t  stop_time_tsc;
-	} wait_poller;
-};
-
-struct spdk_bdev_io_abort_params {
-	/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
-	struct spdk_bdev_io *bio_to_abort;
-};
-
-struct spdk_bdev_io_nvme_passthru_params {
-	/* The NVMe command to execute */
-	struct spdk_nvme_cmd cmd;
-
-	/* For SG buffer cases, array of iovecs to transfer. */
-	struct iovec *iovs;
-
-	/* For SG buffer cases, number of iovecs in iovec array. */
-	int iovcnt;
-
-	/* The data buffer to transfer */
-	void *buf;
-
-	/* The number of bytes to transfer */
-	size_t nbytes;
-
-	/* The meta data buffer to transfer */
-	void *md_buf;
-
-	/* meta data buffer size to transfer */
-	size_t md_len;
-};
-
-struct spdk_bdev_io_zone_mgmt_params {
-	/* First logical block of a zone */
-	uint64_t zone_id;
-
-	/* Number of zones */
-	uint32_t num_zones;
-
-	/* Used to change zoned device zone state */
-	enum spdk_bdev_zone_action zone_action;
-
-	/* The data buffer */
-	void *buf;
-};
-
-/**
- *  Fields that are used internally by the bdev subsystem.  Bdev modules
- *  must not read or write to these fields.
- */
-struct spdk_bdev_io_internal_fields {
-	/** The bdev I/O channel that this was handled on. */
-	struct spdk_bdev_channel *ch;
-
-	union {
-		struct {
-
-			/** Whether the accel_sequence member is valid */
-			uint8_t has_accel_sequence		: 1;
-
-			/** Whether memory_domain member is valid */
-			uint8_t has_memory_domain		: 1;
-
-			/** Whether the split data structure is valid */
-			uint8_t split				: 1;
-
-			/** Whether ptr in the buf data structure is valid */
-			uint8_t has_buf				: 1;
-
-			/** Whether the bounce_buf data structure is valid */
-			uint8_t has_bounce_buf			: 1;
-
-			/** Whether we are currently inside the submit request call */
-			uint8_t in_submit_request		: 1;
-
-			/** Whether the I/O is a sub-I/O of a split parent I/O */
-			uint8_t child_io		: 1;
-
-			/**
-			 * Whether DIF insert/strip has already been added to the accel sequence
-			 * for this I/O.  Used to prevent double-processing on split child I/Os.
-			 */
-			uint8_t has_metadata			: 1;
-		};
-		uint8_t raw;
-	} f;
-
-	/** Status for the IO */
-	int8_t status;
-
-	/** Retry state (resubmit, re-pull, re-push, etc.) */
-	uint8_t retry_state;
-
-	uint8_t	reserved[5];
-
-	/** The bdev descriptor that was used when submitting this I/O. */
-	struct spdk_bdev_desc *desc;
-
-	/** User function that will be called when this completes */
-	spdk_bdev_io_completion_cb cb;
-
-	/** Context that will be passed to the completion callback */
-	void *caller_ctx;
-
-	/** Current tsc at submit time. Used to calculate latency at completion. */
-	uint64_t submit_tsc;
-
-	/** Entry to the list io_submitted of struct spdk_bdev_channel */
-	TAILQ_ENTRY(spdk_bdev_io) ch_link;
-
-	/** bdev_io pool entry */
-	STAILQ_ENTRY(spdk_bdev_io) buf_link;
-
-	/** Error information from a device */
-	union {
-		struct {
-			/** NVMe completion queue entry DW0 */
-			uint32_t cdw0;
-			/** NVMe status code type */
-			uint8_t sct;
-			/** NVMe status code */
-			uint8_t sc;
-		} nvme;
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
-		struct {
-			/** SCSI status code */
-			uint8_t sc;
-			/** SCSI sense key */
-			uint8_t sk;
-			/** SCSI additional sense code */
-			uint8_t asc;
-			/** SCSI additional sense code qualifier */
-			uint8_t ascq;
-		} scsi;
-		/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
-		int aio_result;
-	} error;
-
-	struct {
-		/** stored user callback in case we split the I/O and use a temporary callback */
-		spdk_bdev_io_completion_cb stored_user_cb;
-
-		/** number of blocks remaining in a split i/o */
-		uint64_t remaining_num_blocks;
-
-		/** current offset of the split I/O in the bdev */
-		uint64_t current_offset_blocks;
-
-		/** count of outstanding batched split I/Os */
-		uint32_t outstanding;
-	} split;
-
-	struct {
-		/** bdev allocated memory associated with this request */
-		void *ptr;
-
-		/** requested size of the buffer associated with this I/O */
-		uint64_t len;
-	} buf;
-
-	/** if the request is double buffered, store original request iovs here */
-	struct {
-		struct iovec  iov;
-		struct iovec  md_iov;
-		struct iovec  orig_md_iov;
-		struct iovec *orig_iovs;
-		int           orig_iovcnt;
-	} bounce_buf;
-
-	/** Callback for when buf is allocated */
-	spdk_bdev_io_get_buf_cb get_buf_cb;
-
-	/**
-	 * Queue entry used in several cases:
-	 *  1. IOs awaiting retry due to NOMEM status,
-	 *  2. IOs awaiting submission due to QoS,
-	 *  3. IOs with an accel sequence being executed,
-	 *  4. IOs awaiting memory domain pull/push,
-	 *  5. queued reset requests.
-	 */
-	TAILQ_ENTRY(spdk_bdev_io) link;
-
-	/** iobuf queue entry */
-	struct spdk_iobuf_entry iobuf;
-
-	/** Enables queuing parent I/O when no bdev_ios available for split children. */
-	struct spdk_bdev_io_wait_entry waitq_entry;
-
-	/** Memory domain and its context passed by the user in ext API */
-	struct spdk_memory_domain *memory_domain;
-	void *memory_domain_ctx;
-
-	/* Sequence of accel operations passed by the user */
-	struct spdk_accel_sequence *accel_sequence;
-
-	/** Data transfer completion callback */
-	void (*data_transfer_cpl)(void *ctx, int rc);
-};
-
 struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
@@ -1143,12 +780,8 @@ struct spdk_bdev_io {
 	/** Enumerated value representing the I/O type. */
 	uint8_t type;
 
-	uint8_t reserved0;
-
 	/** Number of IO submission retries */
 	uint16_t num_retries;
-
-	uint32_t reserved1;
 
 	/** A single iovec element for use by this bdev_io. */
 	struct iovec iov;
@@ -1156,25 +789,250 @@ struct spdk_bdev_io {
 	/** Array of iovecs used for I/O splitting. */
 	struct iovec child_iov[SPDK_BDEV_IO_NUM_CHILD_IOV];
 
-	uint8_t reserved2[32];
-
-	/** Parameters filled in by the user */
 	union {
-		struct spdk_bdev_io_block_params bdev;
-		struct spdk_bdev_io_reset_params reset;
-		struct spdk_bdev_io_abort_params abort;
-		struct spdk_bdev_io_nvme_passthru_params nvme_passthru;
-		struct spdk_bdev_io_zone_mgmt_params zone_mgmt;
+		struct {
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** For fused operations such as COMPARE_AND_WRITE, array of iovecs
+			 *  for the second operation.
+			 */
+			struct iovec *fused_iovs;
+
+			/** Number of iovecs in fused_iovs. */
+			int fused_iovcnt;
+
+			/* Metadata buffer */
+			void *md_buf;
+
+			/** Total size of data to be transferred. */
+			uint64_t num_blocks;
+
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
+
+			/** Memory domain and its context to be used by bdev modules */
+			struct spdk_memory_domain *memory_domain;
+			void *memory_domain_ctx;
+
+			/* Sequence of accel operations */
+			struct spdk_accel_sequence *accel_sequence;
+
+			/** stored user callback in case we split the I/O and use a temporary callback */
+			spdk_bdev_io_completion_cb stored_user_cb;
+
+			/** number of blocks remaining in a split i/o */
+			uint64_t split_remaining_num_blocks;
+
+			/** current offset of the split I/O in the bdev */
+			uint64_t split_current_offset_blocks;
+
+			/** count of outstanding batched split I/Os */
+			uint32_t split_outstanding;
+
+			struct {
+				/** Whether the buffer should be populated with the real data */
+				uint8_t populate : 1;
+
+				/** Whether the buffer should be committed back to disk */
+				uint8_t commit : 1;
+
+				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
+				uint8_t start : 1;
+			} zcopy;
+
+			struct {
+				/** The callback argument for the outstanding request which this abort
+				 *  attempts to cancel.
+				 */
+				void *bio_cb_arg;
+			} abort;
+
+			struct {
+				/** The offset of next data/hole.  */
+				uint64_t offset;
+			} seek;
+
+			struct {
+				/** Starting source offset (in blocks) of the bdev for copy I/O. */
+				uint64_t src_offset_blocks;
+			} copy;
+		} bdev;
+		struct {
+			/** Channel reference held while messages for this reset are in progress. */
+			struct spdk_io_channel *ch_ref;
+			struct {
+				/* Handle to timed poller that checks each channel for outstanding IO. */
+				struct spdk_poller *poller;
+				/* Store calculated time value, when a poller should stop its work. */
+				uint64_t  stop_time_tsc;
+			} wait_poller;
+		} reset;
+		struct {
+			/** The outstanding request matching bio_cb_arg which this abort attempts to cancel. */
+			struct spdk_bdev_io *bio_to_abort;
+		} abort;
+		struct {
+			/* The NVMe command to execute */
+			struct spdk_nvme_cmd cmd;
+
+			/* For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/* For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/* The data buffer to transfer */
+			void *buf;
+
+			/* The number of bytes to transfer */
+			size_t nbytes;
+
+			/* The meta data buffer to transfer */
+			void *md_buf;
+
+			/* meta data buffer size to transfer */
+			size_t md_len;
+		} nvme_passthru;
+		struct {
+			/* First logical block of a zone */
+			uint64_t zone_id;
+
+			/* Number of zones */
+			uint32_t num_zones;
+
+			/* Used to change zoned device zone state */
+			enum spdk_bdev_zone_action zone_action;
+
+			/* The data buffer */
+			void *buf;
+		} zone_mgmt;
 	} u;
 
-	uint8_t reserved3[40];
+	/** It may be used by modules to put the bdev_io into its own list. */
+	TAILQ_ENTRY(spdk_bdev_io) module_link;
 
 	/**
 	 *  Fields that are used internally by the bdev subsystem.  Bdev modules
 	 *  must not read or write to these fields.
 	 */
-	struct spdk_bdev_io_internal_fields internal;
-	uint8_t reserved4[64];
+	struct __bdev_io_internal_fields {
+		/** The bdev I/O channel that this was handled on. */
+		struct spdk_bdev_channel *ch;
+
+		uint8_t	reserved[8];
+
+		/** The bdev descriptor that was used when submitting this I/O. */
+		struct spdk_bdev_desc *desc;
+
+		/** User function that will be called when this completes */
+		spdk_bdev_io_completion_cb cb;
+
+		/** Context that will be passed to the completion callback */
+		void *caller_ctx;
+
+		/** Current tsc at submit time. Used to calculate latency at completion. */
+		uint64_t submit_tsc;
+
+		/** Error information from a device */
+		union {
+			struct {
+				/** NVMe completion queue entry DW0 */
+				uint32_t cdw0;
+				/** NVMe status code type */
+				uint8_t sct;
+				/** NVMe status code */
+				uint8_t sc;
+			} nvme;
+			/** Only valid when status is SPDK_BDEV_IO_STATUS_SCSI_ERROR */
+			struct {
+				/** SCSI status code */
+				uint8_t sc;
+				/** SCSI sense key */
+				uint8_t sk;
+				/** SCSI additional sense code */
+				uint8_t asc;
+				/** SCSI additional sense code qualifier */
+				uint8_t ascq;
+			} scsi;
+			/** Only valid when status is SPDK_BDEV_IO_STATUS_AIO_ERROR */
+			int aio_result;
+		} error;
+
+		/**
+		 * Set to true while the bdev module submit_request function is in progress.
+		 *
+		 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+		 * or if completion must be deferred via an event.
+		 */
+		bool in_submit_request;
+
+		/** Status for the IO */
+		int8_t status;
+
+		/** Indicates whether the IO is split */
+		bool split;
+
+		/** Retry state (resubmit, re-pull, re-push, etc.) */
+		uint8_t retry_state;
+
+		/** Indicates that the IO is associated with an accel sequence */
+		bool has_accel_sequence;
+
+		/** bdev allocated memory associated with this request */
+		void *buf;
+
+		/** requested size of the buffer associated with this I/O */
+		uint64_t buf_len;
+
+		/** if the request is double buffered, store original request iovs here */
+		struct iovec  bounce_iov;
+		struct iovec  bounce_md_iov;
+		struct iovec  orig_md_iov;
+		struct iovec *orig_iovs;
+		int           orig_iovcnt;
+
+		/** Callback for when the aux buf is allocated */
+		spdk_bdev_io_get_aux_buf_cb get_aux_buf_cb;
+
+		/** Callback for when buf is allocated */
+		spdk_bdev_io_get_buf_cb get_buf_cb;
+
+		/**
+		 * Queue entry used in several cases:
+		 *  1. IOs awaiting retry due to NOMEM status,
+		 *  2. IOs awaiting submission due to QoS,
+		 *  3. IOs with an accel sequence being executed,
+		 *  4. IOs awaiting memory domain pull/push,
+		 *  5. queued reset requests.
+		 */
+		TAILQ_ENTRY(spdk_bdev_io) link;
+
+		/** Entry to the list need_buf of struct spdk_bdev. */
+		STAILQ_ENTRY(spdk_bdev_io) buf_link;
+
+		/** Entry to the list io_submitted of struct spdk_bdev_channel */
+		TAILQ_ENTRY(spdk_bdev_io) ch_link;
+
+		/** iobuf queue entry */
+		struct spdk_iobuf_entry iobuf;
+
+		/** Enables queuing parent I/O when no bdev_ios available for split children. */
+		struct spdk_bdev_io_wait_entry waitq_entry;
+
+		/** Memory domain and its context passed by the user in ext API */
+		struct spdk_memory_domain *memory_domain;
+		void *memory_domain_ctx;
+
+		/* Sequence of accel operations passed by the user */
+		struct spdk_accel_sequence *accel_sequence;
+
+		/** Data transfer completion callback */
+		void (*data_transfer_cpl)(void *ctx, int rc);
+	} internal;
 
 	/**
 	 * Per I/O context for use by the bdev module.
@@ -1183,8 +1041,6 @@ struct spdk_bdev_io {
 
 	/* No members may be added after driver_ctx! */
 };
-SPDK_STATIC_ASSERT(offsetof(struct spdk_bdev_io, driver_ctx) % SPDK_CACHE_LINE_SIZE == 0,
-		   "driver_ctx not cache line aligned");
 
 /**
  * Register a new bdev.
@@ -1205,9 +1061,6 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
  *
- * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
- * This function should be called from the SPDK app thread.
- *
  * The cb_fn will be called from the context of the same spdk_thread that called
  * spdk_bdev_unregister.
  *
@@ -1226,9 +1079,6 @@ void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
  * and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptors are closed.
  *
- * Calling this function from any thread is deprecated and will be disallowed in the 26.05 release.
- * This function should be called from the SPDK app thread.
- *
  * The cb_fn will be called from the context of the same spdk_thread that called
  * spdk_bdev_unregister.
  *
@@ -1243,7 +1093,7 @@ int spdk_bdev_unregister_by_name(const char *bdev_name, struct spdk_bdev_module 
 				 spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 /**
- * Notify the bdev layer that an asynchronous destruct operation is complete.
+ * Invokes the unregister callback of a bdev backing a virtual bdev.
  *
  * A Bdev with an asynchronous destruct path should return 1 from its
  * destruct function and call this function at the conclusion of that path.
@@ -1295,7 +1145,6 @@ void spdk_bdev_module_fini_start_done(void);
 /**
  * Add alias to block device names list.
  * Aliases can be add only to registered bdev.
- * All aliases are removed when bdev is unregistered.
  *
  * \param bdev Block device to query.
  * \param alias Alias to be added to list.
@@ -1354,6 +1203,26 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
 /**
+ * Allocate an auxiliary buffer for given bdev_io. The length of the
+ * buffer will be the same size as the bdev_io primary buffer. The buffer
+ * must be freed using \c spdk_bdev_io_put_aux_buf() before completing
+ * the associated bdev_io.  This call will never fail. In case of lack of
+ * memory given callback \c cb will be deferred until enough memory is freed.
+ *
+ * \param bdev_io I/O to allocate buffer for.
+ * \param cb callback to be called when the buffer is allocated
+ */
+void spdk_bdev_io_get_aux_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_aux_buf_cb cb);
+
+/**
+ * Free an auxiliary buffer previously allocated by \c spdk_bdev_io_get_aux_buf().
+ *
+ * \param bdev_io bdev_io specified when the aux_buf was allocated.
+ * \param aux_buf auxiliary buffer to free
+ */
+void spdk_bdev_io_put_aux_buf(struct spdk_bdev_io *bdev_io, void *aux_buf);
+
+/**
  * Set the given buffer as the data buffer described by this bdev_io.
  *
  * The portion of the buffer used may be adjusted for memory alignment
@@ -1385,19 +1254,7 @@ void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
 /**
- * Set a bdev_io with an NVMe status code and DW0 completion queue entry
- *
- * \param bdev_io I/O to set status.
- * \param cdw0 NVMe Completion Queue DW0 value (set to 0 if not applicable)
- * \param sct NVMe Status Code Type.
- * \param sc NVMe Status Code.
- * \return IO status corresponding to the NVMe status
- */
-enum spdk_bdev_io_status spdk_bdev_io_set_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cdw0,
-		int sct, int sc);
-
-/**
- * Set and complete a bdev_io with an NVMe status code and DW0 completion queue entry
+ * Complete a bdev_io with an NVMe status code and DW0 completion queue entry
  *
  * \param bdev_io I/O to complete.
  * \param cdw0 NVMe Completion Queue DW0 value (set to 0 if not applicable)
@@ -1408,20 +1265,7 @@ void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, uint32_t cd
 				       int sc);
 
 /**
- * Set a bdev_io with a SCSI status code.
- *
- * \param bdev_io I/O to set status.
- * \param sc SCSI Status Code.
- * \param sk SCSI Sense Key.
- * \param asc SCSI Additional Sense Code.
- * \param ascq SCSI Additional Sense Code Qualifier.
- * \return IO status corresponding to the SCSI status
- */
-enum spdk_bdev_io_status spdk_bdev_io_set_scsi_status(struct spdk_bdev_io *bdev_io,
-		enum spdk_scsi_status sc, enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
-
-/**
- * Set and complete a bdev_io with a SCSI status code.
+ * Complete a bdev_io with a SCSI status code.
  *
  * \param bdev_io I/O to complete.
  * \param sc SCSI Status Code.
@@ -1433,40 +1277,12 @@ void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_s
 				       enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 
 /**
- * Set a bdev_io with AIO errno.
- *
- * \param bdev_io I/O to set status.
- * \param aio_result Negative errno returned from AIO.
- * \return IO status corresponding to the AIO result
- */
-enum spdk_bdev_io_status spdk_bdev_io_set_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
-
-/**
- * Set and complete a bdev_io with AIO errno.
+ * Complete a bdev_io with AIO errno.
  *
  * \param bdev_io I/O to complete.
  * \param aio_result Negative errno returned from AIO.
  */
 void spdk_bdev_io_complete_aio_status(struct spdk_bdev_io *bdev_io, int aio_result);
-
-/**
- * Copy a bdev_io status from another bdev_io.
- *
- * \param bdev_io I/O to set status.
- * \param base_io I/O from which to copy the status.
- * \return IO status corresponding to the base_io status
- */
-enum spdk_bdev_io_status spdk_bdev_io_set_base_io_status(struct spdk_bdev_io *bdev_io,
-		const struct spdk_bdev_io *base_io);
-
-/**
- * Complete a bdev_io copying a status from another bdev_io.
- *
- * \param bdev_io I/O to complete.
- * \param base_io I/O from which to copy the status.
- */
-void spdk_bdev_io_complete_base_io_status(struct spdk_bdev_io *bdev_io,
-		const struct spdk_bdev_io *base_io);
 
 /**
  * Get a thread that given bdev_io was submitted on.
@@ -1492,15 +1308,6 @@ struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io
  * \return The submit_tsc of the specified bdev I/O.
  */
 uint64_t spdk_bdev_io_get_submit_tsc(struct spdk_bdev_io *bdev_io);
-
-/**
- * Query if metadata is hidden from the bdev I/O.
- *
- * \param bdev_io The bdev I/O to query.
- *
- * \return true if metadata is hidden from the bdev I/O, or false otherwise.
- */
-bool spdk_bdev_io_hide_metadata(struct spdk_bdev_io *bdev_io);
 
 /**
  * Resize for a bdev.
@@ -1873,26 +1680,31 @@ void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
 			      spdk_bdev_get_current_qd_cb cb_fn, void *cb_arg);
 
 /**
- * Add I/O statistics.
+ * Add I/O statictics.
  *
- * \param total The aggregated I/O statistics.
- * \param add The I/O statistics to be added.
+ * \param total The aggregated I/O statictics.
+ * \param add The I/O statictics to be added.
  */
 void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add);
 
 /**
- * Output bdev I/O statistics information to a JSON stream.
+ * Output bdev I/O statictics information to a JSON stream.
  *
- * \param stat The bdev I/O statistics to output.
+ * \param stat The bdev I/O statictics to output.
  * \param w JSON write context.
  */
 void spdk_bdev_dump_io_stat_json(struct spdk_bdev_io_stat *stat, struct spdk_json_write_ctx *w);
 
+enum spdk_bdev_reset_stat_mode {
+	SPDK_BDEV_RESET_STAT_ALL,
+	SPDK_BDEV_RESET_STAT_MAXMIN,
+};
+
 /**
- * Reset I/O statistics structure.
+ * Reset I/O statictics structure.
  *
- * \param stat The I/O statistics to reset.
- * \param mode The mode to reset I/O statistics.
+ * \param stat The I/O statictics to reset.
+ * \param mode The mode to reset I/O statictics.
  */
 void spdk_bdev_reset_io_stat(struct spdk_bdev_io_stat *stat, enum spdk_bdev_reset_stat_mode mode);
 

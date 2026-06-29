@@ -4,10 +4,12 @@
  */
 
 #include "spdk/stdinc.h"
+#include <stdbool.h>
 
 #include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk_internal/event.h"
 #if defined(SPDK_CONFIG_VHOST)
 #include "spdk/vhost.h"
 #endif
@@ -90,12 +92,42 @@ main(int argc, char **argv)
 {
 	struct spdk_app_opts opts = {};
 	int rc;
+	bool is_secondary = false;
+
+	/* Detect and strip --proc-type=secondary (SPDK arg parser doesn't recognize it;
+	 * DPDK EAL uses --proc-type=auto via shm_id, which handles secondary automatically) */
+	int write_idx = 1;
+	for (int i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--proc-type=secondary") == 0) {
+			is_secondary = true;
+			continue;
+		}
+		if (strcmp(argv[i], "--proc-type") == 0 && i + 1 < argc &&
+		    strcmp(argv[i + 1], "secondary") == 0) {
+			is_secondary = true;
+			i++;
+			continue;
+		}
+		argv[write_idx++] = argv[i];
+	}
+	argc = write_idx;
 
 	spdk_app_opts_init(&opts, sizeof(opts));
 	opts.name = "spdk_tgt";
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, g_spdk_tgt_get_opts_string,
 				      NULL, spdk_tgt_parse_arg, spdk_tgt_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
+		return rc;
+	}
+
+	if (is_secondary) {
+		/* Hot upgrade path */
+		SPDK_NOTICELOG("Starting in secondary (hot upgrade) mode\n");
+		rc = spdk_app_secondary_pre_init(&opts);
+		if (rc == 0) {
+			spdk_reactors_start();
+		}
+		spdk_app_fini();
 		return rc;
 	}
 

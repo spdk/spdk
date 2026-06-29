@@ -122,7 +122,7 @@ struct spdk_app_opts {
 	/**
 	 * for passing user-provided log call
 	 */
-	spdk_log_cb		*log;
+	logfunc         *log;
 
 	uint64_t		base_virtaddr;
 
@@ -149,13 +149,8 @@ struct spdk_app_opts {
 
 	bool interrupt_mode;
 
-	bool enforce_numa;
-
-	/* Hole at byte 187. */
-	uint8_t reserved187[1];
-
-	/* Number of threads for SPDK tracing */
-	uint32_t num_trace_threads;
+	/* Hole at bytes 186-191. */
+	uint8_t reserved186[6];
 
 	/**
 	 * The allocated size for the message pool used by the threading library.
@@ -189,20 +184,8 @@ struct spdk_app_opts {
 	 * If non-NULL, a pointer to JSON RPC log file.
 	 */
 	FILE *rpc_log_file;
-
-	/**
-	 * Raw JSON configuration data and its size.
-	 * Cannot be used simultaneously with json_config_file option.
-	 */
-	void *json_data;
-	size_t json_data_size;
-
-	/**
-	 * If set, disable CPU claiming.
-	 */
-	bool disable_cpumask_locks;
 } __attribute__((packed));
-SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 253, "Incorrect size");
+SPDK_STATIC_ASSERT(sizeof(struct spdk_app_opts) == 236, "Incorrect size");
 
 /**
  * Initialize the default value of opts
@@ -250,6 +233,49 @@ int spdk_app_start(struct spdk_app_opts *opts_user, spdk_msg_fn start_fn,
 void spdk_app_fini(void);
 
 /**
+ * Pre-initialize a secondary SPDK process for hot upgrade.
+ *
+ * This function initializes DPDK in secondary process mode, connects to the
+ * Primary's IPC socket, loads shared state, initializes reactors in IDLE mode,
+ * and starts the RPC server. Must be called instead of spdk_app_start() for
+ * the secondary process.
+ *
+ * \param opts Application options. rpc_addr must be set to a different
+ *             address than the Primary's RPC socket.
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_app_secondary_pre_init(struct spdk_app_opts *opts);
+
+/**
+ * Complete the secondary process takeover after hot upgrade.
+ *
+ * Called via the secondary_init RPC to fully initialize the secondary process:
+ * receive FDs from Primary, restore guest memory mappings, restore vhost
+ * connections, and transition reactor to RUNNING state.
+ *
+ * \param start_fn Function called after full initialization (may be NULL).
+ * \param arg1 Argument passed to start_fn.
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_app_secondary_full_init(spdk_msg_fn start_fn, void *arg1);
+
+/**
+ * Transition all reactors to HU_PAUSED state for hot upgrade.
+ *
+ * In this state, the reactor loop continues running but only polls the
+ * app thread (RPC). IO pollers are skipped. This allows rpc_primary_resume
+ * to work without external signal mechanisms.
+ */
+void spdk_reactor_hu_pause(void);
+
+/**
+ * Resume all reactors from HU_PAUSED state back to RUNNING.
+ *
+ * Restores normal IO processing on all reactors.
+ */
+void spdk_reactor_hu_resume(void);
+
+/**
  * Start shutting down the framework.
  *
  * Typically this function is not called directly, and the shutdown process is
@@ -276,6 +302,20 @@ void spdk_app_stop(int rc);
  * \return shared memory id.
  */
 int spdk_app_get_shm_id(void);
+
+/**
+ * Get the base virtual address used for DPDK hugepage mapping.
+ *
+ * \return base virtual address.
+ */
+uint64_t spdk_app_get_base_virtaddr(void);
+
+/**
+ * Get the RPC socket listen address for this application.
+ *
+ * \return RPC socket address string, or NULL if not set.
+ */
+const char *spdk_app_get_rpc_addr(void);
 
 /**
  * Convert a string containing a CPU core mask into a bitmask
@@ -365,17 +405,6 @@ void spdk_framework_enable_context_switch_monitor(bool enabled);
  * \return true if enabled or false otherwise.
  */
 bool spdk_framework_context_switch_monitor_enabled(void);
-
-/**
- * Set up SPDK tracing for the application.
- *
- * Initializes the trace shared memory region and enables tracepoint groups or
- * individual tracepoints as specified in the spdk_app_opts structure.
- *
- * \param opts Application options structure, must be initialized.
- * \return 0 on success, -1 on failure.
- */
-int spdk_app_setup_trace(struct spdk_app_opts *opts);
 
 #ifdef __cplusplus
 }

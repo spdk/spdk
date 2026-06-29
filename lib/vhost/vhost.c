@@ -15,8 +15,11 @@
 #include "vhost_internal.h"
 #include "spdk/queue.h"
 
+
 static struct spdk_cpuset g_vhost_core_mask;
 
+static TAILQ_HEAD(, spdk_vhost_dev) g_vhost_devices = TAILQ_HEAD_INITIALIZER(
+			g_vhost_devices);
 static pthread_mutex_t g_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static TAILQ_HEAD(, spdk_virtio_blk_transport) g_virtio_blk_transports = TAILQ_HEAD_INITIALIZER(
@@ -24,35 +27,28 @@ static TAILQ_HEAD(, spdk_virtio_blk_transport) g_virtio_blk_transports = TAILQ_H
 
 static spdk_vhost_fini_cb g_fini_cb;
 
-static RB_HEAD(vhost_dev_name_tree,
-	       spdk_vhost_dev) g_vhost_devices = RB_INITIALIZER(g_vhost_devices);
-
-static int
-vhost_dev_name_cmp(struct spdk_vhost_dev *vdev1, struct spdk_vhost_dev *vdev2)
-{
-	return strcmp(vdev1->name, vdev2->name);
-}
-
-RB_GENERATE_STATIC(vhost_dev_name_tree, spdk_vhost_dev, node, vhost_dev_name_cmp);
-
 struct spdk_vhost_dev *
 spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
 {
 	if (vdev == NULL) {
-		return RB_MIN(vhost_dev_name_tree, &g_vhost_devices);
+		return TAILQ_FIRST(&g_vhost_devices);
 	}
 
-	return RB_NEXT(vhost_dev_name_tree, &g_vhost_devices, vdev);
+	return TAILQ_NEXT(vdev, tailq);
 }
 
 struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
 {
-	struct spdk_vhost_dev find = {};
+	struct spdk_vhost_dev *vdev;
 
-	find.name = (char *)ctrlr_name;
+	TAILQ_FOREACH(vdev, &g_vhost_devices, tailq) {
+		if (strcmp(vdev->name, ctrlr_name) == 0) {
+			return vdev;
+		}
+	}
 
-	return RB_FIND(vhost_dev_name_tree, &g_vhost_devices, &find);
+	return NULL;
 }
 
 static int
@@ -131,10 +127,6 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 			    mask_str, spdk_cpuset_fmt(&g_vhost_core_mask));
 		return -EINVAL;
 	}
-	vdev->use_default_cpumask = false;
-	if (!mask_str) {
-		vdev->use_default_cpumask = true;
-	}
 
 	spdk_vhost_lock();
 	if (spdk_vhost_dev_find(name)) {
@@ -143,7 +135,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return -EEXIST;
 	}
 
-	vdev->name = strdup(name);
+	vdev->name = spdk_dma_malloc(strlen(name) + 1, 0, NULL); memcpy(vdev->name, name, strlen(name) + 1);
 	if (vdev->name == NULL) {
 		spdk_vhost_unlock();
 		return -EIO;
@@ -163,7 +155,7 @@ vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *ma
 		return rc;
 	}
 
-	RB_INSERT(vhost_dev_name_tree, &g_vhost_devices, vdev);
+	TAILQ_INSERT_TAIL(&g_vhost_devices, vdev, tailq);
 	spdk_vhost_unlock();
 
 	SPDK_INFOLOG(vhost, "Controller %s: new controller added\n", vdev->name);
@@ -190,8 +182,8 @@ vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 
 	free(vdev->name);
 
-	RB_REMOVE(vhost_dev_name_tree, &g_vhost_devices, vdev);
-	if (RB_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
+	TAILQ_REMOVE(&g_vhost_devices, vdev, tailq);
+	if (TAILQ_EMPTY(&g_vhost_devices) && g_fini_cb != NULL) {
 		g_fini_cb();
 	}
 	spdk_vhost_unlock();

@@ -6,13 +6,13 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 10
-SO_MINOR := 0
+SO_VER := 7
+SO_MINOR := 1
 
 CFLAGS += -I.
 CFLAGS += $(ENV_CFLAGS)
 
-C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c rte_vhost_user.c
+C_SRCS = vhost.c vhost_rpc.c vhost_hu.c vhost_scsi.c vhost_blk.c rte_vhost_user.c
 
 LIBNAME = vhost
 

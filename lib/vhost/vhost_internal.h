@@ -17,7 +17,6 @@
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/config.h"
-#include "spdk/tree.h"
 
 #define SPDK_VHOST_MAX_VQUEUES	256
 #define SPDK_VHOST_MAX_VQ_SIZE	1024
@@ -36,19 +35,6 @@
  * Default threshold at which interrupts start to be coalesced.
  */
 #define SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD 60000
-
-/*
- * Timeout in seconds for vhost-user session stop message.
- */
-#define SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC 3
-/*
- * Stop retry timeout in seconds, this value should be greater than SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC.
- */
-#define SPDK_VHOST_SESSION_STOP_RETRY_TIMEOUT_IN_SEC (SPDK_VHOST_SESSION_STOP_TIMEOUT_IN_SEC + 1)
-/*
- * Stop retry period in microseconds
- */
-#define SPDK_VHOST_SESSION_STOP_RETRY_PERIOD_IN_US 1000
 
 /*
  * Currently coalescing is not used by default.
@@ -129,6 +115,7 @@ struct spdk_vhost_session {
 
 	bool started;
 	bool starting;
+	bool interrupt_mode;
 	bool needs_restart;
 
 	struct rte_vhost_memory *mem;
@@ -153,17 +140,6 @@ struct spdk_vhost_session {
 
 	/* Session's stop poller will only try limited times to destroy the session. */
 	uint32_t stop_retry_count;
-
-	/**
-	 * DPDK calls our callbacks synchronously but the work those callbacks
-	 * perform needs to be async. Luckily, all DPDK callbacks are called on
-	 * a DPDK-internal pthread and only related to the current session, so we'll
-	 * just wait on a semaphore of this session in there.
-	 */
-	sem_t dpdk_sem;
-
-	/** Return code for the current DPDK callback */
-	int dpdk_response;
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
@@ -200,7 +176,6 @@ struct spdk_vhost_dev {
 	char *name;
 	char *path;
 
-	bool use_default_cpumask;
 	struct spdk_thread *thread;
 
 	uint64_t virtio_features;
@@ -212,7 +187,9 @@ struct spdk_vhost_dev {
 	/* Context passed from transport */
 	void *ctxt;
 
-	RB_ENTRY(spdk_vhost_dev) node;
+	bool is_hu_suspended;
+	int ipc_sock_for_hu;
+	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
 static inline struct spdk_vhost_user_dev *
@@ -251,7 +228,7 @@ struct spdk_vhost_user_dev_backend {
 	spdk_vhost_session_fn start_session;
 	spdk_vhost_session_fn stop_session;
 	int (*alloc_vq_tasks)(struct spdk_vhost_session *vsession, uint16_t qid);
-	int (*enable_vq)(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq);
+	void (*register_vq_interrupt)(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq);
 };
 
 enum vhost_backend_type {
@@ -507,7 +484,6 @@ int vhost_user_dev_create(struct spdk_vhost_dev *vdev, const char *name,
 int vhost_user_dev_init(struct spdk_vhost_dev *vdev, const char *name,
 			struct spdk_cpuset *cpumask, const struct spdk_vhost_user_dev_backend *user_backend);
 int vhost_user_dev_start(struct spdk_vhost_dev *vdev);
-bool vhost_user_dev_busy(struct spdk_vhost_dev *vdev);
 int vhost_user_dev_unregister(struct spdk_vhost_dev *vdev);
 int vhost_user_init(void);
 void vhost_user_fini(spdk_vhost_fini_cb vhost_cb);

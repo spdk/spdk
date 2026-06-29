@@ -27,5 +27,9 @@
 	spdk_vhost_blk_construct;
 	spdk_vhost_dev_remove;
 
+	spdk_vhost_hu_primary_drain_all;
+	spdk_vhost_hu_primary_suspend_all;
+	spdk_vhost_hu_secondary_takeover_all;
+
 	local: *;
 };

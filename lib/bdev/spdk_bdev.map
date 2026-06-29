@@ -8,6 +8,11 @@
 	spdk_bdev_examine;
 	spdk_bdev_initialize;
 	spdk_bdev_finish;
+	spdk_bdev_hu_get_bdevs_first;
+	spdk_bdev_hu_get_bdevs_last;
+	spdk_bdev_hu_set_bdevs;
+	spdk_bdev_hu_save_bdev_infos;
+	spdk_bdev_hu_fixup_inherited_bdevs;
 	spdk_bdev_subsystem_config_json;
 	spdk_bdev_get_by_name;
 	spdk_bdev_get_module_name;
@@ -17,13 +22,9 @@
 	spdk_bdev_next_leaf;
 	spdk_for_each_bdev;
 	spdk_for_each_bdev_leaf;
-	spdk_for_each_bdev_by_name;
 	spdk_bdev_open_ext;
-	spdk_bdev_open_ext_v2;
-	spdk_bdev_open_opts_init;
 	spdk_bdev_open_async;
 	spdk_bdev_close;
-	spdk_bdev_get_numa_id;
 	spdk_bdev_desc_get_bdev;
 	spdk_bdev_set_timeout;
 	spdk_bdev_io_type_supported;
@@ -47,23 +48,9 @@
 	spdk_bdev_is_zoned;
 	spdk_bdev_get_data_block_size;
 	spdk_bdev_get_physical_block_size;
-	spdk_bdev_get_preferred_write_alignment;
-	spdk_bdev_get_preferred_write_granularity;
-	spdk_bdev_get_optimal_write_size;
-	spdk_bdev_get_preferred_unmap_alignment;
-	spdk_bdev_get_preferred_unmap_granularity;
 	spdk_bdev_get_dif_type;
-	spdk_bdev_get_dif_pi_format;
 	spdk_bdev_is_dif_head_of_md;
 	spdk_bdev_is_dif_check_enabled;
-	spdk_bdev_desc_get_block_size;
-	spdk_bdev_desc_get_md_size;
-	spdk_bdev_desc_is_md_interleaved;
-	spdk_bdev_desc_is_md_separate;
-	spdk_bdev_desc_get_dif_type;
-	spdk_bdev_desc_get_dif_pi_format;
-	spdk_bdev_desc_is_dif_head_of_md;
-	spdk_bdev_desc_is_dif_check_enabled;
 	spdk_bdev_get_current_qd;
 	spdk_bdev_get_qd;
 	spdk_bdev_get_qd_sampling_period;
@@ -95,13 +82,11 @@
 	spdk_bdev_zcopy_end;
 	spdk_bdev_write_zeroes;
 	spdk_bdev_write_zeroes_blocks;
-	spdk_bdev_write_uncorrectable_blocks;
 	spdk_bdev_unmap;
 	spdk_bdev_unmap_blocks;
 	spdk_bdev_flush;
 	spdk_bdev_flush_blocks;
 	spdk_bdev_reset;
-	spdk_bdev_nvme_nssr;
 	spdk_bdev_abort;
 	spdk_bdev_nvme_admin_passthru;
 	spdk_bdev_nvme_io_passthru;
@@ -120,24 +105,16 @@
 	spdk_bdev_io_get_cb_arg;
 	spdk_bdev_io_get_seek_offset;
 	spdk_bdev_histogram_enable;
-	spdk_bdev_histogram_enable_ext;
-	spdk_bdev_enable_histogram_opts_init;
 	spdk_bdev_histogram_get;
 	spdk_bdev_channel_get_histogram;
 	spdk_bdev_get_media_events;
 	spdk_bdev_get_memory_domains;
-	spdk_bdev_get_memory_domain_types;
 	spdk_bdev_readv_blocks_ext;
 	spdk_bdev_writev_blocks_ext;
 	spdk_bdev_for_each_channel;
 	spdk_bdev_for_each_channel_continue;
 	spdk_bdev_get_max_copy;
 	spdk_bdev_copy_blocks;
-	spdk_bdev_get_nvme_ctratt;
-	spdk_bdev_get_nvme_nsid;
-	spdk_bdev_get_nvme_csi;
-	spdk_bdev_get_io_type_name;
-	spdk_bdev_get_io_type;
 
 	# Public functions in bdev_module.h
 	spdk_bdev_register;
@@ -158,17 +135,14 @@
 	spdk_bdev_alias_del_all;
 	spdk_bdev_get_aliases;
 	spdk_bdev_io_get_buf;
+	spdk_bdev_io_get_aux_buf;
+	spdk_bdev_io_put_aux_buf;
 	spdk_bdev_io_set_buf;
 	spdk_bdev_io_set_md_buf;
 	spdk_bdev_io_complete;
-	spdk_bdev_io_set_nvme_status;
 	spdk_bdev_io_complete_nvme_status;
-	spdk_bdev_io_set_scsi_status;
 	spdk_bdev_io_complete_scsi_status;
-	spdk_bdev_io_set_aio_status;
 	spdk_bdev_io_complete_aio_status;
-	spdk_bdev_io_set_base_io_status;
-	spdk_bdev_io_complete_base_io_status;
 	spdk_bdev_io_get_thread;
 	spdk_bdev_io_get_io_channel;
 	spdk_bdev_io_get_submit_tsc;
@@ -204,9 +178,6 @@
 	spdk_bdev_unquiesce;
 	spdk_bdev_quiesce_range;
 	spdk_bdev_unquiesce_range;
-	spdk_bdev_io_hide_metadata;
-	spdk_bdev_desc_hide_metadata;
-	spdk_bdev_io_get_block_size;
 
 	# Public functions in bdev_zone.h
 	spdk_bdev_get_zone_size;

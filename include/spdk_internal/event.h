@@ -30,16 +30,27 @@ enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_RUNNING = 2,
 	SPDK_REACTOR_STATE_EXITING = 3,
 	SPDK_REACTOR_STATE_SHUTDOWN = 4,
+	SPDK_REACTOR_STATE_IDLE = 5,
+	SPDK_REACTOR_STATE_HU_PAUSED = 6,
 };
 
-struct spdk_lw_thread;
+struct spdk_lw_thread {
+	TAILQ_ENTRY(spdk_lw_thread)	link;
+	uint64_t			tsc_start;
+	uint32_t                        lcore;
+	bool				resched;
+	/* stats over a lifetime of a thread */
+	struct spdk_thread_stats	total_stats;
+	/* stats during the last scheduling period */
+	struct spdk_thread_stats	current_stats;
+};
 
 /**
  * Completion callback to set reactor into interrupt mode or poll mode.
  *
  * \param cb_arg Argument to pass to the callback function.
  */
-typedef void (*spdk_reactor_set_interrupt_mode_cb)(void *cb_arg1, void *cb_arg2);
+typedef void (*spdk_reactor_set_interrupt_mode_cb)(void *cb_arg);
 
 struct spdk_reactor {
 	/* Lightweight threads running on this reactor */
@@ -77,7 +88,6 @@ struct spdk_reactor {
 
 	struct spdk_fd_group				*fgrp;
 	int						resched_fd;
-	uint16_t					trace_id;
 } __attribute__((aligned(SPDK_CACHE_LINE_SIZE)));
 
 int spdk_reactors_init(size_t msg_mempool_size);
@@ -125,3 +135,5 @@ int spdk_reactor_set_interrupt_mode(uint32_t lcore, bool new_in_interrupt,
 #endif
 
 #endif /* SPDK_INTERNAL_EVENT_H */
+
+extern enum spdk_reactor_state g_reactor_state;
