@@ -4,6 +4,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/env.h"
 #include "spdk/hot_upgrade.h"
 #include "spdk/hot_upgrade_shared.h"
 #include "spdk/log.h"
@@ -33,6 +34,10 @@ static int g_hu_ipc_sock = -1;
 static int g_hu_ipc_listen_sock = -1;
 static struct spdk_hot_upgrade_shared_state *g_hu_shared_state = NULL;
 static int g_hu_state_fd = -1;
+
+/* Phase 12: TSC timeline for IO interruption measurement */
+static struct spdk_hu_timeline *g_hu_timeline = NULL;
+static int g_hu_timeline_fd = -1;
 
 /*
  * SIGUSR1 handler: sets flag only. The pause() loop in
@@ -497,6 +502,156 @@ spdk_hot_upgrade_state_file_cleanup(void)
 	}
 
 	unlink(SPDK_HU_IPC_SOCK_PATH);
+
+	spdk_hot_upgrade_timeline_cleanup();
+}
+
+/* ===== Phase 12: TSC Timeline File Management ===== */
+
+int
+spdk_hot_upgrade_timeline_create(void)
+{
+	if (g_hu_timeline != NULL) {
+		return 0;
+	}
+
+	g_hu_timeline_fd = open(SPDK_HU_TIMELINE_FILE, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	if (g_hu_timeline_fd < 0) {
+		SPDK_ERRLOG("Failed to open timeline file %s: %s\n",
+			    SPDK_HU_TIMELINE_FILE, spdk_strerror(errno));
+		return -errno;
+	}
+
+	if (ftruncate(g_hu_timeline_fd, sizeof(struct spdk_hu_timeline)) != 0) {
+		SPDK_ERRLOG("Failed to truncate timeline file: %s\n", spdk_strerror(errno));
+		close(g_hu_timeline_fd);
+		g_hu_timeline_fd = -1;
+		return -errno;
+	}
+
+	g_hu_timeline = mmap(NULL, sizeof(struct spdk_hu_timeline),
+			      PROT_READ | PROT_WRITE, MAP_SHARED,
+			      g_hu_timeline_fd, 0);
+	if (g_hu_timeline == MAP_FAILED) {
+		SPDK_ERRLOG("Failed to mmap timeline file: %s\n", spdk_strerror(errno));
+		close(g_hu_timeline_fd);
+		g_hu_timeline_fd = -1;
+		g_hu_timeline = NULL;
+		return -errno;
+	}
+
+	memset(g_hu_timeline, 0, sizeof(struct spdk_hu_timeline));
+	g_hu_timeline->tsc_rate = spdk_get_ticks_hz();
+
+	if (msync(g_hu_timeline, sizeof(struct spdk_hu_timeline), MS_SYNC) != 0) {
+		SPDK_ERRLOG("Failed to msync timeline file: %s\n", spdk_strerror(errno));
+	}
+
+	SPDK_NOTICELOG("Timeline file created at %s (tsc_rate=%lu)\n",
+		       SPDK_HU_TIMELINE_FILE, g_hu_timeline->tsc_rate);
+	return 0;
+}
+
+int
+spdk_hot_upgrade_timeline_load(void)
+{
+	int fd;
+	struct stat st;
+
+	if (g_hu_timeline != NULL) {
+		return 0;
+	}
+
+	fd = open(SPDK_HU_TIMELINE_FILE, O_RDWR);
+	if (fd < 0) {
+		SPDK_WARNLOG("Timeline file %s not available: %s\n",
+			     SPDK_HU_TIMELINE_FILE, spdk_strerror(errno));
+		return -errno;
+	}
+
+	if (fstat(fd, &st) != 0) {
+		SPDK_ERRLOG("Failed to stat timeline file: %s\n", spdk_strerror(errno));
+		close(fd);
+		return -errno;
+	}
+
+	if ((size_t)st.st_size < sizeof(struct spdk_hu_timeline)) {
+		SPDK_WARNLOG("Timeline file too small: %ld < %zu\n",
+			     st.st_size, sizeof(struct spdk_hu_timeline));
+		close(fd);
+		return -EINVAL;
+	}
+
+	g_hu_timeline = mmap(NULL, sizeof(struct spdk_hu_timeline),
+			      PROT_READ | PROT_WRITE, MAP_SHARED,
+			      fd, 0);
+	if (g_hu_timeline == MAP_FAILED) {
+		SPDK_ERRLOG("Failed to mmap timeline file: %s\n", spdk_strerror(errno));
+		close(fd);
+		return -errno;
+	}
+
+	g_hu_timeline_fd = fd;
+
+	SPDK_NOTICELOG("Timeline file loaded from %s (tsc_rate=%lu)\n",
+		       SPDK_HU_TIMELINE_FILE, g_hu_timeline->tsc_rate);
+	return 0;
+}
+
+struct spdk_hu_timeline *
+spdk_hot_upgrade_get_timeline(void)
+{
+	return g_hu_timeline;
+}
+
+void
+spdk_hot_upgrade_timeline_record(enum spdk_hu_timeline_field field, uint64_t tsc)
+{
+	if (g_hu_timeline == NULL) {
+		return;
+	}
+
+	switch (field) {
+	case SPDK_HU_TSC_PRIMARY_EXIT_START:
+		g_hu_timeline->tsc_primary_exit_start = tsc;
+		break;
+	case SPDK_HU_TSC_PRIMARY_DRAIN_DONE:
+		g_hu_timeline->tsc_primary_drain_done = tsc;
+		break;
+	case SPDK_HU_TSC_PRIMARY_SUSPEND_DONE:
+		g_hu_timeline->tsc_primary_suspend_done = tsc;
+		break;
+	case SPDK_HU_TSC_SECONDARY_INIT_START:
+		g_hu_timeline->tsc_secondary_init_start = tsc;
+		break;
+	case SPDK_HU_TSC_SECONDARY_TAKEOVER_DONE:
+		g_hu_timeline->tsc_secondary_takeover_done = tsc;
+		break;
+	case SPDK_HU_TSC_REACTOR_RUNNING:
+		g_hu_timeline->tsc_reactor_running = tsc;
+		break;
+	default:
+		SPDK_ERRLOG("Unknown timeline field: %d\n", field);
+		return;
+	}
+
+	msync(g_hu_timeline, sizeof(struct spdk_hu_timeline), MS_SYNC);
+}
+
+void
+spdk_hot_upgrade_timeline_cleanup(void)
+{
+	if (g_hu_timeline != NULL) {
+		munmap(g_hu_timeline, sizeof(struct spdk_hu_timeline));
+		g_hu_timeline = NULL;
+	}
+
+	if (g_hu_timeline_fd >= 0) {
+		close(g_hu_timeline_fd);
+		g_hu_timeline_fd = -1;
+	}
+
+	unlink(SPDK_HU_TIMELINE_FILE);
 }
 
 SPDK_LOG_REGISTER_COMPONENT(hot_upgrade)

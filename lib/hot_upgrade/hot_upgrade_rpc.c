@@ -4,6 +4,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/env.h"
 #include "spdk/hot_upgrade.h"
 #include "spdk/hot_upgrade_shared.h"
 #include "spdk/jsonrpc.h"
@@ -37,6 +38,7 @@ primary_suspend_done(void *arg)
 	g_suspend_in_progress = true;
 
 	spdk_hot_upgrade_set_state(SPDK_HU_PRIMARY_SUSPENDED);
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_PRIMARY_SUSPEND_DONE, spdk_get_ticks());
 
 	w = spdk_jsonrpc_begin_result(ctx->request);
 	if (w == NULL) {
@@ -83,6 +85,8 @@ primary_drain_io_done(void *arg)
 		return; /* stale event after SIGUSR1 wake, ignore */
 	}
 	g_hu_drain_completed = true;
+
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_PRIMARY_DRAIN_DONE, spdk_get_ticks());
 
 	/* Save shared state before suspending */
 	memset(&state, 0, sizeof(state));
@@ -172,6 +176,10 @@ rpc_primary_exit(struct spdk_jsonrpc_request *request,
 	ctx->request = request;
 	ctx->thread = spdk_get_thread();
 	g_hu_drain_completed = false;
+
+	spdk_hot_upgrade_timeline_create();
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_PRIMARY_EXIT_START, spdk_get_ticks());
+
 	spdk_hot_upgrade_set_state(SPDK_HU_PRIMARY_DRAINING);
 
 	/* Start draining I/O across all subsystems */
@@ -195,6 +203,9 @@ rpc_secondary_init(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	spdk_hot_upgrade_timeline_load();
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_SECONDARY_INIT_START, spdk_get_ticks());
+
 	spdk_hot_upgrade_set_state(SPDK_HU_SECONDARY_TAKEOVER);
 
 	/*
@@ -205,6 +216,7 @@ rpc_secondary_init(struct spdk_jsonrpc_request *request,
 	 * and complete before this function returns.
 	 */
 	spdk_subsystem_secondary_takeover(NULL, NULL);
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_SECONDARY_TAKEOVER_DONE, spdk_get_ticks());
 
 	/*
 	 * Call spdk_app_secondary_full_init()
@@ -216,6 +228,7 @@ rpc_secondary_init(struct spdk_jsonrpc_request *request,
 	 * 6. Rebuild I/O channels
 	 */
 	spdk_app_secondary_full_init(NULL, NULL);
+	spdk_hot_upgrade_timeline_record(SPDK_HU_TSC_REACTOR_RUNNING, spdk_get_ticks());
 
 	spdk_hot_upgrade_set_state(SPDK_HU_COMPLETE);
 
@@ -286,3 +299,44 @@ rpc_primary_resume(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("primary_resume", rpc_primary_resume, SPDK_RPC_RUNTIME)
+
+static void
+rpc_hot_upgrade_get_timeline(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_hu_timeline *tl;
+
+	tl = spdk_hot_upgrade_get_timeline();
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	if (tl != NULL) {
+		spdk_json_write_named_uint64(w, "tsc_rate", tl->tsc_rate);
+		spdk_json_write_named_uint64(w, "tsc_primary_exit_start", tl->tsc_primary_exit_start);
+		spdk_json_write_named_uint64(w, "tsc_primary_drain_done", tl->tsc_primary_drain_done);
+		spdk_json_write_named_uint64(w, "tsc_primary_suspend_done", tl->tsc_primary_suspend_done);
+		spdk_json_write_named_uint64(w, "tsc_secondary_init_start", tl->tsc_secondary_init_start);
+		spdk_json_write_named_uint64(w, "tsc_secondary_takeover_done",
+					     tl->tsc_secondary_takeover_done);
+		spdk_json_write_named_uint64(w, "tsc_reactor_running", tl->tsc_reactor_running);
+
+		if (tl->tsc_rate > 0 && tl->tsc_primary_exit_start > 0 &&
+		    tl->tsc_reactor_running > 0) {
+			uint64_t total_ms = (tl->tsc_reactor_running - tl->tsc_primary_exit_start) *
+					    1000 / tl->tsc_rate;
+			spdk_json_write_named_uint64(w, "total_io_interruption_ms", total_ms);
+		}
+	} else {
+		spdk_json_write_named_string(w, "error", "timeline not loaded");
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("hot_upgrade_get_timeline", rpc_hot_upgrade_get_timeline, SPDK_RPC_RUNTIME)

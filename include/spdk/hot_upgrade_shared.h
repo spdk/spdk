@@ -202,6 +202,67 @@ bool spdk_hot_upgrade_is_primary(void);
  */
 void spdk_hot_upgrade_set_process_role(bool is_primary);
 
+/**
+ * Phase 12: TSC timeline file for IO interruption measurement.
+ *
+ * Separate from spdk_hot_upgrade_shared_state to avoid struct size
+ * incompatibility between old Primary (version 1) and new Secondary.
+ */
+#define SPDK_HU_TIMELINE_FILE "/var/tmp/spdk_hot_upgrade_timeline"
+
+struct spdk_hu_timeline {
+	uint64_t tsc_rate;                    /* spdk_get_ticks_hz() */
+	uint64_t tsc_primary_exit_start;      /* Primary: rpc_primary_exit entry */
+	uint64_t tsc_primary_drain_done;      /* Primary: drain complete */
+	uint64_t tsc_primary_suspend_done;    /* Primary: suspend complete */
+	uint64_t tsc_secondary_init_start;    /* Secondary: rpc_secondary_init entry */
+	uint64_t tsc_secondary_takeover_done; /* Secondary: subsystem takeover done */
+	uint64_t tsc_reactor_running;         /* Secondary: reactor RUNNING, IO resumed */
+};
+
+enum spdk_hu_timeline_field {
+	SPDK_HU_TSC_PRIMARY_EXIT_START = 0,
+	SPDK_HU_TSC_PRIMARY_DRAIN_DONE,
+	SPDK_HU_TSC_PRIMARY_SUSPEND_DONE,
+	SPDK_HU_TSC_SECONDARY_INIT_START,
+	SPDK_HU_TSC_SECONDARY_TAKEOVER_DONE,
+	SPDK_HU_TSC_REACTOR_RUNNING,
+};
+
+/**
+ * Create the timeline file (called by Primary at primary_exit start).
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_hot_upgrade_timeline_create(void);
+
+/**
+ * Load the timeline file (called by Secondary at secondary_init start).
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_hot_upgrade_timeline_load(void);
+
+/**
+ * Get the loaded timeline pointer.
+ *
+ * \return Pointer to timeline struct, or NULL if not loaded.
+ */
+struct spdk_hu_timeline *spdk_hot_upgrade_get_timeline(void);
+
+/**
+ * Record a TSC timestamp to the timeline file and msync.
+ *
+ * \param field Which timeline field to write.
+ * \param tsc TSC value (from spdk_get_ticks()).
+ */
+void spdk_hot_upgrade_timeline_record(enum spdk_hu_timeline_field field, uint64_t tsc);
+
+/**
+ * Clean up the timeline file and unmap memory.
+ */
+void spdk_hot_upgrade_timeline_cleanup(void);
+
 #ifdef __cplusplus
 }
 #endif

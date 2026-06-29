@@ -432,6 +432,38 @@ step6_verify() {
         echo "[METRIC] IO interruption: ${io_dur}s (target: <0.2s)"
     fi
 
+    # Query SPDK internal TSC timeline for per-phase breakdown
+    local timeline_json
+    timeline_json=$(_rpc_call "$SECONDARY_SOCK" "hot_upgrade_get_timeline" 5 2>/dev/null || echo "")
+    if [[ -n "$timeline_json" ]]; then
+        echo "[TIMELINE] SPDK internal TSC breakdown:"
+        echo "$timeline_json" | python3 -c "
+import sys, json
+try:
+    t = json.load(sys.stdin)
+except:
+    print('  (failed to parse timeline JSON)')
+    sys.exit(0)
+rate = t.get('tsc_rate', 0)
+if rate == 0:
+    print('  (timeline unavailable: tsc_rate=0)')
+    sys.exit(0)
+fields = ['tsc_primary_exit_start', 'tsc_primary_drain_done', 'tsc_primary_suspend_done',
+          'tsc_secondary_init_start', 'tsc_secondary_takeover_done', 'tsc_reactor_running']
+labels = ['primary_exit_start', 'primary_drain_done', 'primary_suspend_done',
+          'secondary_init_start', 'secondary_takeover_done', 'reactor_running']
+prev = None
+for f, label in zip(fields, labels):
+    tsc = t.get(f, 0)
+    if prev and tsc:
+        dur_ms = (tsc - prev) * 1000 / rate
+        print(f'  {label}: +{dur_ms:.2f}ms')
+    prev = tsc
+total = t.get('total_io_interruption_ms', 0)
+print(f'  TOTAL (TSC): {total}ms')
+" 2>/dev/null || echo "  (timeline parse error)"
+    fi
+
     return 0
 }
 
