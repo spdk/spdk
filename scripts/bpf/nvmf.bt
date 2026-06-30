@@ -118,12 +118,6 @@ usdt:__EXE__:nvmf_subsystem_destroy {
 	       str(arg1));
 }
 
-usdt:__EXE__:nvmf_ns_change {
-	printf("%d.%06d: namespace change: %d for subsystem: %s\n",
-	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
-	       arg1, str(arg2));
-}
-
 usdt:__EXE__:nvmf_subsystem_add_ns {
 	printf("%d.%06d: subsystem: %s add namespace: %d\n",
 	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),

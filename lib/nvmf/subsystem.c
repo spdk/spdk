@@ -2273,7 +2273,6 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 
 struct subsystem_ns_change_ctx {
 	struct spdk_nvmf_subsystem		*subsystem;
-	spdk_nvmf_subsystem_state_change_done	cb_fn;
 	uint32_t				nsid;
 };
 
@@ -2298,26 +2297,6 @@ _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 }
 
 static void
-nvmf_ns_change_msg(void *ns_ctx)
-{
-	struct subsystem_ns_change_ctx *ctx = ns_ctx;
-	int rc;
-
-	SPDK_DTRACE_PROBE2(nvmf_ns_change, ctx->nsid, ctx->subsystem->subnqn);
-
-	rc = spdk_nvmf_subsystem_pause(ctx->subsystem, ctx->nsid, ctx->cb_fn, ctx);
-	if (rc) {
-		if (rc == -EBUSY) {
-			/* Try again, this is not a permanent situation. */
-			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ctx);
-		} else {
-			free(ctx);
-			SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
-		}
-	}
-}
-
-static void
 nvmf_ns_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_ns *ns = remove_ctx;
@@ -2335,17 +2314,11 @@ nvmf_ns_hot_remove(void *remove_ctx)
 
 	ns_ctx->subsystem = ns->subsystem;
 	ns_ctx->nsid = ns->opts.nsid;
-	ns_ctx->cb_fn = _nvmf_ns_hot_remove;
 
 	rc = spdk_nvmf_subsystem_pause(ns->subsystem, ns_ctx->nsid, _nvmf_ns_hot_remove, ns_ctx);
 	if (rc) {
-		if (rc == -EBUSY) {
-			/* Try again, this is not a permanent situation. */
-			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ns_ctx);
-		} else {
-			SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
-			free(ns_ctx);
-		}
+		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
+		free(ns_ctx);
 	}
 }
 
@@ -2380,20 +2353,14 @@ nvmf_ns_resize(void *event_ctx)
 
 	ns_ctx->subsystem = ns->subsystem;
 	ns_ctx->nsid = ns->opts.nsid;
-	ns_ctx->cb_fn = _nvmf_ns_resize;
 
 	/* Specify 0 for the nsid here, because we do not need to pause the namespace.
 	 * Namespaces can only be resized bigger, so there is no need to quiesce I/O.
 	 */
 	rc = spdk_nvmf_subsystem_pause(ns->subsystem, 0, _nvmf_ns_resize, ns_ctx);
 	if (rc) {
-		if (rc == -EBUSY) {
-			/* Try again, this is not a permanent situation. */
-			spdk_thread_send_msg(spdk_get_thread(), nvmf_ns_change_msg, ns_ctx);
-		} else {
-			SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
-			free(ns_ctx);
-		}
+		SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
+		free(ns_ctx);
 	}
 }
 

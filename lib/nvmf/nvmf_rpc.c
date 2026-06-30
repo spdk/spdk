@@ -455,10 +455,6 @@ rpc_nvmf_delete_subsystem(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("Subsystem is already being destroyed.\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Subsystem is already being destroyed.");
-	} else if (rc == -EBUSY) {
-		SPDK_ERRLOG("Subsystem currently in another state change try again later.\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Subsystem currently in another state change try again later.");
 	} else if (rc != 0) {
 		SPDK_ERRLOG("Unable to change state on subsystem. rc=%d\n", rc);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
