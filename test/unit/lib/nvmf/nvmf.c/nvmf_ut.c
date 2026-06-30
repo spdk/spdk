@@ -280,6 +280,99 @@ test_nvmf_target_opts_copy_bounds_size(void)
 	CU_ASSERT(dst.opts.discovery_filter == SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY);
 }
 
+static void
+ut_pause_done(void *cb_arg, int status)
+{
+	bool *done = cb_arg;
+
+	*done = true;
+}
+
+static void
+test_nvmf_pause_drains_targeted_ns(void)
+{
+	/* NVMe namespace IDs are 1-based, but the poll group's ns_info[] array
+	 * is 0-based: namespace N is tracked at ns_info[N - 1].
+	 */
+	const uint32_t ns1 = 1;
+	const uint32_t ns2 = 2;
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroup = {};
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info[2] = {};
+	bool done;
+
+	subsystem.id = 0;
+	group.num_sgroups = 1;
+	group.sgroups = &sgroup;
+	sgroup.num_ns = 2;
+	sgroup.ns_info = ns_info;
+
+	/* Two active namespaces: namespace 1 still has I/O in flight, namespace
+	 * 2 is idle.
+	 */
+	sgroup.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	ns_info[ns1 - 1].state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	ns_info[ns1 - 1].io_outstanding = 1;
+	ns_info[ns2 - 1].state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	ns_info[ns2 - 1].io_outstanding = 0;
+
+	/*
+	 * Pause namespace 2. It has no outstanding I/O, so the pause completes
+	 * immediately and leaves the poll group PAUSED -- but namespace 1 was
+	 * not its target, so namespace 1 stays ACTIVE and keeps its outstanding
+	 * I/O. This is the precondition behind the io_outstanding underflow
+	 * assert in _nvmf_request_complete() (issue #3738): a poll group that is
+	 * already PAUSED while a namespace is still ACTIVE and accumulating I/O.
+	 */
+	done = false;
+	nvmf_poll_group_pause_subsystem(&group, &subsystem, ns2, ut_pause_done, &done);
+	CU_ASSERT(done == true);
+	CU_ASSERT(sgroup.state == SPDK_NVMF_SUBSYSTEM_PAUSED);
+	CU_ASSERT(ns_info[ns2 - 1].state == SPDK_NVMF_SUBSYSTEM_PAUSING);
+	CU_ASSERT(ns_info[ns1 - 1].state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
+
+	/*
+	 * Now pause namespace 1 while the poll group is already PAUSED. I/O
+	 * admission is gated per-namespace, so namespace 1 can still be ACTIVE
+	 * with I/O in flight even though the poll group is paused. Pausing it
+	 * must quiesce namespace 1 (mark it PAUSING so it stops admitting new
+	 * I/O) and, because the namespace still has I/O outstanding, defer
+	 * completion until the namespace drains -- the callback must not fire
+	 * yet. If pausing an already-PAUSED poll group instead short-circuited
+	 * and reported completion immediately, namespace 1 would stay ACTIVE and
+	 * its io_outstanding could later be cleared while requests were still in
+	 * flight, underflowing the counter.
+	 */
+	done = false;
+	nvmf_poll_group_pause_subsystem(&group, &subsystem, ns1, ut_pause_done, &done);
+	CU_ASSERT(ns_info[ns1 - 1].state == SPDK_NVMF_SUBSYSTEM_PAUSING);
+	CU_ASSERT(done == false);
+	CU_ASSERT(sgroup.state == SPDK_NVMF_SUBSYSTEM_PAUSING);
+	CU_ASSERT(sgroup.cb_arg == &done);
+	SPDK_CU_ASSERT_FATAL(sgroup.cb_fn == ut_pause_done);
+
+	/* Quiescing namespace 1 must not disturb the other namespace. */
+	CU_ASSERT(ns_info[ns2 - 1].state == SPDK_NVMF_SUBSYSTEM_PAUSING);
+
+	/*
+	 * Drain namespace 1. In the running target the namespace's outstanding
+	 * I/O completes in _nvmf_request_complete() (lib/nvmf/ctrlr.c), which
+	 * decrements io_outstanding and, once no PAUSING namespace has I/O left,
+	 * flips the poll group to PAUSED and invokes the stored callback. That
+	 * file is not built into this unit test, so reproduce its effect here to
+	 * show that the deferred pause finally completes once the namespace has
+	 * drained.
+	 */
+	ns_info[ns1 - 1].io_outstanding--;
+	CU_ASSERT(ns_info[ns1 - 1].io_outstanding == 0);
+	sgroup.state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+	sgroup.cb_fn(sgroup.cb_arg, 0);
+	sgroup.cb_fn = NULL;
+	sgroup.cb_arg = NULL;
+	CU_ASSERT(done == true);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -293,6 +386,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
 	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
 	CU_ADD_TEST(suite, test_nvmf_tgt_options);
+	CU_ADD_TEST(suite, test_nvmf_pause_drains_targeted_ns);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

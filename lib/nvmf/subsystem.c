@@ -813,6 +813,15 @@ out:
 }
 
 static void
+subsystem_pause_ns_drain_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	/* No subsystem transition happened, so just report completion. */
+	nvmf_subsystem_state_change_complete(ctx, status);
+}
+
+static void
 subsystem_state_change_continue(void *ctx, int status)
 {
 	struct spdk_io_channel_iter *i = ctx;
@@ -869,8 +878,24 @@ nvmf_subsystem_do_state_change(struct nvmf_subsystem_state_change_ctx *ctx)
 	SPDK_DTRACE_PROBE3(nvmf_subsystem_change_state, subsystem->subnqn,
 			   ctx->requested_state, subsystem->state);
 
-	/* If we are already in the requested state, just call the callback immediately. */
+	/* If we are already in the requested state, just call the callback
+	 * immediately. The one exception is a pause that targets a specific
+	 * namespace: a previous state change may have left the subsystem PAUSED
+	 * without quiescing this namespace (for example a whole-subsystem pause
+	 * that drained nothing (nsid 0), or a pause that targeted a different
+	 * namespace). Since I/O admission is gated per-namespace, that namespace
+	 * can still be accumulating I/O, so we must fan out to the poll groups
+	 * and drain it before the caller modifies it.
+	 */
 	if (subsystem->state == ctx->requested_state) {
+		if (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED && ctx->nsid != 0) {
+			ctx->original_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+			spdk_for_each_channel(subsystem->tgt,
+					      subsystem_state_change_on_pg,
+					      ctx,
+					      subsystem_pause_ns_drain_done);
+			return;
+		}
 		nvmf_subsystem_state_change_complete(ctx, 0);
 		return;
 	}

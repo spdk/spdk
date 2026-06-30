@@ -2049,7 +2049,29 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 
 	sgroup = &group->sgroups[subsystem->id];
 	if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
-		goto fini;
+		/* The poll group is already paused, but a previous pause may not
+		 * have quiesced the namespace(s) this request targets (e.g. it was a
+		 * whole-subsystem pause that drained nothing (nsid 0), or a pause
+		 * for a different namespace). New I/O to a namespace is admitted
+		 * based on the per-namespace state -- not the subsystem state -- so
+		 * a namespace left ACTIVE can still be accumulating I/O while the
+		 * subsystem is paused. Mark the targeted namespace(s) PAUSING to
+		 * stop new I/O and drain whatever is in flight before reporting
+		 * completion.
+		 *
+		 * Note mgmt_io_outstanding is intentionally not consulted here:
+		 * while the subsystem is paused, admin/fabric commands are queued
+		 * rather than admitted (see nvmf_check_subsystem_active()), so it
+		 * cannot be growing and the subsystem could not have reached PAUSED
+		 * with it non-zero.
+		 */
+		if (!nvmf_sgroup_pause_ns(sgroup, nsid)) {
+			goto fini;
+		}
+
+		sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		nvmf_sgroup_arm_completion(sgroup, cb_fn, cb_arg);
+		return;
 	}
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
 	draining = nvmf_sgroup_pause_ns(sgroup, nsid);
