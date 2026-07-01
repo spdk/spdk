@@ -3096,6 +3096,8 @@ nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 	if (TAILQ_EMPTY(&subsystem->ctrlrs)) {
 		nvmf_subsystem_refresh_vwc_present(subsystem);
 	}
+
+	ctrlr->subsys = NULL;
 }
 
 struct spdk_nvmf_ctrlr *

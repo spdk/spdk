@@ -179,9 +179,9 @@ usdt:__EXE__:nvmf_ctrlr_create {
 }
 
 usdt:__EXE__:nvmf_ctrlr_destruct {
-	printf("%d.%06d: destroy ctrlr: %p on subsystem: %s on thread: %lu\n",
+	printf("%d.%06d: destroy ctrlr: %p on thread: %lu\n",
 	       elapsed / (uint64)(1000 * 1000), elapsed % (uint64)(1000 * 1000),
-	       arg1, str(arg2), arg3);
+	       arg1, arg2);
 }
 
 usdt:__EXE__:nvmf_ctrlr_add_io_qpair {

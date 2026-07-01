@@ -194,9 +194,6 @@ DEFINE_STUB_V(spdk_nvme_print_completion, (uint16_t qid, struct spdk_nvme_cpl *c
 DEFINE_STUB_V(spdk_nvme_print_completion_ext, (uint16_t qid, const struct spdk_nvme_cpl *cpl,
 		uint8_t opc));
 
-DEFINE_STUB_V(nvmf_subsystem_remove_ctrlr, (struct spdk_nvmf_subsystem *subsystem,
-		struct spdk_nvmf_ctrlr *ctrlr));
-
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_abort_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
@@ -362,6 +359,13 @@ bool
 nvmf_ns_is_ptpl_capable(const struct spdk_nvmf_ns *ns)
 {
 	return ns->ptpl_file != NULL;
+}
+
+void
+nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ctrlr *ctrlr)
+{
+	ctrlr->subsys = NULL;
 }
 
 static void

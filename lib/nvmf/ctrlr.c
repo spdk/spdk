@@ -637,11 +637,11 @@ _nvmf_ctrlr_destruct(void *ctx)
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
 	struct spdk_nvmf_async_event_completion *event, *event_tmp;
 
-	SPDK_DTRACE_PROBE3_TICKS(nvmf_ctrlr_destruct, ctrlr, ctrlr->subsys->subnqn,
-				 spdk_thread_get_id(ctrlr->thread));
+	SPDK_DTRACE_PROBE2_TICKS(nvmf_ctrlr_destruct, ctrlr, spdk_thread_get_id(ctrlr->thread));
 
 	assert(spdk_get_thread() == ctrlr->thread);
 	assert(ctrlr->in_destruct);
+	assert(ctrlr->subsys == NULL);
 
 	SPDK_DEBUGLOG(nvmf, "Destroy ctrlr 0x%hx\n", ctrlr->cntlid);
 	if (ctrlr->disconnect_in_progress) {
