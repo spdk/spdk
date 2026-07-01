@@ -207,7 +207,7 @@ def add_parser(subparsers):
                    help='Injection type: corrupt (corrupt data), failure (fail operation), disable (disable injection)')
     p.add_argument('-c', '--count', type=int,
                    help='Number of errors to inject on each IO channel; 0 disables injection. Default: UINT64_MAX (no limit)')
-    p.add_argument('-i', '--interval', type=int, help='Number of operations between successive injections')
+    p.add_argument('-i', '--interval', type=int, help='Inject every Nth operation')
     p.add_argument('--errcode', type=int, help='Error code to return; only relevant for type=failure')
     p.set_defaults(func=accel_error_inject_error)
 

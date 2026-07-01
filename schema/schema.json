@@ -1090,7 +1090,7 @@
         {
           "name": "interval",
           "type": "uint64",
-          "description": "Number of operations between successive injections"
+          "description": "Inject every Nth operation"
         },
         {
           "name": "errcode",
