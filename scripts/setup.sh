@@ -52,8 +52,8 @@ function usage() {
 	echo
 	echo "The following environment variables can be specified."
 	echo "HUGEMEM           Size of hugepage memory to allocate (in MB). 2048 by default."
-	echo "                  For NUMA systems, the hugepages will be distributed on node0 by"
-	echo "                  default."
+	echo "                  For NUMA systems, the hugepages will be distributed across all"
+	echo "                  nodes by the kernel. Use HUGENODE to target specific node(s)."
 	echo "FREEBSD_BUFSZ     Value (in MB) used to determine how many buffers of FREEBSD_BUFSZ to"
 	echo "                  allocate. This value can be used to either increase or decrease the"
 	echo "                  the final amount of contigmem buffers relative to HUGEMEM. Used only"
