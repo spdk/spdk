@@ -5378,6 +5378,7 @@ static bool
 nvmf_check_qpair_active(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	int sc, sct;
 
 	if (spdk_likely(qpair->state == SPDK_NVMF_QPAIR_ENABLED)) {
@@ -5423,6 +5424,21 @@ nvmf_check_qpair_active(struct spdk_nvmf_request *req)
 
 	req->rsp->nvme_cpl.status.sct = sct;
 	req->rsp->nvme_cpl.status.sc = sc;
+
+	/* nvmf_check_subsystem_active() increments mgmt_io_outstanding for admin requests, including
+	 * AERs. nvmf_ctrlr_process_admin_cmd() decrements it for AERs, and _nvmf_request_complete()
+	 * skips the AER decrement. If the qpair is no longer active, this path bypasses
+	 * nvmf_ctrlr_process_admin_cmd(), so decrement it here.
+	 */
+	if (spdk_unlikely(qpair->ctrlr != NULL &&
+			  nvmf_qpair_is_admin_queue(qpair) &&
+			  req->cmd->nvme_cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
+		sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		assert(sgroup != NULL);
+		assert(sgroup->mgmt_io_outstanding > 0);
+		sgroup->mgmt_io_outstanding--;
+	}
+
 	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
 	_nvmf_request_complete(req);
 

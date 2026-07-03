@@ -2774,6 +2774,47 @@ test_multi_async_events(void)
 }
 
 static void
+qpair_state_change_done(void *cb_arg, int status)
+{
+}
+
+static void
+test_aer_on_inactive_qpair_mgmt_io_accounting(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	struct spdk_nvmf_request req = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroup = {};
+
+	ctrlr.subsys = &subsystem;
+
+	sgroup.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+	group.sgroups = &sgroup;
+
+	qpair.ctrlr = &ctrlr;
+	qpair.group = &group;
+	qpair.qid = 0;
+	qpair.state = SPDK_NVMF_QPAIR_DEACTIVATING;
+	qpair.state_cb = qpair_state_change_done;
+	TAILQ_INIT(&qpair.outstanding);
+
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_ASYNC_EVENT_REQUEST;
+
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	spdk_nvmf_request_exec(&req);
+
+	CU_ASSERT_EQUAL(sgroup.mgmt_io_outstanding, 0);
+	CU_ASSERT(TAILQ_EMPTY(&qpair.outstanding));
+}
+
+static void
 test_rae(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {};
@@ -3069,11 +3110,6 @@ test_nvmf_ctrlr_use_zcopy(void)
 	CU_ASSERT(req.zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 
 	spdk_bit_array_free(&ctrlr.visible_ns);
-}
-
-static void
-qpair_state_change_done(void *cb_arg, int status)
-{
 }
 
 static void
@@ -4000,6 +4036,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_ana_log_page_one_ns_per_anagrp);
 	CU_ADD_TEST(suite, test_get_ana_log_page_multi_ns_per_anagrp);
 	CU_ADD_TEST(suite, test_multi_async_events);
+	CU_ADD_TEST(suite, test_aer_on_inactive_qpair_mgmt_io_accounting);
 	CU_ADD_TEST(suite, test_rae);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_create_destruct);
 	CU_ADD_TEST(suite, test_nvmf_ctrlr_use_zcopy);
