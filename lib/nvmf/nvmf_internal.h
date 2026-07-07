@@ -347,7 +347,7 @@ struct spdk_nvmf_ctrlr {
 
 struct nvmf_subsystem_state_change_ctx {
 	struct spdk_nvmf_subsystem			*subsystem;
-	uint16_t					nsid;
+	uint32_t					nsid;
 
 	enum spdk_nvmf_subsystem_state			original_state;
 	enum spdk_nvmf_subsystem_state			requested_state;
