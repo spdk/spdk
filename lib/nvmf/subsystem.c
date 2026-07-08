@@ -612,8 +612,10 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 		return -EAGAIN;
 	}
 
+	pthread_mutex_lock(&subsystem->mutex);
 	if (subsystem->destroy_state == NVMF_SUBSYSTEM_DESTROY_IN_PROGRESS) {
 		SPDK_ERRLOG("Subsystem %s destruction is already in progress\n", subsystem->subnqn);
+		pthread_mutex_unlock(&subsystem->mutex);
 		return -EALREADY;
 	}
 
@@ -622,8 +624,6 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem, nvmf_subsyste
 	SPDK_DEBUGLOG(nvmf, "subsystem is %p %s\n", subsystem, subsystem->subnqn);
 
 	nvmf_subsystem_remove_all_listeners(subsystem, false);
-
-	pthread_mutex_lock(&subsystem->mutex);
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
 		for (transport = spdk_nvmf_transport_get_first(subsystem->tgt); transport;
@@ -899,16 +899,12 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 			    enum spdk_nvmf_subsystem_state requested_state,
 			    spdk_nvmf_subsystem_state_change_done cb_fn,
 			    void *cb_arg,
-			    bool skip_destroy_check)
+			    bool prepare_for_destroy)
 {
 	struct nvmf_subsystem_state_change_ctx *ctx;
 	struct spdk_thread *thread;
 
-	if (skip_destroy_check) {
-		assert(requested_state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
-	} else if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
-		return -ENODEV;
-	}
+	assert(requested_state == SPDK_NVMF_SUBSYSTEM_INACTIVE || !prepare_for_destroy);
 
 	thread = spdk_get_thread();
 	if (thread == NULL) {
@@ -928,6 +924,16 @@ nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
 	ctx->thread = thread;
 
 	pthread_mutex_lock(&subsystem->mutex);
+	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
+		pthread_mutex_unlock(&subsystem->mutex);
+		free(ctx);
+		return -ENODEV;
+	}
+
+	if (prepare_for_destroy) {
+		subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_PENDING;
+	}
+
 	TAILQ_INSERT_TAIL(&subsystem->state_changes, ctx, link);
 	if (ctx != TAILQ_FIRST(&subsystem->state_changes)) {
 		pthread_mutex_unlock(&subsystem->mutex);
@@ -963,18 +969,8 @@ spdk_nvmf_subsystem_stop_for_destroy(struct spdk_nvmf_subsystem *subsystem,
 				     spdk_nvmf_subsystem_state_change_done cb_fn,
 				     void *cb_arg)
 {
-	int rc;
-
-	if (subsystem->destroy_state != NVMF_SUBSYSTEM_DESTROY_NOT_STARTED) {
-		return -ENODEV;
-	}
-	subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_PENDING;
-	rc = nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
-					 true);
-	if (rc != 0) {
-		subsystem->destroy_state = NVMF_SUBSYSTEM_DESTROY_NOT_STARTED;
-	}
-	return rc;
+	return nvmf_subsystem_state_change(subsystem, 0, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg,
+					   true);
 }
 
 int

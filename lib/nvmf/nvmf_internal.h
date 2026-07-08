@@ -381,7 +381,9 @@ struct spdk_nvmf_subsystem {
 	/* Protected against concurrent access by ->mutex */
 	bool						allow_any_host;
 
-	/* Tracks subsystem destruction state */
+	/* Tracks subsystem destruction state.
+	 * Protected against concurrent access by ->mutex
+	 */
 	enum nvmf_subsystem_destroy_state		destroy_state;
 	/* Set when destroy() must wait for active controllers to disconnect */
 	bool						async_destroy;
