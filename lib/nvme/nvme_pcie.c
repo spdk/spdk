@@ -958,8 +958,7 @@ static struct spdk_nvme_ctrlr *
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
 	if (rc != 0) {
-		spdk_pci_device_unclaim(pci_dev);
-		spdk_free(pctrlr);
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		return NULL;
 	}
 
@@ -970,8 +969,7 @@ static struct spdk_nvme_ctrlr *
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "get_cap() failed\n");
-		spdk_pci_device_unclaim(pci_dev);
-		spdk_free(pctrlr);
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
 		return NULL;
 	}
 
@@ -1051,6 +1049,9 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		}
 		spdk_pci_device_unclaim(devhandle);
 		spdk_pci_device_detach(devhandle);
+	} else if (pctrlr->devhandle) {
+		/* The controller failed to construct before nvme_ctrlr_add_process() ran. */
+		spdk_pci_device_unclaim(pctrlr->devhandle);
 	}
 
 	spdk_free(pctrlr);

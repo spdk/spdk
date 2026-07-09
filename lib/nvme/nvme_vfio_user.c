@@ -196,7 +196,7 @@ static struct spdk_nvme_ctrlr *
 	if (ret != 0) {
 		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "Read PCI CMD REG failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		goto exit;
+		return NULL;
 	}
 	cmd_reg |= 0x404;
 	ret = spdk_vfio_user_pci_bar_access(vctrlr->dev, VFIO_PCI_CONFIG_REGION_INDEX, 4, 2,
@@ -204,13 +204,13 @@ static struct spdk_nvme_ctrlr *
 	if (ret != 0) {
 		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "Write PCI CMD REG failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		goto exit;
+		return NULL;
 	}
 
 	if (nvme_ctrlr_get_cap(&pctrlr->ctrlr, &cap)) {
 		NVME_CTRLR_ERRLOG(&pctrlr->ctrlr, "get_cap() failed\n");
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		goto exit;
+		return NULL;
 	}
 
 	/* Doorbell stride is 2 ^ (dstrd + 2),
@@ -220,14 +220,14 @@ static struct spdk_nvme_ctrlr *
 	ret = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr, pctrlr->ctrlr.opts.admin_queue_size);
 	if (ret != 0) {
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		goto exit;
+		return NULL;
 	}
 
 	/* Construct the primary process properties */
 	ret = nvme_ctrlr_add_process(&pctrlr->ctrlr, 0);
 	if (ret != 0) {
 		nvme_ctrlr_destruct(&pctrlr->ctrlr);
-		goto exit;
+		return NULL;
 	}
 
 	return &pctrlr->ctrlr;

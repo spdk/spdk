@@ -4651,10 +4651,16 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 	ctrlr->prepare_for_reset = false;
 	ctrlr->is_destructed = true;
 
-	spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	/* The admin qpair may not exist yet if a transport constructor failed. */
+	if (ctrlr->adminq) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
 
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
-	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
+	if (ctrlr->adminq) {
+		nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+	}
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
@@ -4685,7 +4691,9 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		ctx->cb_fn(ctrlr);
 	}
 
-	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
+	if (ctrlr->adminq) {
+		nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
+	}
 
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
 		nvme_ns_clear(ns);

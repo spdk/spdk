@@ -15,10 +15,11 @@
 
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {};
 
-/* nvme_transport_ctrlr_disconnect_qpair_done() stub is defined in common_stubs.h, but we need to
- * override it here */
+/* Stubs are defined in common header, but we need to override it here */
 static void nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_qpair *qpair);
 #define nvme_transport_ctrlr_disconnect_qpair_done nvme_transport_ctrlr_disconnect_qpair_done_mocked
+static void nvme_ctrlr_destruct_mocked(struct spdk_nvme_ctrlr *ctrlr);
+#define nvme_ctrlr_destruct nvme_ctrlr_destruct_mocked
 
 #include "nvme/nvme_tcp.c"
 
@@ -69,6 +70,13 @@ static void
 nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_qpair *qpair)
 {
 	qpair->state = NVME_QPAIR_DISCONNECTED;
+}
+
+static void
+nvme_ctrlr_destruct_mocked(struct spdk_nvme_ctrlr *ctrlr)
+{
+	/* Real nvme_ctrlr_destruct() dispatches to the transport destruct; that is what frees the controller. */
+	nvme_tcp_ctrlr_destruct(ctrlr);
 }
 
 static void

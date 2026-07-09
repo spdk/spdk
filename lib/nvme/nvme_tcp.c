@@ -2904,7 +2904,7 @@ nvme_tcp_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
 			       tctrlr->ctrlr.opts.admin_queue_size, true);
 	if (!tctrlr->ctrlr.adminq) {
 		NVME_CTRLR_ERRLOG(&tctrlr->ctrlr, "failed to create admin qpair\n");
-		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
+		nvme_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}
 
