@@ -38,6 +38,10 @@ fi
 
 if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "tcp" ]]; then
 	run_test "nvmf_digest" "$rootdir/test/nvmf/host/digest.sh" "${TEST_ARGS[@]}"
+	# Error injection uses the sock_error module, which only wraps the posix impl.
+	if [[ $SPDK_TEST_URING -eq 0 ]]; then
+		run_test "nvmf_err_injection" "$rootdir/test/nvmf/host/err_injection.sh" "${TEST_ARGS[@]}"
+	fi
 fi
 
 if [[ "$SPDK_TEST_NVMF_TRANSPORT" == "rdma" ]]; then
