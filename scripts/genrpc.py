@@ -158,6 +158,8 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     for method in schema['methods']:
+        if 'description' not in method:
+            raise ValueError(f"Method '{method['name']}' is missing 'description' field in schema")
         if method['name'] in private_methods:
             continue
         if method['name'] == 'nvmf_set_config':
@@ -248,6 +250,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
             if params
             else "This method has no parameters."
         )
+        transformation[f"{method['name']}_description"] = method['description'].rstrip('\n')
     for obj in schema['objects']:
         fields = [
             dict(
