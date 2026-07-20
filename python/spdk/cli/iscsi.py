@@ -102,7 +102,7 @@ def add_parser(subparsers):
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.add_argument('-c', '--secrets', type=partial(str.split, sep=','), default=[],
                    help="""Comma-separated list of CHAP secrets
-<user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret> enclosed in quotes.
+(user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret) enclosed in quotes.
 Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'""")
     p.set_defaults(func=iscsi_create_auth_group)
 
@@ -216,18 +216,18 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('alias_name', help='Target node alias name (ASCII)')
     p.add_argument('luns', type=partial(str.split, sep=' '), default=[],
-                   help="""Whitespace-separated list of <bdev name:LUN ID> pairs enclosed
-    in quotes.  Format:  'bdev_name0:id0 bdev_name1:id1' etc
-    Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
-    *** The bdevs must pre-exist ***
-    *** LUN0 (id = 0) is required ***
-    *** bdevs names cannot contain space or colon characters ***""")
+                   help="""Whitespace-separated list of (bdev name:LUN ID) pairs enclosed
+in quotes.  Format:  'bdev_name0:id0 bdev_name1:id1' etc
+Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
+*** The bdevs must pre-exist ***
+*** LUN0 (id = 0) is required ***
+*** bdevs names cannot contain space or colon characters ***""")
     p.add_argument('pg_ig_maps', type=partial(str.split, sep=' '), default=[],
                    help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
-    Whitespace separated, quoted, mapping defined with colon
-    separated list of "tags" (int > 0)
-    Example: '1:1 2:2 2:1'
-    *** The Portal/Initiator Groups must be precreated ***""")
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
     p.add_argument('queue_depth', help='Target queue depth', type=int)
     p.add_argument('-g', '--chap-group',
                    help='Authentication group ID for this target node (non-zero values must reference a precreated group)', type=int)
@@ -291,10 +291,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_maps', type=partial(str.split, sep=' '), default=[],
                    help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
-    Whitespace separated, quoted, mapping defined with colon
-    separated list of "tags" (int > 0)
-    Example: '1:1 2:2 2:1'
-    *** The Portal/Initiator Groups must be precreated ***""")
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=iscsi_target_node_add_pg_ig_maps)
 
     def iscsi_target_node_remove_pg_ig_maps(args):
@@ -312,10 +312,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_maps', type=partial(str.split, sep=' '), default=[],
                    help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
-    Whitespace separated, quoted, mapping defined with colon
-    separated list of "tags" (int > 0)
-    Example: '1:1 2:2 2:1'
-    *** The Portal/Initiator Groups must be precreated ***""")
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
     p.set_defaults(func=iscsi_target_node_remove_pg_ig_maps)
 
     def iscsi_target_node_set_redirect(args):
@@ -364,14 +364,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portals', type=partial(str.split, sep=' '), default=[],
                    help="""List of portals in host:port format, separated by whitespace
-    Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'""")
+Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'""")
     p.add_argument('-p', '--private', help="""Public (false) or private (true) portal group.
-    Private portal groups do not have their portals returned by a discovery session. A public
-    portal group may optionally specify a redirect portal for non-discovery logins. This redirect
-    portal must be from a private portal group.""", action='store_true')
-    p.add_argument('-w', '--wait', help="""Do not listening on portals until it is started explicitly.
-    One major iSCSI initiator may not retry login once it failed. Hence for such initiator, listening
-    on portals should be allowed after all associated target nodes are created.""", action='store_true')
+Private portal groups do not have their portals returned by a discovery session. A public
+portal group may optionally specify a redirect portal for non-discovery logins. This redirect
+portal must be from a private portal group.""", action='store_true')
+    p.add_argument('-w', '--wait', help="""Do not listen on portals until started explicitly.
+One major iSCSI initiator may not retry login once it failed. Hence for such initiator, listening
+on portals should be allowed after all associated target nodes are created.""", action='store_true')
     p.set_defaults(func=iscsi_create_portal_group)
 
     def iscsi_start_portal_group(args):
@@ -393,10 +393,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
+enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('netmasks', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
-    Example: '255.255.0.0 255.248.0.0' etc""")
+Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_create_initiator_group)
 
     def iscsi_initiator_group_add_initiators(args):
@@ -410,11 +410,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
-    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
+enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('-m', dest='netmasks', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
-    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
+This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_add_initiators)
 
     def iscsi_initiator_group_remove_initiators(args):
@@ -428,11 +428,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
-    enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
-    'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
+enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'""")
     p.add_argument('-m', dest='netmasks', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
-    This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
+This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
     p.set_defaults(func=iscsi_initiator_group_remove_initiators)
 
     def iscsi_delete_target_node(args):

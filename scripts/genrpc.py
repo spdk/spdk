@@ -222,7 +222,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
                 # argparse.BooleanOptionalAction auto-appends " (default: %(default)s)" when default is concrete; strip it.
                 help_str = action.help.removesuffix(" (default: %(default)s)") if action.help else action.help
-                if param['description'] != help_str and "\n" not in help_str and not method['name'].startswith('bdev_'):
+                if param['description'] != help_str and not method['name'].startswith('bdev_'):
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'description' field is mismatched")
 
 

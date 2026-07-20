@@ -98,15 +98,18 @@ def add_parser(subparsers):
                    help='Number of pooled data buffers available to the transport. Deprecated, use iobuf_set_options instead',
                    type=int)
     group = p.add_mutually_exclusive_group()
-    group.add_argument('-b', '--buf-cache-size', help="""The number of shared buffers to reserve for each poll group.
-    Deprecated, use iobuf-small-cache-size instead""", type=int)
-    group.add_argument('--iobuf-small-cache-size', help="""The number of shared buffers from a small iobuf pool to reserve
-    for each poll group (optional)""", type=int)
+    group.add_argument('-b', '--buf-cache-size',
+                       help="""The number of shared buffers to reserve for each poll group.
+Deprecated, use iobuf-small-cache-size instead""",
+                       type=int)
+    group.add_argument('--iobuf-small-cache-size',
+                       help="The number of shared buffers from a small iobuf pool to reserve for each poll group",
+                       type=int)
     p.add_argument('--iobuf-large-cache-size',
                    help='Number of shared buffers from the large iobuf pool to reserve for each poll group',
                    type=int)
-    p.add_argument('-z', '--zcopy', action='store_true', help='''Use zero-copy operations if the
-    underlying bdev supports them''')
+    p.add_argument('-z', '--zcopy', action='store_true',
+                   help="Use zero-copy operations if the underlying bdev supports them")
     p.add_argument('-d', '--num-cqe',
                    help='Number of CQ entries, only used when no_srq=true (RDMA only)',
                    type=int)
@@ -189,8 +192,8 @@ def add_parser(subparsers):
     p.add_argument("--dmrsl", help="Dataset Management Range Size Limit in logical block units", type=int)
     p.add_argument("--wzsl",
                    help="Write Zeroes Size Limit as a power of two (2^wzsl) in units of minimum memory page size", type=int)
-    p.add_argument("-p", "--passthrough", action='store_true', help="""Use NVMe passthrough for all I/O commands and namespace-directed
-                   admin commands""")
+    p.add_argument("-p", "--passthrough", action='store_true',
+                   help="Use NVMe passthrough for all I/O commands and namespace-directed admin commands")
     p.add_argument("-n", "--enable-nssr", action='store_true', help="Enable NSSR (NVMe subsystem reset)")
     p.set_defaults(func=nvmf_create_subsystem)
 

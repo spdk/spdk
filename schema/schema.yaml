@@ -2467,7 +2467,10 @@ methods:
       - name: secrets
         type: array
         class: iscsi_auth_secrets
-        description: List of CHAP secrets for this authentication group
+        description: |-
+          Comma-separated list of CHAP secrets
+          (user:user_name secret:chap_secret muser:mutual_user_name msecret:mutual_chap_secret) enclosed in quotes.
+          Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'
   - name: iscsi_delete_auth_group
     description: Delete an existing authentication group for CHAP authentication.
     params:
@@ -2524,12 +2527,16 @@ methods:
         type: array
         class: iscsi_initiators
         required: true
-        description: List of initiator hostnames or IP addresses
+        description: |-
+          Whitespace-separated list of initiator hostnames or IP addresses,
+          enclosed in quotes.  Example: 'ANY' or 'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'
       - name: netmasks
         type: array
         class: iscsi_netmasks
         required: true
-        description: List of initiator netmasks
+        description: |-
+          Whitespace-separated list of initiator netmasks enclosed in quotes.
+          Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_delete_initiator_group
     description: Delete an existing initiator group.
     params:
@@ -2547,11 +2554,16 @@ methods:
       - name: initiators
         type: array
         class: iscsi_initiators
-        description: List of initiator hostnames or IP addresses
+        description: |-
+          Whitespace-separated list of initiator hostnames or IP addresses,
+          enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+          'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'
       - name: netmasks
         type: array
         class: iscsi_netmasks
-        description: List of initiator netmasks
+        description: |-
+          Whitespace-separated list of initiator netmasks enclosed in quotes.
+          This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_initiator_group_remove_initiators
     description: Remove initiators from an initiator group.
     params:
@@ -2562,11 +2574,16 @@ methods:
       - name: initiators
         type: array
         class: iscsi_initiators
-        description: List of initiator hostnames or IP addresses
+        description: |-
+          Whitespace-separated list of initiator hostnames or IP addresses,
+          enclosed in quotes.  This parameter can be omitted.  Example: 'ANY' or
+          'iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2'
       - name: netmasks
         type: array
         class: iscsi_netmasks
-        description: List of initiator netmasks
+        description: |-
+          Whitespace-separated list of initiator netmasks enclosed in quotes.
+          This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_get_target_nodes
     description: Show information about all available iSCSI target nodes.
     params: []
@@ -2585,12 +2602,23 @@ methods:
         type: array
         class: iscsi_pg_ig_maps
         required: true
-        description: List of portal-group-tag to initiator-group-tag mappings
+        description: |-
+          List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+          Whitespace separated, quoted, mapping defined with colon
+          separated list of "tags" (int > 0)
+          Example: '1:1 2:2 2:1'
+          *** The Portal/Initiator Groups must be precreated ***
       - name: luns
         type: array
         class: scsi_luns
         required: true
-        description: List of bdev-name to LUN-ID mappings
+        description: |-
+          Whitespace-separated list of (bdev name:LUN ID) pairs enclosed
+          in quotes.  Format:  'bdev_name0:id0 bdev_name1:id1' etc
+          Example: 'Malloc0:0 Malloc1:1 Malloc5:2'
+          *** The bdevs must pre-exist ***
+          *** LUN0 (id = 0) is required ***
+          *** bdevs names cannot contain space or colon characters ***
       - name: queue_depth
         type: int32
         required: true
@@ -2643,7 +2671,12 @@ methods:
         type: array
         class: iscsi_pg_ig_maps
         required: true
-        description: List of portal-group-tag to initiator-group-tag mappings
+        description: |-
+          List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+          Whitespace separated, quoted, mapping defined with colon
+          separated list of "tags" (int > 0)
+          Example: '1:1 2:2 2:1'
+          *** The Portal/Initiator Groups must be precreated ***
   - name: iscsi_target_node_remove_pg_ig_maps
     description: Delete initiator group to portal group mappings from an existing iSCSI target node.
     params:
@@ -2655,7 +2688,12 @@ methods:
         type: array
         class: iscsi_pg_ig_maps
         required: true
-        description: List of portal-group-tag to initiator-group-tag mappings
+        description: |-
+          List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+          Whitespace separated, quoted, mapping defined with colon
+          separated list of "tags" (int > 0)
+          Example: '1:1 2:2 2:1'
+          *** The Portal/Initiator Groups must be precreated ***
   - name: iscsi_delete_target_node
     description: Delete an iSCSI target node.
     params:
@@ -2677,13 +2715,22 @@ methods:
         type: array
         class: iscsi_portals
         required: true
-        description: List of portals in host:port format
+        description: |-
+          List of portals in host:port format, separated by whitespace
+          Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262'
       - name: private
         type: boolean
-        description: Private portal group (portals are not returned by a discovery session; used for login redirection)
+        description: |-
+          Public (false) or private (true) portal group.
+          Private portal groups do not have their portals returned by a discovery session. A public
+          portal group may optionally specify a redirect portal for non-discovery logins. This redirect
+          portal must be from a private portal group.
       - name: wait
         type: boolean
-        description: Do not listen on portals until started explicitly
+        description: |-
+          Do not listen on portals until started explicitly.
+          One major iSCSI initiator may not retry login once it failed. Hence for such initiator, listening
+          on portals should be allowed after all associated target nodes are created.
   - name: iscsi_start_portal_group
     description: |
       Start listening on portals if the portal group is not started yet, or do nothing
@@ -2855,7 +2902,9 @@ methods:
       - name: buf_cache_size
         type: uint32
         deprecated: true
-        description: The number of shared buffers to reserve for each poll group
+        description: |-
+          The number of shared buffers to reserve for each poll group.
+          Deprecated, use iobuf-small-cache-size instead
       - name: iobuf_small_cache_size
         type: uint32
         description: The number of shared buffers from a small iobuf pool to reserve for each poll group
