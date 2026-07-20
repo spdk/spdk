@@ -13,20 +13,20 @@ def add_parser(subparsers):
     def accel_get_opc_assignments(args):
         print_dict(args.client.accel_get_opc_assignments())
 
-    p = subparsers.add_parser('accel_get_opc_assignments', help='Get list of opcode name to module assignments.')
+    p = subparsers.add_parser('accel_get_opc_assignments', help="Get a list of opcode names and their assigned accel_fw modules.")
     p.set_defaults(func=accel_get_opc_assignments)
 
     def accel_get_module_info(args):
         print_dict(args.client.accel_get_module_info())
 
     p = subparsers.add_parser('accel_get_module_info',
-                              help='Get list of valid module names and their operations.')
+                              help="Get a list of valid module names and their supported operations.")
     p.set_defaults(func=accel_get_module_info)
 
     def accel_assign_opc(args):
         args.client.accel_assign_opc(opname=args.opname, module=args.module)
 
-    p = subparsers.add_parser('accel_assign_opc', help='Manually assign an operation to a module.')
+    p = subparsers.add_parser('accel_assign_opc', help="Manually assign an operation to a module.")
     p.add_argument('-o', '--opname', help='Name of the accel operation; see accel_get_opc_assignments for the list', required=True)
     p.add_argument('-m', '--module', help='Name of the accel module to assign the operation to', required=True)
     p.set_defaults(func=accel_assign_opc)
@@ -39,7 +39,7 @@ def add_parser(subparsers):
                                                      tweak_mode=args.tweak_mode,
                                                      name=args.name))
 
-    p = subparsers.add_parser('accel_crypto_key_create', help='Create encryption key')
+    p = subparsers.add_parser('accel_crypto_key_create', help="Create a crypto key which will be used in accel framework")
     p.add_argument('-c', '--cipher', choices=['AES_CBC', 'AES_XTS'], help='Crypto cipher', required=True)
     p.add_argument('-k', '--key', help='Key in hex form', required=True)
     p.add_argument('-e', '--key2', help='Second part of the key (or tweak) in hex form, required for AES_XTS', default=None)
@@ -52,22 +52,23 @@ def add_parser(subparsers):
     def accel_crypto_key_destroy(args):
         print_dict(args.client.accel_crypto_key_destroy(key_name=args.key_name))
 
-    p = subparsers.add_parser('accel_crypto_key_destroy', help='Destroy encryption key')
+    p = subparsers.add_parser('accel_crypto_key_destroy', help="Destroy a crypto key. The user is responsible for ensuring that the deleted"
+                                                                " key is not used by acceleration modules.")
     p.add_argument('-n', '--name', dest='key_name', help='Name of the key to destroy', required=True, type=str)
     p.set_defaults(func=accel_crypto_key_destroy)
 
     def accel_crypto_keys_get(args):
         print_dict(args.client.accel_crypto_keys_get(key_name=args.key_name))
 
-    p = subparsers.add_parser('accel_crypto_keys_get', help='Get a list of the crypto keys')
+    p = subparsers.add_parser('accel_crypto_keys_get', help="Get information about existing crypto keys")
     p.add_argument('-k', '--key-name', help='Name of a specific key to query. Default: list all', type=str)
     p.set_defaults(func=accel_crypto_keys_get)
 
     def accel_set_driver(args):
         args.client.accel_set_driver(name=args.name)
 
-    p = subparsers.add_parser('accel_set_driver', help='Select accel platform driver to execute ' +
-                              'operation chains')
+    p = subparsers.add_parser('accel_set_driver', help="Select platform driver to execute operation chains. Until a driver is"
+                                                        " selected, all operations are executed through accel modules.")
     p.add_argument('--name', help='Name of the platform driver, or empty string to disable')
     p.set_defaults(func=accel_set_driver)
 
@@ -78,7 +79,7 @@ def add_parser(subparsers):
                                       sequence_count=args.sequence_count,
                                       buf_count=args.buf_count)
 
-    p = subparsers.add_parser('accel_set_options', help='Set accel framework\'s options')
+    p = subparsers.add_parser('accel_set_options', help="Set accel framework's options.")
     p.add_argument('--small-cache-size', type=int, help='Size of the small iobuf cache')
     p.add_argument('--large-cache-size', type=int, help='Size of the large iobuf cache')
     p.add_argument('--task-count', type=int, help='Maximum number of tasks per IO channel')
@@ -89,5 +90,7 @@ def add_parser(subparsers):
     def accel_get_stats(args):
         print_dict(args.client.accel_get_stats())
 
-    p = subparsers.add_parser('accel_get_stats', help='Display accel framework\'s statistics')
+    p = subparsers.add_parser('accel_get_stats', help="Retrieve accel framework's statistics. Statistics for opcodes that have never"
+                                                      " been executed (i.e. all their stats are at 0) aren't included in the"
+                                                      " `operations` array.")
     p.set_defaults(func=accel_get_stats)

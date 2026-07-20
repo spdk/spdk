@@ -15,7 +15,10 @@ def add_parser(subparsers):
                                     cpumask=args.cpumask,
                                     disable_user_copy=args.disable_user_copy)
     p = subparsers.add_parser('ublk_create_target',
-                              help='Create spdk ublk target for ublk dev')
+                              help="Start to create ublk threads and initialize ublk target. It will"
+                                   " return an error if user calls this RPC twice without"
+                                   " ublk_destroy_target in between. It will use current cpumask in SPDK"
+                                   " when user does not specify cpumask option.")
     p.add_argument('-m', '--cpumask', help="CPU mask for the ublk target's I/O threads")
     p.add_argument('--disable-user-copy', help='Disable the ublk user-copy feature. Default: false', action='store_true')
     p.set_defaults(func=ublk_create_target)
@@ -23,7 +26,7 @@ def add_parser(subparsers):
     def ublk_destroy_target(args):
         args.client.ublk_destroy_target()
     p = subparsers.add_parser('ublk_destroy_target',
-                              help='Destroy spdk ublk target for ublk dev')
+                              help="Release all UBLK devices and destroy ublk target.")
     p.set_defaults(func=ublk_destroy_target)
 
     def ublk_start_disk(args):
@@ -34,7 +37,7 @@ def add_parser(subparsers):
                                        queue_depth=args.queue_depth))
 
     p = subparsers.add_parser('ublk_start_disk',
-                              help='Export a bdev as a ublk device')
+                              help="Start to export one SPDK bdev as a UBLK device")
     p.add_argument('bdev_name', help='Name of the bdev to export')
     p.add_argument('ublk_id', help='ublk device ID, used as the suffix in /dev/ublkb[id]', type=int)
     p.add_argument('-q', '--num-queues', help='Number of queues to create on the device. Default: 1', type=int)
@@ -45,7 +48,7 @@ def add_parser(subparsers):
         args.client.ublk_stop_disk(ublk_id=args.ublk_id)
 
     p = subparsers.add_parser('ublk_stop_disk',
-                              help='Stop a ublk device')
+                              help="Delete a UBLK device")
     p.add_argument('ublk_id', help='ID of the ublk device to stop', type=int)
     p.set_defaults(func=ublk_stop_disk)
 
@@ -55,7 +58,7 @@ def add_parser(subparsers):
                                          ublk_id=args.ublk_id))
 
     p = subparsers.add_parser('ublk_recover_disk',
-                              help='Recover ublk device')
+                              help="Recover original UBLK device with ID and block device")
     p.add_argument('bdev_name', help='Name of the bdev backing the recovering ublk device')
     p.add_argument('ublk_id', help='ID of the ublk device to recover', type=int)
     p.set_defaults(func=ublk_recover_disk)
@@ -64,6 +67,6 @@ def add_parser(subparsers):
         print_dict(args.client.ublk_get_disks(ublk_id=args.ublk_id))
 
     p = subparsers.add_parser('ublk_get_disks',
-                              help='Display full or specified ublk device list')
+                              help="Display full or specified ublk device list")
     p.add_argument('-n', '--ublk-id', help='ID of a ublk device to query. Default: list all', type=int)
     p.set_defaults(func=ublk_get_disks)

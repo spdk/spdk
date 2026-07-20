@@ -17,7 +17,7 @@ def add_parser(subparsers):
     def spdk_get_version(args):
         print_json(args.client.spdk_get_version())
 
-    p = subparsers.add_parser('spdk_get_version', help='Get SPDK version')
+    p = subparsers.add_parser('spdk_get_version', help="Get the version info of the running SPDK application.")
     p.set_defaults(func=spdk_get_version)
 
     def save_config(args):
@@ -27,8 +27,9 @@ def add_parser(subparsers):
                            subsystems=args.subsystems,
                            with_batches=args.with_batches)
 
-    p = subparsers.add_parser('save_config', help="""Write current (live) configuration of SPDK subsystems and targets to stdout.
-    """)
+    p = subparsers.add_parser('save_config',
+                              help="Write current (live) configuration of SPDK subsystems and targets"
+                                   " to stdout.")
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. Default indent level is 2.
     """, type=int, default=2)
     p.add_argument('-s', '--subsystems', help="""Comma-separated list of subsystems (and their dependencies) to save""")
@@ -41,7 +42,8 @@ def add_parser(subparsers):
                            fd=args.json_conf,
                            include_aliases=args.include_aliases)
 
-    p = subparsers.add_parser('load_config', help="""Configure SPDK subsystems and targets using JSON RPC.""")
+    p = subparsers.add_parser('load_config',
+                              help="Configure SPDK subsystems and targets using JSON RPC.")
     p.add_argument('-i', '--include-aliases', help='include RPC aliases', action='store_true')
     p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_config)
@@ -53,8 +55,8 @@ def add_parser(subparsers):
                                      name=args.name,
                                      with_batches=args.with_batches)
 
-    p = subparsers.add_parser('save_subsystem_config', help="""Write current (live) configuration of SPDK subsystem to stdout.
-    """)
+    p = subparsers.add_parser('save_subsystem_config',
+                              help="Write current (live) configuration of SPDK subsystem to stdout.")
     p.add_argument('-i', '--indent', help="""Indent level. Value less than 0 mean compact mode. Default indent level is 2.
     """, type=int, default=2)
     p.add_argument('-n', '--name', help='Name of subsystem', required=True)
@@ -65,7 +67,8 @@ def add_parser(subparsers):
     def load_subsystem_config(args):
         config.load_subsystem_config(args.client, fd=args.json_conf)
 
-    p = subparsers.add_parser('load_subsystem_config', help="""Configure SPDK subsystem using JSON RPC.""")
+    p = subparsers.add_parser('load_subsystem_config',
+                              help="Configure SPDK subsystem using JSON RPC.")
     p.add_argument('-j', '--json-conf', help='Valid JSON configuration', default=sys.stdin)
     p.set_defaults(func=load_subsystem_config)
 
@@ -74,14 +77,13 @@ def add_parser(subparsers):
         print_dict(args.client.framework_get_subsystems())
 
     p = subparsers.add_parser('framework_get_subsystems',
-                              help="""Print subsystems array in initialization order. Each subsystem
-    entry contain (unsorted) array of subsystems it depends on.""")
+                              help="Get an array of name and dependency relationship of SPDK subsystems in initialization order.")
     p.set_defaults(func=framework_get_subsystems)
 
     def framework_get_config(args):
         print_dict(args.client.framework_get_config(name=args.name, with_batches=args.with_batches))
 
-    p = subparsers.add_parser('framework_get_config', help="""Print subsystem configuration""")
+    p = subparsers.add_parser('framework_get_config', help="Get current configuration of the specified SPDK framework")
     p.add_argument('name', help='Name of the SPDK subsystem to query')
     p.add_argument('--with-batches', action=argparse.BooleanOptionalAction, default=False,
                    help='Keep batch arrays in output. Default: false (flatten into individual entries)')
@@ -92,14 +94,17 @@ def add_parser(subparsers):
         args.client.ioat_scan_accel_module()
 
     p = subparsers.add_parser('ioat_scan_accel_module',
-                              help='Enable IOAT accel module offload.')
+                              help="Enable ioat accel module offload.")
     p.set_defaults(func=ioat_scan_accel_module)
 
     # dpdk compressdev
     def compressdev_scan_accel_module(args):
         args.client.compressdev_scan_accel_module(pmd=args.pmd)
 
-    p = subparsers.add_parser('compressdev_scan_accel_module', help='Scan and enable compressdev module and set pmd option.')
+    p = subparsers.add_parser('compressdev_scan_accel_module',
+                              help="Set config and enable compressdev accel module offload. Select the"
+                                   " DPDK polled mode driver (pmd) for the accel compress module,"
+                                   " 0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only.")
     p.add_argument('-p', '--pmd', type=int, help='PMD selection: 0=auto, 1=QAT only, 2=mlx5_pci only, 3=uadk only', required=True)
     p.set_defaults(func=compressdev_scan_accel_module)
 
@@ -108,7 +113,8 @@ def add_parser(subparsers):
         args.client.dsa_scan_accel_module(config_kernel_mode=args.config_kernel_mode)
 
     p = subparsers.add_parser('dsa_scan_accel_module',
-                              help='Set config and enable dsa accel module offload.')
+                              help="Set config and enable dsa accel module offload. This feature is"
+                                   " considered as experimental.")
     p.add_argument('-k', '--config-kernel-mode', help='Use the kernel idxd driver instead of user-mode. Default: false',
                    action='store_true', dest='config_kernel_mode')
     p.set_defaults(func=dsa_scan_accel_module, config_kernel_mode=None)
@@ -118,21 +124,22 @@ def add_parser(subparsers):
         args.client.iaa_scan_accel_module()
 
     p = subparsers.add_parser('iaa_scan_accel_module',
-                              help='Set config and enable iaa accel module offload.')
+                              help="Enable IAA accel module offload. This feature is considered as"
+                                   " experimental.")
     p.set_defaults(func=iaa_scan_accel_module)
 
     def dpdk_cryptodev_scan_accel_module(args):
         args.client.dpdk_cryptodev_scan_accel_module()
 
     p = subparsers.add_parser('dpdk_cryptodev_scan_accel_module',
-                              help='Enable dpdk_cryptodev accel module offload.')
+                              help="Enable dpdk_cryptodev accel offload")
     p.set_defaults(func=dpdk_cryptodev_scan_accel_module)
 
     def dpdk_cryptodev_set_driver(args):
         args.client.dpdk_cryptodev_set_driver(driver_name=args.driver_name)
 
     p = subparsers.add_parser('dpdk_cryptodev_set_driver',
-                              help='Set the DPDK cryptodev driver.')
+                              help="Set the DPDK cryptodev driver")
     p.add_argument('-d', '--driver-name',
                    help='DPDK crypto driver',
                    choices=['crypto_aesni_mb', 'crypto_qat', 'mlx5_pci', 'crypto_uadk'],
@@ -142,7 +149,7 @@ def add_parser(subparsers):
     def dpdk_cryptodev_get_driver(args):
         print_dict(args.client.dpdk_cryptodev_get_driver())
 
-    p = subparsers.add_parser('dpdk_cryptodev_get_driver', help='Get the DPDK cryptodev driver')
+    p = subparsers.add_parser('dpdk_cryptodev_get_driver', help="Get the DPDK cryptodev driver")
     p.set_defaults(func=dpdk_cryptodev_get_driver)
 
     # ae4dma
@@ -150,7 +157,7 @@ def add_parser(subparsers):
         args.client.ae4dma_scan_accel_module()
 
     p = subparsers.add_parser('ae4dma_scan_accel_module',
-                              help='Enable AE4DMA accel module offload.')
+                              help="Enable ae4dma accel module offload.")
     p.set_defaults(func=ae4dma_scan_accel_module)
 
     # mlx5
@@ -162,7 +169,7 @@ def add_parser(subparsers):
                                         crypto_split_blocks=args.crypto_split_blocks,
                                         enable_driver=args.enable_driver)
 
-    p = subparsers.add_parser('mlx5_scan_accel_module', help='Enable mlx5 accel module.')
+    p = subparsers.add_parser('mlx5_scan_accel_module', help="Enable mlx5 accel offload")
     p.add_argument('-q', '--qp-size', type=int, help='Queue pair size')
     p.add_argument('-r', '--num-requests', type=int, help='Size of the shared requests pool')
     p.add_argument('-d', '--allowed-devs', help="Comma separated list of allowed device names, e.g. mlx5_0,mlx5_1")
@@ -175,7 +182,7 @@ def add_parser(subparsers):
     def accel_mlx5_dump_stats(args):
         print_dict(args.client.accel_mlx5_dump_stats(level=args.level))
 
-    p = subparsers.add_parser('accel_mlx5_dump_stats', help='Dump accel mlx5 module statistics.')
+    p = subparsers.add_parser('accel_mlx5_dump_stats', help="Dump mlx5 accel module statistics")
     p.add_argument('-l', '--level',
                    choices=['total', 'channel', 'device'],
                    help='Verbosity level')
@@ -185,7 +192,7 @@ def add_parser(subparsers):
     def cuda_scan_accel_module(args):
         args.client.cuda_scan_accel_module()
 
-    p = subparsers.add_parser('cuda_scan_accel_module', help='Enable CUDA accel module offload.')
+    p = subparsers.add_parser('cuda_scan_accel_module', help="Enable cuda accel module offload.")
     p.set_defaults(func=cuda_scan_accel_module)
 
     # accel_error
@@ -195,7 +202,9 @@ def add_parser(subparsers):
                                              interval=args.interval, errcode=args.errcode)
 
     p = subparsers.add_parser('accel_error_inject_error',
-                              help='Inject an error to processing accel operation')
+                              help="Inject an error to execution of a given operation. Note, that in"
+                                   " order for the errors to be actually injected, the error module must"
+                                   " be assigned to that operation via `accel_assign_opc`.")
     p.add_argument('-o', '--opcode', required=True,
                    choices=['copy', 'fill', 'dualcast', 'compare', 'crc32c', 'copy_crc32c',
                             'compress', 'decompress', 'encrypt', 'decrypt', 'xor',
@@ -220,7 +229,7 @@ def add_parser(subparsers):
                                             match_len=args.match_len)
 
     p = subparsers.add_parser('sock_error_inject_error',
-                              help='Inject errors into socket operations')
+                              help='Inject an error into a socket operation for testing.')
     p.add_argument('-o', '--operation', required=True,
                    choices=['connect', 'recv', 'readv', 'writev', 'writev_async', 'flush'],
                    help='Socket operation to inject errors on')
@@ -240,14 +249,14 @@ def add_parser(subparsers):
     def sock_error_register(args):
         args.client.sock_error_register()
 
-    p = subparsers.add_parser('sock_error_register', help='Register the sock_error sock implementation')
+    p = subparsers.add_parser('sock_error_register', help='Register the socket error injection module as a net impl')
     p.set_defaults(func=sock_error_register)
 
     def env_dpdk_get_mem_stats(args):
         print_dict(args.client.env_dpdk_get_mem_stats())
 
     p = subparsers.add_parser(
-        'env_dpdk_get_mem_stats', help='write the dpdk memory stats to a file.')
+        'env_dpdk_get_mem_stats', help="Write the dpdk memory stats to a file.")
     p.set_defaults(func=env_dpdk_get_mem_stats)
 
     def framework_get_pci_devices(args):
@@ -264,7 +273,8 @@ def add_parser(subparsers):
                     print('{:02x}: {}'.format(lineid * 16, ' '.join(splitbuf(line.lower(), 2))))
                 print()
 
-    p = subparsers.add_parser('framework_get_pci_devices', help='''Get a list of attached PCI devices''')
+    p = subparsers.add_parser('framework_get_pci_devices', help="List PCIe devices attached to an SPDK application and the contents of"
+                                                                 " their config space.")
     p.add_argument('--format-lspci', help='Format the output in a way to be consumed by lspci -F',
                    action='store_true')
     p.set_defaults(func=framework_get_pci_devices)

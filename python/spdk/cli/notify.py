@@ -13,7 +13,7 @@ def add_parser(subparsers):
     def notify_get_types(args):
         print_dict(args.client.notify_get_types())
 
-    p = subparsers.add_parser('notify_get_types', help='List available notifications that user can subscribe to.')
+    p = subparsers.add_parser('notify_get_types', help="Return list of all supported notification types.")
     p.set_defaults(func=notify_get_types)
 
     def notify_get_notifications(args):
@@ -22,7 +22,12 @@ def add_parser(subparsers):
                                                   max=args.max)
         print_dict(ret)
 
-    p = subparsers.add_parser('notify_get_notifications', help='Get notifications')
+    p = subparsers.add_parser('notify_get_notifications',
+                              help="Request notifications. Returns array of notifications that happened"
+                                   " since the specified id (or first that is available). Notice:"
+                                   " Notifications are kept in circular buffer with limited size. Older"
+                                   " notifications might be inaccessible due to being overwritten by new"
+                                   " ones.")
     p.add_argument('-i', '--id', help='Index of the first event to return. Default: 0 (oldest available)', type=int)
     p.add_argument('-n', '--max', help='Maximum number of events to return. Default: no limit', type=int)
     p.set_defaults(func=notify_get_notifications)

@@ -490,7 +490,7 @@ objects:
       - name: luns
         type: array
         class: scsi_luns
-        description: array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
+        description: array of objects describing @ref rpc_vhost_get_controllers_scsi_luns "Vhost SCSI LUNs"
 return_objects:
   - name: framework_monitor_context_switch_result
     fields:
@@ -629,7 +629,7 @@ return_objects:
         description: Authentication group tag
       - name: secrets
         type: array
-        description: Array of @ref rpc_iscsi_create_auth_group_secret objects
+        description: Array of @ref rpc_iscsi_create_auth_group_secret "authentication secret" objects
   - name: iscsi_get_connections_result
     fields:
       - name: id
@@ -1545,7 +1545,7 @@ methods:
         description: Name of the crypto vbdev to create
       - name: crypto_pmd
         type: string
-        description: Name of the crypto device driver. Obsolete, see accel_crypto_key_create
+        description: Name of the crypto device driver. Obsolete, see dpdk_cryptodev_set_driver
       - name: key
         type: string
         description: Key in hex form. Obsolete, see accel_crypto_key_create
@@ -1740,7 +1740,7 @@ methods:
         description: Bdev name
   - name: bdev_malloc_create
     description: |
-      Construct @ref bdev_config_malloc
+      Construct @ref bdev_config_malloc "a Malloc bdev"
 
       The `dif_type` parameter can have 0, 1, 2, or 3, and controls the check of the guard tag and the reference tag.
       If the `dif_type` is 1, 2, or 3, the malloc bdev compares the guard tag to the CRC-16 computed over the block data.
@@ -1794,7 +1794,7 @@ methods:
         required: false
         description: NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. Default is -1.
   - name: bdev_malloc_delete
-    description: 'Delete @ref bdev_config_malloc'
+    description: 'Delete @ref bdev_config_malloc "a Malloc bdev"'
     result:
       type: boolean
       description: true on success
@@ -1804,7 +1804,7 @@ methods:
         required: true
         description: Bdev name
   - name: bdev_null_create
-    description: 'Construct @ref bdev_config_null'
+    description: 'Construct @ref bdev_config_null "a Null bdev"'
     result:
       type: string
       description: Name of newly created bdev.
@@ -1855,7 +1855,7 @@ methods:
         type: uint32
         description: Preferred unmap alignment in blocks
   - name: bdev_null_delete
-    description: 'Delete @ref bdev_config_null.'
+    description: 'Delete @ref bdev_config_null "a Null bdev".'
     result:
       type: boolean
       description: true on success
@@ -1865,7 +1865,7 @@ methods:
         required: true
         description: Bdev name
   - name: bdev_null_resize
-    description: 'Resize @ref bdev_config_null.'
+    description: 'Resize @ref bdev_config_null "a Null bdev".'
     result:
       type: boolean
       description: true on success
@@ -1879,7 +1879,7 @@ methods:
         required: true
         description: Bdev new capacity in MiB
   - name: bdev_aio_create
-    description: 'Construct @ref bdev_config_aio.'
+    description: 'Construct @ref bdev_config_aio "an AIO bdev".'
     result:
       type: string
       description: Name of newly created bdev.
@@ -1908,7 +1908,7 @@ methods:
         type: boolean
         description: Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel.
   - name: bdev_aio_rescan
-    description: 'Rescan the size of @ref bdev_config_aio.'
+    description: 'Rescan the size of @ref bdev_config_aio "an AIO bdev".'
     result:
       type: boolean
       description: true on success
@@ -1918,7 +1918,7 @@ methods:
         required: true
         description: Bdev name
   - name: bdev_aio_delete
-    description: 'Delete @ref bdev_config_aio.'
+    description: 'Delete @ref bdev_config_aio "an AIO bdev".'
     result:
       type: boolean
       description: true on success
@@ -2060,7 +2060,7 @@ methods:
         description: 'How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.'
   - name: bdev_nvme_attach_controller
     description: |
-      Construct @ref bdev_config_nvme. This RPC can also be used to add additional paths to an existing controller to enable
+      Construct @ref bdev_config_nvme "an NVMe bdev". This RPC can also be used to add additional paths to an existing controller to enable
       multipathing. This is done by specifying the `name` parameter as an existing controller. When adding an additional
       path, the hostnqn, hostsvcid, hostaddr, prchk_reftag, and prchk_guard_arguments must not be specified and are assumed
       to have the same value as the existing path.
@@ -2476,7 +2476,9 @@ methods:
         required: true
         description: Name of the NVMe bdev controller
   - name: bdev_rbd_register_cluster
-    description: This method is available only if SPDK was build with Ceph RBD support.
+    description: >-
+      Add a Rados cluster with Ceph RBD backend.
+      This method is available only if SPDK was build with Ceph RBD support.
     result:
       type: string
       description: Name of newly created Rados cluster object.
@@ -2502,6 +2504,7 @@ methods:
         description: Core mask for librados IO context threads
   - name: bdev_rbd_unregister_cluster
     description: |
+      Unregister a Rados cluster object.
       This method is available only if SPDK was build with Ceph RBD support.
       If there is still rbd bdev using this cluster, the unregisteration operation
       will fail.
@@ -2514,14 +2517,16 @@ methods:
         required: true
         description: Rados cluster object name
   - name: bdev_rbd_get_clusters_info
-    description: This method is available only if SPDK was build with Ceph RBD support.
+    description: >-
+      Display registered Rados cluster names and related info.
+      This method is available only if SPDK was build with Ceph RBD support.
     params:
       - name: name
         type: string
         description: Rados cluster object name
   - name: bdev_rbd_create
     description: |
-      Create @ref bdev_config_rbd bdev
+      Create @ref bdev_config_rbd "an RBD bdev"
 
       This method is available only if SPDK was build with Ceph RBD support.
     result:
@@ -2560,7 +2565,7 @@ methods:
         description: set rbd bdev as read-only
   - name: bdev_rbd_delete
     description: |
-      Delete @ref bdev_config_rbd bdev
+      Delete @ref bdev_config_rbd "an RBD bdev"
 
       This method is available only if SPDK was build with Ceph RBD support.
     result:
@@ -2573,7 +2578,7 @@ methods:
         description: Bdev name
   - name: bdev_rbd_resize
     description: |
-      Resize @ref bdev_config_rbd bdev
+      Resize @ref bdev_config_rbd "an RBD bdev"
 
       This method is available only if SPDK was build with Ceph RBD support.
     result:
@@ -2730,7 +2735,9 @@ methods:
         required: true
         description: Name of the error injection bdev
   - name: bdev_iscsi_set_options
-    description: 'This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.'
+    description: >-
+      Set options for iSCSI bdevs.
+      This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.
     result:
       type: boolean
       description: true on success
@@ -2942,7 +2949,7 @@ methods:
         required: true
         description: name of xnvme bdev to delete
   - name: bdev_virtio_attach_controller
-    description: 'Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk and expose all found bdevs.'
+    description: 'Create new initiator @ref bdev_config_virtio_scsi "Virtio SCSI" or @ref bdev_config_virtio_blk "Virtio Block" bdev and expose all found bdevs.'
     result:
       type: array
       class: bdev_names
@@ -3503,7 +3510,9 @@ methods:
         type: int32
         description: LUN ID. -1 or omitted assigns the lowest free ID
   - name: iscsi_target_node_set_redirect
-    description: 'Update redirect portal of the primary portal group for the target node,'
+    description: >-
+      Update redirect portal of the public portal group for the target node.
+      Omit redirect host and port to clear previously set redirect settings.
     result:
       type: boolean
       description: true on success
@@ -3701,7 +3710,7 @@ methods:
         required: false
         description: 'Comma-separated list of FUSES features to mask (disable). Available options: all, fcws'
   - name: nvmf_get_subsystems
-    description: ""
+    description: Get information about NVMe-oF subsystems.
     params:
       - name: nqn
         type: string
@@ -3794,7 +3803,7 @@ methods:
         type: object
         required: true
         class: nvmf_listen_address
-        description: '@ref rpc_nvmf_listen_address object'
+        description: '@ref rpc_nvmf_listen_address "Listen address" object'
       - name: secure_channel
         type: boolean
         description: Require all connections to immediately establish a secure channel
@@ -3826,7 +3835,7 @@ methods:
         type: object
         required: true
         class: nvmf_listen_address
-        description: '@ref rpc_nvmf_listen_address object'
+        description: '@ref rpc_nvmf_listen_address "Listen address" object'
   - name: nvmf_subsystem_listener_set_ana_state
     description: |
       Set ANA state of a listener for an NVMe-oF subsystem. Only the ANA state of the specified ANA
@@ -3846,7 +3855,7 @@ methods:
         type: object
         required: true
         class: nvmf_listen_address
-        description: '@ref rpc_nvmf_listen_address object'
+        description: '@ref rpc_nvmf_listen_address "Listen address" object'
       - name: ana_state
         type: enum
         class: nvme_ana_state
@@ -3869,7 +3878,7 @@ methods:
         type: object
         required: true
         class: nvmf_namespace
-        description: '@ref rpc_nvmf_namespace object'
+        description: '@ref rpc_nvmf_namespace "Namespace" object'
       - name: tgt_name
         type: string
         description: Parent NVMe-oF target name
@@ -4003,7 +4012,7 @@ methods:
         type: string
         description: DH-HMAC-CHAP controller key name
   - name: nvmf_subsystem_get_controllers
-    description: ""
+    description: Get information about NVMe-oF subsystem controllers.
     params:
       - name: nqn
         type: string
@@ -4013,7 +4022,7 @@ methods:
         type: string
         description: Parent NVMe-oF target name
   - name: nvmf_subsystem_get_qpairs
-    description: ""
+    description: Get information about NVMe-oF subsystem queue pairs.
     params:
       - name: nqn
         type: string
@@ -4023,7 +4032,7 @@ methods:
         type: string
         description: Parent NVMe-oF target name
   - name: nvmf_subsystem_get_listeners
-    description: ""
+    description: Get information about NVMe-oF subsystem listeners.
     params:
       - name: nqn
         type: string
@@ -4038,7 +4047,7 @@ methods:
       or future controllers with the specified hostnqn.
 
       Note: the namespace must have been added with no_auto_visible = false
-      (see @ref rpc_nvmf_subsystem_add_ns).
+      (see @ref rpc_nvmf_subsystem_add_ns "nvmf_subsystem_add_ns").
     result:
       type: boolean
       description: true on success
@@ -4064,7 +4073,7 @@ methods:
       or future controllers with the specified hostnqn.
 
       Note: the namespace must have been added to the subsystem with
-      no_auto_visible = false (see @ref rpc_nvmf_subsystem_add_ns).
+      no_auto_visible = false (see @ref rpc_nvmf_subsystem_add_ns "nvmf_subsystem_add_ns").
     result:
       type: boolean
       description: true on success
@@ -4111,7 +4120,7 @@ methods:
         type: object
         required: true
         class: nvmf_listen_address
-        description: '@ref rpc_nvmf_listen_address object'
+        description: '@ref rpc_nvmf_listen_address "Listen address" object'
       - name: secure_channel
         type: boolean
         description: The connection to that discovery subsystem requires a secure channel
@@ -4131,12 +4140,12 @@ methods:
         type: object
         required: true
         class: nvmf_listen_address
-        description: '@ref rpc_nvmf_listen_address object'
+        description: '@ref rpc_nvmf_listen_address "Listen address" object'
       - name: subnqn
         type: string
         description: Subsystem NQN
   - name: nvmf_discovery_get_referrals
-    description: ""
+    description: Get information about NVMe-oF discovery service referrals.
     params:
       - name: tgt_name
         type: string
@@ -4173,7 +4182,7 @@ methods:
         class: nvmf_dup_host_policy
         description: Duplicate host policy
   - name: nvmf_get_transports
-    description: ""
+    description: Get information about NVMe-oF transports.
     params:
       - name: tgt_name
         type: string
@@ -4402,7 +4411,7 @@ methods:
         description: Name of the bdev to expose as LUN 0 of the target
   - name: vhost_scsi_controller_remove_target
     description: |
-      Remove SCSI target ID `scsi_target_num` from vhost target `scsi_target_num`.
+      Remove SCSI target ID `scsi_target_num` from vhost target `ctrlr`.
 
       This method will fail if initiator is connected, but doesn't support hot-remove (the `VIRTIO_SCSI_F_HOTPLUG` is not negotiated).
     result:
@@ -4428,7 +4437,7 @@ methods:
         required: true
         description: Name of the virtio-blk transport to create
   - name: virtio_blk_get_transports
-    description: ""
+    description: Get information about virtio-blk transports.
     params:
       - name: name
         type: string
@@ -4474,7 +4483,7 @@ methods:
       Remove vhost target.
 
       This call will fail if there is an initiator connected or there is at least one SCSI target configured in case of
-      vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_vhost_scsi_controller_remove_target.
+      vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_vhost_scsi_controller_remove_target "vhost_scsi_controller_remove_target".
     result:
       type: boolean
       description: true on success
@@ -4750,7 +4759,7 @@ methods:
   - name: bdev_lvol_set_parent_bdev
     description: |
       Set an external snapshot as the parent of a lvol, making the lvol a clone of this external
-      snapshot (see @ref rpc_bdev_lvol_clone_bdev).
+      snapshot (see @ref rpc_bdev_lvol_clone_bdev "bdev_lvol_clone_bdev").
       The previous parent of the lvol, if any, can be another external snapshot or a snapshot; if the
       lvol is not a clone, it must be thin-provisioned.
       The size of the external snapshot device must be an integer multiple of cluster size of lvol's lvolstore.
@@ -4896,7 +4905,7 @@ methods:
         required: true
         description: Base bdev name in RAID
   - name: bdev_split_create
-    description: This is used to split an underlying block device and create several smaller equal-sized vbdevs.
+    description: This is used to split an underlying block device and create several smaller equal-sized vbdevs.
     params:
       - name: base_bdev
         type: string
@@ -5445,7 +5454,7 @@ methods:
         required: true
         description: Opcode for which the error injection is applied
   - name: bdev_daos_create
-    description: 'Construct @ref bdev_config_daos'
+    description: 'Construct @ref bdev_config_daos "a DAOS bdev"'
     result:
       type: string
       description: Name of newly created bdev.
@@ -5477,7 +5486,7 @@ methods:
         type: string
         description: DAOS object class (default SX)
   - name: bdev_daos_delete
-    description: 'Delete @ref bdev_config_daos'
+    description: 'Delete @ref bdev_config_daos "a DAOS bdev"'
     result:
       type: boolean
       description: true on success
@@ -5487,7 +5496,7 @@ methods:
         required: true
         description: Bdev name
   - name: bdev_daos_resize
-    description: 'Resize @ref bdev_config_daos.'
+    description: 'Resize @ref bdev_config_daos "a DAOS bdev".'
     result:
       type: boolean
       description: true on success

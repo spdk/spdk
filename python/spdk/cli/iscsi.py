@@ -39,7 +39,9 @@ def add_parser(subparsers):
             data_out_pool_size=args.data_out_pool_size)
 
     p = subparsers.add_parser('iscsi_set_options',
-                              help="""Set options of iSCSI subsystem""")
+                              help="Set global parameters for iSCSI targets. This RPC may only be called"
+                                   " before SPDK subsystems have been initialized. This RPC can be called"
+                                   " only once.")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
     p.add_argument('-b', '--node-base', help='Prefix of the name of iSCSI target node')
     p.add_argument('-o', '--nop-timeout', help='NOP-In request timeout to the initiator in seconds', type=int)
@@ -81,7 +83,7 @@ def add_parser(subparsers):
             chap_group=args.chap_group)
 
     p = subparsers.add_parser('iscsi_set_discovery_auth',
-                              help="""Set CHAP authentication for discovery session.""")
+                              help="Set CHAP authentication for sessions dynamically.")
     g = p.add_mutually_exclusive_group()
     g.add_argument('-d', '--disable-chap', help='Disable CHAP for discovery session', action='store_true')
     g.add_argument('-r', '--require-chap', help='Require CHAP for discovery session', action='store_true')
@@ -98,7 +100,7 @@ def add_parser(subparsers):
         args.client.iscsi_create_auth_group(tag=args.tag, secrets=secrets)
 
     p = subparsers.add_parser('iscsi_create_auth_group',
-                              help='Create authentication group for CHAP authentication.')
+                              help="Create an authentication group for CHAP authentication.")
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.add_argument('-c', '--secrets', type=partial(str.split, sep=','), default=[],
                    help="""Comma-separated list of CHAP secrets
@@ -110,7 +112,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         args.client.iscsi_delete_auth_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_auth_group',
-                              help='Delete an authentication group.')
+                              help="Delete an existing authentication group for CHAP authentication.")
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_auth_group)
 
@@ -123,7 +125,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             msecret=args.msecret)
 
     p = subparsers.add_parser('iscsi_auth_group_add_secret',
-                              help='Add a secret to an authentication group.')
+                              help="Add a secret to an existing authentication group for CHAP authentication.")
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.add_argument('-u', '--user', help='User name for one-way (unidirectional) CHAP authentication', required=True)
     p.add_argument('-s', '--secret', help='Secret for one-way (unidirectional) CHAP authentication', required=True)
@@ -135,7 +137,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         args.client.iscsi_auth_group_remove_secret(tag=args.tag, user=args.user)
 
     p = subparsers.add_parser('iscsi_auth_group_remove_secret',
-                              help='Remove a secret from an authentication group.')
+                              help="Remove a secret from an existing authentication group for CHAP authentication.")
     p.add_argument('tag', help='Authentication group tag (unique, integer > 0)', type=int)
     p.add_argument('-u', '--user', help='User name for one-way (unidirectional) CHAP authentication', required=True)
     p.set_defaults(func=iscsi_auth_group_remove_secret)
@@ -144,33 +146,33 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict(args.client.iscsi_get_auth_groups())
 
     p = subparsers.add_parser('iscsi_get_auth_groups',
-                              help='Display current authentication group configuration')
+                              help="Show information about all existing authentication group for CHAP authentication.")
     p.set_defaults(func=iscsi_get_auth_groups)
 
     def iscsi_get_portal_groups(args):
         print_dict(args.client.iscsi_get_portal_groups())
 
-    p = subparsers.add_parser('iscsi_get_portal_groups', help='Display current portal group configuration')
+    p = subparsers.add_parser('iscsi_get_portal_groups', help="Show information about all available portal groups.")
     p.set_defaults(func=iscsi_get_portal_groups)
 
     def iscsi_get_initiator_groups(args):
         print_dict(args.client.iscsi_get_initiator_groups())
 
     p = subparsers.add_parser('iscsi_get_initiator_groups',
-                              help='Display current initiator group configuration')
+                              help="Show information about all available initiator groups.")
     p.set_defaults(func=iscsi_get_initiator_groups)
 
     def iscsi_get_target_nodes(args):
         print_dict(args.client.iscsi_get_target_nodes())
 
-    p = subparsers.add_parser('iscsi_get_target_nodes', help='Display target nodes')
+    p = subparsers.add_parser('iscsi_get_target_nodes', help="Show information about all available iSCSI target nodes.")
     p.set_defaults(func=iscsi_get_target_nodes)
 
     def iscsi_enable_histogram(args):
         args.client.iscsi_enable_histogram(name=args.name, enable=args.enable)
 
     p = subparsers.add_parser('iscsi_enable_histogram',
-                              help='Enable or disable histogram for specified iscsi target')
+                              help="Control whether collecting data for histogram is enabled for specified iscsi target node.")
     p.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
                    required=True, help='Enable or disable histogram for the specified iSCSI target node')
     p.add_argument('name', help='iSCSI target node name')
@@ -180,7 +182,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print_dict(args.client.iscsi_get_histogram(name=args.name))
 
     p = subparsers.add_parser('iscsi_get_histogram',
-                              help='Get histogram for specified iscsi target')
+                              help="Get latency histogram for specified iscsi target node.")
     p.add_argument('name', help='iSCSI target node name')
     p.set_defaults(func=iscsi_get_histogram)
 
@@ -212,7 +214,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
             header_digest=args.header_digest,
             data_digest=args.data_digest)
 
-    p = subparsers.add_parser('iscsi_create_target_node', help='Add a target node')
+    p = subparsers.add_parser('iscsi_create_target_node', help="Add an iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('alias_name', help='Target node alias name (ASCII)')
     p.add_argument('luns', type=partial(str.split, sep=' '), default=[],
@@ -249,7 +251,7 @@ Example: '1:1 2:2 2:1'
             lun_id=args.lun_id)
 
     p = subparsers.add_parser('iscsi_target_node_add_lun',
-                              help='Add LUN to the target node')
+                              help="Add an LUN to an existing iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('bdev_name', help='bdev name to be added as a LUN (must not contain spaces or colons)')
     p.add_argument('-i', dest='lun_id', help='LUN ID. -1 or omitted assigns the lowest free ID', type=int)
@@ -264,7 +266,7 @@ Example: '1:1 2:2 2:1'
             mutual_chap=args.mutual_chap)
 
     p = subparsers.add_parser('iscsi_target_node_set_auth',
-                              help='Set CHAP authentication for the target node')
+                              help="Set CHAP authentication to an existing iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('-g', '--chap-group',
                    help='Authentication group ID for this target node (non-zero values must reference a precreated group)', type=int)
@@ -287,7 +289,7 @@ Example: '1:1 2:2 2:1'
             name=args.name)
 
     p = subparsers.add_parser('iscsi_target_node_add_pg_ig_maps',
-                              help='Add PG-IG maps to the target node')
+                              help="Add initiator group to portal group mappings to an existing iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_maps', type=partial(str.split, sep=' '), default=[],
                    help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
@@ -308,7 +310,7 @@ Example: '1:1 2:2 2:1'
              pg_ig_maps=pg_ig_maps, name=args.name)
 
     p = subparsers.add_parser('iscsi_target_node_remove_pg_ig_maps',
-                              help='Delete PG-IG maps from the target node')
+                              help="Delete initiator group to portal group mappings from an existing iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_ig_maps', type=partial(str.split, sep=' '), default=[],
                    help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
@@ -326,8 +328,9 @@ Example: '1:1 2:2 2:1'
             redirect_port=args.redirect_port)
 
     p = subparsers.add_parser('iscsi_target_node_set_redirect',
-                              help="""Update redirect portal of the public portal group for the target node.
-    Omit redirect host and port to clear previously set redirect settings.""")
+                              help="Update redirect portal of the public portal group for the target"
+                                   " node. Omit redirect host and port to clear previously set redirect"
+                                   " settings.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('pg_tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('-a', '--redirect-host', help='Numeric IP address of the redirect portal')
@@ -340,8 +343,9 @@ Example: '1:1 2:2 2:1'
             pg_tag=args.pg_tag)
 
     p = subparsers.add_parser('iscsi_target_node_request_logout',
-                              help="""For the target node, request connections whose portal group tag
-    match to logout, or request all connections if portal group tag is omitted.""")
+                              help="For the target node, request connections whose portal group tag"
+                                   " match to logout, or request all connections to logout if portal"
+                                   " group tag is omitted.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.add_argument('-t', '--pg-tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_target_node_request_logout)
@@ -360,7 +364,7 @@ Example: '1:1 2:2 2:1'
             wait=args.wait)
 
     p = subparsers.add_parser('iscsi_create_portal_group',
-                              help='Add a portal group')
+                              help="Add a portal group.")
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('portals', type=partial(str.split, sep=' '), default=[],
                    help="""List of portals in host:port format, separated by whitespace
@@ -378,7 +382,9 @@ on portals should be allowed after all associated target nodes are created.""", 
         args.client.iscsi_start_portal_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_start_portal_group',
-                              help='Start listening on portals if it is not started yet.')
+                              help="Start listening on portals if the portal group is not started yet,"
+                                   " or do nothing if the portal group already started. Return a success"
+                                   " response for both cases.")
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_start_portal_group)
 
@@ -389,7 +395,7 @@ on portals should be allowed after all associated target nodes are created.""", 
             netmasks=args.netmasks)
 
     p = subparsers.add_parser('iscsi_create_initiator_group',
-                              help='Add an initiator group')
+                              help="Add an initiator group.")
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
@@ -406,7 +412,7 @@ Example: '255.255.0.0 255.248.0.0' etc""")
             netmasks=args.netmasks)
 
     p = subparsers.add_parser('iscsi_initiator_group_add_initiators',
-                              help='Add initiators to an existing initiator group')
+                              help="Add initiators to an existing initiator group.")
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
@@ -424,7 +430,7 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
             netmasks=args.netmasks)
 
     p = subparsers.add_parser('iscsi_initiator_group_remove_initiators',
-                              help='Delete initiators from an existing initiator group')
+                              help="Remove initiators from an initiator group.")
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.add_argument('-n', dest='initiators', type=partial(str.split, sep=' '), default=[],
                    help="""Whitespace-separated list of initiator hostnames or IP addresses,
@@ -439,7 +445,7 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
         args.client.iscsi_delete_target_node(name=args.name)
 
     p = subparsers.add_parser('iscsi_delete_target_node',
-                              help='Delete a target node')
+                              help="Delete an iSCSI target node.")
     p.add_argument('name', help='Target node name (ASCII)')
     p.set_defaults(func=iscsi_delete_target_node)
 
@@ -447,7 +453,7 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
         args.client.iscsi_delete_portal_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_portal_group',
-                              help='Delete a portal group')
+                              help="Delete an existing portal group.")
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_portal_group)
 
@@ -455,7 +461,7 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
         args.client.iscsi_delete_initiator_group(tag=args.tag)
 
     p = subparsers.add_parser('iscsi_delete_initiator_group',
-                              help='Delete an initiator group')
+                              help="Delete an existing initiator group.")
     p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
     p.set_defaults(func=iscsi_delete_initiator_group)
 
@@ -468,7 +474,9 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
             mutual_chap=args.mutual_chap)
 
     p = subparsers.add_parser('iscsi_portal_group_set_auth',
-                              help='Set CHAP authentication for discovery sessions specific for the portal group')
+                              help="Set CHAP authentication for discovery sessions specific for the"
+                                   " existing iSCSI portal group. This RPC overwrites the setting by the"
+                                   " global parameters for the iSCSI portal group.")
     p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
     p.add_argument('-g', '--chap-group',
                    help='CHAP authentication group ID for this portal group (non-zero values must reference a precreated group)', type=int)
@@ -483,25 +491,25 @@ This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc""")
         print_dict(args.client.iscsi_get_connections())
 
     p = subparsers.add_parser('iscsi_get_connections',
-                              help='Display iSCSI connections')
+                              help="Show information about all active connections.")
     p.set_defaults(func=iscsi_get_connections)
 
     def iscsi_get_stats(args):
         print_dict(args.client.iscsi_get_stats())
 
     p = subparsers.add_parser('iscsi_get_stats',
-                              help='Display stat information of iSCSI connections.')
+                              help="Show stat information of iSCSI connections.")
     p.set_defaults(func=iscsi_get_stats)
 
     def iscsi_get_options(args):
         print_dict(args.client.iscsi_get_options())
 
     p = subparsers.add_parser('iscsi_get_options',
-                              help='Display iSCSI global parameters')
+                              help="Show global parameters of iSCSI targets.")
     p.set_defaults(func=iscsi_get_options)
 
     def scsi_get_devices(args):
         print_dict(args.client.scsi_get_devices())
 
-    p = subparsers.add_parser('scsi_get_devices', help='Display SCSI devices')
+    p = subparsers.add_parser('scsi_get_devices', help="Display SCSI devices")
     p.set_defaults(func=scsi_get_devices)

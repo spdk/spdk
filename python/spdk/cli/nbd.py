@@ -16,7 +16,7 @@ def add_parser(subparsers):
                                      nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('nbd_start_disk',
-                              help='Export a bdev as an nbd disk')
+                              help="Start to export one SPDK bdev as NBD disk")
     p.add_argument('bdev_name', help='Name of the bdev to export')
     p.add_argument('nbd_device', help='Path to the NBD device, e.g. "/dev/nbd0". Default: first available device', nargs='?')
     p.set_defaults(func=nbd_start_disk)
@@ -25,7 +25,7 @@ def add_parser(subparsers):
         args.client.nbd_stop_disk(nbd_device=args.nbd_device)
 
     p = subparsers.add_parser('nbd_stop_disk',
-                              help='Stop an nbd disk')
+                              help="Stop one NBD disk which is based on SPDK bdev.")
     p.add_argument('nbd_device', help='Path to the NBD device, e.g. "/dev/nbd0"')
     p.set_defaults(func=nbd_stop_disk)
 
@@ -33,6 +33,6 @@ def add_parser(subparsers):
         print_dict(args.client.nbd_get_disks(nbd_device=args.nbd_device))
 
     p = subparsers.add_parser('nbd_get_disks',
-                              help='Display full or specified nbd device list')
+                              help="Display all or specified NBD device list")
     p.add_argument('-n', '--nbd-device', help='Path to the NBD device, e.g. "/dev/nbd0". Default: list all')
     p.set_defaults(func=nbd_get_disks)

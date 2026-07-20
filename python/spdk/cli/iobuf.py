@@ -17,7 +17,7 @@ def add_parser(subparsers):
                                     small_bufsize=args.small_bufsize,
                                     large_bufsize=args.large_bufsize,
                                     enable_numa=args.enable_numa)
-    p = subparsers.add_parser('iobuf_set_options', help='Set iobuf pool options')
+    p = subparsers.add_parser('iobuf_set_options', help="Set iobuf buffer pool options.")
     p.add_argument('--small-pool-count', help='Number of small buffers in the global pool. Default: 8192', type=int)
     p.add_argument('--large-pool-count', help='Number of large buffers in the global pool. Default: 1024', type=int)
     p.add_argument('--small-bufsize', help='Size of a small buffer in bytes. Default: 8192', type=int)
@@ -30,5 +30,5 @@ def add_parser(subparsers):
     def iobuf_get_stats(args):
         print_dict(args.client.iobuf_get_stats())
 
-    p = subparsers.add_parser('iobuf_get_stats', help='Display iobuf statistics')
+    p = subparsers.add_parser('iobuf_get_stats', help="Retrieve iobuf's statistics.")
     p.set_defaults(func=iobuf_get_stats)

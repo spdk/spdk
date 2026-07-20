@@ -15,7 +15,10 @@ def add_parser(subparsers):
     def log_set_flag(args):
         args.client.log_set_flag(flag=args.flag)
 
-    p = subparsers.add_parser('log_set_flag', help='set log flag')
+    p = subparsers.add_parser('log_set_flag',
+                              help="Enable logging for specific portions of the application. The list of"
+                                   " possible log flags can be obtained using the `log_get_flags` RPC"
+                                   " and may be different for each application.")
     p.add_argument(
         'flag', help='Log flag name (e.g. "nvme") or "all" to set all flags')
     p.set_defaults(func=log_set_flag)
@@ -23,7 +26,10 @@ def add_parser(subparsers):
     def log_clear_flag(args):
         args.client.log_clear_flag(flag=args.flag)
 
-    p = subparsers.add_parser('log_clear_flag', help='clear log flag')
+    p = subparsers.add_parser('log_clear_flag',
+                              help="Disable logging for specific portions of the application. The list"
+                                   " of possible log flags can be obtained using the `log_get_flags` RPC"
+                                   " and may be different for each application.")
     p.add_argument(
         'flag', help='Log flag name (e.g. "nvme") or "all" to clear all flags')
     p.set_defaults(func=log_clear_flag)
@@ -31,39 +37,45 @@ def add_parser(subparsers):
     def log_get_flags(args):
         print_dict(args.client.log_get_flags())
 
-    p = subparsers.add_parser('log_get_flags', help='get log flags')
+    p = subparsers.add_parser('log_get_flags',
+                              help="Get the list of valid flags for this application and whether they"
+                                   " are currently enabled.")
     p.set_defaults(func=log_get_flags)
 
     def log_set_level(args):
         args.client.log_set_level(level=args.level)
 
-    p = subparsers.add_parser('log_set_level', help='set log level')
+    p = subparsers.add_parser('log_set_level', help="Set the current logging level output by the `log` module.")
     p.add_argument('level', help='Log level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_level)
 
     def log_get_level(args):
         print_dict(args.client.log_get_level())
 
-    p = subparsers.add_parser('log_get_level', help='get log level')
+    p = subparsers.add_parser('log_get_level', help="Get the current logging level output by the `log` module.")
     p.set_defaults(func=log_get_level)
 
     def log_set_print_level(args):
         args.client.log_set_print_level(level=args.level)
 
-    p = subparsers.add_parser('log_set_print_level', help='set log print level')
+    p = subparsers.add_parser('log_set_print_level',
+                              help="Set the current level at which output will additionally be sent to"
+                                   " the current console.")
     p.add_argument('level', help='Log print level', choices=['ERROR', 'WARNING', 'NOTICE', 'INFO', 'DEBUG'])
     p.set_defaults(func=log_set_print_level)
 
     def log_get_print_level(args):
         print_dict(args.client.log_get_print_level())
 
-    p = subparsers.add_parser('log_get_print_level', help='get log print level')
+    p = subparsers.add_parser('log_get_print_level',
+                              help="Get the current level at which output will additionally be sent to"
+                                   " the current console.")
     p.set_defaults(func=log_get_print_level)
 
     def log_enable_timestamps(args):
         args.client.log_enable_timestamps(enabled=args.enabled)
     p = subparsers.add_parser('log_enable_timestamps',
-                              help='Enable or disable timestamps.')
+                              help="Enable or disable timestamps.")
     p.add_argument('--timestamps', dest='enabled', action=argparse.BooleanOptionalAction,
                    required=True, help='Enable (true) or disable (false) timestamps in log output')
     p.set_defaults(func=log_enable_timestamps)

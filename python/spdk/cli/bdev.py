@@ -22,7 +22,9 @@ def add_parser(subparsers):
                                   iobuf_large_cache_size=args.iobuf_large_cache_size)
 
     p = subparsers.add_parser('bdev_set_options',
-                              help="""Set options of bdev subsystem""")
+                              help="Set global parameters for the block device (bdev) subsystem. This"
+                                   " RPC may only be called before SPDK subsystems have been"
+                                   " initialized.")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
     p.add_argument('--auto-examine', dest='bdev_auto_examine', action=argparse.BooleanOptionalAction,
@@ -35,7 +37,10 @@ def add_parser(subparsers):
         args.client.bdev_examine(name=args.name)
 
     p = subparsers.add_parser('bdev_examine',
-                              help="""examine a bdev if it exists, or will examine it after it is created""")
+                              help="Request that the bdev layer examines the given bdev for metadata and"
+                                   " creates new bdevs if metadata is found. This is only necessary if"
+                                   " `auto_examine` has been set to false using `bdev_set_options`. By"
+                                   " default, `auto_examine` is true and bdev examination is automatic.")
     p.add_argument('-b', '--name', help='Name or alias of the bdev', required=True)
     p.set_defaults(func=bdev_examine)
 
@@ -43,7 +48,7 @@ def add_parser(subparsers):
         args.client.bdev_wait_for_examine()
 
     p = subparsers.add_parser('bdev_wait_for_examine',
-                              help="""Report when all bdevs have been examined""")
+                              help="Report when all bdevs have been examined by every bdev module.")
     p.set_defaults(func=bdev_wait_for_examine)
 
     def bdev_crypto_create(args):
@@ -55,7 +60,7 @@ def add_parser(subparsers):
                                                cipher=args.cipher,
                                                key2=args.key2,
                                                key_name=args.key_name))
-    p = subparsers.add_parser('bdev_crypto_create', help='Add a crypto vbdev')
+    p = subparsers.add_parser('bdev_crypto_create', help="Create a new crypto bdev on a given base bdev.")
     p.add_argument('base_bdev_name', help="Name of the base bdev")
     p.add_argument('name', help="Name of the crypto vbdev")
     p.add_argument('-p', '--crypto-pmd', help="Name of the crypto device driver. Obsolete, see dpdk_cryptodev_set_driver")
@@ -68,7 +73,7 @@ def add_parser(subparsers):
     def bdev_crypto_delete(args):
         args.client.bdev_crypto_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_crypto_delete', help='Delete a crypto disk')
+    p = subparsers.add_parser('bdev_crypto_delete', help='Delete a crypto bdev.')
     p.add_argument('name', help='crypto bdev name')
     p.set_defaults(func=bdev_crypto_delete)
 
@@ -79,7 +84,11 @@ def add_parser(subparsers):
                                             cache_line_size=args.cache_line_size,
                                             cache_bdev_name=args.cache_bdev_name,
                                             core_bdev_name=args.core_bdev_name))
-    p = subparsers.add_parser('bdev_ocf_create', help='Add an OCF block device')
+    p = subparsers.add_parser('bdev_ocf_create',
+                              help="Construct new OCF bdev. Command accepts cache mode that is going to"
+                                   " be used. You can find more details about supported cache modes in"
+                                   " the [OCF documentation]"
+                                   "(https://open-cas.github.io/cache_configuration.html#cache-mode)")
     p.add_argument('name', help='Name of resulting OCF bdev')
     p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
     p.add_argument(
@@ -95,25 +104,25 @@ def add_parser(subparsers):
     def bdev_ocf_delete(args):
         args.client.bdev_ocf_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_ocf_delete', help='Delete an OCF block device')
+    p = subparsers.add_parser('bdev_ocf_delete', help='Delete the OCF bdev')
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_delete)
 
     def bdev_ocf_get_stats(args):
         print_dict(args.client.bdev_ocf_get_stats(name=args.name))
-    p = subparsers.add_parser('bdev_ocf_get_stats', help='Get statistics of chosen OCF block device')
+    p = subparsers.add_parser('bdev_ocf_get_stats', help='Get statistics of chosen OCF block device.')
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_get_stats)
 
     def bdev_ocf_reset_stats(args):
         print_dict(args.client.bdev_ocf_reset_stats(name=args.name))
-    p = subparsers.add_parser('bdev_ocf_reset_stats', help='Reset statistics of chosen OCF block device')
+    p = subparsers.add_parser('bdev_ocf_reset_stats', help='Reset statistics of chosen OCF block device.')
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_reset_stats)
 
     def bdev_ocf_get_bdevs(args):
         print_dict(args.client.bdev_ocf_get_bdevs(name=args.name))
-    p = subparsers.add_parser('bdev_ocf_get_bdevs', help='Get list of OCF devices including unregistered ones')
+    p = subparsers.add_parser('bdev_ocf_get_bdevs', help='Get list of OCF devices including unregistered ones.')
     p.add_argument('name', nargs='?', help='name of OCF vbdev or name of cache device or name of core device (optional)')
     p.set_defaults(func=bdev_ocf_get_bdevs)
 
@@ -122,7 +131,7 @@ def add_parser(subparsers):
                                                     name=args.name,
                                                     mode=args.mode))
     p = subparsers.add_parser('bdev_ocf_set_cache_mode',
-                              help='Set cache mode of OCF block device')
+                              help='Set new cache mode on OCF bdev.')
     p.add_argument('name', help='Name of OCF bdev')
     p.add_argument('mode', help='OCF cache mode', choices=['wb', 'wt', 'pt', 'wa', 'wi', 'wo'])
     p.set_defaults(func=bdev_ocf_set_cache_mode)
@@ -134,7 +143,10 @@ def add_parser(subparsers):
                                         threshold=args.threshold,
                                         promotion_count=args.promotion_count)
     p = subparsers.add_parser('bdev_ocf_set_seqcutoff',
-                              help='Set sequential cutoff parameters on all cores for the given OCF cache device')
+                              help="Set sequential cutoff parameters on all cores for the given OCF cache"
+                                   " device. A brief description of this functionality can be found in"
+                                   " [OpenCAS documentation]"
+                                   "(https://open-cas.github.io/guide_tool_details.html#seq-cutoff).")
     p.add_argument('name', help='Name of OCF cache bdev')
     p.add_argument('-t', '--threshold', type=int,
                    help='Activation threshold [KiB]')
@@ -147,21 +159,41 @@ def add_parser(subparsers):
     def bdev_ocf_flush_start(args):
         args.client.bdev_ocf_flush_start(name=args.name)
     p = subparsers.add_parser('bdev_ocf_flush_start',
-                              help='Start flushing OCF cache device')
+                              help="Start flushing OCF cache device. Automatic flushes of dirty data are"
+                                   " managed by OCF cleaning policy settings. In addition to that, all"
+                                   " dirty data is flushed to core device when there is an attempt to"
+                                   " stop caching. On the other hand, this RPC call gives a possibility"
+                                   " to flush dirty data manually when there is a need for it, e.g. to"
+                                   " speed up the shutdown process when data hasn't been flushed for a"
+                                   " long time. This RPC returns immediately, and flush is then being"
+                                   " performed in the background. To see the status of flushing operation"
+                                   " use bdev_ocf_flush_status.")
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_flush_start)
 
     def bdev_ocf_flush_status(args):
         print_json(args.client.bdev_ocf_flush_status(name=args.name))
     p = subparsers.add_parser('bdev_ocf_flush_status',
-                              help='Get flush status of OCF cache device')
+                              help="Get flush status of OCF cache device. Automatic flushes of dirty"
+                                   " data are managed by OCF cleaning policy settings. In addition to"
+                                   " that, all dirty data is flushed to core device when there is an"
+                                   " attempt to stop caching. On the other hand, there is a possibility"
+                                   " to flush dirty data manually when there is a need for it, e.g. to"
+                                   " speed up the shutdown process when data hasn't been flushed for a"
+                                   " long time. This RPC reports if such manual flush is still in"
+                                   " progress and if the operation was successful. To start manual flush"
+                                   " use bdev_ocf_flush_start.")
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=bdev_ocf_flush_status)
 
     def bdev_kvmalloc_create(args):
         params = strip_globals(vars(args))
         print_json(args.client.bdev_kvmalloc_create(**params))
-    p = subparsers.add_parser('bdev_kvmalloc_create', help='Create a bdev with kvmalloc backend (KV command set)')
+    p = subparsers.add_parser('bdev_kvmalloc_create',
+                              help="Construct a Key-Value bdev backed by malloc memory. The bdev reports"
+                                   " support for the NVMe KV command set and serves Store, Retrieve,"
+                                   " Delete, Exist, and List from an in-memory RB tree. It is intended"
+                                   " for testing and development purposes.")
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
     p.add_argument('-k', '--max-key-size', type=int,
@@ -178,7 +210,7 @@ def add_parser(subparsers):
     def bdev_kvmalloc_delete(args):
         args.client.bdev_kvmalloc_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_kvmalloc_delete', help='Delete a kvmalloc disk')
+    p = subparsers.add_parser('bdev_kvmalloc_delete', help='Delete a Key-Value malloc bdev.')
     p.add_argument('name', help='kvmalloc bdev name')
     p.set_defaults(func=bdev_kvmalloc_delete)
 
@@ -197,7 +229,19 @@ def add_parser(subparsers):
                                                dif_is_head_of_md=args.dif_is_head_of_md,
                                                dif_pi_format=args.dif_pi_format,
                                                numa_id=args.numa_id))
-    p = subparsers.add_parser('bdev_malloc_create', help='Create a bdev with malloc backend')
+    p = subparsers.add_parser('bdev_malloc_create',
+                              help="Construct a Malloc bdev The `dif_type` parameter can have 0, 1, 2,"
+                                   " or 3, and controls the check of the guard tag and the reference"
+                                   " tag. If the `dif_type` is 1, 2, or 3, the malloc bdev compares the"
+                                   " guard tag to the CRC-16 computed over the block data. If the"
+                                   " `dif_type` is 1 or 2, the malloc bdev compares the reference tag to"
+                                   " the computed reference tag. The computed reference tag for the first"
+                                   " block of the I/O is the `init_ref_tag` of the DIF context, and the"
+                                   " computed reference tag is incremented for each subsequent block. If"
+                                   " the `dif_type` is 3, the malloc bdev does not check the reference"
+                                   " tag. The application tag is not checked by the malloc bdev because"
+                                   " the current block device API does not expose it to the upper layer"
+                                   " yet.")
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
     p.add_argument(
@@ -226,7 +270,7 @@ def add_parser(subparsers):
     def bdev_malloc_delete(args):
         args.client.bdev_malloc_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_malloc_delete', help='Delete a malloc disk')
+    p = subparsers.add_parser('bdev_malloc_delete', help='Delete a Malloc bdev')
     p.add_argument('name', help='malloc bdev name')
     p.set_defaults(func=bdev_malloc_delete)
 
@@ -251,7 +295,7 @@ def add_parser(subparsers):
                                              preferred_unmap_alignment=args.preferred_unmap_alignment,
                                              preferred_unmap_granularity=args.preferred_unmap_granularity))
 
-    p = subparsers.add_parser('bdev_null_create', help='Add a bdev with null backend')
+    p = subparsers.add_parser('bdev_null_create', help='Construct a Null bdev')
     p.add_argument('name', help='Block device name')
     p.add_argument('-u', '--uuid', help='UUID of the bdev (optional)')
     p.add_argument('total_size', help='Size of null bdev in MB (int > 0). Includes only data blocks.', type=int)
@@ -277,7 +321,7 @@ def add_parser(subparsers):
     def bdev_null_delete(args):
         args.client.bdev_null_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_null_delete', help='Delete a null bdev')
+    p = subparsers.add_parser('bdev_null_delete', help='Delete a Null bdev.')
     p.add_argument('name', help='null bdev name')
     p.set_defaults(func=bdev_null_delete)
 
@@ -287,7 +331,7 @@ def add_parser(subparsers):
                                              new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_null_resize',
-                              help='Resize a null bdev')
+                              help='Resize a Null bdev.')
     p.add_argument('name', help='null bdev name')
     p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_null_resize)
@@ -302,7 +346,7 @@ def add_parser(subparsers):
                                             uuid=args.uuid,
                                             nowait=args.nowait))
 
-    p = subparsers.add_parser('bdev_aio_create', help='Add a bdev with aio backend')
+    p = subparsers.add_parser('bdev_aio_create', help="Construct an AIO bdev.")
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
@@ -319,14 +363,14 @@ def add_parser(subparsers):
     def bdev_aio_rescan(args):
         print_json(args.client.bdev_aio_rescan(name=args.name))
 
-    p = subparsers.add_parser('bdev_aio_rescan', help='Rescan a bdev size with aio backend')
+    p = subparsers.add_parser('bdev_aio_rescan', help='Rescan the size of an AIO bdev.')
     p.add_argument('name', help='Block device name')
     p.set_defaults(func=bdev_aio_rescan)
 
     def bdev_aio_delete(args):
         args.client.bdev_aio_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_aio_delete', help='Delete an aio disk')
+    p = subparsers.add_parser('bdev_aio_delete', help='Delete an AIO bdev.')
     p.add_argument('name', help='aio bdev name')
     p.set_defaults(func=bdev_aio_delete)
 
@@ -337,7 +381,7 @@ def add_parser(subparsers):
                                               block_size=args.block_size,
                                               uuid=args.uuid))
 
-    p = subparsers.add_parser('bdev_uring_create', help='Create a bdev with io_uring backend')
+    p = subparsers.add_parser('bdev_uring_create', help="Create a bdev with io_uring backend.")
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='bdev name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
@@ -347,14 +391,14 @@ def add_parser(subparsers):
     def bdev_uring_rescan(args):
         print_json(args.client.bdev_uring_rescan(name=args.name))
 
-    p = subparsers.add_parser('bdev_uring_rescan', help='Rescan a bdev size with uring backend')
+    p = subparsers.add_parser('bdev_uring_rescan', help='Rescan the size of a uring bdev.')
     p.add_argument('name', help='Block device name')
     p.set_defaults(func=bdev_uring_rescan)
 
     def bdev_uring_delete(args):
         args.client.bdev_uring_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_uring_delete', help='Delete a uring bdev')
+    p = subparsers.add_parser('bdev_uring_delete', help='Remove a uring bdev.')
     p.add_argument('name', help='uring bdev name')
     p.set_defaults(func=bdev_uring_delete)
 
@@ -365,7 +409,7 @@ def add_parser(subparsers):
                                               io_mechanism=args.io_mechanism,
                                               conserve_cpu=args.conserve_cpu))
 
-    p = subparsers.add_parser('bdev_xnvme_create', help='Create a bdev with xNVMe backend')
+    p = subparsers.add_parser('bdev_xnvme_create', help="Create xnvme bdev. This bdev type redirects all IO to its underlying backend.")
     p.add_argument('filename', help='Path to device or file (ex: /dev/nvme0n1)')
     p.add_argument('name', help='name of xNVMe bdev to create')
     p.add_argument('io_mechanism', help='IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)')
@@ -375,7 +419,7 @@ def add_parser(subparsers):
     def bdev_xnvme_delete(args):
         args.client.bdev_xnvme_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_xnvme_delete', help='Delete a xNVMe bdev')
+    p = subparsers.add_parser('bdev_xnvme_delete', help='Delete xnvme bdev.')
     p.add_argument('name', help='xNVMe bdev name')
     p.set_defaults(func=bdev_xnvme_delete)
 
@@ -387,7 +431,7 @@ def add_parser(subparsers):
                                                    optimal_open_zones=args.optimal_open_zones))
 
     p = subparsers.add_parser('bdev_zone_block_create',
-                              help='Create virtual zone namespace device with block device backend')
+                              help='Creates a virtual zone device on top of existing non-zoned bdev.')
     p.add_argument('-b', '--name', help="Name of the zone device", required=True)
     p.add_argument('-n', '--base-bdev', help='Name of underlying, non-zoned bdev', required=True)
     p.add_argument('-z', '--zone-capacity', help='Surfaced zone capacity in blocks', type=int, required=True)
@@ -397,7 +441,7 @@ def add_parser(subparsers):
     def bdev_zone_block_delete(args):
         args.client.bdev_zone_block_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_zone_block_delete', help='Delete a virtual zone namespace device')
+    p = subparsers.add_parser('bdev_zone_block_delete', help='Deletes a virtual zone device.')
     p.add_argument('name', help='Virtual zone bdev name')
     p.set_defaults(func=bdev_zone_block_delete)
 
@@ -419,7 +463,8 @@ def add_parser(subparsers):
                                                       core_mask=args.core_mask))
 
     p = subparsers.add_parser('bdev_rbd_register_cluster',
-                              help='Add a Rados cluster with ceph rbd backend')
+                              help="Add a Rados cluster with Ceph RBD backend. This method is available"
+                                   " only if SPDK was build with Ceph RBD support.")
     p.add_argument('name', help="Name of the Rados cluster only known to rbd bdev")
     p.add_argument('--user', dest='user_id', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config-param', action='append', metavar='key=value',
@@ -433,7 +478,9 @@ def add_parser(subparsers):
         args.client.bdev_rbd_unregister_cluster(name=args.name)
 
     p = subparsers.add_parser('bdev_rbd_unregister_cluster',
-                              help='Unregister a Rados cluster object')
+                              help="Unregister a Rados cluster object. This method is available only if"
+                                   " SPDK was build with Ceph RBD support. If there is still rbd bdev"
+                                   " using this cluster, the unregisteration operation will fail.")
     p.add_argument('name', help='Name of the Rados Cluster only known to rbd bdev')
     p.set_defaults(func=bdev_rbd_unregister_cluster)
 
@@ -441,7 +488,8 @@ def add_parser(subparsers):
         print_json(args.client.bdev_rbd_get_clusters_info(name=args.name))
 
     p = subparsers.add_parser('bdev_rbd_get_clusters_info',
-                              help='Display registered Rados Cluster names and related info')
+                              help="Display registered Rados cluster names and related info. This method"
+                                   " is available only if SPDK was build with Ceph RBD support.")
     p.add_argument('-b', '--name', help="Name of the registered Rados Cluster Name. Example: Cluster1")
     p.set_defaults(func=bdev_rbd_get_clusters_info)
 
@@ -465,7 +513,9 @@ def add_parser(subparsers):
                                             uuid=args.uuid,
                                             read_only=args.read_only))
 
-    p = subparsers.add_parser('bdev_rbd_create', help='Add a bdev with ceph rbd backend')
+    p = subparsers.add_parser('bdev_rbd_create',
+                              help="Create an RBD bdev This method is available only if SPDK was build"
+                                   " with Ceph RBD support.")
     p.add_argument('-b', '--name', help="Name of the bdev")
     p.add_argument('--user', dest='user_id', help="Ceph user name (i.e. admin, not client.admin)")
     p.add_argument('--config', action='append', metavar='key=value',
@@ -481,7 +531,9 @@ def add_parser(subparsers):
     def bdev_rbd_delete(args):
         args.client.bdev_rbd_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_rbd_delete', help='Delete a rbd bdev')
+    p = subparsers.add_parser('bdev_rbd_delete',
+                              help="Delete an RBD bdev This method is available only if SPDK was build"
+                                   " with Ceph RBD support.")
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=bdev_rbd_delete)
 
@@ -491,7 +543,8 @@ def add_parser(subparsers):
                                             new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_rbd_resize',
-                              help='Resize a rbd bdev')
+                              help="Resize an RBD bdev This method is available only if SPDK was build"
+                                   " with Ceph RBD support.")
     p.add_argument('name', help='rbd bdev name')
     p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_rbd_resize)
@@ -507,7 +560,10 @@ def add_parser(subparsers):
                                               p99_write_latency=args.p99_write_latency))
 
     p = subparsers.add_parser('bdev_delay_create',
-                              help='Add a delay bdev on existing bdev')
+                              help="Create delay bdev. This bdev type redirects all IO to it's base bdev "
+                                   "and inserts a delay on the completion\n"
+                                   "path to create an artificial drive latency. All latency values "
+                                   "supplied to this bdev should be in microseconds.")
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
     p.add_argument('-d', '--name', help="Name of the delay bdev", required=True)
     p.add_argument('-u', '--uuid', help='UUID of the bdev (optional)')
@@ -524,7 +580,7 @@ def add_parser(subparsers):
     def bdev_delay_delete(args):
         args.client.bdev_delay_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_delay_delete', help='Delete a delay bdev')
+    p = subparsers.add_parser('bdev_delay_delete', help='Delete delay bdev.')
     p.add_argument('name', help='delay bdev name')
     p.set_defaults(func=bdev_delay_delete)
 
@@ -534,7 +590,9 @@ def add_parser(subparsers):
                                                       latency_type=args.latency_type,
                                                       latency_us=args.latency_us))
     p = subparsers.add_parser('bdev_delay_update_latency',
-                              help='Update one of the latency values for a given delay bdev')
+                              help="Update a target latency value associated with a given delay bdev."
+                                   " Any currently outstanding I/O will be completed with the old"
+                                   " latency.")
     p.add_argument('delay_bdev_name', help='The name of the given delay bdev')
     p.add_argument('latency_type', choices=['avg_read', 'avg_write', 'p99_read', 'p99_write'],
                    help='Latency bucket to update')
@@ -546,7 +604,7 @@ def add_parser(subparsers):
                                               base_name=args.base_name,
                                               uuid=args.uuid))
 
-    p = subparsers.add_parser('bdev_error_create', help='Add bdev with error injection backend')
+    p = subparsers.add_parser('bdev_error_create', help='Construct error bdev.')
     p.add_argument('base_name', help='base bdev name')
     p.add_argument('--uuid', help='UUID for this bdev')
     p.set_defaults(func=bdev_error_create)
@@ -554,14 +612,16 @@ def add_parser(subparsers):
     def bdev_error_delete(args):
         args.client.bdev_error_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_error_delete', help='Delete an error bdev')
+    p = subparsers.add_parser('bdev_error_delete', help='Delete error bdev')
     p.add_argument('name', help='error bdev name')
     p.set_defaults(func=bdev_error_delete)
 
     def bdev_iscsi_set_options(args):
         args.client.bdev_iscsi_set_options(timeout_sec=args.timeout_sec)
 
-    p = subparsers.add_parser('bdev_iscsi_set_options', help='Set options for the bdev iscsi type.')
+    p = subparsers.add_parser('bdev_iscsi_set_options',
+                              help="Set options for iSCSI bdevs. This RPC can be called at any time, but"
+                                   " the new value will only take effect for new iSCSI bdevs.")
     p.add_argument('-t', '--timeout-sec', help="Timeout for command, in seconds, if 0, don't track timeout.", type=int)
     p.set_defaults(func=bdev_iscsi_set_options)
 
@@ -572,7 +632,9 @@ def add_parser(subparsers):
                                               initiator_iqn=args.initiator_iqn))
 
     p = subparsers.add_parser('bdev_iscsi_create',
-                              help='Add bdev with iSCSI initiator backend')
+                              help="Connect to iSCSI target and create bdev backed by this connection."
+                                   " This method is available only if SPDK was build with iSCSI"
+                                   " initiator support.")
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('-i', '--initiator-iqn', help="Initiator IQN", required=True)
     p.add_argument('--url', help="iSCSI Lun URL", required=True)
@@ -581,7 +643,9 @@ def add_parser(subparsers):
     def bdev_iscsi_delete(args):
         args.client.bdev_iscsi_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_iscsi_delete', help='Delete an iSCSI bdev')
+    p = subparsers.add_parser('bdev_iscsi_delete',
+                              help="Delete iSCSI bdev and terminate connection to target. This method is"
+                                   " available only if SPDK was built with iSCSI initiator support.")
     p.add_argument('name', help='iSCSI bdev name')
     p.set_defaults(func=bdev_iscsi_delete)
 
@@ -591,7 +655,10 @@ def add_parser(subparsers):
                                                  name=args.name,
                                                  uuid=args.uuid))
 
-    p = subparsers.add_parser('bdev_passthru_create', help='Add a pass through bdev on existing bdev')
+    p = subparsers.add_parser('bdev_passthru_create',
+                              help="Create passthru bdev. This bdev type redirects all IO to it's "
+                                   "base bdev. It has no other purpose than being an example\n"
+                                   "and a starting point in development of new bdev type.")
     p.add_argument('-b', '--base-bdev-name', help="Name of the existing bdev", required=True)
     p.add_argument('-p', '--name', help="Name of the pass through bdev", required=True)
     p.add_argument('-u', '--uuid', help="UUID of the bdev")
@@ -600,7 +667,7 @@ def add_parser(subparsers):
     def bdev_passthru_delete(args):
         args.client.bdev_passthru_delete(name=args.name)
 
-    p = subparsers.add_parser('bdev_passthru_delete', help='Delete a pass through bdev')
+    p = subparsers.add_parser('bdev_passthru_delete', help='Delete passthru bdev.')
     p.add_argument('name', help='pass through bdev name')
     p.set_defaults(func=bdev_passthru_delete)
 
@@ -608,7 +675,7 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_get_bdevs(name=args.name, timeout=args.timeout))
 
     p = subparsers.add_parser('bdev_get_bdevs',
-                              help='Display current blockdev list or required blockdev')
+                              help='Get information about block devices (bdevs).')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.add_argument('-t', '--timeout-ms', dest='timeout', help="""Time in ms to wait for the bdev to appear (only used
     with the -b|--name option). The default timeout is 0, meaning the RPC returns immediately
@@ -623,7 +690,7 @@ def add_parser(subparsers):
                                             names=args.names))
 
     p = subparsers.add_parser('bdev_get_iostat',
-                              help='Display current I/O statistics of all the blockdevs or specified blockdev.')
+                              help='Get I/O statistics of block devices (bdevs).')
     p.add_argument('-c', '--per-channel', default=False, dest='per_channel', help='Display per channel IO stats for specified device',
                    action='store_true')
     p.add_argument('--reset-mode', help="Mode to reset I/O statistics after getting", choices=['all', 'maxmin', 'error', 'none'])
@@ -635,7 +702,8 @@ def add_parser(subparsers):
         args.client.bdev_reset_iostat(name=args.name, mode=args.mode)
 
     p = subparsers.add_parser('bdev_reset_iostat',
-                              help='Reset I/O statistics of all the blockdevs or specified blockdev.')
+                              help="Reset I/O statistics of block devices (bdevs). Note that if one"
+                                   " consumer resets I/O statistics, it affects all other consumers.")
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1")
     p.add_argument('-m', '--mode', help="Mode to reset I/O statistics", choices=['all', 'maxmin', 'error', 'none'])
     p.set_defaults(func=bdev_reset_iostat)
@@ -645,7 +713,7 @@ def add_parser(subparsers):
                                           granularity=args.granularity, min_nsec=args.min_nsec, max_nsec=args.max_nsec)
 
     p = subparsers.add_parser('bdev_enable_histogram',
-                              help='Enable or disable histogram for specified bdev')
+                              help="Control whether collecting data for histogram is enabled for specified bdev.")
     p.add_argument('--histogram', dest='enable', action=argparse.BooleanOptionalAction,
                    required=True, help='Enable or disable histograms on specified device')
     p.add_argument('-o', '--opc', help='Enable histogram for specified io type. Defaults to all io types if not specified.'
@@ -660,7 +728,7 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_get_histogram(name=args.name))
 
     p = subparsers.add_parser('bdev_get_histogram',
-                              help='Get histogram for specified bdev')
+                              help='Get latency histogram for specified bdev.')
     p.add_argument('name', help='bdev name')
     p.set_defaults(func=bdev_get_histogram)
 
@@ -673,7 +741,7 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_get_histogram_borders(name=args.name, borders=borders))
 
     p = subparsers.add_parser('bdev_get_histogram_borders',
-                              help='Dump histogram for specified bdev into user-provided borders')
+                              help='Dump latency histogram for specified bdev into user-provided borders.')
     p.add_argument('name', help='bdev name')
     p.add_argument('--borders', type=partial(str.split, sep=','),
                    help='Comma-separated list of borders in microseconds to dump histogram into.'
@@ -689,7 +757,7 @@ def add_parser(subparsers):
                                              period=args.period)
 
     p = subparsers.add_parser('bdev_set_qd_sampling_period',
-                              help="Enable or disable tracking of a bdev's queue depth.")
+                              help='Enable queue depth tracking on a specified bdev.')
     p.add_argument('name', help='Blockdev name. Example: Malloc0')
     p.add_argument('period', help='Period with which to poll the block device queue depth in microseconds.'
                    ' If set to 0, polling will be disabled.',
@@ -705,7 +773,7 @@ def add_parser(subparsers):
                                     w_mbytes_per_sec=args.w_mbytes_per_sec)
 
     p = subparsers.add_parser('bdev_set_qos_limit',
-                              help='Set QoS rate limit on a blockdev')
+                              help='Set the quality of service rate limit on a bdev.')
     p.add_argument('name', help='Blockdev name to set QoS. Example: Malloc0')
     p.add_argument('--rw-ios-per-sec',
                    help='R/W IOs per second limit (>=1000, example: 20000). 0 means unlimited.',
@@ -733,7 +801,11 @@ def add_parser(subparsers):
                                          corrupt_offset=args.corrupt_offset,
                                          corrupt_value=args.corrupt_value)
 
-    p = subparsers.add_parser('bdev_error_inject_error', help='bdev inject error')
+    p = subparsers.add_parser('bdev_error_inject_error',
+                              help="Inject an error via an error bdev. Create an error bdev on "
+                                   "base bdev first. Default 'num'\n"
+                                   "value is 1 and if 'num' is set to zero, the specified "
+                                   "injection is disabled.")
     p.add_argument('name', help="""the name of the error injection bdev""")
     p.add_argument('io_type', choices=['clear', 'read', 'write', 'unmap', 'flush', 'all'], help='IO type')
     p.add_argument('error_type', choices=['failure', 'nvme_failure', 'pending', 'corrupt_data', 'nomem'], help='Error type')
@@ -752,7 +824,7 @@ def add_parser(subparsers):
     def bdev_error_resume_pending(args):
         args.client.bdev_error_resume_pending(name=args.name)
 
-    p = subparsers.add_parser('bdev_error_resume_pending', help='Resume pending IOs')
+    p = subparsers.add_parser('bdev_error_resume_pending', help='Resume all error bdev pending requests.')
     p.add_argument('name', help='the name of the error injection bdev')
     p.set_defaults(func=bdev_error_resume_pending)
 
@@ -763,7 +835,20 @@ def add_parser(subparsers):
                                        process_max_bandwidth_mb_sec=args.process_max_bandwidth_mb_sec)
 
     p = subparsers.add_parser('bdev_raid_set_options',
-                              help='Set options for bdev raid.')
+                              help='Set options for bdev raid. This RPC can be called at any time, but'
+                                   ' the new value will only take effect for new raid bdevs. The'
+                                   ' `process_window_size_kb` parameter defines the size of the "window"'
+                                   " (LBA range of the raid bdev) in which a background process like"
+                                   " rebuild performs its work. Any positive value is valid, but the"
+                                   " value actually used by a raid bdev can be adjusted to the size of"
+                                   " the raid bdev or the write unit size."
+                                   " `process_max_bandwidth_mb_sec` parameter defines the maximum"
+                                   " bandwidth used by a background process like rebuild. Any positive"
+                                   " value or zero is valid, zero means no bandwidth limitation for"
+                                   " background process. It can only limit the process bandwidth but"
+                                   " doesn't guarantee it can be reached. Changing this value will not"
+                                   " affect existing processes, it will only take effect on new processes"
+                                   " generated after the RPC is completed.")
     p.add_argument('-w', '--process-window-size-kb', type=int,
                    help="Background process (e.g. rebuild) window size in KiB")
     p.add_argument('-b', '--process-max-bandwidth-mb-sec', type=int,
@@ -776,11 +861,15 @@ def add_parser(subparsers):
                                                 category=args.category))
 
     p = subparsers.add_parser('bdev_raid_get_bdevs',
-                              help="""This is used to list all the raid bdev details based on the input category
-    requested. Category should be one of 'all', 'online', 'configuring' or 'offline'. 'all' means all the raid bdevs whether
-    they are online or configuring or offline. 'online' is the raid bdev which is registered with bdev layer. 'configuring'
-    is the raid bdev which does not have full configuration discovered yet. 'offline' is the raid bdev which is not registered
-    with bdev as of now and it has encountered any error or user has requested to offline the raid bdev""")
+                              help="This is used to list all the raid bdev details based on the input"
+                                   " category requested. Category should be one of 'all', 'online',"
+                                   " 'configuring' or 'offline'. 'all' means all the raid bdevs whether"
+                                   " they are online or configuring or offline. 'online' is the raid bdev"
+                                   " which is registered with bdev layer. 'configuring' is the raid bdev"
+                                   " which does not have full configuration discovered yet. 'offline' is"
+                                   " the raid bdev which is not registered with bdev as of now and it has"
+                                   " encountered any error or user has requested to offline the raid"
+                                   " bdev.")
     p.add_argument('category', choices=['all', 'online', 'configuring', 'offline'], help='all or online or configuring or offline')
     p.set_defaults(func=bdev_raid_get_bdevs)
 
@@ -792,7 +881,7 @@ def add_parser(subparsers):
                                   base_bdevs=args.base_bdevs,
                                   uuid=args.uuid,
                                   superblock=args.superblock)
-    p = subparsers.add_parser('bdev_raid_create', help='Create new raid bdev')
+    p = subparsers.add_parser('bdev_raid_create', help='Constructs new RAID bdev.')
     p.add_argument('-n', '--name', help='raid bdev name', required=True)
     p.add_argument('-z', '--strip-size-kb', help='strip size in KB', type=int)
     p.add_argument('-r', '--raid-level', choices=['raid0', '0', 'raid1', '1', 'raid5f', '5f', 'concat'], help='Raid level', required=True)
@@ -806,7 +895,7 @@ def add_parser(subparsers):
         args.client.bdev_raid_delete(
                                   name=args.name,
                                   clear_sb=args.clear_sb)
-    p = subparsers.add_parser('bdev_raid_delete', help='Delete existing raid bdev')
+    p = subparsers.add_parser('bdev_raid_delete', help='Removes RAID bdev.')
     p.add_argument('name', help='raid bdev name')
     p.add_argument('-c', '--clear-sb', help='If set, clear the superblock from all base bdevs', action='store_true')
     p.set_defaults(func=bdev_raid_delete)
@@ -815,14 +904,18 @@ def add_parser(subparsers):
         args.client.bdev_raid_add_base_bdev(
                                          raid_bdev=args.raid_bdev,
                                          base_bdev=args.base_bdev)
-    p = subparsers.add_parser('bdev_raid_add_base_bdev', help='Add base bdev to existing raid bdev')
+    p = subparsers.add_parser('bdev_raid_add_base_bdev',
+                              help="Add base bdev to existing raid bdev. The raid bdev must have "
+                                   "an empty base bdev slot.\n"
+                                   "The bdev must be large enough and have the same block size "
+                                   "and metadata format as the other base bdevs.")
     p.add_argument('raid_bdev', help='raid bdev name')
     p.add_argument('base_bdev', help='base bdev name')
     p.set_defaults(func=bdev_raid_add_base_bdev)
 
     def bdev_raid_remove_base_bdev(args):
         args.client.bdev_raid_remove_base_bdev(name=args.name)
-    p = subparsers.add_parser('bdev_raid_remove_base_bdev', help='Remove base bdev from existing raid bdev')
+    p = subparsers.add_parser('bdev_raid_remove_base_bdev', help='Remove base bdev from existing raid bdev.')
     p.add_argument('name', help='base bdev name')
     p.set_defaults(func=bdev_raid_remove_base_bdev)
 
@@ -834,9 +927,7 @@ def add_parser(subparsers):
                                                split_size_mb=args.split_size_mb))
 
     p = subparsers.add_parser('bdev_split_create',
-                              help="""Add given disk name to split config. If bdev with base_name
-    name exist the split bdevs will be created right away, if not split bdevs will be created when base bdev became
-    available (during examination process).""")
+                              help="This is used to split an underlying block device and create several smaller equal-sized vbdevs.")
     p.add_argument('base_bdev', help='base bdev name')
     p.add_argument('-s', '--split-size-mb', help='size in MiB for each bdev', type=int)
     p.add_argument('split_count', help="""Optional - number of split bdevs to create. Total size * split_count must not
@@ -846,7 +937,7 @@ def add_parser(subparsers):
     def bdev_split_delete(args):
         args.client.bdev_split_delete(base_bdev=args.base_bdev)
 
-    p = subparsers.add_parser('bdev_split_delete', help="""Delete split config with all created splits.""")
+    p = subparsers.add_parser('bdev_split_delete', help="This is used to remove the split vbdevs.")
     p.add_argument('base_bdev', help='base bdev name')
     p.set_defaults(func=bdev_split_delete)
 
@@ -862,7 +953,8 @@ def add_parser(subparsers):
                                             core_mask=args.core_mask,
                                             fast_shutdown=args.fast_shutdown))
 
-    p = subparsers.add_parser('bdev_ftl_create', help='Add FTL bdev')
+    p = subparsers.add_parser('bdev_ftl_create',
+                              help="Create FTL bdev. This RPC is subject to change.")
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('-d', '--base-bdev', help='Name of bdev used as underlying device',
                    required=True)
@@ -882,7 +974,8 @@ def add_parser(subparsers):
     def bdev_ftl_delete(args):
         print_dict(args.client.bdev_ftl_delete(name=args.name, fast_shutdown=args.fast_shutdown))
 
-    p = subparsers.add_parser('bdev_ftl_delete', help='Delete FTL bdev')
+    p = subparsers.add_parser('bdev_ftl_delete',
+                              help="Delete FTL bdev. This RPC is subject to change.")
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('-f', '--fast-shutdown', help="Fast shutdown", action='store_true')
     p.set_defaults(func=bdev_ftl_delete)
@@ -892,7 +985,8 @@ def add_parser(subparsers):
                                               lba=args.lba,
                                               num_blocks=args.num_blocks))
 
-    p = subparsers.add_parser('bdev_ftl_unmap', help='FTL unmap')
+    p = subparsers.add_parser('bdev_ftl_unmap',
+                              help="Unmap range of LBAs. This RPC is subject to change.")
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('--lba', help='start LBA', required=True, type=int)
     p.add_argument('--num-blocks', help='num blocks', required=True, type=int)
@@ -901,14 +995,15 @@ def add_parser(subparsers):
     def bdev_ftl_get_stats(args):
         print_dict(args.client.bdev_ftl_get_stats(name=args.name))
 
-    p = subparsers.add_parser('bdev_ftl_get_stats', help='print ftl stats')
+    p = subparsers.add_parser('bdev_ftl_get_stats',
+                              help="Get IO statistics for FTL bdev This RPC is subject to change.")
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=bdev_ftl_get_stats)
 
     def bdev_ftl_get_properties(args):
         print_dict(args.client.bdev_ftl_get_properties(name=args.name))
 
-    p = subparsers.add_parser('bdev_ftl_get_properties', help='Print FTL properties')
+    p = subparsers.add_parser('bdev_ftl_get_properties', help='Get FTL properties')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.set_defaults(func=bdev_ftl_get_properties)
 
@@ -917,7 +1012,7 @@ def add_parser(subparsers):
                    ftl_property=args.ftl_property,
                    value=args.value))
 
-    p = subparsers.add_parser('bdev_ftl_set_property', help='Set FTL property')
+    p = subparsers.add_parser('bdev_ftl_set_property', help='Set FTL property. Trying to set a read-only property will result in an error.')
     p.add_argument('-b', '--name', help="Name of the bdev", required=True)
     p.add_argument('-p', '--property', dest='ftl_property', help="Name of the property to be set", required=True)
     p.add_argument('-v', '--value', help="Value of the property", required=True)
@@ -935,7 +1030,7 @@ def add_parser(subparsers):
                                              cont=args.cont,
                                              oclass=args.oclass))
     p = subparsers.add_parser('bdev_daos_create',
-                              help='Create a bdev with DAOS backend')
+                              help='Construct a DAOS bdev')
     p.add_argument('name', help="Name of the bdev")
     p.add_argument('pool', help="UUID of the DAOS pool")
     p.add_argument('cont', help="UUID of the DAOS container")
@@ -950,7 +1045,7 @@ def add_parser(subparsers):
         args.client.bdev_daos_delete(name=args.name)
 
     p = subparsers.add_parser('bdev_daos_delete',
-                              help='Delete a DAOS disk')
+                              help='Delete a DAOS bdev')
     p.add_argument('name', help='DAOS bdev name')
     p.set_defaults(func=bdev_daos_delete)
 
@@ -960,7 +1055,7 @@ def add_parser(subparsers):
                                              new_size=args.new_size))
 
     p = subparsers.add_parser('bdev_daos_resize',
-                              help='Resize a DAOS bdev')
+                              help='Resize a DAOS bdev.')
     p.add_argument('name', help='DAOS bdev name')
     p.add_argument('new_size', help='new bdev size for resize operation. The unit is MiB', type=int)
     p.set_defaults(func=bdev_daos_resize)

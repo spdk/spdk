@@ -12,14 +12,14 @@ def add_parser(subparsers):
     def vfu_tgt_set_base_path(args):
         args.client.vfu_tgt_set_base_path(path=args.path)
 
-    p = subparsers.add_parser('vfu_tgt_set_base_path', help='Set socket base path.')
+    p = subparsers.add_parser('vfu_tgt_set_base_path', help="Set base path of Unix Domain socket file.")
     p.add_argument('path', help='Base path for the vfio-user UNIX sockets')
     p.set_defaults(func=vfu_tgt_set_base_path)
 
     def vfu_virtio_delete_endpoint(args):
         args.client.vfu_virtio_delete_endpoint(name=args.name)
 
-    p = subparsers.add_parser('vfu_virtio_delete_endpoint', help='Delete the PCI device via endpoint name.')
+    p = subparsers.add_parser('vfu_virtio_delete_endpoint', help="Delete PCI device via endpoint name.")
     p.add_argument('name', help='Name of the endpoint')
     p.set_defaults(func=vfu_virtio_delete_endpoint)
 
@@ -32,7 +32,7 @@ def add_parser(subparsers):
                                                      qsize=args.qsize,
                                                      packed_ring=args.packed_ring)
 
-    p = subparsers.add_parser('vfu_virtio_create_blk_endpoint', help='Create virtio-blk endpoint.')
+    p = subparsers.add_parser('vfu_virtio_create_blk_endpoint', help="Create vfio-user virtio-blk PCI endpoint.")
     p.add_argument('name', help='Name of the endpoint')
     p.add_argument('--bdev-name', help='Name of the backing block device', type=str, required=True)
     p.add_argument('--cpumask', help="CPU mask for the endpoint's I/O threads")
@@ -47,7 +47,8 @@ def add_parser(subparsers):
                                                  scsi_target_num=args.scsi_target_num,
                                                  bdev_name=args.bdev_name)
 
-    p = subparsers.add_parser('vfu_virtio_scsi_add_target', help='Attach a block device to SCSI target of PCI endpoint.')
+    p = subparsers.add_parser('vfu_virtio_scsi_add_target', help="Add block device to specified SCSI target of vfio-user virtio-scsi PCI"
+                                                                  " endpoint.")
     p.add_argument('name', help='Name of the endpoint')
     p.add_argument('--scsi-target-num', help='SCSI target number: 0-7', type=int, required=True)
     p.add_argument('--bdev-name', help='Name of the backing block device', type=str, required=True)
@@ -58,7 +59,7 @@ def add_parser(subparsers):
                                                     name=args.name,
                                                     scsi_target_num=args.scsi_target_num)
 
-    p = subparsers.add_parser('vfu_virtio_scsi_remove_target', help='Remove the specified SCSI target of PCI endpoint.')
+    p = subparsers.add_parser('vfu_virtio_scsi_remove_target', help="Remove a SCSI target of vfio-user virtio-scsi PCI endpoint.")
     p.add_argument('name', help='Name of the endpoint')
     p.add_argument('--scsi-target-num', help='SCSI target number: 0-7', type=int, required=True)
     p.set_defaults(func=vfu_virtio_scsi_remove_target)
@@ -71,7 +72,7 @@ def add_parser(subparsers):
                                                       qsize=args.qsize,
                                                       packed_ring=args.packed_ring)
 
-    p = subparsers.add_parser('vfu_virtio_create_scsi_endpoint', help='Create virtio-scsi endpoint.')
+    p = subparsers.add_parser('vfu_virtio_create_scsi_endpoint', help="Create vfio-user virtio-scsi PCI endpoint.")
     p.add_argument('name', help='Name of the endpoint')
     p.add_argument('--cpumask', help="CPU mask for the endpoint's I/O threads")
     p.add_argument('--num-io-queues',
@@ -91,7 +92,7 @@ def add_parser(subparsers):
                                                     qsize=args.qsize,
                                                     packed_ring=args.packed_ring)
 
-    p = subparsers.add_parser('vfu_virtio_create_fs_endpoint', help='Create virtio-fs endpoint.')
+    p = subparsers.add_parser('vfu_virtio_create_fs_endpoint', help="Create vfio-user virtio-fs PCI endpoint.")
     p.add_argument('name', help='Name of the endpoint')
     p.add_argument('--fsdev-name', help='Name of the backing fsdev', type=str, required=True)
     p.add_argument('--tag', help='virtiofs mount tag (per virtio specification)', type=str, required=True)

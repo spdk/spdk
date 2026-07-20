@@ -13,7 +13,7 @@ def add_parser(subparsers):
     def keyring_file_add_key(args):
         args.client.keyring_file_add_key(name=args.name, path=args.path)
 
-    p = subparsers.add_parser('keyring_file_add_key', help='Add a file-based key to the keyring')
+    p = subparsers.add_parser('keyring_file_add_key', help="Add a file-based key to a keyring.")
     p.add_argument('name', help='Name of the key')
     p.add_argument('path', help='Path to the file containing the key')
     p.set_defaults(func=keyring_file_add_key)
@@ -21,19 +21,24 @@ def add_parser(subparsers):
     def keyring_file_remove_key(args):
         args.client.keyring_file_remove_key(name=args.name)
 
-    p = subparsers.add_parser('keyring_file_remove_key', help='Remove a file-based key from the keyring')
+    p = subparsers.add_parser('keyring_file_remove_key', help="Remove a file-based key from a keyring.")
     p.add_argument('name', help='Name of the key')
     p.set_defaults(func=keyring_file_remove_key)
 
     def keyring_get_keys(args):
         print_dict(args.client.keyring_get_keys())
 
-    p = subparsers.add_parser('keyring_get_keys', help='Get a list of registered keys')
+    p = subparsers.add_parser('keyring_get_keys',
+                              help="Get a list of available keys. This RPC will only list keys that are"
+                                   " currently attached to a keyring. Dynamically loaded keys (via the"
+                                   " `probe_key()` callback) will only be included if they're currently"
+                                   " in-use (i.e. with active references obtained via"
+                                   " `spdk_keyring_get_key()`).")
     p.set_defaults(func=keyring_get_keys)
 
     def keyring_linux_set_options(args):
         args.client.keyring_linux_set_options(enable=args.enable)
 
-    p = subparsers.add_parser('keyring_linux_set_options', help='Set options of the keyring_linux module')
+    p = subparsers.add_parser('keyring_linux_set_options', help="Set options of the keyring_linux module.")
     p.add_argument('-e', '--enable', help='Enable the Linux keyring module. Default: false', action='store_true')
     p.set_defaults(func=keyring_linux_set_options)

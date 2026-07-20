@@ -15,7 +15,7 @@ def add_parser(subparsers):
     def sock_impl_get_options(args):
         print_json(args.client.sock_impl_get_options(impl_name=args.impl_name))
 
-    p = subparsers.add_parser('sock_impl_get_options', help="""Get options of socket layer implementation""")
+    p = subparsers.add_parser('sock_impl_get_options', help="Get parameters for the socket layer implementation.")
     p.add_argument('-i', '--impl', dest='impl_name',
                    help='Socket implementation name (e.g. "posix", "ssl", "uring")', required=True)
     p.set_defaults(func=sock_impl_get_options)
@@ -34,7 +34,7 @@ def add_parser(subparsers):
                                        tls_version=args.tls_version,
                                        enable_ktls=args.enable_ktls)
 
-    p = subparsers.add_parser('sock_impl_set_options', help="""Set options of socket layer implementation""")
+    p = subparsers.add_parser('sock_impl_set_options', help="Set parameters for the socket layer implementation.")
     p.add_argument('-i', '--impl', dest='impl_name',
                    help='Socket implementation name (e.g. "posix", "ssl", "uring")', required=True)
     p.add_argument('-r', '--recv-buf-size', help='Receive buffer size in bytes', type=int)
@@ -61,7 +61,7 @@ def add_parser(subparsers):
     def sock_set_default_impl(args):
         print_json(args.client.sock_set_default_impl(impl_name=args.impl_name))
 
-    p = subparsers.add_parser('sock_set_default_impl', help="""Set the default sock implementation""")
+    p = subparsers.add_parser('sock_set_default_impl', help="Set the default sock implementation.")
     p.add_argument('-i', '--impl', dest='impl_name',
                    help='Socket implementation name (e.g. "posix", "ssl", "uring")', required=True)
     p.set_defaults(func=sock_set_default_impl)
@@ -69,5 +69,5 @@ def add_parser(subparsers):
     def sock_get_default_impl(args):
         print_json(args.client.sock_get_default_impl())
 
-    p = subparsers.add_parser('sock_get_default_impl', help="Get the default sock implementation name")
+    p = subparsers.add_parser('sock_get_default_impl', help="Get the name of the default sock implementation.")
     p.set_defaults(func=sock_get_default_impl)

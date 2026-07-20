@@ -22,6 +22,21 @@ from tabulate import tabulate
 # Get directory of this script
 base_dir = Path(__file__).resolve().parent.parent
 
+def _normalize_help(text: str) -> str:
+    """Normalize a help string for comparison.
+
+    - Strip leading/trailing whitespace
+    - Resolve Doxygen @ref markup: ``@ref anchor "text"`` becomes *text*,
+      bare ``@ref anchor`` is dropped entirely
+    - Collapse all whitespace (spaces, newlines, tabs) into single spaces
+    """
+    text = text.strip()
+    text = re.sub(r'@ref\s+[\w.-]+\s+"([^"]+)"', r'\1', text)
+    text = re.sub(r'@ref\s+[\w.-]+', '', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
 def _strip_argparse_default_hint(action: argparse.Action) -> Optional[str]:
     """Remove a Python < 3.11 BooleanOptionalAction default hint."""
     if not isinstance(action, argparse.BooleanOptionalAction) or not action.help:
@@ -207,6 +222,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
         raise ValueError(f"Methods defined in schema but missing in CLI: {sorted(missing_in_cli)}")
     if missing_in_schema:
         raise ValueError(f"Commands found in CLI but not defined in schema: {sorted(missing_in_schema)}")
+    cli_help = {a.dest: a.help for a in subparsers._choices_actions}
     schema_objects = {obj["name"]: obj for obj in schema['objects']}
     schema_enums = {obj["name"]: obj for obj in schema['enums']}
     for method in schema['methods']:
@@ -214,6 +230,20 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
             raise ValueError(f"Method '{method['name']}' is missing 'description' field in schema")
         if method['name'] in private_methods:
             continue
+        schema_desc = _normalize_help(method['description'])
+        cli_raw = cli_help.get(method['name']) or ''
+        try:
+            cli_unescaped = cli_raw % {}
+        except (TypeError, ValueError) as e:
+            raise ValueError(
+                f"For method {method['name']}: CLI help contains a bare '%' that will crash argparse: {e}",
+            ) from e
+        cli_desc = _normalize_help(cli_unescaped)
+        if schema_desc != cli_desc:
+            raise ValueError(
+                f"For method {method['name']}: 'description' field is mismatched\n"
+                f"  schema: {schema_desc!r}\n"
+                f"  cli:    {cli_desc!r}")
         if method['name'] == 'nvmf_set_config':
             # TODO: handle this case later and fix issues raised by it
             continue

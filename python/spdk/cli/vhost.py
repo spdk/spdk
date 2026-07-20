@@ -18,7 +18,14 @@ def add_parser(subparsers):
                                                   delay_base_us=args.delay_base_us,
                                                   iops_threshold=args.iops_threshold)
 
-    p = subparsers.add_parser('vhost_controller_set_coalescing', help='Set vhost controller coalescing')
+    p = subparsers.add_parser('vhost_controller_set_coalescing',
+                              help="Controls interrupt coalescing for specific target. Because"
+                                   " `delay_base_us` is used to calculate delay in CPU ticks there is no"
+                                   " hardcoded limit for this parameter. Only limitation is that final"
+                                   " delay in CPU ticks might not overflow 32 bit unsigned integer (which"
+                                   " is more than 1s @ 4GHz CPU). In real scenarios `delay_base_us`"
+                                   " should be much lower than 150us. To disable coalescing set"
+                                   " `delay_base_us` to 0.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.add_argument('delay_base_us', help='Base coalescing delay in microseconds', type=int)
     p.add_argument('iops_threshold', help='IOPS threshold above which coalescing kicks in (must be > 0)', type=int)
@@ -29,14 +36,14 @@ def add_parser(subparsers):
         args.client.virtio_blk_create_transport(**params)
 
     p = subparsers.add_parser('virtio_blk_create_transport',
-                              help='Create virtio blk transport')
+                              help="Create virtio blk transport.")
     p.add_argument('name', help='Name of the virtio-blk transport to create')
     p.set_defaults(func=virtio_blk_create_transport)
 
     def virtio_blk_get_transports(args):
         print_dict(args.client.virtio_blk_get_transports(name=args.name))
 
-    p = subparsers.add_parser('virtio_blk_get_transports', help='Display virtio-blk transports or requested transport')
+    p = subparsers.add_parser('virtio_blk_get_transports', help="Get information about virtio-blk transports.")
     p.add_argument('--name', help='Name of a specific transport to query. Default: list all', type=str)
     p.set_defaults(func=virtio_blk_get_transports)
 
@@ -46,7 +53,7 @@ def add_parser(subparsers):
                                                cpumask=args.cpumask,
                                                delay=args.delay)
 
-    p = subparsers.add_parser('vhost_create_scsi_controller', help='Add new vhost controller')
+    p = subparsers.add_parser('vhost_create_scsi_controller', help="Construct vhost SCSI target.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.add_argument('--cpumask', help="CPU mask for the controller's threads")
     p.add_argument("--delay", action='store_true', help='Delay controller startup. Default: false')
@@ -55,7 +62,8 @@ def add_parser(subparsers):
     def vhost_start_scsi_controller(args):
         args.client.vhost_start_scsi_controller(ctrlr=args.ctrlr)
 
-    p = subparsers.add_parser('vhost_start_scsi_controller', help='Start vhost scsi controller')
+    p = subparsers.add_parser('vhost_start_scsi_controller', help="Start vhost SCSI controller, if controller is already started, do"
+                                                                   " nothing.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.set_defaults(func=vhost_start_scsi_controller)
 
@@ -65,7 +73,8 @@ def add_parser(subparsers):
                                                               scsi_target_num=args.scsi_target_num,
                                                               bdev_name=args.bdev_name))
 
-    p = subparsers.add_parser('vhost_scsi_controller_add_target', help='Add lun to vhost controller')
+    p = subparsers.add_parser('vhost_scsi_controller_add_target', help="In vhost target `ctrlr` create SCSI target with ID"
+                                                                        " `scsi_target_num` and add `bdev_name` as LUN 0.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.add_argument('scsi_target_num', help='SCSI target number (0-7), or -1 to pick the first free slot', type=int)
     p.add_argument('bdev_name', help='Name of the bdev to expose as LUN 0 of the target')
@@ -77,7 +86,9 @@ def add_parser(subparsers):
                                                       scsi_target_num=args.scsi_target_num)
 
     p = subparsers.add_parser('vhost_scsi_controller_remove_target',
-                              help='Remove target from vhost controller')
+                              help="Remove SCSI target ID `scsi_target_num` from vhost target `ctrlr`."
+                                   " This method will fail if initiator is connected, but doesn't support"
+                                   " hot-remove (the `VIRTIO_SCSI_F_HOTPLUG` is not negotiated).")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.add_argument('scsi_target_num', help='SCSI target number (0-7)', type=int)
     p.set_defaults(func=vhost_scsi_controller_remove_target)
@@ -86,7 +97,11 @@ def add_parser(subparsers):
         params = strip_globals(vars(args))
         args.client.vhost_create_blk_controller(**params)
 
-    p = subparsers.add_parser('vhost_create_blk_controller', help='Add a new vhost block controller')
+    p = subparsers.add_parser('vhost_create_blk_controller',
+                              help="Create vhost block controller If `readonly` is `true` then vhost"
+                                   " block target will be created as read only and fail any write"
+                                   " requests. The `VIRTIO_BLK_F_RO` feature flag will be offered to the"
+                                   " initiator.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.add_argument('dev_name', help='Name of the bdev to expose as the block device')
     p.add_argument('--cpumask', help="CPU mask for the controller's threads")
@@ -98,14 +113,18 @@ def add_parser(subparsers):
     def vhost_get_controllers(args):
         print_dict(args.client.vhost_get_controllers(name=args.name))
 
-    p = subparsers.add_parser('vhost_get_controllers', help='List all or specific vhost controller(s)')
+    p = subparsers.add_parser('vhost_get_controllers', help="Display information about all or specific vhost controller(s).")
     p.add_argument('-n', '--name', help='Name of a specific vhost controller to query. Default: list all')
     p.set_defaults(func=vhost_get_controllers)
 
     def vhost_delete_controller(args):
         args.client.vhost_delete_controller(ctrlr=args.ctrlr)
 
-    p = subparsers.add_parser('vhost_delete_controller', help='Delete a vhost controller')
+    p = subparsers.add_parser('vhost_delete_controller',
+                              help="Remove vhost target. This call will fail if there is an initiator"
+                                   " connected or there is at least one SCSI target configured in case"
+                                   " of vhost SCSI target. In the later case please remove all SCSI"
+                                   " targets first using vhost_scsi_controller_remove_target.")
     p.add_argument('ctrlr', help='Name of the vhost controller')
     p.set_defaults(func=vhost_delete_controller)
 
@@ -119,10 +138,8 @@ def add_parser(subparsers):
                                                             vq_size=args.vq_size))
 
     p = subparsers.add_parser('bdev_virtio_attach_controller',
-                              help="""Attach virtio controller using provided
-    transport type and device type. This will also create bdevs for any block devices connected to the
-    controller (for example, SCSI devices for a virtio-scsi controller).
-    Result is array of added bdevs.""")
+                              help="Create new initiator Virtio SCSI or Virtio Block bdev and expose all found"
+                                    " bdevs.")
     p.add_argument('name', help='Prefix used to name the resulting bdev(s)')
     p.add_argument('-t', '--trtype',
                    help='Virtio transport type', required=True,
@@ -141,21 +158,22 @@ def add_parser(subparsers):
     def bdev_virtio_scsi_get_devices(args):
         print_dict(args.client.bdev_virtio_scsi_get_devices())
 
-    p = subparsers.add_parser('bdev_virtio_scsi_get_devices', help='List all Virtio-SCSI devices.')
+    p = subparsers.add_parser('bdev_virtio_scsi_get_devices', help="Show information about all available Virtio SCSI devices.")
     p.set_defaults(func=bdev_virtio_scsi_get_devices)
 
     def bdev_virtio_detach_controller(args):
         args.client.bdev_virtio_detach_controller(name=args.name)
 
-    p = subparsers.add_parser('bdev_virtio_detach_controller', help="""Remove a Virtio device
-    This will delete all bdevs exposed by this device""")
+    p = subparsers.add_parser('bdev_virtio_detach_controller', help="Remove a Virtio device. This command can be used to remove any type of"
+                                                                     " virtio device.")
     p.add_argument('name', help='Name of the virtio bdev (e.g. "VirtioUser0")')
     p.set_defaults(func=bdev_virtio_detach_controller)
 
     def bdev_virtio_blk_set_hotplug(args):
         args.client.bdev_virtio_blk_set_hotplug(enable=args.enable, period_us=args.period_us)
 
-    p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help='Set hotplug options for bdev virtio_blk type.')
+    p = subparsers.add_parser('bdev_virtio_blk_set_hotplug', help="Enable/Disable the virtio blk hotplug monitor or change the monitor"
+                                                                   " period time")
     p.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction,
                    required=True, help='Enable the virtio-blk hotplug monitor')
     p.add_argument('-r', '--period-us',

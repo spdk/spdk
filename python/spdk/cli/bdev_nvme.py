@@ -19,7 +19,25 @@ def add_parser(subparsers):
                                                 svcname=args.svcname,
                                                 hostnqn=args.hostnqn)
 
-    p = subparsers.add_parser('bdev_nvme_start_mdns_discovery', help='Start mdns based automatic discovery')
+    p = subparsers.add_parser('bdev_nvme_start_mdns_discovery',
+                              help="Starts an mDNS based discovery service for the specified service"
+                                   " type for the auto-discovery of discovery controllers (NVMe"
+                                   " TP-8009). The discovery service will listen for the mDNS discovery"
+                                   " events from the Avahi-daemon and will connect to the newly learnt"
+                                   " discovery controllers. Then the discovery service will"
+                                   " automatically attach to any subsystem found in the discovery log"
+                                   " page from the discovery controllers learnt using mDNS. When"
+                                   " determining a controller name to use when attaching, it will use"
+                                   " the 'name' parameter as a prefix, followed by a unique integer"
+                                   " assigned for each of the discovery controllers learnt through"
+                                   " mDNS, followed by a unique integer for that discovery service. If"
+                                   " the discovery service identifies a subsystem that has been"
+                                   " previously attached but is listed with a different path, it will"
+                                   " use the same controller name as the previous entry, and connect as"
+                                   " a multipath. When the discovery service sees that a subsystem"
+                                   " entry has been removed from the log page, it will automatically"
+                                   " detach from that controller as well. The 'name' is also used to"
+                                   " later stop the discovery service.")
     p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
     p.add_argument('-s', '--svcname', help='Service type to discover: e.g., _nvme-disc._tcp', required=True)
     p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
@@ -28,14 +46,17 @@ def add_parser(subparsers):
     def bdev_nvme_stop_mdns_discovery(args):
         args.client.bdev_nvme_stop_mdns_discovery(name=args.name)
 
-    p = subparsers.add_parser('bdev_nvme_stop_mdns_discovery', help='Stop automatic mdns discovery')
+    p = subparsers.add_parser('bdev_nvme_stop_mdns_discovery',
+                              help="Stops a mDNS discovery service. This includes detaching any"
+                                   " controllers that were discovered via the service that is being"
+                                   " stopped.")
     p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_mdns_discovery)
 
     def bdev_nvme_get_mdns_discovery_info(args):
         print_dict(args.client.bdev_nvme_get_mdns_discovery_info())
 
-    p = subparsers.add_parser('bdev_nvme_get_mdns_discovery_info', help='Get information about the automatic mdns discovery')
+    p = subparsers.add_parser('bdev_nvme_get_mdns_discovery_info', help="Get the information about the mDNS discovery service instances.")
     p.set_defaults(func=bdev_nvme_get_mdns_discovery_info)
 
     def bdev_nvme_set_options(args):
@@ -44,7 +65,15 @@ def add_parser(subparsers):
         args.client.bdev_nvme_set_options(**params)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
-                              help='Set options for the bdev nvme type. This is startup command.')
+                              help="Set global parameters for all bdev NVMe. This RPC may only be called"
+                                   " before SPDK subsystems have been initialized or any bdev NVMe has"
+                                   " been created. Parameters, ctrlr_loss_timeout_sec,"
+                                   " reconnect_delay_sec, and fast_io_fail_timeout_sec, are for I/O"
+                                   " error resiliency. They can be overridden if they are given by the"
+                                   " RPC bdev_nvme_attach_controller. The `multipath_opts` parameter"
+                                   " sets the default creation-time multipath policy, selector, and"
+                                   " minimum I/O count. These defaults can also be overridden by"
+                                   " `bdev_nvme_attach_controller`.")
     p.add_argument('-a', '--action-on-timeout',
                    choices=['none', 'reset', 'abort'],
                    help="Action to take on command time out")
@@ -145,7 +174,10 @@ def add_parser(subparsers):
     def bdev_nvme_set_hotplug(args):
         args.client.bdev_nvme_set_hotplug(enable=args.enable, period_us=args.period_us)
 
-    p = subparsers.add_parser('bdev_nvme_set_hotplug', help='Set hotplug options for bdev nvme type.')
+    p = subparsers.add_parser('bdev_nvme_set_hotplug',
+                              help="Change settings of the NVMe hotplug feature. If enabled, PCIe NVMe"
+                                   " bdevs will be automatically discovered on insertion and deleted on"
+                                   " removal.")
     p.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction,
                    required=True, help='Enable or disable hotplug')
     p.add_argument('-r', '--period-us',
@@ -157,7 +189,24 @@ def add_parser(subparsers):
         params = group_as(params, 'multipath_opts', ['policy', 'selector', 'min_io'])
         print_array(args.client.bdev_nvme_attach_controller(**params))
 
-    p = subparsers.add_parser('bdev_nvme_attach_controller', help='Add bdevs with nvme backend')
+    p = subparsers.add_parser('bdev_nvme_attach_controller',
+                              help="Construct an NVMe bdev. This RPC can also be used to add additional"
+                                   " paths to an existing controller to enable multipathing. This is"
+                                   " done by specifying the `name` parameter as an existing controller."
+                                   " When adding an additional path, the hostnqn, hostsvcid, hostaddr,"
+                                   " prchk_reftag, and prchk_guard_arguments must not be specified and"
+                                   " are assumed to have the same value as the existing path. The"
+                                   " parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and"
+                                   " `fast_io_fail_timeout_sec`, are mutually dependent. If"
+                                   " `reconnect_delay_sec` is non-zero, `ctrlr_loss_timeout_sec` has to"
+                                   " be -1 or not less than `reconnect_delay_sec`. If"
+                                   " `reconnect_delay_sec` is zero, `ctrlr_loss_timeout_sec` has to be"
+                                   " zero. If `fast_io_fail_timeout_sec` is not zero, it has to be not"
+                                   " less than `reconnect_delay_sec` and less than"
+                                   " `ctrlr_loss_timeout_sec` if `ctrlr_loss_timeout_sec` is not -1."
+                                   " The `multipath_opts` parameter configures the policy when the"
+                                   " controller is created. Every path attached to the same multipath"
+                                   " controller must use identical multipath options.")
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
@@ -229,7 +278,7 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_nvme_get_controllers(name=args.name))
 
     p = subparsers.add_parser(
-        'bdev_nvme_get_controllers', help='Display current NVMe controllers list or required NVMe controller')
+        'bdev_nvme_get_controllers', help="Get information about NVMe controllers.")
     p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0")
     p.set_defaults(func=bdev_nvme_get_controllers)
 
@@ -245,7 +294,13 @@ def add_parser(subparsers):
                                              hostsvcid=args.hostsvcid)
 
     p = subparsers.add_parser('bdev_nvme_detach_controller',
-                              help='Detach an NVMe controller and delete any associated bdevs')
+                              help="Detach NVMe controller and delete any associated bdevs. Optionally,"
+                                   " If all of the transport ID options are specified, only remove that"
+                                   " transport path from the specified controller. If that is the only"
+                                   " available path for the controller, this will also result in the"
+                                   " controller being detached and the associated bdevs being deleted."
+                                   " returns true if the controller and bdevs were successfully"
+                                   " destroyed or the address was properly removed, false otherwise.")
     p.add_argument('name', help="Name of the controller")
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie')
@@ -268,7 +323,15 @@ def add_parser(subparsers):
                                             cntlid=args.cntlid)
 
     p = subparsers.add_parser('bdev_nvme_reset_controller',
-                              help='Reset an NVMe controller or all NVMe controllers in an NVMe bdev controller')
+                              help="For non NVMe multipath, reset an NVMe controller whose name is"
+                                   " given by the `name` parameter. For NVMe multipath, an NVMe bdev"
+                                   " controller is created and it aggregates multiple NVMe controllers."
+                                   " The `name` parameter is an NVMe bdev controller name and the"
+                                   " `cntlid` parameter is used to identify an NVMe controller in the"
+                                   " NVMe bdev controller. Reset only one NVMe-oF controller if the"
+                                   " `cntlid` parameter is specified, or all NVMe-oF controllers in an"
+                                   " NVMe bdev controller if it is omitted. Returns true if the"
+                                   " controller reset was successful, false otherwise.")
     p.add_argument('name', help="Name of the NVMe controller")
     p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_reset_controller)
@@ -279,7 +342,16 @@ def add_parser(subparsers):
                                              cntlid=args.cntlid)
 
     p = subparsers.add_parser('bdev_nvme_enable_controller',
-                              help='Enable an NVMe controller or all NVMe controllers in an NVMe bdev controller')
+                              help="For non NVMe multipath, enable an NVMe controller whose name is"
+                                   " given by the `name` parameter. For NVMe multipath, an NVMe bdev"
+                                   " controller is created and it aggregates multiple NVMe controllers."
+                                   " The `name` parameter is an NVMe bdev controller name and the"
+                                   " `cntlid` parameter is used to identify an NVMe controller in the"
+                                   " NVMe bdev controller. Enable only one NVMe-oF controller if the"
+                                   " `cntlid` parameter is specified, or all NVMe-oF controllers in an"
+                                   " NVMe bdev controller if it is omitted. Returns true if the"
+                                   " controller enablement was successful or a controller was already"
+                                   " enabled, false otherwise.")
     p.add_argument('name', help="Name of the NVMe controller")
     p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_enable_controller)
@@ -290,7 +362,16 @@ def add_parser(subparsers):
                                               cntlid=args.cntlid)
 
     p = subparsers.add_parser('bdev_nvme_disable_controller',
-                              help='Disable an NVMe controller or all NVMe controllers in an NVMe bdev controller')
+                              help="For non NVMe multipath, disable an NVMe controller whose name is"
+                                   " given by the `name` parameter. For NVMe multipath, an NVMe bdev"
+                                   " controller is created and it aggregates multiple NVMe controllers."
+                                   " The `name` parameter is an NVMe bdev controller name and the"
+                                   " `cntlid` parameter is used to identify an NVMe controller in the"
+                                   " NVMe bdev controller. Disable only one NVMe-oF controller if the"
+                                   " `cntlid` parameter is specified, or all NVMe-oF controllers in an"
+                                   " NVMe bdev controller if it is omitted. Returns true if the"
+                                   " controller disablement was successful or a controller was already"
+                                   " disabled, false otherwise.")
     p.add_argument('name', help="Name of the NVMe controller")
     p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_disable_controller)
@@ -309,7 +390,20 @@ def add_parser(subparsers):
                                            reconnect_delay_sec=args.reconnect_delay_sec,
                                            fast_io_fail_timeout_sec=args.fast_io_fail_timeout_sec)
 
-    p = subparsers.add_parser('bdev_nvme_start_discovery', help='Start automatic discovery')
+    p = subparsers.add_parser('bdev_nvme_start_discovery',
+                              help="Start a discovery service for the discovery subsystem of the"
+                                   " specified transport ID. The discovery service will read the"
+                                   " discovery log page for the specified discovery subsystem, and"
+                                   " automatically attach to any subsystems found in the log page. When"
+                                   " determining a controller name to use when attaching, it will use"
+                                   " the 'name' parameter as a prefix, followed by a unique integer for"
+                                   " that discovery service. If the discovery service identifies a"
+                                   " subsystem that has been previously attached but is listed with a"
+                                   " different path, it will use the same controller name as the"
+                                   " previous entry, and connect as a multipath. When the discovery"
+                                   " service sees that a subsystem entry has been removed from the log"
+                                   " page, it will automatically detach from that controller as well."
+                                   " The 'name' is also used to later stop the discovery service.")
     p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
@@ -351,20 +445,22 @@ def add_parser(subparsers):
     def bdev_nvme_stop_discovery(args):
         args.client.bdev_nvme_stop_discovery(name=args.name)
 
-    p = subparsers.add_parser('bdev_nvme_stop_discovery', help='Stop automatic discovery')
+    p = subparsers.add_parser('bdev_nvme_stop_discovery',
+                              help="Stop a discovery service. This includes detaching any controllers"
+                                   " that were discovered via the service that is being stopped.")
     p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_discovery)
 
     def bdev_nvme_get_discovery_info(args):
         print_dict(args.client.bdev_nvme_get_discovery_info())
 
-    p = subparsers.add_parser('bdev_nvme_get_discovery_info', help='Get information about the automatic discovery')
+    p = subparsers.add_parser('bdev_nvme_get_discovery_info', help="Get information about the discovery service.")
     p.set_defaults(func=bdev_nvme_get_discovery_info)
 
     def bdev_nvme_get_io_paths(args):
         print_dict(args.client.bdev_nvme_get_io_paths(name=args.name))
 
-    p = subparsers.add_parser('bdev_nvme_get_io_paths', help='Display active I/O paths')
+    p = subparsers.add_parser('bdev_nvme_get_io_paths', help="Display all or the specified NVMe bdev's active I/O paths.")
     p.add_argument('-n', '--name', help="Name of the NVMe bdev")
     p.set_defaults(func=bdev_nvme_get_io_paths)
 
@@ -374,17 +470,20 @@ def add_parser(subparsers):
                                               cntlid=args.cntlid)
 
     p = subparsers.add_parser('bdev_nvme_set_preferred_path',
-                              help="""Set the preferred I/O path for an NVMe bdev when in multipath mode""")
+                              help="Set the preferred I/O path for an NVMe bdev in multipath mode."
+                                   " NOTE: This RPC does not support NVMe bdevs in failover mode.")
     p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
     p.add_argument('-c', '--cntlid', help='NVMe-oF controller ID', type=int, required=True)
     p.set_defaults(func=bdev_nvme_set_preferred_path)
+
 
     def bdev_nvme_get_path_iostat(args):
         print_dict(args.client.bdev_nvme_get_path_iostat(name=args.name))
 
     p = subparsers.add_parser('bdev_nvme_get_path_iostat',
-                              help="""Display current I/O statistics of all the IO paths of the blockdev. It can be
-                              called when io_path_stat is true.""")
+                              help="Get I/O statistics for IO paths of the block device. Call RPC"
+                                   " bdev_nvme_set_options to set io_path_stat true before using this"
+                                   " RPC.")
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: NVMe0n1", required=True)
     p.set_defaults(func=bdev_nvme_get_path_iostat)
 
@@ -392,7 +491,7 @@ def add_parser(subparsers):
         args.client.bdev_nvme_cuse_register(name=args.name)
 
     p = subparsers.add_parser('bdev_nvme_cuse_register',
-                              help='Register CUSE devices on NVMe controller')
+                              help="Register CUSE device on NVMe controller.")
     p.add_argument('-n', '--name',
                    help='Name of the NVMe controller. Example: Nvme0', required=True)
     p.set_defaults(func=bdev_nvme_cuse_register)
@@ -401,7 +500,7 @@ def add_parser(subparsers):
         args.client.bdev_nvme_cuse_unregister(name=args.name)
 
     p = subparsers.add_parser('bdev_nvme_cuse_unregister',
-                              help='Unregister CUSE devices on NVMe controller')
+                              help="Unregister CUSE device on NVMe controller.")
     p.add_argument('-n', '--name',
                    help='Name of the NVMe controller. Example: Nvme0', required=True)
     p.set_defaults(func=bdev_nvme_cuse_unregister)
@@ -412,8 +511,11 @@ def add_parser(subparsers):
                                        dhchap_ctrlr_key=args.dhchap_ctrlr_key)
 
     p = subparsers.add_parser('bdev_nvme_set_keys',
-                              help='Set DH-HMAC-CHAP keys and force (re)authentication on all '
-                              'connected qpairs')
+                              help="Set DH-HMAC-CHAP keys and force (re)authentication on all connected"
+                                   " qpairs across all multipath controllers. If none of the keys are"
+                                   " provided, the keys will be cleared, meaning that any new qpairs"
+                                   " won't be authenticated. If successful, existing qpairs won't be"
+                                   " disconnected/reconnected.")
     p.add_argument('name', help='Name of the NVMe controller')
     p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
     p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
@@ -425,7 +527,7 @@ def add_parser(subparsers):
                                                      filename=args.filename,
                                                      commit_action=args.commit_action))
 
-    p = subparsers.add_parser('bdev_nvme_apply_firmware', help='Download and commit firmware to NVMe device')
+    p = subparsers.add_parser('bdev_nvme_apply_firmware', help="Download and commit firmware to NVMe device.")
     p.add_argument('filename', help='filename of the firmware to download')
     p.add_argument('bdev_name', help='name of the NVMe device')
     p.add_argument('commit_action', choices=['replace_and_enable', 'activate_immediate'], nargs='?',
@@ -436,14 +538,14 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_nvme_get_transport_statistics())
 
     p = subparsers.add_parser('bdev_nvme_get_transport_statistics',
-                              help='Get bdev_nvme poll group transport statistics')
+                              help="Get bdev_nvme poll group transport statistics.")
     p.set_defaults(func=bdev_nvme_get_transport_statistics)
 
     def bdev_nvme_get_controller_health_info(args):
         print_dict(args.client.bdev_nvme_get_controller_health_info(name=args.name))
 
     p = subparsers.add_parser('bdev_nvme_get_controller_health_info',
-                              help='Display health log of the required NVMe bdev controller.')
+                              help="Display health log of the required NVMe bdev device.")
     p.add_argument('-c', '--name', help="Name of the NVMe bdev controller. Example: Nvme0", required=True)
     p.set_defaults(func=bdev_nvme_get_controller_health_info)
 
@@ -453,7 +555,8 @@ def add_parser(subparsers):
                                      nvme_ctrlr_name=args.nvme_ctrlr_name,
                                      password=args.password)
 
-    p = subparsers.add_parser('bdev_nvme_opal_init', help='take ownership and activate')
+    p = subparsers.add_parser('bdev_nvme_opal_init', help="This is used to initialize OPAL of a given NVMe ctrlr, including taking"
+                                                           " ownership and activating.")
     p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
     p.add_argument('-p', '--password', help='password for admin', required=True)
     p.set_defaults(func=bdev_nvme_opal_init)
@@ -462,7 +565,8 @@ def add_parser(subparsers):
         args.client.bdev_nvme_opal_revert(
                                        nvme_ctrlr_name=args.nvme_ctrlr_name,
                                        password=args.password)
-    p = subparsers.add_parser('bdev_nvme_opal_revert', help='Revert to default factory settings')
+    p = subparsers.add_parser('bdev_nvme_opal_revert', help="This is used to revert OPAL to its factory settings. Erase all user"
+                                                             " configuration and data.")
     p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
     p.add_argument('-p', '--password', help='password', required=True)
     p.set_defaults(func=bdev_nvme_opal_revert)
@@ -480,7 +584,13 @@ def add_parser(subparsers):
                                                metadata_len=args.metadata_len,
                                                timeout_ms=args.timeout_ms))
 
-    p = subparsers.add_parser('bdev_nvme_send_cmd', help='NVMe passthrough cmd.')
+    p = subparsers.add_parser('bdev_nvme_send_cmd',
+                              help="Send NVMe command directly to NVMe controller or namespace."
+                                   " Parameters and responses encoded by base64 urlsafe need further"
+                                   " processing. Notice: bdev_nvme_send_cmd requires user to guarantee"
+                                   " the correctness of NVMe command itself, and also optional"
+                                   " parameters. Illegal command contents or mismatching buffer size may"
+                                   " result in unpredictable behavior.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
     p.add_argument('-r', '--data-direction', choices=['c2h', 'h2c'], help='Direction of data transfer', required=True)
@@ -506,7 +616,7 @@ def add_parser(subparsers):
                                                           sct=args.sct,
                                                           sc=args.sc))
     p = subparsers.add_parser('bdev_nvme_add_error_injection',
-                              help='Add a NVMe command error injection.')
+                              help="Add a NVMe command error injection for a bdev nvme controller.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command', required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the NVMe command.""", required=True, type=int)
@@ -526,7 +636,7 @@ def add_parser(subparsers):
                                                              cmd_type=args.cmd_type,
                                                              opc=args.opc))
     p = subparsers.add_parser('bdev_nvme_remove_error_injection',
-                              help='Removes a NVMe command error injection.')
+                              help="Remove a NVMe command error injection.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
     p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
     p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
@@ -542,7 +652,7 @@ def add_parser(subparsers):
                                              range_length=args.range_length,
                                              password=args.password))
 
-    p = subparsers.add_parser('bdev_opal_create', help="""Create opal bdev on specified NVMe controller""")
+    p = subparsers.add_parser('bdev_opal_create', help="This is used to create an OPAL virtual bdev.")
     p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
     p.add_argument('-n', '--nsid', help='namespace ID (only support nsid=1 for now)', type=int, required=True)
     p.add_argument('-i', '--locking-range-id', help='locking range id', type=int, required=True)
@@ -556,7 +666,7 @@ def add_parser(subparsers):
                                                bdev_name=args.bdev_name,
                                                password=args.password))
 
-    p = subparsers.add_parser('bdev_opal_get_info', help='get opal locking range info for this bdev')
+    p = subparsers.add_parser('bdev_opal_get_info', help="This is used to get information of a given OPAL bdev.")
     p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
     p.add_argument('-p', '--password', help='password', required=True)
     p.set_defaults(func=bdev_opal_get_info)
@@ -566,7 +676,7 @@ def add_parser(subparsers):
                                   bdev_name=args.bdev_name,
                                   password=args.password)
 
-    p = subparsers.add_parser('bdev_opal_delete', help="""delete a virtual opal bdev""")
+    p = subparsers.add_parser('bdev_opal_delete', help="This is used to delete OPAL vbdev.")
     p.add_argument('-b', '--bdev-name', help='opal virtual bdev', required=True)
     p.add_argument('-p', '--password', help='admin password', required=True)
     p.set_defaults(func=bdev_opal_delete)
@@ -578,7 +688,10 @@ def add_parser(subparsers):
                                     user_id=args.user_id,
                                     user_password=args.user_password)
 
-    p = subparsers.add_parser('bdev_opal_new_user', help="""Add a user to opal bdev who can set lock state for this bdev""")
+    p = subparsers.add_parser('bdev_opal_new_user',
+                              help="This enables a new user to the specified opal bdev so that the user"
+                                   " can lock/unlock the bdev. Recalling this for the same opal bdev,"
+                                   " only the newest user will have the privilege.")
     p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
     p.add_argument('-p', '--admin-password', help='admin password', required=True)
     p.add_argument('-i', '--user-id', help='ID for new user', type=int, required=True)
@@ -592,7 +705,8 @@ def add_parser(subparsers):
                                           password=args.password,
                                           lock_state=args.lock_state)
 
-    p = subparsers.add_parser('bdev_opal_set_lock_state', help="""set lock state for an opal bdev""")
+    p = subparsers.add_parser('bdev_opal_set_lock_state', help="This is used to lock/unlock specific opal bdev providing user ID and"
+                                                                " password.")
     p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
     p.add_argument('-i', '--user-id', help='ID of the user who want to set lock state, either admin or a user assigned to this bdev',
                    type=int, required=True)
