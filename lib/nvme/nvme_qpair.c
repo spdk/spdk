@@ -844,6 +844,18 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 
 	assert(num_requests > 0);
 
+	/*
+	 * This function can be invoked while the qpair is only CONNECTED (for example, the transport
+	 * connect poll replays queued requests as soon as the connection completes). If we just popped
+	 * the head request and then submitted it from here, that submit would re-enter
+	 * nvme_qpair_check_enabled() in _nvme_qpair_submit_request(), which flips the state to ENABLED
+	 * and drains the rest of the queue ahead of the head before submitting this head. This results
+	 * in the head request being submitted last, after the complete queue has been drained, which is
+	 * not desired. For a fused COMPARE/WRITE pair that reverses their on-wire order: the FUSE_SECOND
+	 * WRITE reaches the controller before the FUSE_FIRST COMPARE and is aborted with MISSING FUSED.
+	 */
+	nvme_qpair_check_enabled(qpair);
+
 	for (i = 0; i < num_requests; i++) {
 		if (qpair->ctrlr->is_resetting) {
 			break;

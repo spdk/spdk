@@ -24,8 +24,27 @@ struct nvme_driver _g_nvme_driver = {
 };
 
 DEFINE_STUB_V(nvme_transport_qpair_abort_reqs, (struct spdk_nvme_qpair *qpair));
-DEFINE_STUB(nvme_transport_qpair_submit_request, int,
-	    (struct spdk_nvme_qpair *qpair, struct nvme_request *req), 0);
+
+#define UT_SUBMIT_ORDER_MAX 8
+static uint8_t g_submit_order_opc[UT_SUBMIT_ORDER_MAX];
+static uint32_t g_submit_order_count;
+
+DEFINE_RETURN_MOCK(nvme_transport_qpair_submit_request, int);
+int
+nvme_transport_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req)
+{
+	/* Record the order in which requests reach the transport so tests can assert on the
+	 * on-wire ordering (e.g. of a fused command pair).
+	 */
+	if (g_submit_order_count < UT_SUBMIT_ORDER_MAX) {
+		g_submit_order_opc[g_submit_order_count] = req->cmd.opc;
+	}
+	g_submit_order_count++;
+
+	HANDLE_RETURN_MOCK(nvme_transport_qpair_submit_request);
+
+	return 0;
+}
 DEFINE_STUB(spdk_nvme_ctrlr_free_io_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair));
@@ -631,6 +650,58 @@ test_nvme_qpair_resubmit_request_with_transport_failed(void)
 }
 
 static void
+test_nvme_qpair_resubmit_request_ordering(void)
+{
+	struct spdk_nvme_qpair		qpair = {};
+	struct spdk_nvme_ctrlr		ctrlr = {};
+	struct nvme_request		*compare_req;
+	struct nvme_request		*write_req;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+
+	/* Build a fused COMPARE (FUSE_FIRST) + WRITE (FUSE_SECOND) pair and queue them, in order,
+	 * while the qpair is not yet enabled. This mirrors a fused compare-and-write submitted on
+	 * a freshly connected qpair, whose halves get parked on queued_req until the connection
+	 * completes.
+	 */
+	compare_req = nvme_allocate_request_null(&qpair, dummy_cb_fn, NULL);
+	SPDK_CU_ASSERT_FATAL(compare_req != NULL);
+	TAILQ_INIT(&compare_req->children);
+	compare_req->cmd.opc = SPDK_NVME_OPC_COMPARE;
+	compare_req->cmd.fuse = SPDK_NVME_CMD_FUSE_FIRST;
+	compare_req->queued = true;
+
+	write_req = nvme_allocate_request_null(&qpair, dummy_cb_fn, NULL);
+	SPDK_CU_ASSERT_FATAL(write_req != NULL);
+	TAILQ_INIT(&write_req->children);
+	write_req->cmd.opc = SPDK_NVME_OPC_WRITE;
+	write_req->cmd.fuse = SPDK_NVME_CMD_FUSE_SECOND;
+	write_req->queued = true;
+
+	STAILQ_INSERT_TAIL(&qpair.queued_req, compare_req, stailq);
+	STAILQ_INSERT_TAIL(&qpair.queued_req, write_req, stailq);
+
+	/* Resubmit while the qpair is still CONNECTED (not yet ENABLED) - the state the transport
+	 * connect poll leaves it in. The queued requests must reach the transport in the same FIFO
+	 * order they were queued; otherwise the FUSE_SECOND WRITE would be submitted before the
+	 * FUSE_FIRST COMPARE and the controller would abort it with MISSING FUSED.
+	 */
+	qpair.state = NVME_QPAIR_CONNECTED;
+	g_submit_order_count = 0;
+	nvme_qpair_resubmit_requests(&qpair, 32);
+
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_ENABLED);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.queued_req));
+	SPDK_CU_ASSERT_FATAL(g_submit_order_count == 2);
+	CU_ASSERT(g_submit_order_opc[0] == SPDK_NVME_OPC_COMPARE);
+	CU_ASSERT(g_submit_order_opc[1] == SPDK_NVME_OPC_WRITE);
+
+	nvme_free_request(compare_req);
+	nvme_free_request(write_req);
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
 ut_spdk_nvme_cmd_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
 	CU_ASSERT(cb_arg == (void *)0xDEADBEEF);
@@ -792,6 +863,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_qpair_add_cmd_error_injection);
 	CU_ADD_TEST(suite, test_nvme_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
+	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_ordering);
 	CU_ADD_TEST(suite, test_nvme_qpair_manual_complete_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_init_deinit);
 	CU_ADD_TEST(suite, test_nvme_get_sgl_print_info);
