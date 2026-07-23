@@ -39,7 +39,8 @@ pkgdep_setup_python_venv() {
 
 	python3 -m venv --system-site-packages "$virtdir"
 	source "$virtdir/bin/activate"
-	python -m pip install -U "pip<26" setuptools wheel pip-tools
+	python -m pip install -U "pip<26" setuptools wheel pip-tools \
+		"typing-extensions>=4.6.0; python_version < '3.11'"
 	pip-compile --extra dev --strip-extras -o "$rootdir/scripts/pkgdep/requirements.txt" "${rootdir}/python/pyproject.toml"
 	pip3 install -r "$rootdir/scripts/pkgdep/requirements.txt"
 
