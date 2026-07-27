@@ -42,8 +42,12 @@ and NVMe-oF RDMA initiators.
 ### Advanced Examples
 
 ```bash
-# Mixed workload with latency tracking
+# 70/30 read/write split at a single I/O size, with latency tracking
 ./spdk_nvme_perf -q 64 -o 4096 -w randrw -M 70 -t 300 -L \
+  -r "trtype:PCIe traddr:0000:01:00.0"
+
+# Blended I/O workloads in a single run (see Mixed Workloads below)
+./spdk_nvme_perf -q 64 -t 300 --mixed-workload 4k:randread:70,128k:randwrite:30 \
   -r "trtype:PCIe traddr:0000:01:00.0"
 
 # Multi-queue pairs per namespace usage
@@ -61,6 +65,7 @@ and NVMe-oF RDMA initiators.
 | `-t, --time`        | Test duration (seconds)            | `-t 300`                             |
 | `-r, --transport`   | Target specification               | See examples above                   |
 | `-c, --core-mask`   | CPU cores to use                   | `-c 0xFF`                            |
+| `--mixed-workload`  | Blend of sizes/workloads/ratios    | `--mixed-workload 4k:randread:100`   |
 
 For complete options list, use: `./spdk_nvme_perf --help`
 
@@ -120,6 +125,78 @@ Example:
 ```
 
 See NVMe Multi-Process documentation for detailed configuration.
+
+## Mixed Workloads
+
+`-o`/`-w`/`-M` describe a single I/O shape: one size, one access pattern, and
+optionally a read/write split at that one size. Real applications rarely look
+like that - a database issues small random reads while its log writer issues
+large sequential writes.
+
+`--mixed-workload` drives several weighted workloads from one set of queues:
+
+```text
+--mixed-workload <size>:<pattern>:<pct>[,<size>:<pattern>:<pct>,...]
+```
+
+| Field       | Meaning                                                            |
+|-------------|--------------------------------------------------------------------|
+| `<size>`    | I/O size; decimal bytes with an optional `k`/`K`/`m`/`M`/`g`/`G`   |
+| `<pattern>` | One of `read`, `write`, `randread`, `randwrite`                     |
+| `<pct>`     | Integer 1-100 share of the total I/O count; all must sum to 100    |
+
+`--mixed-workload` is mutually exclusive with `-o`, `-w` and `-M`; combining
+it with any of them is an error.
+
+```bash
+# 70% 4K random reads blended with 30% 128K random writes
+./build/bin/spdk_nvme_perf -q 128 -t 60 \
+  --mixed-workload 4k:randread:70,128k:randwrite:30 \
+  -r 'trtype:PCIe traddr:0000:01:00.0'
+
+# Small random reads competing with a large sequential write stream
+./build/bin/spdk_nvme_perf -q 128 -t 60 -c 0xF \
+  --mixed-workload 4k:randread:60,8k:randread:20,1m:write:20 \
+  -r 'trtype:TCP adrfam:IPv4 traddr:192.168.1.100 trsvcid:4420'
+```
+
+### Semantics
+
+- **Percentages are I/O counts, not bandwidth.** With
+  `4k:randread:70,128k:randwrite:30`, 30% of the *operations* are writes but
+  those writes are roughly 93% of the *bytes*. The summary reports both shares
+  so the distinction is visible.
+- **Random workloads** draw offsets from their own range, so each workload is
+  naturally aligned to its own I/O size. `-F/--zipf` is only supported when
+  every random workload in the mix shares the same I/O size, since the Zipf
+  generator is shared across them; a mix of random workloads with different
+  sizes rejects `-F/--zipf` at startup.
+- **Sequential workloads share a single cursor per queue.** A mix of
+  sequential sizes therefore forms one contiguous, non-overlapping stream
+  instead of several streams colliding with each other. The corollary is that
+  no individual sequential workload is sequential in isolation - only the
+  combined stream is.
+- **Buffers and geometry are sized from the largest workload**, so queue
+  depth and memory footprint are those of the biggest I/O in the mix.
+- A device is dropped from the run (with a warning) when any workload size is
+  not a multiple of its block size, or is larger than the device.
+
+### Output
+
+The once-per-second progress line gains a per-workload I/O rate, and the
+summary gains a per-workload breakdown:
+
+```text
+Per-workload breakdown:
+Workload                               IOPS        MiB/s    IO%  Bytes% AvgLat(us) MinLat(us) MaxLat(us)
+4096B randread (70% cfg)          254881.44       995.63  70.0%    6.8%      15.32       4.11     512.40
+131072B randwrite (30% cfg)       109234.90     13654.36  30.0%   93.2%     102.77      41.02    1893.60
+```
+
+Per-workload latency is reported separately because the aggregate
+`Average/min/max` row blends every transfer size, which is not meaningful once
+the sizes differ. Single-workload runs, including `-w rw`/`-w randrw`, keep
+their original output unchanged.
 
 ## Compiling perf on FreeBSD
 
