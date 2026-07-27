@@ -636,6 +636,7 @@ test_auth_failure1(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	auth = qpair.auth;
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	MOCK_SET(spdk_get_ticks_hz, 1000 * 1000);
 
 	/* Check failure1 message fields */
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
@@ -648,13 +649,16 @@ test_auth_failure1(void)
 	CU_ASSERT(g_req_completed);
 	CU_ASSERT_EQUAL(cpl->status.sct, 0);
 	CU_ASSERT_EQUAL(cpl->status.sc, 0);
-	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(msg->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(msg->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(msg->t_id, 8);
 	CU_ASSERT_EQUAL(msg->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(msg->rce, SPDK_NVMF_AUTH_FAILED);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 
 	/* Do a receive while expecting an auth send command */
@@ -667,13 +671,16 @@ test_auth_failure1(void)
 	CU_ASSERT(g_req_completed);
 	CU_ASSERT_EQUAL(cpl->status.sct, 0);
 	CU_ASSERT_EQUAL(cpl->status.sc, 0);
-	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(msg->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(msg->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(msg->t_id, 8);
 	CU_ASSERT_EQUAL(msg->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(msg->rce, SPDK_NVMF_AUTH_INCORRECT_PROTOCOL_MESSAGE);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 
 	/* Do a receive but specify a buffer that's too small */
@@ -717,6 +724,7 @@ test_auth_challenge(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	auth = qpair.auth;
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
+	MOCK_SET(spdk_get_ticks_hz, 1000 * 1000);
 
 	/* Successfully receive a challenge message */
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(msgbuf));
@@ -782,12 +790,15 @@ test_auth_challenge(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	MOCK_SET(RAND_bytes, 1);
 
@@ -800,12 +811,15 @@ test_auth_challenge(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 
 	/* Check spdk_nvme_dhchap_dhkey_get_pubkey failure */
@@ -818,12 +832,15 @@ test_auth_challenge(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_FAILED);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	MOCK_SET(spdk_nvme_dhchap_dhkey_get_pubkey, 0);
 
@@ -837,12 +854,15 @@ test_auth_challenge(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	MOCK_CLEAR(spdk_nvme_dhchap_get_digest_length);
 
@@ -1094,6 +1114,7 @@ test_auth_success1(void)
 	auth = qpair.auth;
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	auth->tid = 8;
+	MOCK_SET(spdk_get_ticks_hz, 1000 * 1000);
 
 	/* Successfully receive a success message */
 	ut_prep_recv_cmd(&req, &cmd, msgbuf, sizeof(*msg));
@@ -1139,13 +1160,16 @@ test_auth_success1(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 
 	/* Bad message length (smaller than msg + hl) */
@@ -1158,13 +1182,16 @@ test_auth_success1(void)
 
 	nvmf_auth_recv_exec(&req);
 	CU_ASSERT(g_req_completed);
-	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
-	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
 	CU_ASSERT_EQUAL(fail->auth_type, SPDK_NVMF_AUTH_TYPE_COMMON_MESSAGE);
 	CU_ASSERT_EQUAL(fail->auth_id, SPDK_NVMF_AUTH_ID_FAILURE1);
 	CU_ASSERT_EQUAL(fail->t_id, 8);
 	CU_ASSERT_EQUAL(fail->rc, SPDK_NVMF_AUTH_FAILURE);
 	CU_ASSERT_EQUAL(fail->rce, SPDK_NVMF_AUTH_INCORRECT_PAYLOAD);
+	MOCK_SET(spdk_get_ticks, NVMF_AUTH_FAILURE1_DELAY_US);
+	poll_threads();
+	CU_ASSERT_EQUAL(auth->state, NVMF_QPAIR_AUTH_ERROR);
+	CU_ASSERT_EQUAL(qpair.state, SPDK_NVMF_QPAIR_ERROR);
+	MOCK_SET(spdk_get_ticks, 0);
 	qpair.state = SPDK_NVMF_QPAIR_AUTHENTICATING;
 	auth->cvalid = false;
 	cmd.al = req.iov[0].iov_len = req.length = sizeof(*msg);
