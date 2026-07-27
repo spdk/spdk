@@ -63,6 +63,11 @@ fi
 # standard read_depth is 16. That triggers split of Write IO into several parts
 run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 36864 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4
 run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" --transport-stat
+# Blended I/O sizes and patterns from a single set of queues. The second run adds
+# --io-unit-size so the small workload consumes only part of the iov array that was
+# allocated for the large one.
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -t 2 --mixed-workload 4096:randread:70,131072:randwrite:30 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -O 16384 -t 2 --mixed-workload 4096:randread:50,262144:write:50 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT"
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
 

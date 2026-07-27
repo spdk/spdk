@@ -27,6 +27,79 @@ function nvme_perf() {
 	fi
 }
 
+function check_mixed_output() {
+	local out=$1
+
+	grep -q "Per-workload breakdown:" <<< "$out"
+	awk '
+		$1 == "4096B" && $2 == "randread" { small = $6 }
+		$1 == "12288B" && $2 == "randwrite" { large = $6 }
+		END { exit !(small > 0 && large > 0 && small < large && small / large > 0.5) }
+	' <<< "$out"
+}
+
+function nvme_perf_mixed_workload_invalid_args() {
+	local perf=$SPDK_BIN_DIR/spdk_nvme_perf
+
+	# Each case must fail on argument validation alone. Run this only when no
+	# stub holds the controllers, otherwise NOT would also pass on a probe failure.
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:30,131072:randwrite:30'
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:60,131072:randwrite:60'
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:bogus:100'
+	NOT $perf -q 1 -t 1 --mixed-workload '4kzz:randread:100'
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:0'
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:6,4096:read:4'
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:100' -o 4096
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:100' -w randread
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:100' -M 50
+	# -F/--zipf requires every random workload to share one IO size.
+	NOT $perf -q 1 -t 1 --mixed-workload '4096:randread:50,131072:randwrite:50' -F 1.2
+}
+
+function nvme_perf_mixed_workload_nvme() {
+	local perf=$SPDK_BIN_DIR/spdk_nvme_perf out
+
+	# Fail explicitly rather than silently skip if there is no local NVMe.
+	get_nvme_bdfs > /dev/null
+
+	# Blended sizes and workloads, exercising suffix parsing, multi-iov
+	# submission, and explicit-versus-legacy breakdown output.
+	$perf -q 32 -t 1 -i 0 --mixed-workload '4K:randread:70,128k:randwrite:30'
+	$perf -q 32 -t 1 -i 0 -O 16384 --mixed-workload '4096:randread:50,256K:write:50'
+	$perf -q 32 -t 1 -i 0 -F 1.2 --mixed-workload '4096:randread:50,4096:randwrite:50'
+	out=$($perf -q 32 -t 1 -i 0 --mixed-workload '4096:read:60,8192:write:40')
+	grep -q "Per-workload breakdown:" <<< "$out"
+	out=$($perf -q 32 -t 1 -i 0 -o 4096 -w randrw -M 50)
+	NOT grep -q "Per-workload breakdown:" <<< "$out"
+}
+
+# Exercise the AIO (or, with -R, io_uring) backend on a zram device.
+function nvme_perf_mixed_workload_zram() {
+	local perf=$SPDK_BIN_DIR/spdk_nvme_perf zram_dev_id dev out block_size dev_size io_size
+
+	init_zram
+	zram_dev_id=$(create_zram_dev)
+	set_zram_dev "$zram_dev_id" 64M
+	dev=/dev/zram$zram_dev_id
+	block_size=$(blockdev --getss "$dev")
+	dev_size=$(blockdev --getsize64 "$dev")
+
+	# These only warn and drop the device, so perf may exit non-zero if no
+	# other device is left; check the warning, not the exit status.
+	io_size=$((block_size + 1))
+	out=$($perf "$dev" "$@" -q 1 -t 1 -i 0 --mixed-workload "$io_size:read:100" 2>&1 || true)
+	grep -Fq "IO size $io_size (workload 0) is not a multiple of device $dev block size $block_size" <<< "$out"
+
+	io_size=$((dev_size + block_size))
+	out=$($perf "$dev" "$@" -q 1 -t 1 -i 0 --mixed-workload "$io_size:read:100" 2>&1 || true)
+	grep -Fq "IO size $io_size (workload 0) is larger than device $dev size $dev_size" <<< "$out"
+
+	out=$($perf "$dev" "$@" -q 32 -t 1 -i 0 --mixed-workload '4096:randread:70,12288:randwrite:30')
+	check_mixed_output "$out"
+
+	remove_zram_dev "$zram_dev_id"
+}
+
 function nvme_fio_test() {
 	PLUGIN_DIR=$rootdir/app/fio/nvme
 	ran_fio=false
@@ -84,6 +157,13 @@ fi
 run_test "nvme_reset" $testdir/reset/reset -q 64 -w write -o 4096 -t 5
 run_test "nvme_identify" nvme_identify
 run_test "nvme_perf" nvme_perf
+run_test "nvme_perf_mixed_workload_nvme" nvme_perf_mixed_workload_nvme
+if [[ $(uname -s) == Linux ]]; then
+	run_test "nvme_perf_mixed_workload_aio" nvme_perf_mixed_workload_zram
+	if [[ $SPDK_TEST_URING -eq 1 ]]; then
+		run_test "nvme_perf_mixed_workload_uring" nvme_perf_mixed_workload_zram -R
+	fi
+fi
 run_test "nvme_hello_world" $SPDK_EXAMPLE_DIR/hello_world -i 0
 run_test "nvme_sgl" $testdir/sgl/sgl
 run_test "nvme_e2edp" $testdir/e2edp/nvme_dp
@@ -101,6 +181,8 @@ if [ $(uname) != "FreeBSD" ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
+
+run_test "nvme_perf_mixed_workload_invalid_args" nvme_perf_mixed_workload_invalid_args
 
 run_test "bdev_nvme_reset_stuck_adm_cmd" $rootdir/test/nvme/nvme_reset_stuck_adm_cmd.sh
 

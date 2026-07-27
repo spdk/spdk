@@ -79,6 +79,9 @@ accel_mlx5_crc32c
 # Disabled due to compression related deprecations and removals
 unittest_dpdk_compressdev
 
+# No CI job runs nvme.sh with SPDK_TEST_URING=1
+nvme_perf_mixed_workload_uring
+
 # Disabled after move to spdk-ci
 accel_cdev_comp
 accel_cdev_decomp
