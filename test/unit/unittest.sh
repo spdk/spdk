@@ -238,6 +238,9 @@ if [[ $CONFIG_NVME_CUSE == y ]]; then
 fi
 
 run_test "unittest_nvmf" unittest_nvmf
+if [[ $CONFIG_HAVE_EVP_MAC == y ]]; then
+	run_test "unittest_nvmf_auth" $valgrind $testdir/lib/nvmf/auth.c/auth_ut
+fi
 if [[ $CONFIG_FC == y ]]; then
 	run_test "unittest_nvmf_fc" $valgrind $testdir/lib/nvmf/fc.c/fc_ut
 	run_test "unittest_nvmf_fc_ls" $valgrind $testdir/lib/nvmf/fc_ls.c/fc_ls_ut
