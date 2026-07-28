@@ -22,7 +22,6 @@
 	virtio_dev_write_dev_config;
 	virtio_dev_read_dev_config;
 	virtio_dev_backend_ops;
-	virtio_dev_has_feature;
 	virtio_dev_dump_json_info;
 	virtio_dev_enable_interrupts;
 	virtio_pci_dev_enumerate;
