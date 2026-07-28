@@ -155,7 +155,6 @@
 	spdk_nvmf_ctrlr_get_id;
 	spdk_nvmf_ctrlr_save_migr_data;
 	spdk_nvmf_ctrlr_restore_migr_data;
-	spdk_nvmf_req_get_xfer;
 	spdk_nvmf_poll_group_remove;
 	spdk_nvmf_ctrlr_async_event_error_event;
 	spdk_nvmf_ctrlr_abort_aer;
