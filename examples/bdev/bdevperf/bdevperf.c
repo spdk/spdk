@@ -1882,6 +1882,9 @@ job_init_rw(struct bdevperf_job *job, enum job_config_rw rw)
 		break;
 	case JOB_CONFIG_RW_RW:
 		job->is_random = false;
+		/* Generate seed even though this workload is not random, as it is also used
+		 * for determining the distribution of reads/writes in mixed workloads. */
+		job->seed = spdk_rand_xorshift64_seed();
 		break;
 	case JOB_CONFIG_RW_RANDRW:
 		job->is_random = true;
