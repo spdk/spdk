@@ -178,6 +178,21 @@ bdev_rbd_put_pool_ctx(struct bdev_rbd_pool_ctx *entry)
 }
 
 static void
+bdev_rbd_stop_update_watch(struct bdev_rbd *rbd)
+{
+	if (rbd->image == NULL || rbd->rbd_watch_handle == 0) {
+		return;
+	}
+
+	/* rbd_update_unwatch() waits for a callback that is already running,
+	 * so after it returns librbd will not invoke rbd_update_callback()
+	 * for this bdev again.
+	 */
+	rbd_update_unwatch(rbd->image, rbd->rbd_watch_handle);
+	rbd->rbd_watch_handle = 0;
+}
+
+static void
 bdev_rbd_free(struct bdev_rbd *rbd)
 {
 	if (!rbd) {
@@ -185,9 +200,11 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 	}
 
 	if (rbd->image) {
-		if (rbd->rbd_watch_handle) {
-			rbd_update_unwatch(rbd->image, rbd->rbd_watch_handle);
-		}
+		/* Already done by _bdev_rbd_destruct() for a registered bdev.
+		 * The error paths of bdev_rbd_create() still need it, since
+		 * they free the bdev without going through the destruct chain.
+		 */
+		bdev_rbd_stop_update_watch(rbd);
 		rbd_flush(rbd->image);
 		rbd_close(rbd->image);
 	}
@@ -728,6 +745,14 @@ static void
 _bdev_rbd_destruct(void *ctx)
 {
 	struct bdev_rbd *rbd = ctx;
+
+	/* Unwatch before unregistering: rbd_update_callback() defers its work
+	 * to the app thread with a raw bdev pointer, so a late notification
+	 * could be handled after bdev_rbd_free(). We are on the app thread,
+	 * so callbacks already queued still run before bdev_rbd_free_cb(),
+	 * and none can be queued once rbd_update_unwatch() returns.
+	 */
+	bdev_rbd_stop_update_watch(rbd);
 
 	spdk_io_device_unregister(rbd, bdev_rbd_free_cb);
 }
