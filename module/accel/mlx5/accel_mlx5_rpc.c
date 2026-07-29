@@ -12,11 +12,11 @@ static void
 rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 			   const struct spdk_json_val *params)
 {
-	struct accel_mlx5_attr attr = {};
+	struct spdk_accel_mlx5_attr attr = {};
 	struct rpc_mlx5_scan_accel_module_ctx req = {};
 	int rc;
 
-	accel_mlx5_get_default_attr(&attr);
+	spdk_accel_mlx5_get_default_attr(&attr, sizeof(attr));
 	req.qp_size = attr.qp_size;
 	req.num_requests = attr.num_requests;
 	req.allowed_devs = attr.allowed_devs;
@@ -41,7 +41,7 @@ rpc_mlx5_scan_accel_module(struct spdk_jsonrpc_request *request,
 	attr.crypto_split_blocks = req.crypto_split_blocks;
 	attr.enable_driver = req.enable_driver;
 
-	rc = accel_mlx5_enable(&attr);
+	rc = spdk_accel_mlx5_enable(&attr);
 	if (rc) {
 		spdk_jsonrpc_send_error_response_fmt(request, rc, "mlx5 scan failed with %d", rc);
 	} else {

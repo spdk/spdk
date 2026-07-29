@@ -2,6 +2,14 @@
 
 ## v26.09: (Upcoming Release)
 
+### accel
+
+Exposed the accel_mlx5 module API publicly. Added `spdk_accel_mlx5_get_default_attr()` and
+`spdk_accel_mlx5_enable()` functions along with the `struct spdk_accel_mlx5_attr` configuration
+structure to the public header `include/spdk/module/accel/mlx5.h`. This allows applications to
+configure and enable the MLX5 accelerator module with specific parameters such as queue size,
+number of requests, allowed devices, crypto split blocks, and driver mode for UMR operations.
+
 ### schema
 
 The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).

@@ -1,0 +1,6 @@
+{
+	global:
+		spdk_accel_mlx5_get_default_attr;
+		spdk_accel_mlx5_enable;
+	local: *;
+};

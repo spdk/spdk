@@ -100,7 +100,7 @@ struct accel_mlx5_module {
 	struct spdk_spinlock lock;
 	struct accel_mlx5_dev_ctx *dev_ctxs;
 	uint32_t num_ctxs;
-	struct accel_mlx5_attr attr;
+	struct spdk_accel_mlx5_attr attr;
 	char **allowed_devs;
 	size_t allowed_devs_count;
 	bool initialized;
@@ -2641,15 +2641,31 @@ err_out:
 }
 
 void
-accel_mlx5_get_default_attr(struct accel_mlx5_attr *attr)
+spdk_accel_mlx5_get_default_attr(struct spdk_accel_mlx5_attr *attr, size_t opts_size)
 {
 	assert(attr);
+	assert(opts_size > 0);
 
-	attr->qp_size = ACCEL_MLX5_QP_SIZE;
-	attr->num_requests = ACCEL_MLX5_NUM_REQUESTS;
-	attr->allowed_devs = NULL;
-	attr->crypto_split_blocks = 0;
-	attr->enable_driver = false;
+	memset(attr, 0, opts_size);
+	attr->opts_size = opts_size;
+
+#define SET_FIELD(field, value) \
+	if (offsetof(struct spdk_accel_mlx5_attr, field) + sizeof(attr->field) <= opts_size) { \
+		attr->field = value; \
+	} \
+
+	SET_FIELD(qp_size, ACCEL_MLX5_QP_SIZE);
+	SET_FIELD(num_requests, ACCEL_MLX5_NUM_REQUESTS);
+	SET_FIELD(allowed_devs, NULL);
+	SET_FIELD(crypto_split_blocks, 0);
+	SET_FIELD(enable_driver, false);
+
+	/* Do not remove this statement, you should always update this statement when
+	 * you adding a new field, and do not forget to add the SET_FIELD statement
+	 * for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_accel_mlx5_attr) == 25, "Incorrect size");
+
+#undef SET_FIELD
 }
 
 static void
@@ -2717,7 +2733,7 @@ accel_mlx5_allowed_devs_parse(const char *allowed_devs)
 }
 
 int
-accel_mlx5_enable(struct accel_mlx5_attr *attr)
+spdk_accel_mlx5_enable(struct spdk_accel_mlx5_attr *attr)
 {
 	int rc;
 
@@ -2725,19 +2741,35 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 		return -EEXIST;
 	}
 	if (attr) {
-		if (attr->num_requests / spdk_env_get_core_count() < ACCEL_MLX5_MAX_MKEYS_IN_TASK) {
-			SPDK_ERRLOG("num requests per core must not be less than %u, current value %u\n",
-				    ACCEL_MLX5_MAX_MKEYS_IN_TASK, attr->num_requests / spdk_env_get_core_count());
+		if (attr->opts_size == 0) {
+			SPDK_ERRLOG("opts_size should not be zero\n");
 			return -EINVAL;
 		}
-		if (attr->qp_size < 8) {
+
+#define GET_FIELD(field, defval) \
+	(offsetof(struct spdk_accel_mlx5_attr, field) + sizeof(attr->field) <= attr->opts_size ? \
+	 attr->field : defval)
+
+		if (GET_FIELD(num_requests, ACCEL_MLX5_NUM_REQUESTS) /
+		    spdk_env_get_core_count() < ACCEL_MLX5_MAX_MKEYS_IN_TASK) {
+			SPDK_ERRLOG("num requests per core must not be less than %u, current value %u\n",
+				    ACCEL_MLX5_MAX_MKEYS_IN_TASK,
+				    GET_FIELD(num_requests, ACCEL_MLX5_NUM_REQUESTS) / spdk_env_get_core_count());
+			return -EINVAL;
+		}
+		if (GET_FIELD(qp_size, ACCEL_MLX5_QP_SIZE) < 8) {
 			SPDK_ERRLOG("qp_size must be at least 8\n");
 			return -EINVAL;
 		}
-		g_accel_mlx5.attr = *attr;
+
+		/* Initialize with defaults, then copy only what the caller provided */
+		spdk_accel_mlx5_get_default_attr(&g_accel_mlx5.attr, sizeof(g_accel_mlx5.attr));
+		memcpy(&g_accel_mlx5.attr, attr,
+		       spdk_min(attr->opts_size, sizeof(g_accel_mlx5.attr)));
+		g_accel_mlx5.attr.opts_size = sizeof(g_accel_mlx5.attr);
 		g_accel_mlx5.attr.allowed_devs = NULL;
 
-		if (attr->allowed_devs) {
+		if (GET_FIELD(allowed_devs, NULL)) {
 			/* Contains a copy of user's string */
 			g_accel_mlx5.attr.allowed_devs = strndup(attr->allowed_devs, ACCEL_MLX5_ALLOWED_DEVS_MAX_LEN);
 			if (!g_accel_mlx5.attr.allowed_devs) {
@@ -2754,8 +2786,10 @@ accel_mlx5_enable(struct accel_mlx5_attr *attr)
 				return rc;
 			}
 		}
+
+#undef GET_FIELD
 	} else {
-		accel_mlx5_get_default_attr(&g_accel_mlx5.attr);
+		spdk_accel_mlx5_get_default_attr(&g_accel_mlx5.attr, sizeof(g_accel_mlx5.attr));
 	}
 
 	g_accel_mlx5.enabled = true;
