@@ -484,10 +484,6 @@ bdev_reset_iostat(void *ctx, struct spdk_bdev *bdev)
 		return rc;
 	}
 
-	if (bdev->fn_table->reset_device_stat) {
-		bdev->fn_table->reset_device_stat(bdev->ctxt);
-	}
-
 	rpc_ctx->bdev_count++;
 	bdev_ctx->rpc_ctx = rpc_ctx;
 	bdev_reset_device_stat(bdev, rpc_ctx->mode, bdev_reset_iostat_done, bdev_ctx);

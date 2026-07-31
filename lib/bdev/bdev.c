@@ -7337,6 +7337,10 @@ bdev_reset_device_stat(struct spdk_bdev *bdev, enum spdk_bdev_reset_stat_mode mo
 	assert(bdev != NULL);
 	assert(cb != NULL);
 
+	if (bdev->fn_table->reset_device_stat) {
+		bdev->fn_table->reset_device_stat(bdev->ctxt);
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
 		SPDK_ERRLOG("Unable to allocate bdev_iostat_reset_ctx.\n");
