@@ -265,13 +265,10 @@ class JSONRPCClient(JSONRPCAbstractClient):
         results = []
         for resp in response:
             if 'error' in resp:
-                errors.append("\n".join(["Got JSON-RPC error response",
-                                         "response:", json.dumps(resp['error'], indent=2)]))
-                continue
-            results.append(resp.get('result'))
-        if len(errors) > 0:
-            raise JSONRPCException("\n".join(errors))
-        return results
+                errors.append(resp['error'])
+            else:
+                results.append(resp.get('result'))
+        return results, errors
 
     def call_batch(self, batch):
         self._logger.debug("call_batch() with %d requests" % len(batch))

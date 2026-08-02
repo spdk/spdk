@@ -99,13 +99,16 @@ def execute_script(parser, client, timeout, fd, batch=False):
             if not client.send_batch():
                 return
             response = client.recv()
-            results = JSONRPCClient.handle_batch_response(response)
+            results, errors = JSONRPCClient.handle_batch_response(response)
             for result in results:
                 if result is not None:
                     print(json.dumps(result, indent=2))
+            for error in errors:
+                print(json.dumps(error, indent=2), file=sys.stderr)
+            if errors:
+                exit(1)
         except JSONRPCException as ex:
             print("Exception:")
-            print(executed_rpc.strip())
             print(ex.message)
             exit(1)
 
