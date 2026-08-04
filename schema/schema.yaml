@@ -3576,6 +3576,9 @@ methods:
       - name: max_srq_depth
         type: uint32
         description: Number of elements in the per-thread shared receive queue (RDMA only)
+      - name: max_sgl_entries
+        type: uint32
+        description: Maximum number of SGL entries per request, which is the MSDBD advertised to the initiators (RDMA only)
       - name: no_srq
         type: boolean
         description: Disable shared receive queue even for devices that support it (RDMA only)

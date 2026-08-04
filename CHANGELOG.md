@@ -15,6 +15,10 @@ runtime by `nvme_rdma_ctrlr_get_max_sges()` to the target's advertised MSDBD and
 Removed the deprecated `discovery_filter` parameter from the `nvmf_set_config` RPC.
 Use `discovery_filters` instead.
 
+Added `max_sgl_entries` parameter to the `nvmf_create_transport` RPC. It selects the maximum number
+of SGL entries per request, which is the MSDBD advertised to the initiators, and it cannot exceed
+the build time maximum.
+
 ## v26.09
 
 ### accel

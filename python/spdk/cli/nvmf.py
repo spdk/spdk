@@ -133,6 +133,8 @@ def add_parser(subparsers):
                    type=int)
     p.add_argument('--ack-timeout', help='ACK timeout in milliseconds', type=int)
     p.add_argument('--data-wr-pool-size', help='RDMA data WR pool size (RDMA only)', type=int)
+    p.add_argument('--max-sgl-entries', help='Maximum number of SGL entries per request, which is the'
+                   ' MSDBD advertised to the initiators (RDMA only)', type=int)
     p.add_argument('--disable-command-passthru', action='store_true',
                    help='Disallow forwarding unrecognized I/O opcodes and the Identify Namespace admin command'
                         ' to the underlying bdev. Passthrough subsystems and admin_cmd_passthru are unaffected')

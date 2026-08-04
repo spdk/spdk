@@ -496,6 +496,7 @@ struct spdk_nvmf_rdma_port {
 struct rdma_transport_opts {
 	int		num_cqe;
 	uint32_t	max_srq_depth;
+	uint32_t	max_sgl_entries;
 	bool		no_srq;
 	bool		no_wr_batching;
 	int		acceptor_backlog;
@@ -543,6 +544,10 @@ static const struct spdk_json_object_decoder rdma_transport_opts_decoder[] = {
 	},
 	{
 		"max_srq_depth", offsetof(struct rdma_transport_opts, max_srq_depth),
+		spdk_json_decode_uint32, true
+	},
+	{
+		"max_sgl_entries", offsetof(struct rdma_transport_opts, max_sgl_entries),
 		spdk_json_decode_uint32, true
 	},
 	{
@@ -1011,6 +1016,7 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	device = rqpair->device;
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	qp_init_attr.qp_context	= rqpair;
 	qp_init_attr.pd		= device->pd;
@@ -1025,7 +1031,8 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	/* SEND, READ, and WRITE operations */
 	qp_init_attr.cap.max_send_wr	= (uint32_t)rqpair->max_queue_depth * 2;
-	qp_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
+	qp_init_attr.cap.max_send_sge	= spdk_min((uint32_t)device->attr.max_sge,
+					  rtransport->rdma_opts.max_sgl_entries);
 	qp_init_attr.cap.max_recv_sge	= spdk_min((uint32_t)device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
 	qp_init_attr.stats		= &rqpair->poller->stat.qp_stats;
 
@@ -1043,13 +1050,13 @@ nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2),
 					  qp_init_attr.cap.max_send_wr);
-	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, qp_init_attr.cap.max_send_sge);
+	rqpair->max_send_sge = spdk_min(rtransport->rdma_opts.max_sgl_entries,
+					qp_init_attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, qp_init_attr.cap.max_recv_sge);
 	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair);
 	SPDK_DEBUGLOG(rdma, "New RDMA Connection: %p\n", qpair);
 
 	if (rqpair->poller->srq == NULL) {
-		rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 		transport = &rtransport->transport;
 
 		opts.qp = rqpair->rdma_qp;
@@ -1490,7 +1497,8 @@ static int
 nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_device *device,
 		      struct spdk_nvmf_rdma_request *rdma_req,
 		      struct ibv_send_wr *wr,
-		      uint32_t total_length)
+		      uint32_t total_length,
+		      uint32_t max_sgl_entries)
 {
 	struct spdk_rdma_utils_memory_translation mem_translation;
 	struct ibv_sge	*sg_ele;
@@ -1500,7 +1508,7 @@ nvmf_rdma_fill_wr_sgl(struct spdk_nvmf_rdma_device *device,
 
 	wr->num_sge = 0;
 
-	while (total_length && wr->num_sge < SPDK_NVMF_MAX_SGL_ENTRIES) {
+	while (total_length && wr->num_sge < (int)max_sgl_entries) {
 		iov = &rdma_req->req.iov[rdma_req->iovpos];
 		rc = spdk_rdma_utils_get_translation(device->map, iov->iov_base, iov->iov_len, &mem_translation);
 		if (spdk_unlikely(rc)) {
@@ -1553,7 +1561,8 @@ nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rdma_req->iovpos = 0;
 
-	rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, wr, length);
+	rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, wr, length,
+				   rtransport->rdma_opts.max_sgl_entries);
 	if (spdk_unlikely(rc != 0)) {
 		goto err_exit;
 	}
@@ -1607,7 +1616,8 @@ nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtranspor
 		}
 
 		assert(lengths[i] > 0);
-		rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, current_wr, lengths[i]);
+		rc = nvmf_rdma_fill_wr_sgl(device, rdma_req, current_wr, lengths[i],
+					   rtransport->rdma_opts.max_sgl_entries);
 		if (spdk_unlikely(rc != 0)) {
 			rc = -ENOMEM;
 			goto err_exit;
@@ -2486,7 +2496,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			i;
 	uint32_t			sge_count;
 	uint32_t			min_in_capsule_data_size;
-	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
+	int				max_device_sge;
 	uint64_t			period;
 
 	rtransport = calloc(1, sizeof(*rtransport));
@@ -2502,6 +2512,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
 	rtransport->rdma_opts.num_cqe = DEFAULT_NVMF_RDMA_CQ_SIZE;
 	rtransport->rdma_opts.max_srq_depth = SPDK_NVMF_RDMA_DEFAULT_SRQ_DEPTH;
+	rtransport->rdma_opts.max_sgl_entries = SPDK_NVMF_MAX_SGL_ENTRIES;
 	rtransport->rdma_opts.no_srq = SPDK_NVMF_RDMA_DEFAULT_NO_SRQ;
 	rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	rtransport->rdma_opts.no_wr_batching = SPDK_NVMF_RDMA_DEFAULT_NO_WR_BATCHING;
@@ -2519,6 +2530,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     "  max_io_qpairs_per_ctrlr=%d,\n"
 		     "  in_capsule_data_size=%d, max_aq_depth=%d,\n"
 		     "  num_cqe=%d, max_srq_depth=%d, no_srq=%d,"
+		     "  max_sgl_entries=%u,"
 		     "  acceptor_backlog=%d, no_wr_batching=%d abort_timeout_sec=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
@@ -2528,6 +2540,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		     rtransport->rdma_opts.num_cqe,
 		     rtransport->rdma_opts.max_srq_depth,
 		     rtransport->rdma_opts.no_srq,
+		     rtransport->rdma_opts.max_sgl_entries,
 		     rtransport->rdma_opts.acceptor_backlog,
 		     rtransport->rdma_opts.no_wr_batching,
 		     opts->abort_timeout_sec);
@@ -2538,18 +2551,28 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		rtransport->rdma_opts.acceptor_backlog = SPDK_NVMF_RDMA_ACCEPTOR_BACKLOG;
 	}
 
+	if (rtransport->rdma_opts.max_sgl_entries == 0 ||
+	    rtransport->rdma_opts.max_sgl_entries > SPDK_NVMF_MAX_SGL_ENTRIES) {
+		SPDK_ERRLOG("max_sgl_entries must be in the range [1..%u], use "
+			    "--max-nvmf-sgl-entries at build time to raise the upper bound\n",
+			    SPDK_NVMF_MAX_SGL_ENTRIES);
+		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
+		return NULL;
+	}
+
 	spdk_iobuf_get_opts(&opts_iobuf, sizeof(opts_iobuf));
 	sge_count = opts->max_io_size / opts_iobuf.large_bufsize;
-	if (sge_count > NVMF_DEFAULT_TX_SGE) {
+	if (sge_count > rtransport->rdma_opts.max_sgl_entries) {
 		SPDK_ERRLOG("Unsupported max_io_size specified, %d bytes\n", opts->max_io_size);
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
 	}
 
-	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) * SPDK_NVMF_MAX_SGL_ENTRIES;
+	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) *
+				   rtransport->rdma_opts.max_sgl_entries;
 	if (opts->in_capsule_data_size < min_in_capsule_data_size) {
 		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=%u\n",
-			     min_in_capsule_data_size, SPDK_NVMF_MAX_SGL_ENTRIES);
+			     min_in_capsule_data_size, rtransport->rdma_opts.max_sgl_entries);
 		opts->in_capsule_data_size = min_in_capsule_data_size;
 	}
 
@@ -2566,8 +2589,8 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	data_wr_pool_size = opts->data_wr_pool_size;
-	if (data_wr_pool_size < SPDK_NVMF_MAX_SGL_ENTRIES * 2 * spdk_env_get_core_count()) {
-		data_wr_pool_size = SPDK_NVMF_MAX_SGL_ENTRIES * 2 * spdk_env_get_core_count();
+	if (data_wr_pool_size < rtransport->rdma_opts.max_sgl_entries * 2 * spdk_env_get_core_count()) {
+		data_wr_pool_size = rtransport->rdma_opts.max_sgl_entries * 2 * spdk_env_get_core_count();
 		SPDK_NOTICELOG("data_wr_pool_size is changed to %zu to guarantee enough cache for handling "
 			       "at least one IO in each core\n", data_wr_pool_size);
 	}
@@ -2595,6 +2618,7 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	i = 0;
 	rc = 0;
+	max_device_sge = rtransport->rdma_opts.max_sgl_entries;
 	while (contexts[i] != NULL) {
 		rc = create_ib_device(rtransport, contexts[i], &device);
 		if (rc < 0) {
@@ -2609,6 +2633,18 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	if (rc < 0) {
 		nvmf_rdma_destroy(&rtransport->transport, NULL, NULL);
 		return NULL;
+	}
+
+	/* Clamp the configured max_sgl_entries to what all discovered HCAs actually
+	 * support. Otherwise MSDBD would be advertised at the configured value while
+	 * the QPs are created with the smaller device limit, and nvmf_rdma_fill_wr_sgl
+	 * could build send WRs the QP cannot post. */
+	if (i > 0 && (uint32_t)max_device_sge < rtransport->rdma_opts.max_sgl_entries) {
+		SPDK_WARNLOG("max_sgl_entries %u exceeds min device max_sge %d; "
+			     "clamping to %d\n",
+			     rtransport->rdma_opts.max_sgl_entries, max_device_sge,
+			     max_device_sge);
+		rtransport->rdma_opts.max_sgl_entries = max_device_sge;
 	}
 
 	rc = generate_poll_fds(rtransport);
@@ -2669,6 +2705,7 @@ nvmf_rdma_dump_opts(struct spdk_nvmf_transport *transport, struct spdk_json_writ
 	}
 	spdk_json_write_named_int32(w, "acceptor_backlog", rtransport->rdma_opts.acceptor_backlog);
 	spdk_json_write_named_bool(w, "no_wr_batching", rtransport->rdma_opts.no_wr_batching);
+	spdk_json_write_named_uint32(w, "max_sgl_entries", rtransport->rdma_opts.max_sgl_entries);
 }
 
 static void
@@ -3757,11 +3794,12 @@ static void
 nvmf_rdma_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
 		     struct spdk_nvmf_ctrlr_data *cdata)
 {
-	struct spdk_nvmf_transport_opts *opts = &transport->opts;
+	struct spdk_nvmf_rdma_transport *rtransport;
 
-	cdata->nvmf_specific.msdbd = NVMF_DEFAULT_MSDBD;
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	cdata->nvmf_specific.msdbd = rtransport->rdma_opts.max_sgl_entries;
 
-	if (opts->in_capsule_data_size > 0x1000) {
+	if (transport->opts.in_capsule_data_size > 0x1000) {
 		SPDK_WARNLOG("In-capsule data is greater than 4KiB (MSDBD %u).\n",
 			     cdata->nvmf_specific.msdbd);
 		SPDK_WARNLOG("When used in conjunction with the NVMe-oF initiator from the Linux "

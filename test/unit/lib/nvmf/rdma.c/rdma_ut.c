@@ -187,6 +187,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rdma_req.req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
+	rtransport.rdma_opts.max_sgl_entries = NVMF_RDMA_DEFAULT_SGL_ENTRIES;
 	rtransport.transport.small_bufsize = RDMA_UT_MIN_IO_BUFFER_SIZE;
 	rtransport.transport.large_bufsize = SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
 	rtransport.data_wr_pool = NULL;
@@ -657,6 +658,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
+	rtransport.rdma_opts.max_sgl_entries = NVMF_RDMA_DEFAULT_SGL_ENTRIES;
 	rtransport.transport.small_bufsize = RDMA_UT_MIN_IO_BUFFER_SIZE;
 	rtransport.transport.large_bufsize = SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
 	rtransport.data_wr_pool = spdk_mempool_create("test_wr_pool", 128,
