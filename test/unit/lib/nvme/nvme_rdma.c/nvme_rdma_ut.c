@@ -1399,11 +1399,22 @@ test_nvme_rdma_ctrlr_get_max_sges(void)
 	rctrlr.max_sge = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 16;
 	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
-	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 16);
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == spdk_min(16,
+			NVME_RDMA_MAX_SGL_DESCRIPTORS));
 
-	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 32;
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = NVME_RDMA_MAX_SGL_DESCRIPTORS;
 	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
-	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == 16);
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == NVME_RDMA_MAX_SGL_DESCRIPTORS);
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 52;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == spdk_min(52,
+			NVME_RDMA_MAX_SGL_DESCRIPTORS));
+
+	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 53;
+	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;
+	CU_ASSERT(nvme_rdma_ctrlr_get_max_sges(&rctrlr.ctrlr) == spdk_min(53,
+			NVME_RDMA_MAX_SGL_DESCRIPTORS));
 
 	rctrlr.ctrlr.cdata.nvmf_specific.msdbd = 8;
 	rctrlr.ctrlr.cdata.nvmf_specific.ioccsz = 4096;

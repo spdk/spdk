@@ -38,8 +38,14 @@
 #define NVME_RDMA_DEFAULT_TX_SGE		2
 #define NVME_RDMA_DEFAULT_RX_SGE		1
 
-/* Max number of NVMe-oF SGL descriptors supported by the host */
-#define NVME_RDMA_MAX_SGL_DESCRIPTORS		16
+/* Compile-time upper bound for NVMe-oF SGL descriptor arrays.
+ * Configurable via --max-nvmf-sgl-entries at build time (SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES).
+ * Defaults to 16 when building without the nvmf target. The effective runtime value is
+ * clamped to min(this, dev_attr.max_sge, target MSDBD). */
+#ifndef SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES
+#define SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES	16
+#endif
+#define NVME_RDMA_MAX_SGL_DESCRIPTORS		SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES
 
 /* number of STAILQ entries for holding pending RDMA CM events. */
 #define NVME_RDMA_NUM_CM_EVENTS			256
