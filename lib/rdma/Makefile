@@ -7,22 +7,22 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-SO_VER := 9
+SO_VER := 10
 SO_MINOR := 0
 
-SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_rdma_provider.map)
+SPDK_MAP_FILE = $(abspath $(CURDIR)/spdk_rdma.map)
 
-LIBNAME = rdma_provider
+LIBNAME = rdma
 
 C_SRCS = common.c
 
 ifeq ($(CONFIG_RDMA_PROV),verbs)
-C_SRCS += rdma_provider_verbs.c
+C_SRCS += rdma_verbs.c
 else ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
-C_SRCS += rdma_provider_mlx5_dv.c
+C_SRCS += rdma_mlx5_dv.c
 LOCAL_SYS_LIBS += -lmlx5
 else
-$(error Wrong RDMA provider specified: $(CONFIG_RDMA_PROV))
+$(error Wrong RDMA module specified: $(CONFIG_RDMA_PROV))
 endif
 
 LOCAL_SYS_LIBS += -libverbs

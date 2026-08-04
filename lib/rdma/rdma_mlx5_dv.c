@@ -12,13 +12,13 @@
 #include "spdk/dma.h"
 
 #include "spdk_internal/rdma_cm.h"
-#include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma.h"
 #include "spdk_internal/mlx5.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 
 struct spdk_rdma_mlx5_dv_qp {
-	struct spdk_rdma_provider_qp common;
+	struct spdk_rdma_qp common;
 	struct spdk_memory_domain_rdma_ctx domain_ctx;
 	struct ibv_qp_ex *qpex;
 };
@@ -70,9 +70,9 @@ rdma_mlx5_dv_init_qpair(struct spdk_rdma_mlx5_dv_qp *mlx5_qp)
 	return rc;
 }
 
-struct spdk_rdma_provider_qp *
-spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
-			     struct spdk_rdma_provider_qp_init_attr *qp_attr)
+struct spdk_rdma_qp *
+spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
+		    struct spdk_rdma_qp_init_attr *qp_attr)
 {
 	assert(cm_id);
 	assert(qp_attr);
@@ -128,7 +128,7 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 	mlx5_qp->qpex = ibv_qp_to_qp_ex(qp);
 
 	if (!mlx5_qp->qpex) {
-		spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
+		spdk_rdma_qp_destroy(&mlx5_qp->common);
 		return NULL;
 	}
 	mlx5_qp->domain_ctx.size = sizeof(mlx5_qp->domain_ctx);
@@ -140,13 +140,13 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 				       SPDK_RDMA_DMA_DEVICE);
 	if (rc) {
 		SPDK_ERRLOG("Failed to create memory domain\n");
-		spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
+		spdk_rdma_qp_destroy(&mlx5_qp->common);
 		return NULL;
 	}
 	if (qp_attr->domain_transfer) {
-		if (!spdk_rdma_provider_accel_sequence_supported()) {
+		if (!spdk_rdma_accel_sequence_supported()) {
 			SPDK_ERRLOG("Data transfer functionality is not supported\n");
-			spdk_rdma_provider_qp_destroy(&mlx5_qp->common);
+			spdk_rdma_qp_destroy(&mlx5_qp->common);
 			return NULL;
 		}
 		spdk_memory_domain_set_data_transfer(mlx5_qp->common.domain, qp_attr->domain_transfer);
@@ -158,8 +158,8 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 }
 
 int
-spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-			     struct rdma_conn_param *conn_param)
+spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp,
+		    struct rdma_conn_param *conn_param)
 {
 	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
 
@@ -180,7 +180,7 @@ spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 int
-spdk_rdma_provider_qp_complete_connect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
 	int rc;
@@ -204,7 +204,7 @@ spdk_rdma_provider_qp_complete_connect(struct spdk_rdma_provider_qp *spdk_rdma_q
 }
 
 void
-spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
 	int rc;
@@ -235,7 +235,7 @@ spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 }
 
 int
-spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	int rc = 0;
 
@@ -262,8 +262,8 @@ spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 }
 
 bool
-spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-				     struct ibv_send_wr *first)
+spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp,
+			    struct ibv_send_wr *first)
 {
 	struct ibv_send_wr *tmp;
 	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
@@ -314,8 +314,8 @@ spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 int
-spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-				     struct ibv_send_wr **bad_wr)
+spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp,
+			    struct ibv_send_wr **bad_wr)
 {
 	struct spdk_rdma_mlx5_dv_qp *mlx5_qp;
 	int rc;
@@ -343,7 +343,7 @@ spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 bool
-spdk_rdma_provider_accel_sequence_supported(void)
+spdk_rdma_accel_sequence_supported(void)
 {
 	return spdk_mlx5_umr_implementer_is_registered();
 }

@@ -9,15 +9,15 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/rdma_cm.h"
-#include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma.h"
 #include "spdk_internal/rdma_utils.h"
 #include "spdk/log.h"
 
-struct spdk_rdma_provider_qp *
-spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
-			     struct spdk_rdma_provider_qp_init_attr *qp_attr)
+struct spdk_rdma_qp *
+spdk_rdma_qp_create(struct rdma_cm_id *cm_id,
+		    struct spdk_rdma_qp_init_attr *qp_attr)
 {
-	struct spdk_rdma_provider_qp *spdk_rdma_qp;
+	struct spdk_rdma_qp *spdk_rdma_qp;
 	int rc;
 	struct ibv_qp_init_attr attr = {
 		.qp_context = qp_attr->qp_context,
@@ -64,7 +64,7 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 	spdk_rdma_qp->cm_id = cm_id;
 	spdk_rdma_qp->domain = spdk_rdma_utils_get_memory_domain(qp_attr->pd);
 	if (!spdk_rdma_qp->domain) {
-		spdk_rdma_provider_qp_destroy(spdk_rdma_qp);
+		spdk_rdma_qp_destroy(spdk_rdma_qp);
 		return NULL;
 	}
 
@@ -74,8 +74,8 @@ spdk_rdma_provider_qp_create(struct rdma_cm_id *cm_id,
 }
 
 int
-spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-			     struct rdma_conn_param *conn_param)
+spdk_rdma_qp_accept(struct spdk_rdma_qp *spdk_rdma_qp,
+		    struct rdma_conn_param *conn_param)
 {
 	assert(spdk_rdma_qp != NULL);
 	assert(spdk_rdma_qp->cm_id != NULL);
@@ -84,14 +84,14 @@ spdk_rdma_provider_qp_accept(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 int
-spdk_rdma_provider_qp_complete_connect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_complete_connect(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	/* Nothing to be done for Verbs */
 	return 0;
 }
 
 void
-spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_destroy(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	assert(spdk_rdma_qp != NULL);
 
@@ -114,7 +114,7 @@ spdk_rdma_provider_qp_destroy(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 }
 
 int
-spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
+spdk_rdma_qp_disconnect(struct spdk_rdma_qp *spdk_rdma_qp)
 {
 	int rc = 0;
 
@@ -137,8 +137,8 @@ spdk_rdma_provider_qp_disconnect(struct spdk_rdma_provider_qp *spdk_rdma_qp)
 }
 
 bool
-spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-				     struct ibv_send_wr *first)
+spdk_rdma_qp_queue_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp,
+			    struct ibv_send_wr *first)
 {
 	struct ibv_send_wr *last;
 
@@ -164,8 +164,8 @@ spdk_rdma_provider_qp_queue_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 int
-spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
-				     struct ibv_send_wr **bad_wr)
+spdk_rdma_qp_flush_send_wrs(struct spdk_rdma_qp *spdk_rdma_qp,
+			    struct ibv_send_wr **bad_wr)
 {
 	int rc;
 
@@ -185,7 +185,7 @@ spdk_rdma_provider_qp_flush_send_wrs(struct spdk_rdma_provider_qp *spdk_rdma_qp,
 }
 
 bool
-spdk_rdma_provider_accel_sequence_supported(void)
+spdk_rdma_accel_sequence_supported(void)
 {
 	return false;
 }

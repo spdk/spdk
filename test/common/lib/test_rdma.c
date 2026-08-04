@@ -8,7 +8,7 @@
 #include "spdk/nvme.h"
 
 #include "spdk_internal/rdma_cm.h"
-#include "spdk_internal/rdma_provider.h"
+#include "spdk_internal/rdma.h"
 #include "spdk_internal/rdma_utils.h"
 #include "spdk_internal/mock.h"
 
@@ -24,31 +24,31 @@
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {};
 struct spdk_nvme_accel_fn_table g_spdk_nvme_transport_accel_fn_table = {};
 void *g_spdk_nvme_transport_accel_ctx = NULL;
-struct spdk_rdma_provider_qp g_spdk_rdma_qp = {};
-struct spdk_rdma_provider_srq g_spdk_rdma_srq = {};
+struct spdk_rdma_qp g_spdk_rdma_qp = {};
+struct spdk_rdma_srq g_spdk_rdma_srq = {};
 
-DEFINE_STUB(spdk_rdma_provider_qp_create, struct spdk_rdma_provider_qp *, (struct rdma_cm_id *cm_id,
-		struct spdk_rdma_provider_qp_init_attr *qp_attr), &g_spdk_rdma_qp);
-DEFINE_STUB(spdk_rdma_provider_qp_accept, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
-		struct rdma_conn_param *conn_param), 0);
-DEFINE_STUB(spdk_rdma_provider_qp_complete_connect, int,
-	    (struct spdk_rdma_provider_qp *spdk_rdma_qp), 0);
-DEFINE_STUB_V(spdk_rdma_provider_qp_destroy, (struct spdk_rdma_provider_qp *spdk_rdma_qp));
-DEFINE_STUB(spdk_rdma_provider_qp_disconnect, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp), 0);
-DEFINE_STUB(spdk_rdma_provider_qp_queue_send_wrs, bool, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
+DEFINE_STUB(spdk_rdma_qp_create, struct spdk_rdma_qp *, (struct rdma_cm_id *cm_id,
+		struct spdk_rdma_qp_init_attr *qp_attr), &g_spdk_rdma_qp);
+DEFINE_STUB(spdk_rdma_qp_accept, int, (struct spdk_rdma_qp *spdk_rdma_qp,
+				       struct rdma_conn_param *conn_param), 0);
+DEFINE_STUB(spdk_rdma_qp_complete_connect, int,
+	    (struct spdk_rdma_qp *spdk_rdma_qp), 0);
+DEFINE_STUB_V(spdk_rdma_qp_destroy, (struct spdk_rdma_qp *spdk_rdma_qp));
+DEFINE_STUB(spdk_rdma_qp_disconnect, int, (struct spdk_rdma_qp *spdk_rdma_qp), 0);
+DEFINE_STUB(spdk_rdma_qp_queue_send_wrs, bool, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_send_wr *first), true);
-DEFINE_STUB(spdk_rdma_provider_qp_flush_send_wrs, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
+DEFINE_STUB(spdk_rdma_qp_flush_send_wrs, int, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_send_wr **bad_wr), 0);
-DEFINE_STUB(spdk_rdma_provider_srq_create, struct spdk_rdma_provider_srq *,
-	    (struct spdk_rdma_provider_srq_init_attr *init_attr), &g_spdk_rdma_srq);
-DEFINE_STUB(spdk_rdma_provider_srq_destroy, int, (struct spdk_rdma_provider_srq *rdma_srq), 0);
-DEFINE_STUB(spdk_rdma_provider_srq_queue_recv_wrs, bool, (struct spdk_rdma_provider_srq *rdma_srq,
+DEFINE_STUB(spdk_rdma_srq_create, struct spdk_rdma_srq *,
+	    (struct spdk_rdma_srq_init_attr *init_attr), &g_spdk_rdma_srq);
+DEFINE_STUB(spdk_rdma_srq_destroy, int, (struct spdk_rdma_srq *rdma_srq), 0);
+DEFINE_STUB(spdk_rdma_srq_queue_recv_wrs, bool, (struct spdk_rdma_srq *rdma_srq,
 		struct ibv_recv_wr *first), true);
-DEFINE_STUB(spdk_rdma_provider_srq_flush_recv_wrs, int, (struct spdk_rdma_provider_srq *rdma_srq,
+DEFINE_STUB(spdk_rdma_srq_flush_recv_wrs, int, (struct spdk_rdma_srq *rdma_srq,
 		struct ibv_recv_wr **bad_wr), 0);
-DEFINE_STUB(spdk_rdma_provider_qp_queue_recv_wrs, bool, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
+DEFINE_STUB(spdk_rdma_qp_queue_recv_wrs, bool, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_recv_wr *first), true);
-DEFINE_STUB(spdk_rdma_provider_qp_flush_recv_wrs, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
+DEFINE_STUB(spdk_rdma_qp_flush_recv_wrs, int, (struct spdk_rdma_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr), 0);
 DEFINE_STUB(spdk_rdma_utils_create_mem_map, struct spdk_rdma_utils_mem_map *, (struct ibv_pd *pd,
 		uint32_t access_flags), NULL)

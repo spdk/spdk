@@ -42,7 +42,7 @@ BLOCKDEV_MODULES_LIST += ocfenv
 endif
 
 ifeq ($(CONFIG_RDMA),y)
-BLOCKDEV_MODULES_LIST += rdma_provider rdma_utils rdma_cm
+BLOCKDEV_MODULES_LIST += rdma rdma_utils rdma_cm
 BLOCKDEV_MODULES_PRIVATE_LIBS += -libverbs
 ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
 BLOCKDEV_MODULES_PRIVATE_LIBS += -lmlx5

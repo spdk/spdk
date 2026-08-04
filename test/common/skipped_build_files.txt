@@ -14,7 +14,7 @@ lib/util/base64_neon
 lib/util/base64_sve
 
 # Not configured for mlx5 dv testing
-lib/rdma_provider/rdma_provider_mlx5_dv
+lib/rdma/rdma_mlx5_dv
 
 # Not configured for using RDMA connection manager mock
 lib/rdma_cm/rdma_cm_mock
