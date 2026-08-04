@@ -11,7 +11,7 @@ import re
 import sys
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import rpc
 import yaml
@@ -20,6 +20,18 @@ from tabulate import tabulate
 
 # Get directory of this script
 base_dir = Path(__file__).resolve().parent.parent
+
+def _strip_argparse_default_hint(action: argparse.Action) -> Optional[str]:
+    """Remove a Python < 3.11 BooleanOptionalAction default hint."""
+    if not isinstance(action, argparse.BooleanOptionalAction) or not action.help:
+        return action.help
+
+    hints = (f" (default: {action.default})", " (default: %(default)s)")
+    for hint in hints:
+        if action.help.endswith(hint):
+            return action.help.removesuffix(hint)
+
+    return action.help
 
 
 def lint_json_examples() -> None:
@@ -220,8 +232,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     newtype = action.type
                 if types[param['type']] != newtype:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
-                # argparse.BooleanOptionalAction auto-appends " (default: %(default)s)" when default is concrete; strip it.
-                help_str = action.help.removesuffix(" (default: %(default)s)") if action.help else action.help
+                help_str = _strip_argparse_default_hint(action)
                 if param['description'] != help_str and not method['name'].startswith('bdev_'):
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'description' field is mismatched")
 
