@@ -1996,6 +1996,42 @@ nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	nvmf_poll_group_remove_subsystem_msg(ctx);
 }
 
+static inline void
+nvmf_sgroup_arm_completion(struct spdk_nvmf_subsystem_poll_group *sgroup,
+			   spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
+{
+	assert(sgroup->cb_fn == NULL);
+	assert(sgroup->cb_arg == NULL);
+	sgroup->cb_fn = cb_fn;
+	sgroup->cb_arg = cb_arg;
+}
+
+/* Mark namespace(s) PAUSING and return true if any have I/O outstanding. */
+static bool
+nvmf_sgroup_pause_ns(struct spdk_nvmf_subsystem_poll_group *sgroup, uint32_t nsid)
+{
+	struct spdk_nvmf_subsystem_pg_ns_info *ns_info;
+	bool draining = false;
+	uint32_t i;
+
+	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		for (i = 0; i < sgroup->num_ns; i++) {
+			ns_info = &sgroup->ns_info[i];
+			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+			draining |= (ns_info->io_outstanding > 0);
+		}
+	} else {
+		/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+		if (nsid - 1 < sgroup->num_ns) {
+			ns_info = &sgroup->ns_info[nsid - 1];
+			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+			draining = (ns_info->io_outstanding > 0);
+		}
+	}
+
+	return draining;
+}
+
 void
 nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_subsystem *subsystem,
@@ -2003,9 +2039,8 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 				spdk_nvmf_poll_group_mod_done cb_fn, void *cb_arg)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	struct spdk_nvmf_subsystem_pg_ns_info *ns_info = NULL;
+	bool draining;
 	int rc = 0;
-	uint32_t i;
 
 	if (subsystem->id >= group->num_sgroups) {
 		rc = -1;
@@ -2017,48 +2052,11 @@ nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
 		goto fini;
 	}
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+	draining = nvmf_sgroup_pause_ns(sgroup, nsid);
 
-	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
-		for (i = 0; i < sgroup->num_ns; i++) {
-			ns_info = &sgroup->ns_info[i];
-			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
-		}
-	} else {
-		/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
-		if (nsid - 1 < sgroup->num_ns) {
-			ns_info  = &sgroup->ns_info[nsid - 1];
-			ns_info->state = SPDK_NVMF_SUBSYSTEM_PAUSING;
-		}
-	}
-
-	if (sgroup->mgmt_io_outstanding > 0) {
-		assert(sgroup->cb_fn == NULL);
-		sgroup->cb_fn = cb_fn;
-		assert(sgroup->cb_arg == NULL);
-		sgroup->cb_arg = cb_arg;
+	if (sgroup->mgmt_io_outstanding > 0 || draining) {
+		nvmf_sgroup_arm_completion(sgroup, cb_fn, cb_arg);
 		return;
-	}
-
-	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
-		for (i = 0; i < sgroup->num_ns; i++) {
-			ns_info = &sgroup->ns_info[i];
-
-			if (ns_info->io_outstanding > 0) {
-				assert(sgroup->cb_fn == NULL);
-				sgroup->cb_fn = cb_fn;
-				assert(sgroup->cb_arg == NULL);
-				sgroup->cb_arg = cb_arg;
-				return;
-			}
-		}
-	} else {
-		if (ns_info != NULL && ns_info->io_outstanding > 0) {
-			assert(sgroup->cb_fn == NULL);
-			sgroup->cb_fn = cb_fn;
-			assert(sgroup->cb_arg == NULL);
-			sgroup->cb_arg = cb_arg;
-			return;
-		}
 	}
 
 	assert(sgroup->mgmt_io_outstanding == 0);
