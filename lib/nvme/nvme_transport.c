@@ -586,8 +586,9 @@ nvme_transport_qpair_get_fd(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpai
 void
 nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 {
-	if (qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr) ||
-	    nvme_qpair_is_admin_queue(qpair)) {
+	bool is_current_proc = qpair->active_proc == nvme_ctrlr_get_current_process(qpair->ctrlr);
+
+	if (is_current_proc || nvme_qpair_is_admin_queue(qpair)) {
 		nvme_qpair_abort_all_queued_reqs(qpair);
 	}
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTED);
@@ -595,7 +596,7 @@ nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 	/* In interrupt mode qpairs that are added to poll group need an event for the
 	 * disconnected qpairs handling to kick in.
 	 */
-	if (qpair->poll_group) {
+	if (qpair->poll_group && is_current_proc) {
 		nvme_poll_group_write_disconnect_qpair_fd(qpair->poll_group->group);
 	}
 
