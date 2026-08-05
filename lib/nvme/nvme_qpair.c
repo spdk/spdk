@@ -774,11 +774,35 @@ nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd
 	return aborting;
 }
 
+static int
+nvme_qpair_resubmit_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t num_requests)
+{
+	struct nvme_request *req;
+	uint32_t i;
+	int rc = 0;
+
+	for (i = 0; i < num_requests; i++) {
+		if (qpair->ctrlr->is_resetting) {
+			break;
+		}
+
+		if ((req = STAILQ_FIRST(&qpair->queued_req)) == NULL) {
+			break;
+		}
+
+		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
+		rc = nvme_qpair_resubmit_request(qpair, req);
+		if (spdk_unlikely(rc != 0)) {
+			break;
+		}
+	}
+
+	return rc;
+}
+
 static inline bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
-	struct nvme_request *req;
-
 	/*
 	 * Either during initial connect or reset, the qpair should follow the given state machine.
 	 * QPAIR_DISABLED->QPAIR_CONNECTING->QPAIR_CONNECTED->QPAIR_ENABLING->QPAIR_ENABLED. In the
@@ -800,13 +824,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 		}
 
 		nvme_qpair_set_state(qpair, NVME_QPAIR_ENABLED);
-		while (!STAILQ_EMPTY(&qpair->queued_req)) {
-			req = STAILQ_FIRST(&qpair->queued_req);
-			STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-			if (nvme_qpair_resubmit_request(qpair, req)) {
-				break;
-			}
-		}
+		nvme_qpair_resubmit_queued_reqs(qpair, UINT32_MAX);
 	}
 
 	/*
@@ -838,9 +856,7 @@ nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 void
 nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests)
 {
-	uint32_t i;
-	int resubmit_rc;
-	struct nvme_request *req;
+	int rc;
 
 	assert(num_requests > 0);
 
@@ -856,19 +872,9 @@ nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_request
 	 */
 	nvme_qpair_check_enabled(qpair);
 
-	for (i = 0; i < num_requests; i++) {
-		if (qpair->ctrlr->is_resetting) {
-			break;
-		}
-		if ((req = STAILQ_FIRST(&qpair->queued_req)) == NULL) {
-			break;
-		}
-		STAILQ_REMOVE_HEAD(&qpair->queued_req, stailq);
-		resubmit_rc = nvme_qpair_resubmit_request(qpair, req);
-		if (spdk_unlikely(resubmit_rc != 0)) {
-			NVME_QPAIR_DEBUGLOG(qpair, "Unable to resubmit as many requests as we completed.\n");
-			break;
-		}
+	rc = nvme_qpair_resubmit_queued_reqs(qpair, num_requests);
+	if (spdk_unlikely(rc != 0)) {
+		NVME_QPAIR_DEBUGLOG(qpair, "Unable to resubmit as many requests as completed.\n");
 	}
 
 	_nvme_qpair_complete_abort_queued_reqs(qpair);
