@@ -73,12 +73,6 @@ a bdev of the correct size.
 
 ### nvme
 
-#### nvme_spec.h
-
-`spdk_nvme_cdata_ctratt`
-
-Updated bit definitions to NVMe 2.3. Old bit names will be removed in the v26.09 release.
-
 #### `nvme_ns_get_format_index`
 
 `spdk_nvme_ns_get_format_index` is deprecated and will be removed in v27.01.

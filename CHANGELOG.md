@@ -15,6 +15,9 @@ a completion channel instead of continuously polling.
 Removed the deprecated `spdk_nvme_cpl_get_status_string()`, `spdk_nvme_print_completion()`, and
 `spdk_nvme_qpair_print_completion()` APIs. Use their opcode-aware `_ext` variants instead.
 
+Removed the deprecated named `bits` alias from `spdk_nvme_cdata_ctratt`. Use the anonymous NVMe 2.3
+bitfields directly.
+
 ### nvmf
 
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the

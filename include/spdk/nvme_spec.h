@@ -2450,30 +2450,6 @@ union spdk_nvme_cdata_ctratt {
 
 		uint32_t	reserved2: 12;
 	};
-
-	/** Old bit names are deprecated and will be removed in 26.09 release */
-	struct {
-		uint32_t	host_id_exhid_supported: 1;
-		uint32_t	non_operational_power_state_permissive_mode: 1;
-		uint32_t	nvm_sets: 1;
-		uint32_t	read_recovery_levels: 1;
-		uint32_t	endurance_groups: 1;
-		uint32_t	predictable_latency_mode: 1;
-		uint32_t	tbkas: 1;
-		uint32_t	namespace_granularity: 1;
-		uint32_t	sq_associations: 1;
-		uint32_t	uuid_list: 1;
-		uint32_t	mds: 1;
-		uint32_t	fixed_capacity_management: 1;
-		uint32_t	variable_capacity_management: 1;
-		uint32_t	delete_endurance_group: 1;
-		uint32_t	delete_nvm_set: 1;
-		uint32_t	elbas: 1;
-		uint32_t	mem: 1;
-		uint32_t	reserved1: 2;
-		uint32_t	fdps: 1;
-		uint32_t	reserved2: 12;
-	} bits;
 };
 
 #pragma pack(push, 1)
