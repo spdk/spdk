@@ -80,14 +80,6 @@ Use `spdk_nvme_ns_get_active_format_index` instead.
 
 ### nvmf
 
-`spdk_nvmf_subsystem_create`, `spdk_nvmf_subsystem_set_sn`, `spdk_nvmf_subsystem_set_mn`,
-`spdk_nvmf_subsystem_set_ana_reporting` are deprecated and will be removed in v26.09.
-Use `spdk_nvmf_subsystem_create_ext` with subsystem options instead.
-
-`spdk_nvmf_subsystem_get_sn`, `spdk_nvmf_subsystem_get_mn`, `spdk_nvmf_subsystem_get_max_nsid`,
-`spdk_nvmf_subsystem_get_max_namespaces`, `spdk_nvmf_subsystem_get_ana_reporting`, `spdk_nvmf_subsystem_get_type`
-are deprecated and will be removed in v26.09. Use `spdk_nvmf_subsystem_get_opts` instead.
-
 #### `nvmf_namespace_hide_metadata`
 
 The `hide_metadata` parameter of `nvmf_subsystem_add_ns` RPC is deprecated and will be removed in

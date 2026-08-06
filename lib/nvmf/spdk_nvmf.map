@@ -24,7 +24,6 @@
 	spdk_nvmf_qpair_get_peer_trid;
 	spdk_nvmf_qpair_get_local_trid;
 	spdk_nvmf_qpair_get_listen_trid;
-	spdk_nvmf_subsystem_create;
 	spdk_nvmf_subsystem_create_ext;
 	spdk_nvmf_subsystem_opts_init;
 	spdk_nvmf_subsystem_get_opts;
@@ -68,17 +67,10 @@
 	spdk_nvmf_subsystem_get_ns;
 	spdk_nvmf_subsystem_get_min_cntlid;
 	spdk_nvmf_subsystem_get_max_cntlid;
-	spdk_nvmf_subsystem_get_max_namespaces;
 	spdk_nvmf_ns_get_id;
 	spdk_nvmf_ns_get_bdev;
 	spdk_nvmf_ns_get_opts;
-	spdk_nvmf_subsystem_get_sn;
-	spdk_nvmf_subsystem_set_sn;
-	spdk_nvmf_subsystem_get_mn;
-	spdk_nvmf_subsystem_set_mn;
 	spdk_nvmf_subsystem_get_nqn;
-	spdk_nvmf_subsystem_get_type;
-	spdk_nvmf_subsystem_get_max_nsid;
 	spdk_nvmf_transport_opts_init;
 	spdk_nvmf_transport_create;
 	spdk_nvmf_transport_create_async;
@@ -97,8 +89,6 @@
 	spdk_nvmf_transport_stop_listen_async;
 	spdk_nvmf_poll_group_dump_stat;
 	spdk_nvmf_rdma_init_hooks;
-	spdk_nvmf_subsystem_set_ana_reporting;
-	spdk_nvmf_subsystem_get_ana_reporting;
 	spdk_nvmf_subsystem_set_ana_state;
 	spdk_nvmf_subsystem_get_ana_state;
 	spdk_nvmf_subsystem_set_ns_ana_group;

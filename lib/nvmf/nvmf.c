@@ -954,7 +954,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	/* Emit nvmf_create_subsystem RPCs as a batch */
 	spdk_json_write_batch_begin(w);
 	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
-		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+		if (spdk_nvmf_subsystem_get_opts(subsystem)->type == SPDK_NVMF_SUBTYPE_NVME) {
 			nvmf_write_create_subsystem_config(w, subsystem);
 		}
 	}
@@ -963,7 +963,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	/* Emit nvmf_subsystem_add_host RPCs as a batch */
 	spdk_json_write_batch_begin(w);
 	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
-		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+		if (spdk_nvmf_subsystem_get_opts(subsystem)->type == SPDK_NVMF_SUBTYPE_NVME) {
 			for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
 			     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
 				nvmf_write_subsystem_add_host_config(w, subsystem, host);
@@ -975,7 +975,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	/* Emit nvmf_subsystem_add_ns RPCs as a batch */
 	spdk_json_write_batch_begin(w);
 	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
-		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+		if (spdk_nvmf_subsystem_get_opts(subsystem)->type == SPDK_NVMF_SUBTYPE_NVME) {
 			for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 			     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
 				nvmf_write_subsystem_add_ns_config(w, subsystem, ns);
@@ -987,7 +987,7 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 	/* Emit nvmf_ns_add_host RPCs as a batch */
 	spdk_json_write_batch_begin(w);
 	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
-		if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
+		if (spdk_nvmf_subsystem_get_opts(subsystem)->type == SPDK_NVMF_SUBTYPE_NVME) {
 			for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
 			     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
 				TAILQ_FOREACH(host, &ns->hosts, link) {

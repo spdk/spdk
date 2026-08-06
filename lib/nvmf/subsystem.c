@@ -439,24 +439,6 @@ spdk_nvmf_subsystem_create_ext(struct spdk_nvmf_tgt *tgt,
 	return subsystem;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_create,
-			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-struct spdk_nvmf_subsystem *
-spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
-			   const char *nqn,
-			   enum spdk_nvmf_subtype type,
-			   uint32_t num_ns)
-{
-	struct spdk_nvmf_subsystem_opts opts;
-
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_create);
-	spdk_nvmf_subsystem_opts_init(type, &opts, sizeof(opts));
-	opts.max_namespaces = num_ns;
-
-	return spdk_nvmf_subsystem_create_ext(tgt, nqn, type, &opts);
-}
-
 const struct spdk_nvmf_subsystem_opts *
 spdk_nvmf_subsystem_get_opts(const struct spdk_nvmf_subsystem *subsystem)
 {
@@ -2827,17 +2809,6 @@ spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *o
 	memcpy(opts, &ns->opts, spdk_min(sizeof(ns->opts), opts_size));
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_sn,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-const char *
-spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_sn);
-
-	return subsystem->opts.sn;
-}
-
 int
 nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size)
 {
@@ -2858,28 +2829,6 @@ nvmf_subsystem_copy_sn(char *dst, const char *sn, size_t size)
 	}
 
 	return snprintf(dst, size, "%s", sn) < 0 ? -1 : 0;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_sn,
-			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-int
-spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_sn);
-
-	return nvmf_subsystem_copy_sn(subsystem->opts.sn, sn, sizeof(subsystem->opts.sn));
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_mn,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-const char *
-spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_mn);
-
-	return subsystem->opts.mn;
 }
 
 int
@@ -2907,46 +2856,10 @@ nvmf_subsystem_copy_mn(char *dst, const char *mn, size_t size)
 	return snprintf(dst, size, "%s", mn) < 0 ? -1 : 0;
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_mn,
-			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-int
-spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_mn);
-
-	return nvmf_subsystem_copy_mn(subsystem->opts.mn, mn, sizeof(subsystem->opts.mn));
-}
-
 const char *
 spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subnqn;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_type,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-/* We have to use the typedef in the function declaration to appease astyle. */
-typedef enum spdk_nvmf_subtype spdk_nvmf_subtype_t;
-
-spdk_nvmf_subtype_t
-spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_type);
-
-	return subsystem->opts.type;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_max_nsid,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-uint32_t
-spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_max_nsid);
-
-	return subsystem->max_nsid;
 }
 
 int
@@ -3075,17 +2988,6 @@ nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
 	}
 
 	return NULL;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_max_namespaces,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-uint32_t
-spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_max_namespaces);
-
-	return subsystem->max_nsid;
 }
 
 uint16_t
@@ -4526,35 +4428,6 @@ void
 spdk_nvmf_set_custom_ns_reservation_ops(const struct spdk_nvmf_ns_reservation_ops *ops)
 {
 	g_reservation_ops = *ops;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_set_ana_reporting,
-			      "use spdk_nvmf_subsystem_create_ext instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-int
-spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
-				      bool ana_reporting)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_set_ana_reporting);
-
-	if (subsystem->state != SPDK_NVMF_SUBSYSTEM_INACTIVE) {
-		return -EAGAIN;
-	}
-
-	subsystem->opts.ana_reporting = ana_reporting;
-
-	return 0;
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(spdk_nvmf_subsystem_get_ana_reporting,
-			      "use spdk_nvmf_subsystem_get_opts instead", "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-bool
-spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem)
-{
-	SPDK_LOG_DEPRECATED(spdk_nvmf_subsystem_get_ana_reporting);
-
-	return subsystem->opts.ana_reporting;
 }
 
 struct subsystem_listener_update_ctx {

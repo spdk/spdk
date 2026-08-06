@@ -645,27 +645,6 @@ int spdk_nvmf_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
  * \param tgt The NVMe-oF target that will own this subsystem.
  * \param nqn The NVMe qualified name of this subsystem.
  * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
- * \param num_ns The maximum number of namespaces this subsystem may contain.
- *
- * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
- */
-struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
-		const char *nqn,
-		enum spdk_nvmf_subtype type,
-		uint32_t num_ns);
-
-/**
- * Create an NVMe-oF subsystem.
- *
- * Subsystems are in one of three states: Inactive, Active, Paused. This
- * state affects which operations may be performed on the subsystem. Upon
- * creation, the subsystem will be in the Inactive state and may be activated
- * by calling spdk_nvmf_subsystem_start(). No I/O will be processed in the Inactive
- * or Paused states, but changes to the state of the subsystem may be made.
- *
- * \param tgt The NVMe-oF target that will own this subsystem.
- * \param nqn The NVMe qualified name of this subsystem.
- * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
  * \param opts Subsystem options.
  *
  * \return a pointer to a NVMe-oF subsystem on success, or NULL on failure.
@@ -1165,30 +1144,6 @@ bool spdk_nvmf_subsystem_any_listener_allowed(
 	struct spdk_nvmf_subsystem *subsystem);
 
 /**
- * Set whether a subsystem supports Asymmetric Namespace Access (ANA)
- * reporting.
- *
- * May only be performed on subsystems in the INACTIVE state.
- *
- * \param subsystem Subsystem to modify.
- * \param ana_reporting true to support or false not to support ANA reporting.
- *
- * \return 0 on success, or negated errno value on failure.
- */
-int spdk_nvmf_subsystem_set_ana_reporting(struct spdk_nvmf_subsystem *subsystem,
-		bool ana_reporting);
-
-/**
- * Get whether a subsystem supports Asymmetric Namespace Access (ANA)
- * reporting.
- *
- * \param subsystem Subsystem to check
- *
- * \return true if subsystem supports ANA reporting, false otherwise.
- */
-bool spdk_nvmf_subsystem_get_ana_reporting(struct spdk_nvmf_subsystem *subsystem);
-
-/**
  * Set Asymmetric Namespace Access (ANA) state for the specified ANA group id.
  *
  * May only be performed on subsystems in the INACTIVE or PAUSED state.
@@ -1398,15 +1353,6 @@ struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subs
 		uint32_t nsid);
 
 /**
- * Get the maximum number of namespaces allowed in a subsystem.
- *
- * \param subsystem Subsystem to query.
- *
- * \return Maximum number of namespaces allowed in the subsystem, or 0 for unlimited.
- */
-uint32_t spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem);
-
-/**
  * Get the minimum controller ID allowed in a subsystem.
  *
  * \param subsystem Subsystem to query.
@@ -1453,46 +1399,6 @@ void spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_op
 			   size_t opts_size);
 
 /**
- * Get the serial number of the specified subsystem.
- *
- * \param subsystem Subsystem to query.
- *
- * \return serial number of the specified subsystem.
- */
-const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
-
-
-/**
- * Set the serial number for the specified subsystem.
- *
- * \param subsystem Subsystem to set for.
- * \param sn serial number to set.
- *
- * \return 0 on success, -1 on failure.
- */
-int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
-
-/**
- * Get the model number of the specified subsystem.
- *
- * \param subsystem Subsystem to query.
- *
- * \return model number of the specified subsystem.
- */
-const char *spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem);
-
-
-/**
- * Set the model number for the specified subsystem.
- *
- * \param subsystem Subsystem to set for.
- * \param mn model number to set.
- *
- * \return 0 on success, -1 on failure.
- */
-int spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn);
-
-/**
  * Get the NQN of the specified subsystem.
  *
  * \param subsystem Subsystem to query.
@@ -1500,24 +1406,6 @@ int spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char
  * \return NQN of the specified subsystem.
  */
 const char *spdk_nvmf_subsystem_get_nqn(const struct spdk_nvmf_subsystem *subsystem);
-
-/**
- * Get the type of the specified subsystem.
- *
- * \param subsystem Subsystem to query.
- *
- * \return the type of the specified subsystem.
- */
-enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
-
-/**
- * Get maximum namespace id of the specified subsystem.
- *
- * \param subsystem Subsystem to query.
- *
- * \return maximum namespace id
- */
-uint32_t spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Checks whether a given subsystem is a discovery subsystem

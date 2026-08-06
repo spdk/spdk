@@ -404,18 +404,6 @@ nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *n
 	nsdata->lbaf[0].lbads = spdk_u32log2(512);
 }
 
-const char *
-spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
-{
-	return subsystem->opts.sn;
-}
-
-const char *
-spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
-{
-	return subsystem->opts.mn;
-}
-
 static void
 test_nvmf_tcp_create(void)
 {

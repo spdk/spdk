@@ -33,9 +33,6 @@ struct spdk_bdev {
 #define MAX_ACTIVE_ZONES 34
 #define ZONE_SIZE 56
 
-const char subsystem_default_sn[SPDK_NVME_CTRLR_SN_LEN + 1] = "subsys_default_sn";
-const char subsystem_default_mn[SPDK_NVME_CTRLR_MN_LEN + 1] = "subsys_default_mn";
-
 static struct spdk_bdev_io *zcopy_start_bdev_io_read = (struct spdk_bdev_io *) 0x1122334455667788UL;
 static struct spdk_bdev_io *zcopy_start_bdev_io_write = (struct spdk_bdev_io *)
 		0x8877665544332211UL;
@@ -50,16 +47,6 @@ DEFINE_STUB(spdk_nvmf_poll_group_create,
 	    struct spdk_nvmf_poll_group *,
 	    (struct spdk_nvmf_tgt *tgt),
 	    NULL);
-
-DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
-	    const char *,
-	    (const struct spdk_nvmf_subsystem *subsystem),
-	    subsystem_default_sn);
-
-DEFINE_STUB(spdk_nvmf_subsystem_get_mn,
-	    const char *,
-	    (const struct spdk_nvmf_subsystem *subsystem),
-	    subsystem_default_mn);
 
 DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
 	    bool,

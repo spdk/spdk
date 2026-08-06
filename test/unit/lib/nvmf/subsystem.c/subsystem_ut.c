@@ -659,23 +659,48 @@ nvmf_test_create_subsystem(void)
 }
 
 static void
-test_spdk_nvmf_subsystem_set_sn(void)
+test_spdk_nvmf_subsystem_opts(void)
 {
-	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem_opts opts = {};
+	struct spdk_nvmf_subsystem *subsystem;
+	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+	const char *nqn = "nqn.2016-06.io.spdk:sn";
+	int rc;
+
+	ut_target_create(&tgt);
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
 
 	/* Basic valid serial number */
-	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd xyz") == 0);
-	CU_ASSERT(strcmp(subsystem.opts.sn, "abcd xyz") == 0);
+	snprintf(opts.sn, sizeof(opts.sn), "abcd xyz");
+	opts.max_namespaces = 64;
+	opts.ana_reporting = true;
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(spdk_nvmf_subsystem_get_opts(subsystem)->sn, "abcd xyz");
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->type == SPDK_NVMF_SUBTYPE_NVME);
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->max_namespaces == 64);
+	CU_ASSERT(spdk_nvmf_subsystem_get_opts(subsystem)->ana_reporting == true);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* Exactly 20 characters (valid) */
-	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "12345678901234567890") == 0);
-	CU_ASSERT(strcmp(subsystem.opts.sn, "12345678901234567890") == 0);
+	snprintf(opts.sn, sizeof(opts.sn), "12345678901234567890");
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
+	CU_ASSERT_STRING_EQUAL(spdk_nvmf_subsystem_get_opts(subsystem)->sn, "12345678901234567890");
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 
 	/* 21 characters (too long, invalid) */
-	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "123456789012345678901") < 0);
+	CU_ASSERT(nvmf_subsystem_copy_sn(sn, "123456789012345678901", sizeof(sn)) < 0);
 
-	/* Non-ASCII characters (invalid) */
-	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd\txyz") < 0);
+	/* Non-ASCII characters in creation options are invalid */
+	snprintf(opts.sn, sizeof(opts.sn), "abcd\txyz");
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, &opts);
+	CU_ASSERT(subsystem == NULL);
+
+	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
 static void
@@ -4212,7 +4237,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_fdp_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs);
-	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_set_sn);
+	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_opts);
 	CU_ADD_TEST(suite, test_spdk_nvmf_ns_visible);
 	CU_ADD_TEST(suite, test_reservation_register);
 	CU_ADD_TEST(suite, test_reservation_register_with_ptpl);

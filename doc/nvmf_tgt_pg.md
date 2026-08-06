@@ -69,7 +69,7 @@ system. This is used for access control.
 A user of the NVMe-oF target library begins by creating a target using
 spdk_nvmf_tgt_create(), setting up a set of addresses on which to accept
 connections by calling spdk_nvmf_tgt_listen_ext(), then creating a subsystem
-using spdk_nvmf_subsystem_create().
+using spdk_nvmf_subsystem_opts_init() and spdk_nvmf_subsystem_create_ext().
 
 Subsystems begin in an inactive state and must be activated by calling
 spdk_nvmf_subsystem_start(). Subsystems may be modified at run time, but only

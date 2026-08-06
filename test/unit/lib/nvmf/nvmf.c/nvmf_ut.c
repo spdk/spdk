@@ -46,14 +46,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_nqn, const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_allow_any_host, bool,
 	    (const struct spdk_nvmf_subsystem *subsystem), true);
-DEFINE_STUB(spdk_nvmf_subsystem_get_sn, const char *,
-	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
-DEFINE_STUB(spdk_nvmf_subsystem_get_mn, const char *,
-	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
-DEFINE_STUB(spdk_nvmf_subsystem_get_max_namespaces, uint32_t,
-	    (const struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_min_cntlid, uint16_t,
 	    (const struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_max_cntlid, uint16_t,
@@ -66,8 +58,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_next_host, struct spdk_nvmf_host *,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_host *prev_host), NULL);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns, struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem), NULL);
-DEFINE_STUB(spdk_nvmf_subsystem_get_ana_reporting, bool, (struct spdk_nvmf_subsystem *subsystem),
-	    false);
 DEFINE_STUB_V(spdk_nvmf_ns_get_opts, (const struct spdk_nvmf_ns *ns,
 				      struct spdk_nvmf_ns_opts *opts, size_t opts_size));
 DEFINE_STUB(spdk_nvmf_ns_get_id, uint32_t, (const struct spdk_nvmf_ns *ns), 0);
@@ -101,8 +91,6 @@ DEFINE_STUB(spdk_nvmf_get_transport_name, const char *,
 	    (struct spdk_nvmf_transport *transport), NULL);
 DEFINE_STUB(spdk_nvmf_transport_destroy, int, (struct spdk_nvmf_transport *transport,
 		spdk_nvmf_transport_destroy_done_cb cb_fn, void *cb_arg), 0);
-DEFINE_STUB(spdk_nvmf_subsystem_get_type, enum spdk_nvmf_subtype,
-	    (struct spdk_nvmf_subsystem *subsystem), 0);
 DEFINE_STUB(spdk_nvmf_subsystem_get_first, struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt), NULL);
 DEFINE_STUB_V(nvmf_transport_dump_opts, (struct spdk_nvmf_transport *transport,

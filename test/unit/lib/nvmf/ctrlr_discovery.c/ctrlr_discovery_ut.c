@@ -344,6 +344,7 @@ test_discovery_log(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
 	uint8_t buffer[8192];
 	struct iovec iov;
 	struct spdk_nvmf_discovery_log_page *disc_log;
@@ -360,8 +361,9 @@ test_discovery_log(void)
 	RB_INIT(&tgt.subsystems);
 
 	/* Add one subsystem and verify that the discovery log contains it */
-	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	subsystem = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+			SPDK_NVMF_SUBTYPE_NVME, &opts);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	rc = spdk_nvmf_subsystem_add_host(subsystem, hostnqn, NULL);
@@ -476,6 +478,7 @@ test_discovery_log_with_filters(void)
 		= { .listener_discover = test_tcp_discover };
 	struct spdk_nvmf_transport rdma_tr = {.ops = &rdma_tr_ops }, tcp_tr = { .ops = &tcp_tr_ops };
 	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_subsystem_opts opts;
 	const char *hostnqn = "nqn.2016-06.io.spdk:host1";
 	uint8_t buffer[8192];
 	struct iovec iov;
@@ -493,8 +496,9 @@ test_discovery_log_with_filters(void)
 	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
 	RB_INIT(&tgt.subsystems);
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	spdk_nvmf_subsystem_opts_init(SPDK_NVMF_SUBTYPE_NVME, &opts, sizeof(opts));
+	subsystem = spdk_nvmf_subsystem_create_ext(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+			SPDK_NVMF_SUBTYPE_NVME, &opts);
 	subsystem->allow_any_host = true;
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
