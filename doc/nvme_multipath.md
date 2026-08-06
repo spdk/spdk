@@ -132,11 +132,12 @@ NVMe-oF controller reset. For RESET, the NVMe bdev module starts the NVMe-oF con
 ## Usage
 
 The following is an example to attach two NVMe-oF controllers and aggregate these into a single
-NVMe bdev controller `Nvme0`.
+NVMe bdev controller `Nvme0`. The active-active policy, round-robin selector, and minimum I/O
+count are creation-time options and must be identical for every path.
 
 ```bash
-./scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t rdma -a 192.168.100.8 -s 4420 -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l -1 -o 20
-./scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t rdma -a 192.168.100.9 -s 4420 -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l -1 -o 20 -x multipath
+./scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t rdma -a 192.168.100.8 -s 4420 -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l -1 -o 20 -x multipath --policy active_active --selector round_robin --min-io 10
+./scripts/rpc.py bdev_nvme_attach_controller -b Nvme0 -t rdma -a 192.168.100.9 -s 4420 -f ipv4 -n nqn.2016-06.io.spdk:cnode1 -l -1 -o 20 -x multipath --policy active_active --selector round_robin --min-io 10
 ```
 
 In this example, if these two NVMe-oF controllers have a shared namespace whose namespace ID is 1,
@@ -159,13 +160,12 @@ To monitor the current multipath state, a RPC `bdev_nvme_get_io_paths` are avail
 ./scripts/rpc.py bdev_nvme_get_io_paths -n Nvme0n1
 ```
 
-To configure the path selection policy, a RPC `bdev_nvme_set_multipath_policy` is available.
-The following is an example for a single NVMe bdev `Nvme0n1` to set the path selection policy to
-active-active, set the path selector to round-robin, and set the number of I/Os routed to the
-current I/O path before switching to another I/O path to 10.
+Multipath options can instead be configured as global creation-time defaults before attaching
+controllers. An attach request can override these defaults, but all paths for one controller must
+use the same values.
 
 ```bash
-./scripts/rpc.py bdev_nvme_set_multipath_policy -b Nvme0n1 -p active_active -s round_robin -r 10
+./scripts/rpc.py bdev_nvme_set_options --policy active_active --selector round_robin --min-io 10
 ```
 
 ## Limitations

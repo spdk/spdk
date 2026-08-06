@@ -58,6 +58,7 @@ Launch the bdevperf process in the background:
 ~~~{.sh}
 cd spdk/
 ./build/examples/bdevperf -m 0x4 -z -r /tmp/bdevperf.sock -q 128 -o 4096 -w verify -t 90 &> bdevperf.log &
+BDEVPERF_PID=$!
 ~~~
 
 Configure bdevperf and add two paths:
@@ -93,11 +94,19 @@ Use `ss -t`  to verify that the traffic has switched to the second path.
 
 ## Use round-robin (active_active) path load balancing
 
-First, ensure the ANA for both paths is configured as `optimized` on the target. Then, change the
-multipath policy on the initiator to `active_active` (multipath policy is per bdev, so
-`bdev_nvme_set_multipath_policy` must be called after `bdev_nvme_attach_controller`):
+First, ensure the ANA for both paths is configured as `optimized` on the target. Multipath policy
+is selected when a controller is created and cannot be changed at runtime. Stop the active-passive
+initiator, start a new one, and attach both paths with identical active-active options:
 ~~~{.sh}
-./scripts/rpc.py -s /tmp/bdevperf.sock bdev_nvme_set_multipath_policy -b Nvme0n1 -p active_active
+kill "$BDEVPERF_PID"
+wait "$BDEVPERF_PID"
+./build/examples/bdevperf -m 0x4 -z -r /tmp/bdevperf.sock -q 128 -o 4096 -w verify -t 90 &> bdevperf.log &
+./scripts/rpc.py -s /tmp/bdevperf.sock bdev_nvme_set_options -r -1
+./scripts/rpc.py -s /tmp/bdevperf.sock bdev_nvme_attach_controller -b Nvme0 -t tcp -a 172.17.1.13 -s 4420 -f ipv4 -n nqn.2022-02.io.spdk:cnode0 \
+  -x multipath -l -1 -o 10 --policy active_active
+./scripts/rpc.py -s /tmp/bdevperf.sock bdev_nvme_attach_controller -b Nvme0 -t tcp -a 172.18.1.13 -s 5520 -f ipv4 -n nqn.2022-02.io.spdk:cnode0 \
+  -x multipath -l -1 -o 10 --policy active_active
+PYTHONPATH=$PYTHONPATH:/root/src/spdk/python ./examples/bdev/bdevperf/bdevperf.py -t 1 -s /tmp/bdevperf.sock perform_tests
 ~~~
 
 Observe with `ss -t` that both connections are receiving traffic (queues build up).

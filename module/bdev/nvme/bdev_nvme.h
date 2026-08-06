@@ -213,7 +213,6 @@ struct nvme_bdev {
 	 */
 	TAILQ_HEAD(, nvme_ns)			nvme_ns_list;
 	bool					opal;
-	bool					multipath_conf_updating;
 	TAILQ_ENTRY(nvme_bdev)			tailq;
 	struct nvme_error_stat			*err_stat;
 };

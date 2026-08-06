@@ -3820,7 +3820,12 @@ Example request:
       "ffdhe6144",
       "ffdhe8192"
     ],
-    "rdma_umr_per_io": false
+    "rdma_umr_per_io": false,
+    "multipath_opts": {
+      "policy": "active_active",
+      "selector": "round_robin",
+      "min_io": 10
+    }
   },
   "jsonrpc": "2.0",
   "method": "bdev_nvme_set_options",
@@ -4281,40 +4286,6 @@ Example request:
   "params": {
     "name": "Nvme0n1",
     "cntlid": 0
-  }
-}
-~~~
-
-Example response:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
-}
-~~~
-
-### bdev_nvme_set_multipath_policy {#rpc_bdev_nvme_set_multipath_policy}
-
-{{ bdev_nvme_set_multipath_policy_description }}
-
-#### Parameters
-
-{{ bdev_nvme_set_multipath_policy_params }}
-
-#### Example
-
-Example request:
-
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_set_multipath_policy",
-  "id": 1,
-  "params": {
-    "name": "Nvme0n1",
-    "policy": "active_passive"
   }
 }
 ~~~

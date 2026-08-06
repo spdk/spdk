@@ -4341,13 +4341,6 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 		nvme_namespace_info_json(w, nvme_ns);
 	}
 	spdk_json_write_array_end(w);
-	spdk_json_write_named_string(w, "mp_policy", bdev_nvme_multipath_policy_str(nbdev->mp_policy));
-	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
-		spdk_json_write_named_string(w, "selector", bdev_nvme_multipath_selector_str(nbdev->mp_selector));
-		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
-			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
-		}
-	}
 
 	return 0;
 }
@@ -5738,137 +5731,6 @@ err_bdev:
 err_open:
 	free(ctx);
 err_alloc:
-	cb_fn(cb_arg, rc);
-}
-
-struct bdev_nvme_set_multipath_policy_ctx {
-	struct spdk_bdev_desc *desc;
-	spdk_bdev_nvme_set_multipath_policy_cb cb_fn;
-	void *cb_arg;
-};
-
-static void
-bdev_nvme_set_multipath_policy_done(struct nvme_bdev *nbdev, void *_ctx, int status)
-{
-	struct bdev_nvme_set_multipath_policy_ctx *ctx = _ctx;
-
-	assert(ctx != NULL);
-	assert(ctx->desc != NULL);
-	assert(ctx->cb_fn != NULL);
-
-	nbdev->multipath_conf_updating = false;
-	spdk_bdev_close(ctx->desc);
-	ctx->cb_fn(ctx->cb_arg, status);
-	free(ctx);
-}
-
-static void
-_bdev_nvme_set_multipath_policy(struct nvme_bdev_channel_iter *i,
-				struct nvme_bdev *nbdev,
-				struct nvme_bdev_channel *nbdev_ch, void *ctx)
-{
-	nbdev_ch->mp_policy = nbdev->mp_policy;
-	nbdev_ch->mp_selector = nbdev->mp_selector;
-	nbdev_ch->rr_min_io = nbdev->rr_min_io;
-	bdev_nvme_clear_current_io_path(nbdev_ch);
-
-	nvme_bdev_for_each_channel_continue(i, 0);
-}
-
-SPDK_LOG_DEPRECATION_REGISTER(bdev_nvme_set_multipath_policy,
-			      "use spdk_bdev_nvme_create() with multipath options instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
-void
-spdk_bdev_nvme_set_multipath_policy(const char *name, enum spdk_bdev_nvme_multipath_policy policy,
-				    enum spdk_bdev_nvme_multipath_selector selector, uint32_t rr_min_io,
-				    spdk_bdev_nvme_set_multipath_policy_cb cb_fn, void *cb_arg)
-{
-	struct bdev_nvme_set_multipath_policy_ctx *ctx;
-	struct spdk_bdev *bdev;
-	struct nvme_bdev *nbdev;
-	int rc;
-
-	assert(cb_fn != NULL);
-	assert(spdk_thread_is_app_thread(NULL));
-
-	SPDK_LOG_DEPRECATED(bdev_nvme_set_multipath_policy);
-
-	switch (policy) {
-	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE:
-		break;
-	case SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE:
-		switch (selector) {
-		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN:
-			if (rr_min_io == UINT32_MAX) {
-				rr_min_io = 1;
-			} else if (rr_min_io == 0) {
-				rc = -EINVAL;
-				goto exit;
-			}
-			break;
-		case SPDK_BDEV_NVME_MULTIPATH_SELECTOR_QUEUE_DEPTH:
-			break;
-		default:
-			rc = -EINVAL;
-			goto exit;
-		}
-		break;
-	default:
-		rc = -EINVAL;
-		goto exit;
-	}
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (ctx == NULL) {
-		SPDK_ERRLOG("Failed to alloc context.\n");
-		rc = -ENOMEM;
-		goto exit;
-	}
-
-	ctx->cb_fn = cb_fn;
-	ctx->cb_arg = cb_arg;
-
-	rc = spdk_bdev_open_ext(name, false, dummy_bdev_event_cb, NULL, &ctx->desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to open bdev %s.\n", name);
-		rc = -ENODEV;
-		goto err_open;
-	}
-
-	bdev = spdk_bdev_desc_get_bdev(ctx->desc);
-	if (bdev->module != &nvme_if) {
-		SPDK_ERRLOG("bdev %s is not registered in this module.\n", name);
-		rc = -ENODEV;
-		goto err_module;
-	}
-
-	nbdev = nbdev_from_bdev(bdev);
-	if (nbdev->multipath_conf_updating) {
-		NVME_BDEV_ERRLOG(nbdev, null_ctrlr, "multipath configuration update in progress.\n");
-		rc = -EBUSY;
-		goto err_module;
-	}
-
-	nbdev->multipath_conf_updating = true;
-
-	pthread_mutex_lock(&nbdev->mutex);
-	nbdev->mp_policy = policy;
-	nbdev->mp_selector = selector;
-	nbdev->rr_min_io = rr_min_io;
-	pthread_mutex_unlock(&nbdev->mutex);
-
-	nvme_bdev_for_each_channel(nbdev,
-				   _bdev_nvme_set_multipath_policy,
-				   ctx,
-				   bdev_nvme_set_multipath_policy_done);
-	return;
-
-err_module:
-	spdk_bdev_close(ctx->desc);
-err_open:
-	free(ctx);
-exit:
 	cb_fn(cb_arg, rc);
 }
 
@@ -9423,33 +9285,6 @@ bdev_nvme_hotplug_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_object_end(w);
 }
 
-static void
-bdev_nvme_multipath_config_json(struct nvme_bdev *nbdev, struct spdk_json_write_ctx *w)
-{
-	/* Skip dump if it is matching the default conf. */
-	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE &&
-	    nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN &&
-	    nbdev->rr_min_io == BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT) {
-		return;
-	}
-
-	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "method", "bdev_nvme_set_multipath_policy");
-
-	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_string(w, "name", nbdev->disk.name);
-	spdk_json_write_named_string(w, "policy", bdev_nvme_multipath_policy_str(nbdev->mp_policy));
-	if (nbdev->mp_policy == SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_ACTIVE) {
-		spdk_json_write_named_string(w, "selector", bdev_nvme_multipath_selector_str(nbdev->mp_selector));
-		if (nbdev->mp_selector == SPDK_BDEV_NVME_MULTIPATH_SELECTOR_ROUND_ROBIN) {
-			spdk_json_write_named_uint32(w, "rr_min_io", nbdev->rr_min_io);
-		}
-	}
-
-	spdk_json_write_object_end(w);
-	spdk_json_write_object_end(w);
-}
-
 static int
 bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 {
@@ -9483,19 +9318,13 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	 * of these might be able to run in parallel in a batch but that's
 	 * something to look at later.
 	 */
-	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		struct nvme_bdev *nbdev;
-
 #ifdef SPDK_CONFIG_NVME_CUSE
+	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
 			nvme_ctrlr_cuse_config_json(w, nvme_ctrlr);
 		}
-#endif
-
-		TAILQ_FOREACH(nbdev, &nbdev_ctrlr->bdevs, tailq) {
-			bdev_nvme_multipath_config_json(nbdev, w);
-		}
 	}
+#endif
 
 	TAILQ_FOREACH(ctx, &g_discovery_ctxs, tailq) {
 		if (!ctx->from_mdns_discovery_service) {

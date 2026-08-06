@@ -1417,6 +1417,8 @@ methods:
 
       Parameters, ctrlr_loss_timeout_sec, reconnect_delay_sec, and fast_io_fail_timeout_sec, are for I/O error resiliency.
       They can be overridden if they are given by the RPC bdev_nvme_attach_controller.
+      The `multipath_opts` parameter sets the default creation-time multipath policy, selector, and minimum
+      I/O count. These defaults can also be overridden by `bdev_nvme_attach_controller`.
     params:
       - name: action_on_timeout
         type: enum
@@ -1544,6 +1546,9 @@ methods:
       If `reconnect_delay_sec` is non-zero, `ctrlr_loss_timeout_sec` has to be -1 or not less than `reconnect_delay_sec`.
       If `reconnect_delay_sec` is zero, `ctrlr_loss_timeout_sec` has to be zero.
       If `fast_io_fail_timeout_sec` is not zero, it has to be not less than `reconnect_delay_sec` and less than `ctrlr_loss_timeout_sec` if `ctrlr_loss_timeout_sec` is not -1.
+
+      The `multipath_opts` parameter configures the policy when the controller is created. Every path
+      attached to the same multipath controller must use identical multipath options.
     params:
       - name: name
         type: string
@@ -1812,27 +1817,6 @@ methods:
         type: uint16
         required: true
         description: NVMe-oF controller ID
-  - name: bdev_nvme_set_multipath_policy
-    description: |
-      Set multipath policy of the NVMe bdev in multipath mode or set multipath
-      selector for active-active multipath policy.
-    params:
-      - name: name
-        type: string
-        required: true
-        description: Name of the NVMe bdev
-      - name: policy
-        type: enum
-        class: bdev_nvme_multipath_policy
-        required: true
-        description: 'Multipath policy: active_active or active_passive'
-      - name: selector
-        type: enum
-        class: bdev_nvme_multipath_selector
-        description: 'Multipath selector: round_robin or queue_depth, used in active-active mode. Default is round_robin'
-      - name: rr_min_io
-        type: uint32
-        description: Number of I/Os routed to current io path before switching to another for round-robin selector. The min value is 1.
   - name: bdev_nvme_get_path_iostat
     description: |
       Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set enable_io_path_stat

@@ -19,7 +19,6 @@ extern "C" {
 struct spdk_bdev_nvme_ctrlr;
 
 typedef void (*spdk_bdev_nvme_create_cb)(void *ctx, size_t bdev_count, int rc);
-typedef void (*spdk_bdev_nvme_set_multipath_policy_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_nvme_delete_cb)(void *ctx, int rc);
 
 enum spdk_bdev_nvme_multipath_policy {
@@ -185,27 +184,6 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
  */
 int spdk_bdev_nvme_delete(const char *name, const struct spdk_bdev_nvme_path_id *path_id,
 			  spdk_bdev_nvme_delete_cb delete_cb, void *cb_ctx);
-
-/**
- * Set multipath policy of the NVMe bdev.
- *
- * \deprecated Use spdk_bdev_nvme_create() with multipath options instead.
- *
- * Subsequent calls for the same bdev must wait until the current execution finishes.
- *
- * \param name NVMe bdev name.
- * \param policy Multipath policy (active-passive or active-active).
- * \param selector Multipath selector (round_robin, queue_depth).
- * \param rr_min_io Number of IO to route to a path before switching to another for round-robin.
- * \param cb_fn Function to be called back after completion.
- * \param cb_arg Argument passed to the callback function.
- */
-void spdk_bdev_nvme_set_multipath_policy(const char *name,
-		enum spdk_bdev_nvme_multipath_policy policy,
-		enum spdk_bdev_nvme_multipath_selector selector,
-		uint32_t rr_min_io,
-		spdk_bdev_nvme_set_multipath_policy_cb cb_fn,
-		void *cb_arg);
 
 /* Get default values for controller opts.
  *

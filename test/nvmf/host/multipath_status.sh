@@ -110,7 +110,22 @@ set_ANA_state inaccessible optimized
 sleep 1
 check_status false true true true false true
 
-$rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_multipath_policy -b Nvme0n1 -p active_active
+killprocess $bdevperf_pid
+# Make sure we catch bdevperf's exit status
+wait $bdevperf_pid
+
+# Start a new initiator and create an active-active controller with identical options on both paths.
+run_app_bg "$SPDK_EXAMPLE_DIR/bdevperf" -m 0x4 -z -r $bdevperf_rpc_sock -q 128 -o 4096 -w verify -t 90 &> "$testdir/try.txt"
+bdevperf_pid=$!
+waitforlisten $bdevperf_pid $bdevperf_rpc_sock
+
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_set_options -r -1
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b Nvme0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT -f ipv4 -n $NQN -x multipath -l -1 -o 10 --policy active_active
+$rpc_py -s $bdevperf_rpc_sock bdev_nvme_attach_controller -b Nvme0 -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_SECOND_PORT -f ipv4 -n $NQN -x multipath -l -1 -o 10 --policy active_active
+
+"$rootdir/examples/bdev/bdevperf/bdevperf.py" -t 120 -s $bdevperf_rpc_sock perform_tests &
+
+sleep 2
 
 # For active/active, all optimized paths should be current
 set_ANA_state optimized optimized

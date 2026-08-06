@@ -27,12 +27,6 @@ The tags can be matched with the level 4 headers below.
 Use `spdk_bdev_get_memory_domain_types` and `get_memory_domain_types` instead.
 Will be removed in the v26.09 release.
 
-#### `bdev_nvme_set_multipath_policy`
-
-The `spdk_bdev_nvme_set_multipath_policy` function and the `bdev_nvme_set_multipath_policy` RPC
-are deprecated and will be removed in v26.09. Use `spdk_bdev_nvme_create()` with multipath
-options, or the `multipath_opts` parameter in the `bdev_nvme_attach_controller` RPC instead.
-
 ### fsdev
 
 The current `fsdev` layer and its consumers are deprecated in preparation for

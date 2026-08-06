@@ -379,23 +379,6 @@ def add_parser(subparsers):
     p.add_argument('-c', '--cntlid', help='NVMe-oF controller ID', type=int, required=True)
     p.set_defaults(func=bdev_nvme_set_preferred_path)
 
-    def bdev_nvme_set_multipath_policy(args):
-        args.client.bdev_nvme_set_multipath_policy(
-                                                name=args.name,
-                                                policy=args.policy,
-                                                selector=args.selector,
-                                                rr_min_io=args.rr_min_io)
-
-    p = subparsers.add_parser('bdev_nvme_set_multipath_policy',
-                              help="""Set multipath policy of the NVMe bdev""")
-    p.add_argument('-b', '--name', help='Name of the NVMe bdev', required=True)
-    p.add_argument('-p', '--policy', choices=['active_passive', 'active_active'], help='Multipath policy', required=True)
-    p.add_argument('-s', '--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
-    p.add_argument('-r', '--rr-min-io',
-                   help='Number of IO to route to a path before switching to another for round-robin',
-                   type=int)
-    p.set_defaults(func=bdev_nvme_set_multipath_policy)
-
     def bdev_nvme_get_path_iostat(args):
         print_dict(args.client.bdev_nvme_get_path_iostat(name=args.name))
 
