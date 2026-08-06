@@ -4473,14 +4473,6 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		uint8_t opc);
 
 /**
- * \brief Given NVMe status, return ASCII string for that error.
- *
- * \param status Status from NVMe completion queue element.
- * \return Returns status as an ASCII string.
- */
-const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
-
-/**
  * \brief Given NVMe status and command opcode, return ASCII string for that error.
  *
  * Uses the command opcode to select the correct status code table. In particular,
@@ -4509,15 +4501,6 @@ const char *spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *
  */
 void spdk_nvme_qpair_print_command(struct spdk_nvme_qpair *qpair,
 				   struct spdk_nvme_cmd *cmd);
-
-/**
- * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
- *
- * \param qpair Pointer to the NVMe queue pair - presently unused.
- * \param cpl Pointer to the completion queue element to be formatted.
- */
-void spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
-				      struct spdk_nvme_cpl *cpl);
 
 /**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
@@ -4562,14 +4545,6 @@ uint32_t spdk_nvme_qpair_get_num_outstanding_reqs(struct spdk_nvme_qpair *qpair)
  * \param cmd Pointer to the submission queue command to be formatted.
  */
 void spdk_nvme_print_command(uint16_t qid, struct spdk_nvme_cmd *cmd);
-
-/**
- * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.
- *
- * \param qid Queue identifier.
- * \param cpl Pointer to the completion queue element to be formatted.
- */
-void spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl);
 
 /**
  * \brief Prints (SPDK_NOTICELOG) the contents of an NVMe completion queue entry.

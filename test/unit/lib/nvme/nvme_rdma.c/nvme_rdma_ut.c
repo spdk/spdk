@@ -44,8 +44,6 @@ DEFINE_STUB(spdk_rdma_utils_poll_cq, int, (struct ibv_cq *cq, int num_entries, s
 DEFINE_STUB_V(spdk_nvme_qpair_print_command, (struct spdk_nvme_qpair *qpair,
 		struct spdk_nvme_cmd *cmd));
 
-DEFINE_STUB_V(spdk_nvme_qpair_print_completion, (struct spdk_nvme_qpair *qpair,
-		struct spdk_nvme_cpl *cpl));
 DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpair *qpair,
 		const struct spdk_nvme_cpl *cpl, uint8_t opc));
 DEFINE_STUB(spdk_nvme_qpair_is_connected, bool, (struct spdk_nvme_qpair *qpair), true);

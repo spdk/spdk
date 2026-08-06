@@ -426,6 +426,12 @@ test_get_status_string(void)
 	status_string = spdk_nvme_cpl_get_status_string_ext(&status, 0);
 	CU_ASSERT(strcmp(status_string, "INVALID COMPLETION QUEUE") == 0);
 
+	status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+	status_string = spdk_nvme_cpl_get_status_string_ext(&status, SPDK_NVME_OPC_FABRIC);
+	CU_ASSERT(strcmp(status_string, "INVALID PARAM") == 0);
+	status_string = spdk_nvme_cpl_get_status_string_ext(&status, SPDK_NVME_OPC_IDENTIFY);
+	CU_ASSERT(strcmp(status_string, "WRITE TO RO RANGE") == 0);
+
 	status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
 	status.sc = SPDK_NVME_SC_UNRECOVERED_READ_ERROR;
 	status_string = spdk_nvme_cpl_get_status_string_ext(&status, 0);

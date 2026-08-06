@@ -12,6 +12,9 @@ Added initiator-side interrupt mode support for the RDMA transport. Applications
 interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
 a completion channel instead of continuously polling.
 
+Removed the deprecated `spdk_nvme_cpl_get_status_string()`, `spdk_nvme_print_completion()`, and
+`spdk_nvme_qpair_print_completion()` APIs. Use their opcode-aware `_ext` variants instead.
+
 ### nvmf
 
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the

@@ -469,23 +469,17 @@ static const struct nvme_string fabric_cmd_status[] = {
 	{ 0xFFFF, "FABRIC COMMAND SPECIFIC" }
 };
 
-SPDK_LOG_DEPRECATION_REGISTER(nvme_cpl_without_opc,
-			      "use _ext APIs with opcode parameter instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
 const char *
-spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
+spdk_nvme_cpl_get_status_string_ext(const struct spdk_nvme_status *status, uint8_t opc)
 {
 	const struct nvme_string *entry;
-
-	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
 
 	switch (status->sct) {
 	case SPDK_NVME_SCT_GENERIC:
 		entry = generic_status;
 		break;
 	case SPDK_NVME_SCT_COMMAND_SPECIFIC:
-		entry = command_specific_status;
+		entry = opc == SPDK_NVME_OPC_FABRIC ? fabric_cmd_status : command_specific_status;
 		break;
 	case SPDK_NVME_SCT_MEDIA_ERROR:
 		entry = media_error_status;
@@ -503,31 +497,9 @@ spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 }
 
 const char *
-spdk_nvme_cpl_get_status_string_ext(const struct spdk_nvme_status *status, uint8_t opc)
-{
-	if (opc == SPDK_NVME_OPC_FABRIC && status->sct == SPDK_NVME_SCT_COMMAND_SPECIFIC) {
-		return nvme_get_string(fabric_cmd_status, status->sc);
-	}
-
-	return spdk_nvme_cpl_get_status_string(status);
-}
-
-const char *
 spdk_nvme_cpl_get_status_type_string(const struct spdk_nvme_status *status)
 {
 	return nvme_get_string(status_type, status->sct);
-}
-
-static void
-nvme_get_completion_string(char *buf, size_t size, uint16_t qid, struct spdk_nvme_cpl *cpl)
-{
-	assert(cpl != NULL);
-
-	snprintf(buf, size,
-		 "%s (%02" PRIx8 "/%02" PRIx8 ") qid:%" PRIu16 " cid:%" PRIu16 " cdw0:%08" PRIx32 " sqhd:%04" PRIx16
-		 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
-		 spdk_nvme_cpl_get_status_string(&cpl->status), cpl->status.sct, cpl->status.sc, qid, cpl->cid,
-		 cpl->cdw0, cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
 }
 
 static void
@@ -545,23 +517,6 @@ nvme_get_completion_string_ext(char *buf, size_t size, uint16_t qid,
 }
 
 void
-spdk_nvme_print_completion(uint16_t qid, struct spdk_nvme_cpl *cpl)
-{
-	char buf[NVME_CMD_STR_SIZE] = {'\0'};
-
-	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
-
-	/* Check that sqid matches qid. Note that sqid is reserved
-	 * for fabrics so don't print an error when sqid is 0. */
-	if (cpl->sqid != qid && cpl->sqid != 0) {
-		SPDK_ERRLOG("sqid %u doesn't match qid\n", cpl->sqid);
-	}
-
-	nvme_get_completion_string(buf, sizeof(buf), qid, cpl);
-	SPDK_NOTICELOG("%s\n", buf);
-}
-
-void
 spdk_nvme_print_completion_ext(uint16_t qid, const struct spdk_nvme_cpl *cpl, uint8_t opc)
 {
 	char buf[NVME_CMD_STR_SIZE] = {'\0'};
@@ -572,21 +527,6 @@ spdk_nvme_print_completion_ext(uint16_t qid, const struct spdk_nvme_cpl *cpl, ui
 
 	nvme_get_completion_string_ext(buf, sizeof(buf), qid, cpl, opc);
 	SPDK_NOTICELOG("%s\n", buf);
-}
-
-void
-spdk_nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl)
-{
-	char buf[NVME_CMD_STR_SIZE] = {'\0'};
-
-	SPDK_LOG_DEPRECATED(nvme_cpl_without_opc);
-
-	if (cpl->sqid != qpair->id && cpl->sqid != 0) {
-		NVME_QPAIR_ERRLOG(qpair, "sqid %u doesn't match qid\n", cpl->sqid);
-	}
-
-	nvme_get_completion_string(buf, sizeof(buf), qpair->id, cpl);
-	NVME_QPAIR_NOTICELOG(qpair, "%s\n", buf);
 }
 
 void

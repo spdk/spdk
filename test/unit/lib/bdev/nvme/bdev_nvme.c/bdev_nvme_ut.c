@@ -267,8 +267,6 @@ DEFINE_STUB(spdk_nvme_zns_offline_zone, int,
 DEFINE_STUB(spdk_nvme_cpl_get_status_type_string, const char *,
 	    (const struct spdk_nvme_status *status), NULL);
 
-DEFINE_STUB(spdk_nvme_cpl_get_status_string, const char *,
-	    (const struct spdk_nvme_status *status), NULL);
 DEFINE_STUB(spdk_nvme_cpl_get_status_string_ext, const char *,
 	    (const struct spdk_nvme_status *status, uint8_t opc), NULL);
 
