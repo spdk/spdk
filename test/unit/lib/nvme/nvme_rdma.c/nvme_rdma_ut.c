@@ -1764,6 +1764,186 @@ test_nvme_rdma_stale_conn_lingering_drain(void)
 	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_STALE_CONN);
 }
 
+static void
+test_nvme_rdma_get_accel_no_poll_group(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+	struct spdk_nvme_accel_fn_table *fn = NULL;
+	void *fn_ctx = NULL;
+	bool rc;
+
+	/* Case 1: No poll group, no transport-global fn_table.
+	 * nvme_rdma_get_accel must return false. */
+	rqpair.qpair.poll_group = NULL;
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_ctx = NULL;
+
+	rc = nvme_rdma_get_accel(&rqpair, &fn, &fn_ctx);
+	CU_ASSERT(rc == false);
+
+	/* Case 2: No poll group, transport-global fn_table is set.
+	 * nvme_rdma_get_accel must return true with the global table. */
+	g_spdk_nvme_transport_accel_fn_table.append_copy =
+		(void *)0xDEAD1;
+	g_spdk_nvme_transport_accel_fn_table.finish_sequence =
+		(void *)0xDEAD2;
+	g_spdk_nvme_transport_accel_fn_table.reverse_sequence =
+		(void *)0xDEAD3;
+	g_spdk_nvme_transport_accel_fn_table.abort_sequence =
+		(void *)0xDEAD4;
+	g_spdk_nvme_transport_accel_ctx = (void *)0xBEEF;
+
+	rc = nvme_rdma_get_accel(&rqpair, &fn, &fn_ctx);
+	CU_ASSERT(rc == true);
+	CU_ASSERT(fn == &g_spdk_nvme_transport_accel_fn_table);
+	CU_ASSERT(fn_ctx == (void *)0xBEEF);
+
+	/* Case 3: Poll group exists with accel fn_table set --
+	 * poll group takes priority over transport-global. */
+	struct spdk_nvme_transport_poll_group tgroup = {};
+	struct spdk_nvme_poll_group pg = {};
+
+	pg.accel_fn_table.append_copy = (void *)0xAAAA;
+	pg.ctx = (void *)0xBBBB;
+	tgroup.group = &pg;
+	rqpair.qpair.poll_group = &tgroup;
+
+	fn = NULL;
+	fn_ctx = NULL;
+	rc = nvme_rdma_get_accel(&rqpair, &fn, &fn_ctx);
+	CU_ASSERT(rc == true);
+	CU_ASSERT(fn == &pg.accel_fn_table);
+	CU_ASSERT(fn_ctx == (void *)0xBBBB);
+
+	/* Case 4: Poll group exists but has no accel fn_table --
+	 * should fall through to transport-global. */
+	memset(&pg, 0, sizeof(pg));
+	tgroup.group = &pg;
+
+	fn = NULL;
+	fn_ctx = NULL;
+	rc = nvme_rdma_get_accel(&rqpair, &fn, &fn_ctx);
+	CU_ASSERT(rc == true);
+	CU_ASSERT(fn == &g_spdk_nvme_transport_accel_fn_table);
+	CU_ASSERT(fn_ctx == (void *)0xBEEF);
+
+	/* Cleanup */
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_ctx = NULL;
+}
+
+static uint32_t g_test_accel_poll_calls;
+
+static void
+test_accel_poll_cb(void *ctx)
+{
+	CU_ASSERT(ctx == (void *)0xBEEF);
+	g_test_accel_poll_calls++;
+}
+
+/* On a plain QPair falling back to the transport-global fn_table, nothing else drives its
+ * accel engine while nvme_rdma_qpair_wait_until_quiet()/nvme_rdma_qpair_disconnected() are
+ * blocked waiting for outstanding accel requests to drain during teardown (e.g. inside
+ * spdk_nvme_ctrlr_free_io_qpair()). Both must call the fn_table's poll callback, if set, so
+ * that wait can ever make progress instead of hanging indefinitely. */
+static void
+test_nvme_rdma_qpair_teardown_polls_accel(void)
+{
+	struct nvme_rdma_ctrlr rctrlr = {};
+	struct nvme_rdma_qpair rqpair = {};
+	int rc;
+
+	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
+	rqpair.qpair.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	rqpair.rdma_qp = NULL;
+	rqpair.qpair.poll_group = NULL;
+
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_fn_table.append_copy = (void *)0xDEAD1;
+	g_spdk_nvme_transport_accel_fn_table.finish_sequence = (void *)0xDEAD2;
+	g_spdk_nvme_transport_accel_fn_table.reverse_sequence = (void *)0xDEAD3;
+	g_spdk_nvme_transport_accel_fn_table.abort_sequence = (void *)0xDEAD4;
+	g_spdk_nvme_transport_accel_fn_table.poll = test_accel_poll_cb;
+	g_spdk_nvme_transport_accel_ctx = (void *)0xBEEF;
+
+	/* nvme_rdma_qpair_wait_until_quiet() */
+	rqpair.num_active_accel_reqs = 1;
+	g_test_accel_poll_calls = 0;
+
+	rc = nvme_rdma_qpair_wait_until_quiet(&rqpair);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(g_test_accel_poll_calls == 1);
+	CU_ASSERT(rqpair.state != NVME_RDMA_QPAIR_STATE_EXITED);
+
+	/* nvme_rdma_qpair_disconnected() */
+	rqpair.num_active_accel_reqs = 1;
+	g_test_accel_poll_calls = 0;
+
+	rc = nvme_rdma_qpair_disconnected(&rqpair, 0);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(g_test_accel_poll_calls == 1);
+	CU_ASSERT(rqpair.state == NVME_RDMA_QPAIR_STATE_LINGERING);
+
+	/* Cleanup */
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_ctx = NULL;
+}
+
+static struct nvme_rdma_qpair *g_reentrant_test_rqpair;
+static uint32_t g_reentrant_poll_calls;
+
+static void
+test_reentrant_accel_poll_cb(void *ctx)
+{
+	g_reentrant_poll_calls++;
+	/* Simulate an application whose poll callback ends up (directly or
+	 * transitively) driving this same QPair's accel-poll path again -- e.g.
+	 * because it polls a thread/group that loops back here. Without the
+	 * in_accel_poll guard in nvme_rdma_qpair_poll_accel(), this recurses. */
+	nvme_rdma_qpair_poll_accel(g_reentrant_test_rqpair);
+}
+
+/* nvme_rdma_qpair_poll_accel() must not reenter itself for the same QPair even
+ * if the application's poll callback naively drives it again. */
+static void
+test_nvme_rdma_qpair_poll_accel_reentrant(void)
+{
+	struct nvme_rdma_qpair rqpair = {};
+
+	rqpair.qpair.poll_group = NULL;
+
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_fn_table.append_copy = (void *)0xDEAD1;
+	g_spdk_nvme_transport_accel_fn_table.finish_sequence = (void *)0xDEAD2;
+	g_spdk_nvme_transport_accel_fn_table.reverse_sequence = (void *)0xDEAD3;
+	g_spdk_nvme_transport_accel_fn_table.abort_sequence = (void *)0xDEAD4;
+	g_spdk_nvme_transport_accel_fn_table.poll = test_reentrant_accel_poll_cb;
+	g_spdk_nvme_transport_accel_ctx = (void *)0xBEEF;
+
+	g_reentrant_test_rqpair = &rqpair;
+	g_reentrant_poll_calls = 0;
+
+	nvme_rdma_qpair_poll_accel(&rqpair);
+
+	/* The outer call invokes poll() once; poll()'s own reentrant call must be a
+	 * no-op (guarded), not a second invocation, and must leave the guard cleared
+	 * once the outer call returns. */
+	CU_ASSERT(g_reentrant_poll_calls == 1);
+	CU_ASSERT(rqpair.in_accel_poll == false);
+
+	/* Cleanup */
+	memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+	       sizeof(g_spdk_nvme_transport_accel_fn_table));
+	g_spdk_nvme_transport_accel_ctx = NULL;
+	g_reentrant_test_rqpair = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1798,6 +1978,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_rdma_qpair_set_poller);
 	CU_ADD_TEST(suite, test_nvme_rdma_stale_conn_disconnected);
 	CU_ADD_TEST(suite, test_nvme_rdma_stale_conn_lingering_drain);
+	CU_ADD_TEST(suite, test_nvme_rdma_get_accel_no_poll_group);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_teardown_polls_accel);
+	CU_ADD_TEST(suite, test_nvme_rdma_qpair_poll_accel_reentrant);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
