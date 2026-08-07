@@ -60,6 +60,10 @@
 #define MAX_CORE_STR_LEN 6
 #define MAX_CORE_FREQ_STR_LEN 13
 #define MAX_TIME_STR_LEN 12
+/* MAX_TIME_STR_LEN is the display column width; the buffer itself must be able
+ * to hold the decimal representation of any uint64_t so that snprintf() never
+ * has to truncate. */
+#define TIME_STR_BUF_SIZE 21
 #define MAX_FLOAT_STR_LEN 8
 #define MAX_POLLER_RUN_COUNT 20
 #define MAX_PERIOD_STR_LEN 12
@@ -1302,13 +1306,14 @@ switch_tab(enum tabs tab)
 	doupdate();
 }
 
+/* time_str must be at least TIME_STR_BUF_SIZE bytes. */
 static void
 get_time_str(uint64_t ticks, char *time_str)
 {
 	uint64_t time;
 
 	time = ticks * SPDK_SEC_TO_USEC / g_tick_rate;
-	snprintf(time_str, MAX_TIME_STR_LEN, "%" PRIu64, time);
+	snprintf(time_str, TIME_STR_BUF_SIZE, "%" PRIu64, time);
 }
 
 static void
@@ -1341,8 +1346,8 @@ draw_thread_tab_row(uint64_t current_row, uint8_t item_index)
 	struct col_desc *col_desc = g_col_desc[THREADS_TAB];
 	uint16_t col = TABS_DATA_START_COL;
 	int core_idx, color_attr = COLOR_PAIR(6);
-	char pollers_number[MAX_POLLER_TYPE_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
-	     busy_time[MAX_TIME_STR_LEN], core_str[MAX_CORE_MASK_STR_LEN],
+	char pollers_number[MAX_POLLER_TYPE_COUNT_STR_LEN], idle_time[TIME_STR_BUF_SIZE],
+	     busy_time[TIME_STR_BUF_SIZE], core_str[MAX_CORE_MASK_STR_LEN],
 	     cpu_usage[MAX_FLOAT_STR_LEN], *status_str;
 
 	if (!col_desc[COL_THREADS_NAME].disabled) {
@@ -1493,7 +1498,7 @@ draw_poller_tab_row(uint64_t current_row, uint8_t item_index)
 	struct col_desc *col_desc = g_col_desc[POLLERS_TAB];
 	uint64_t last_run_counter, last_busy_counter;
 	uint16_t col = TABS_DATA_START_COL;
-	char run_count[MAX_POLLER_RUN_COUNT], period_ticks[MAX_PERIOD_STR_LEN],
+	char run_count[MAX_POLLER_RUN_COUNT], period_ticks[TIME_STR_BUF_SIZE],
 	     status[MAX_POLLER_IND_STR_LEN];
 
 	last_busy_counter = get_last_busy_counter(g_pollers_info[current_row].id,
@@ -1634,8 +1639,8 @@ draw_core_tab_row(uint64_t current_row, uint8_t item_index)
 	uint64_t irq_tmp, usr_tmp, sys_tmp, busy_tmp, idle_tmp;
 	int color_attr = COLOR_PAIR(6);
 	char core[MAX_CORE_STR_LEN], threads_number[MAX_THREAD_COUNT_STR_LEN], cpu_usage[MAX_FLOAT_STR_LEN],
-	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[MAX_TIME_STR_LEN],
-	     busy_time[MAX_TIME_STR_LEN], core_freq[MAX_CORE_FREQ_STR_LEN],
+	     pollers_number[MAX_POLLER_COUNT_STR_LEN], idle_time[TIME_STR_BUF_SIZE],
+	     busy_time[TIME_STR_BUF_SIZE], core_freq[MAX_CORE_FREQ_STR_LEN],
 	     in_interrupt[MAX_INTR_LEN], *status_str, sys_str[MAX_FLOAT_STR_LEN],
 	     irq_str[MAX_FLOAT_STR_LEN], cpu_str[MAX_FLOAT_STR_LEN];
 
@@ -2396,7 +2401,7 @@ static void
 draw_thread_win_content(WINDOW *thread_win, struct rpc_thread_info *thread_info)
 {
 	uint64_t current_row, i, time;
-	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
+	char idle_time[TIME_STR_BUF_SIZE], busy_time[TIME_STR_BUF_SIZE];
 
 	box(thread_win, 0, 0);
 
@@ -2492,7 +2497,7 @@ draw_core_win_content(WINDOW *core_win, struct rpc_core_info *core_info)
 {
 	uint64_t i;
 	char core_win_title[25];
-	char idle_time[MAX_TIME_STR_LEN], busy_time[MAX_TIME_STR_LEN];
+	char idle_time[TIME_STR_BUF_SIZE], busy_time[TIME_STR_BUF_SIZE];
 
 	box(core_win, 0, 0);
 	snprintf(core_win_title, sizeof(core_win_title), "Core %" PRIu32 " details",
@@ -2802,7 +2807,7 @@ static void
 draw_poller_win_content(WINDOW *poller_win, struct rpc_poller_info *poller_info)
 {
 	uint64_t last_run_counter, last_busy_counter, busy_count;
-	char poller_period[MAX_TIME_STR_LEN];
+	char poller_period[TIME_STR_BUF_SIZE];
 
 	box(poller_win, 0, 0);
 
