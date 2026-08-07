@@ -402,6 +402,20 @@ struct spdk_nvme_accel_fn_table {
 			   struct iovec *src_iovs, uint32_t src_iovcnt,
 			   struct spdk_memory_domain *src_domain, void *src_domain_ctx,
 			   spdk_nvme_accel_step_cb cb_fn, void *cb_arg);
+
+	/**
+	 * Optional. Drive forward progress of the underlying accelerator engine (e.g. poll the
+	 * `spdk_thread` backing it) so previously submitted sequences can complete.
+	 *
+	 * Only consulted on the process-global fn_table set via
+	 * spdk_nvme_transport_set_accel_fn_table(); ignored on the fn_table passed to
+	 * spdk_nvme_poll_group_create(). Poll group QPairs are always driven by the application
+	 * calling spdk_nvme_poll_group_process_completions(), but a QPair using the
+	 * process-global fallback has no other caller to pump the accel engine while the
+	 * transport is blocked waiting for its accel requests to complete (e.g. inside
+	 * spdk_nvme_ctrlr_free_io_qpair()).
+	 */
+	void (*poll)(void *ctx);
 };
 
 /**
@@ -5008,6 +5022,29 @@ void spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t 
  * \return 0 on success, or negated errno on failure.
  */
 int spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size);
+
+/**
+ * Set the process-global accel fn_table for the NVMe transport.
+ *
+ * This registers an accelerator function table that is used as a fallback
+ * when a QPair is not bound to a poll group.  QPairs bound to a poll group
+ * continue to use the poll group's accel fn_table (if any).
+ *
+ * Applications should also implement the optional `poll` callback (see struct
+ * spdk_nvme_accel_fn_table), since QPairs that fall back to this table have no poll group
+ * to otherwise drive progress on outstanding accel requests during teardown.
+ *
+ * The table is copied into internal storage.  It must be set before any
+ * QPairs are connected (same contract as spdk_nvme_transport_set_opts).
+ *
+ * \param table Pointer to the accel fn_table to copy in.  If NULL, the
+ *              previously registered table is cleared.
+ * \param ctx   Opaque context pointer passed as the first argument to
+ *              each callback in the table.
+ *
+ * \return 0 on success, or negated errno on failure.
+ */
+int spdk_nvme_transport_set_accel_fn_table(const struct spdk_nvme_accel_fn_table *table, void *ctx);
 
 #ifdef __cplusplus
 }

@@ -15,6 +15,8 @@
 #define RDMA_UT_RKEY 312
 
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {};
+struct spdk_nvme_accel_fn_table g_spdk_nvme_transport_accel_fn_table = {};
+void *g_spdk_nvme_transport_accel_ctx = NULL;
 struct spdk_rdma_provider_qp g_spdk_rdma_qp = {};
 struct spdk_rdma_provider_srq g_spdk_rdma_srq = {};
 

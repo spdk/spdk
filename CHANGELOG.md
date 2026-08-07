@@ -16,6 +16,20 @@ The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (
 
 ### nvme
 
+Added `spdk_nvme_transport_set_accel_fn_table()` API to register a process-global accelerator
+function table at the NVMe transport level.  The RDMA transport can use this table to offload
+memory registration to the SPDK accel framework for plain queue pairs not bound to a poll group.
+Applications must provide the `append_copy`, `finish_sequence`, `reverse_sequence`, and
+`abort_sequence` callbacks and poll their `spdk_thread` to drive completion processing.
+
+Added an optional `poll` callback to `struct spdk_nvme_accel_fn_table`, consulted only for the
+process-global table (not for `spdk_nvme_poll_group_create()`'s table, since poll group
+queue pairs are already driven by the application). The RDMA transport calls it while waiting for
+a plain queue pair's accel requests to drain during teardown (e.g. inside
+`spdk_nvme_ctrlr_free_io_qpair()`), where nothing else would otherwise drive the accel engine.
+Applications should implement it (typically via `spdk_thread_poll()`) to avoid stalling
+indefinitely on teardown with in-flight UMR requests.
+
 Added initiator-side interrupt mode support for the RDMA transport. Applications can now enable
 interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
 a completion channel instead of continuously polling.

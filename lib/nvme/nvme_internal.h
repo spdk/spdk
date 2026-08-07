@@ -37,6 +37,34 @@
 extern pid_t g_spdk_nvme_pid;
 
 extern struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts;
+extern struct spdk_nvme_accel_fn_table g_spdk_nvme_transport_accel_fn_table;
+extern void *g_spdk_nvme_transport_accel_ctx;
+
+/*
+ * Shared validation used by both spdk_nvme_poll_group_create() and
+ * spdk_nvme_transport_set_accel_fn_table(), guaranteeing that append_copy/append_crc32c
+ * implies finish_sequence, reverse_sequence, and abort_sequence are all present too.
+ */
+static inline bool
+nvme_accel_fn_table_is_valid(const struct spdk_nvme_accel_fn_table *table)
+{
+	/* Make sure either all or none of the sequence manipulation callbacks are implemented */
+	if ((table->finish_sequence && table->reverse_sequence && table->abort_sequence) !=
+	    (table->finish_sequence || table->reverse_sequence || table->abort_sequence)) {
+		SPDK_ERRLOG("Invalid accel_fn_table configuration: either all or none of the "
+			    "sequence callbacks must be provided\n");
+		return false;
+	}
+
+	/* Make sure that sequence callbacks are implemented if append* callbacks are provided */
+	if ((table->append_crc32c || table->append_copy) && !table->finish_sequence) {
+		SPDK_ERRLOG("Invalid accel_fn_table configuration: append_crc32c and/or append_copy require "
+			    "sequence callbacks to be provided\n");
+		return false;
+	}
+
+	return true;
+}
 
 /*
  * Some Intel devices support vendor-unique read latency log page even

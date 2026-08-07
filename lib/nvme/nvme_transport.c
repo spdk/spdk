@@ -33,6 +33,9 @@ struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {
 	.tcp_connect_timeout_ms = 0,
 };
 
+struct spdk_nvme_accel_fn_table g_spdk_nvme_transport_accel_fn_table = {};
+void *g_spdk_nvme_transport_accel_ctx = NULL;
+
 const struct spdk_nvme_transport *
 nvme_get_first_transport(void)
 {
@@ -940,6 +943,53 @@ spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t
 	g_spdk_nvme_transport_opts.opts_size = opts->opts_size;
 
 #undef SET_FIELD
+
+	return 0;
+}
+
+int
+spdk_nvme_transport_set_accel_fn_table(const struct spdk_nvme_accel_fn_table *table,
+				       void *ctx)
+{
+	if (table == NULL) {
+		/* Clear the table */
+		memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+		       sizeof(g_spdk_nvme_transport_accel_fn_table));
+		g_spdk_nvme_transport_accel_ctx = NULL;
+		return 0;
+	}
+
+	if (table->table_size == 0) {
+		SPDK_ERRLOG("table_size should not be zero.\n");
+		return -EINVAL;
+	}
+
+#define SET_FIELD(field) \
+	if (offsetof(struct spdk_nvme_accel_fn_table, field) + sizeof(table->field) <= table->table_size) { \
+		g_spdk_nvme_transport_accel_fn_table.field = table->field; \
+	} \
+
+	SET_FIELD(table_size);
+	SET_FIELD(finish_sequence);
+	SET_FIELD(reverse_sequence);
+	SET_FIELD(abort_sequence);
+	SET_FIELD(append_crc32c);
+	SET_FIELD(append_copy);
+	SET_FIELD(poll);
+
+	if (!nvme_accel_fn_table_is_valid(&g_spdk_nvme_transport_accel_fn_table)) {
+		memset(&g_spdk_nvme_transport_accel_fn_table, 0,
+		       sizeof(g_spdk_nvme_transport_accel_fn_table));
+		return -EINVAL;
+	}
+
+	/* Do not remove this statement, you should always update this statement when you add a new
+	 * field, and do not forget to add the SET_FIELD statement for your added field. */
+	SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_accel_fn_table) == 64, "Incorrect size");
+
+#undef SET_FIELD
+
+	g_spdk_nvme_transport_accel_ctx = ctx;
 
 	return 0;
 }
