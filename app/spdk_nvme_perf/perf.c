@@ -30,6 +30,12 @@
 #include "spdk/module/keyring/file.h"
 #include "spdk/event.h"
 #include "spdk/trace.h"
+#include "spdk/accel.h"
+#include "spdk/thread.h"
+#include "spdk/accel_module.h"
+#ifdef PERF_WITH_MLX5
+#include "spdk/module/accel/mlx5.h"
+#endif
 
 #ifdef SPDK_CONFIG_URING
 #include <liburing.h>
@@ -189,6 +195,7 @@ struct worker_thread {
 	TAILQ_HEAD(, ns_worker_ctx)	ns_ctx;
 	TAILQ_ENTRY(worker_thread)	link;
 	unsigned			lcore;
+	struct spdk_thread		*thread;
 };
 
 struct ns_fn_table {
@@ -281,6 +288,9 @@ static uint8_t g_transport_tos = 0;
 static uint32_t g_rdma_srq_size;
 static struct spdk_key *g_psk = NULL, *g_dhchap = NULL, *g_dhchap_ctrlr = NULL;
 static char *g_vf_token = NULL;
+static int g_rdma_umr = -1;	/* tri-state: -1=transport decides, 0=disabled, 1=enabled */
+static struct spdk_thread *g_accel_init_thread;
+static __thread struct spdk_io_channel *t_accel_ch;
 
 /* When user specifies -Q, some error messages are rate limited.  When rate
  * limited, we only print the error message every g_quiet_count times the
@@ -322,6 +332,85 @@ static TAILQ_HEAD(, _trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_lis
 static int g_file_optind; /* Index of first filename in argv */
 
 static inline void task_complete(struct perf_task *task);
+
+static void
+perf_accel_fini_cb(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+}
+
+/*
+ * Accel bridge callbacks -- wrap standard spdk_accel APIs for use as
+ * spdk_nvme_accel_fn_table callbacks.  The fn_table interface uses
+ * opaque void* for sequences and contexts, while the real accel API
+ * uses typed pointers.  The bridge translates between the two.
+ *
+ * The io_channel is fetched lazily and cached in a thread-local variable
+ * to avoid per-IO overhead and refcount churn.
+ */
+static int
+perf_accel_append_copy(void *ctx, void **seq,
+		       struct iovec *dst_iovs, uint32_t dst_iovcnt,
+		       struct spdk_memory_domain *dst_domain, void *dst_domain_ctx,
+		       struct iovec *src_iovs, uint32_t src_iovcnt,
+		       struct spdk_memory_domain *src_domain, void *src_domain_ctx,
+		       spdk_nvme_accel_step_cb cb_fn, void *cb_arg)
+{
+	if (spdk_unlikely(!t_accel_ch)) {
+		t_accel_ch = spdk_accel_get_io_channel();
+		if (!t_accel_ch) {
+			return -ENOMEM;
+		}
+	}
+
+	return spdk_accel_append_copy((struct spdk_accel_sequence **)seq, t_accel_ch,
+				      dst_iovs, dst_iovcnt, dst_domain, dst_domain_ctx,
+				      src_iovs, src_iovcnt, src_domain, src_domain_ctx,
+				      (spdk_accel_step_cb)cb_fn, cb_arg);
+}
+
+static void
+perf_accel_finish_sequence(void *seq, spdk_nvme_accel_completion_cb cb_fn, void *cb_arg)
+{
+	spdk_accel_sequence_finish((struct spdk_accel_sequence *)seq,
+				   (spdk_accel_completion_cb)cb_fn, cb_arg);
+}
+
+static void
+perf_accel_reverse_sequence(void *seq)
+{
+	spdk_accel_sequence_reverse((struct spdk_accel_sequence *)seq);
+}
+
+static void
+perf_accel_abort_sequence(void *seq)
+{
+	spdk_accel_sequence_abort((struct spdk_accel_sequence *)seq);
+}
+
+/*
+ * See struct spdk_nvme_accel_fn_table.poll. g_perf_accel_fn_table and its ctx are shared
+ * by every per-lcore worker thread, so poll whichever thread is currently calling in
+ * rather than relying on a stored pointer.
+ */
+static void
+perf_accel_poll(void *ctx)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+
+	if (thread) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+}
+
+static struct spdk_nvme_accel_fn_table g_perf_accel_fn_table = {
+	.table_size       = sizeof(struct spdk_nvme_accel_fn_table),
+	.append_copy      = perf_accel_append_copy,
+	.finish_sequence  = perf_accel_finish_sequence,
+	.reverse_sequence = perf_accel_reverse_sequence,
+	.abort_sequence   = perf_accel_abort_sequence,
+	.poll             = perf_accel_poll,
+};
 
 static void
 perf_set_sock_opts(const char *impl_name, const char *field, uint32_t val, const char *valstr)
@@ -1656,6 +1745,20 @@ work_fn(void *arg)
 	uint64_t check_now;
 	TAILQ_HEAD(, perf_task)	swap;
 	struct perf_task *task;
+	char thread_name[32];
+
+	/* Create per-worker spdk_thread only when UMR is enabled
+	 * (required for accel io_channel and pollers) */
+	if (g_rdma_umr > 0) {
+		snprintf(thread_name, sizeof(thread_name), "perf_w%u", worker->lcore);
+		worker->thread = spdk_thread_create(thread_name, NULL);
+		if (worker->thread == NULL) {
+			fprintf(stderr, "ERROR: failed to create spdk_thread for lcore %u\n", worker->lcore);
+			pthread_barrier_wait(&g_worker_sync_barrier);
+			return 1;
+		}
+		spdk_set_thread(worker->thread);
+	}
 
 	/* Initialize thread local seed. */
 	seed = spdk_rand_xorshift64_seed();
@@ -1735,6 +1838,11 @@ work_fn(void *arg)
 			}
 		}
 
+		/* Drive accel pollers -- required for UMR CQ completion processing. */
+		if (worker->thread) {
+			spdk_thread_poll(worker->thread, 0, 0);
+		}
+
 		if (spdk_unlikely(all_draining)) {
 			break;
 		}
@@ -1789,6 +1897,9 @@ work_fn(void *arg)
 
 			if (ns_ctx->current_queue_depth > 0) {
 				ns_ctx->entry->fn_table->check_io(ns_ctx);
+				if (worker->thread) {
+					spdk_thread_poll(worker->thread, 0, 0);
+				}
 				if (ns_ctx->current_queue_depth > 0) {
 					unfinished_ns_ctx++;
 				}
@@ -1804,6 +1915,23 @@ work_fn(void *arg)
 
 	TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 		cleanup_ns_worker_ctx(ns_ctx);
+	}
+
+	/* Release accel io_channel before destroying thread */
+	if (t_accel_ch) {
+		spdk_put_io_channel(t_accel_ch);
+		t_accel_ch = NULL;
+	}
+
+	/* Tear down spdk_thread */
+	if (worker->thread) {
+		spdk_set_thread(worker->thread);
+		spdk_thread_exit(worker->thread);
+		while (!spdk_thread_is_exited(worker->thread)) {
+			spdk_thread_poll(worker->thread, 0, 0);
+		}
+		spdk_thread_destroy(worker->thread);
+		worker->thread = NULL;
 	}
 
 	return 0;
@@ -1918,6 +2046,12 @@ usage(char *program_name)
 	printf("==== RDMA OPTIONS ====\n\n");
 	printf("\t--transport-tos <val> specify the type of service for RDMA transport. Default: 0 (disabled)\n");
 	printf("\t--rdma-srq-size <val> The size of a shared rdma receive queue. Default: 0 (disabled)\n");
+#ifdef PERF_WITH_MLX5
+	printf("\t--umr enable RDMA UMR (Unrestricted Memory Registration) for hardware-accelerated\n");
+	printf("\t\t memory registration. Requires ConnectX-5+ NIC. Initializes the SPDK accel\n");
+	printf("\t\t framework with the mlx5 driver and registers a process-global accel fn_table.\n");
+#endif
+	printf("\t--no-umr explicitly disable RDMA UMR. Default: transport decides\n");
 	printf("\t-k, --keepalive <ms> keep alive timeout period in millisecond\n");
 	printf("\n");
 
@@ -2417,6 +2551,10 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"fua",				no_argument,	NULL, PERF_FUA},
 #define PERF_DISABLE_SQ_FLOW_CONTROL	278
 	{"disable-sq-flow-control", no_argument, NULL, PERF_DISABLE_SQ_FLOW_CONTROL},
+#define PERF_UMR		279
+	{"umr",				no_argument,	NULL, PERF_UMR},
+#define PERF_NO_UMR		280
+	{"no-umr",			no_argument,	NULL, PERF_NO_UMR},
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2615,6 +2753,17 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		case PERF_DISABLE_SQ_FLOW_CONTROL:
 			g_disable_sq_flow_control = true;
 			break;
+		case PERF_UMR:
+#ifdef PERF_WITH_MLX5
+			g_rdma_umr = 1;
+#else
+			fprintf(stderr, "ERROR: --umr requires MLX5 support, please recompile with --with-rdma=mlx5_dv\n");
+			return 1;
+#endif
+			break;
+		case PERF_NO_UMR:
+			g_rdma_umr = 0;
+			break;
 		case PERF_ENABLE_INTERRUPT:
 			g_enable_interrupt = 1;
 			break;
@@ -2793,6 +2942,13 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		return 1;
 	}
 
+	if (g_rdma_umr > 0 && g_enable_interrupt) {
+		fprintf(stderr, "--umr and interrupt mode (--enable-interrupt) cannot be "
+			"used together: UMR completions require polling which "
+			"conflicts with interrupt-driven I/O wait\n");
+		return 1;
+	}
+
 	if (!g_queue_depth) {
 		fprintf(stderr, "missing -q (--io-depth) operand\n");
 		usage(argv[0]);
@@ -2885,6 +3041,29 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		rc = spdk_nvme_transport_set_opts(&opts, sizeof(opts));
 		if (rc != 0) {
 			fprintf(stderr, "Failed to set NVMe transport options.\n");
+			return 1;
+		}
+	}
+
+	/* Configure UMR transport option if specified */
+	if (g_rdma_umr >= 0) {
+		struct spdk_nvme_transport_opts topts;
+
+		spdk_nvme_transport_get_opts(&topts, sizeof(topts));
+		topts.rdma_umr_per_io = (g_rdma_umr == 1);
+		rc = spdk_nvme_transport_set_opts(&topts, sizeof(topts));
+		if (rc != 0) {
+			fprintf(stderr, "Failed to set UMR transport option\n");
+			return 1;
+		}
+	}
+
+	/* register process-global accel fn_table for UMR */
+	if (g_rdma_umr > 0) {
+		rc = spdk_nvme_transport_set_accel_fn_table(&g_perf_accel_fn_table, NULL);
+		if (rc != 0) {
+			fprintf(stderr, "Failed to set transport accel fn_table: %s\n",
+				spdk_strerror(-rc));
 			return 1;
 		}
 	}
@@ -3305,6 +3484,105 @@ main(int argc, char **argv)
 		goto out;
 	}
 
+	/* Initialize spdk_thread library, accel framework, and iobuf when
+	 * UMR is enabled.  These are only needed for accel io_channels and
+	 * pollers, so skip them entirely for non-UMR runs to avoid shifting
+	 * the perf baseline. */
+	if (g_rdma_umr > 0) {
+#ifdef PERF_WITH_MLX5
+		struct spdk_accel_mlx5_attr mlx5_attr;
+
+		rc = spdk_thread_lib_init(NULL, 0);
+		if (rc != 0) {
+			fprintf(stderr, "Unable to initialize thread library\n");
+			pthread_mutex_destroy(&g_stats_mutex);
+			free_globals();
+			spdk_env_fini();
+			goto out;
+		}
+
+		/* Enable the mlx5 accel module with driver mode */
+		spdk_accel_mlx5_get_default_attr(&mlx5_attr, sizeof(mlx5_attr));
+		mlx5_attr.enable_driver = true;
+		rc = spdk_accel_mlx5_enable(&mlx5_attr);
+		if (rc != 0 && rc != -EEXIST) {
+			fprintf(stderr, "Failed to enable accel_mlx5 module: %s\n",
+				spdk_strerror(-rc));
+			spdk_thread_lib_fini();
+			pthread_mutex_destroy(&g_stats_mutex);
+			free_globals();
+			spdk_env_fini();
+			goto out;
+		}
+
+		g_accel_init_thread = spdk_thread_create("perf_init", NULL);
+		if (g_accel_init_thread == NULL) {
+			fprintf(stderr, "Failed to create init thread for accel\n");
+			spdk_thread_lib_fini();
+			pthread_mutex_destroy(&g_stats_mutex);
+			free_globals();
+			spdk_env_fini();
+			goto out;
+		}
+		spdk_set_thread(g_accel_init_thread);
+
+		/* iobuf must be initialized before accel -- accel channels
+		 * create iobuf channels internally */
+		rc = spdk_iobuf_initialize();
+		if (rc != 0) {
+			fprintf(stderr, "Unable to initialize iobuf: %s\n",
+				spdk_strerror(-rc));
+			spdk_thread_exit(g_accel_init_thread);
+			while (!spdk_thread_is_exited(g_accel_init_thread)) {
+				spdk_thread_poll(g_accel_init_thread, 0, 0);
+			}
+			spdk_set_thread(NULL);
+			spdk_thread_destroy(g_accel_init_thread);
+			g_accel_init_thread = NULL;
+			spdk_thread_lib_fini();
+			pthread_mutex_destroy(&g_stats_mutex);
+			free_globals();
+			spdk_env_fini();
+			goto out;
+		}
+
+		rc = spdk_accel_initialize();
+		if (rc != 0) {
+			bool iobuf_done = false;
+
+			fprintf(stderr, "Unable to initialize accel framework: %s\n",
+				spdk_strerror(-rc));
+			spdk_iobuf_finish(perf_accel_fini_cb, &iobuf_done);
+			while (!iobuf_done) {
+				spdk_thread_poll(g_accel_init_thread, 0, 0);
+			}
+			spdk_thread_exit(g_accel_init_thread);
+			while (!spdk_thread_is_exited(g_accel_init_thread)) {
+				spdk_thread_poll(g_accel_init_thread, 0, 0);
+			}
+			spdk_set_thread(NULL);
+			spdk_thread_destroy(g_accel_init_thread);
+			g_accel_init_thread = NULL;
+			spdk_thread_lib_fini();
+			pthread_mutex_destroy(&g_stats_mutex);
+			free_globals();
+			spdk_env_fini();
+			goto out;
+		}
+		/* Poll the init thread to complete io_device registration.
+		 * Keep g_accel_init_thread alive for teardown at cleanup. */
+		spdk_thread_poll(g_accel_init_thread, 0, 0);
+		spdk_set_thread(NULL);
+#else
+		/* Should not happen as --umr is guarded at parse time */
+		fprintf(stderr, "ERROR: --umr was set but MLX5 support is missing\n");
+		pthread_mutex_destroy(&g_stats_mutex);
+		free_globals();
+		spdk_env_fini();
+		goto out;
+#endif
+	}
+
 	rc = spdk_keyring_init();
 	if (rc != 0) {
 		fprintf(stderr, "Unable to initialize keyring: %s\n", spdk_strerror(-rc));
@@ -3440,6 +3718,36 @@ cleanup:
 	free_globals();
 
 	spdk_keyring_cleanup();
+
+	/* Tear down accel framework, iobuf, and thread library if they
+	 * were initialized (UMR path only). */
+	if (g_accel_init_thread) {
+		bool accel_done = false;
+		bool iobuf_done = false;
+
+		spdk_set_thread(g_accel_init_thread);
+
+		spdk_accel_finish(perf_accel_fini_cb, &accel_done);
+		while (!accel_done) {
+			spdk_thread_poll(g_accel_init_thread, 0, 0);
+		}
+
+		spdk_iobuf_finish(perf_accel_fini_cb, &iobuf_done);
+		while (!iobuf_done) {
+			spdk_thread_poll(g_accel_init_thread, 0, 0);
+		}
+
+		spdk_thread_exit(g_accel_init_thread);
+		while (!spdk_thread_is_exited(g_accel_init_thread)) {
+			spdk_thread_poll(g_accel_init_thread, 0, 0);
+		}
+		spdk_set_thread(NULL);
+		spdk_thread_destroy(g_accel_init_thread);
+		g_accel_init_thread = NULL;
+
+		spdk_thread_lib_fini();
+	}
+
 	spdk_log_close();
 	spdk_env_fini();
 

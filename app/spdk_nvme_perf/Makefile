@@ -12,9 +12,14 @@ APP = spdk_nvme_perf
 
 C_SRCS := perf.c
 
-SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme keyring_file trace event
+SPDK_LIB_LIST += $(SOCK_MODULES_LIST) nvme keyring_file trace event accel thread
 ifeq ($(CONFIG_VMD),y)
 SPDK_LIB_LIST += vmd
+endif
+
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+SPDK_LIB_LIST += accel_mlx5
+CFLAGS += -DPERF_WITH_MLX5
 endif
 
 ifeq ($(OS),Linux)
