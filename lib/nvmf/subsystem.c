@@ -71,7 +71,7 @@ nvmf_nqn_is_valid(const char *nqn)
 	uint32_t i;
 	int bytes_consumed;
 	uint32_t domain_label_length;
-	char *reverse_domain_end;
+	const char *reverse_domain_end;
 	uint32_t reverse_domain_end_index;
 	enum spdk_nvmf_nqn_domain_states domain_state = SPDK_NVMF_DOMAIN_ACCEPT_LETTER;
 
