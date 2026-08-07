@@ -82,6 +82,7 @@ lib/mlx5/mlx5_crypto
 lib/mlx5/mlx5_qp
 lib/mlx5/mlx5_dma
 lib/mlx5/mlx5_umr
+examples/accel/nvme_umr/nvme_umr
 
 # Not configured to build hello_gorpc example
 examples/go/hello_gorpc/hello_gorpc.go

@@ -8,6 +8,10 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y += perf
 
+ifeq ($(CONFIG_RDMA_PROV),mlx5_dv)
+DIRS-y += nvme_umr
+endif
+
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
