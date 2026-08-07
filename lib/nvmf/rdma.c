@@ -2914,10 +2914,9 @@ static void _nvmf_rdma_register_poller_in_group(void *c);
 static void _nvmf_rdma_remove_poller_in_group(void *c);
 
 static bool
-nvmf_rdma_all_pollers_management_done(void *c)
+nvmf_rdma_all_pollers_management_done(struct poller_manage_ctx *ctx)
 {
-	struct poller_manage_ctx	*ctx = c;
-	int				counter;
+	int counter;
 
 	counter = __atomic_sub_fetch(ctx->inflight_op_counter, 1, __ATOMIC_SEQ_CST);
 	SPDK_DEBUGLOG(rdma, "nvmf_rdma_all_pollers_management_done called. counter: %d, poller: %p\n",
@@ -4801,7 +4800,7 @@ _nvmf_rdma_remove_poller_in_group_cb(void *c)
 	struct spdk_nvmf_rdma_device	*device = ctx->device;
 	struct spdk_thread		*thread = ctx->thread;
 
-	if (nvmf_rdma_all_pollers_management_done(c)) {
+	if (nvmf_rdma_all_pollers_management_done(ctx)) {
 		/* destroy device when last poller is destroyed */
 		device->ready_to_destroy = true;
 		spdk_thread_send_msg(thread, _nvmf_rdma_remove_destroyed_device, rtransport);
