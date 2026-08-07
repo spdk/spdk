@@ -104,6 +104,28 @@ DEFINE_STUB(spdk_bdev_get_nvme_nsid, uint32_t, (struct spdk_bdev *bdev), 0);
 
 static struct spdk_nvmf_transport g_transport = {};
 
+static void
+ut_target_create(struct spdk_nvmf_tgt *tgt)
+{
+	tgt->max_subsystems = 1024;
+	tgt->subsystem_ids = spdk_bit_array_create(tgt->max_subsystems);
+	SPDK_CU_ASSERT_FATAL(tgt->subsystem_ids != NULL);
+	RB_INIT(&tgt->subsystems);
+}
+
+static struct spdk_nvmf_subsystem *
+ut_subsystem_create(struct spdk_nvmf_tgt *tgt, const char *nqn, enum spdk_nvmf_subtype type,
+		    struct spdk_nvmf_subsystem_opts *opts)
+{
+	struct spdk_nvmf_subsystem_opts _opts;
+
+	if (!opts) {
+		spdk_nvmf_subsystem_opts_init(type, &_opts, sizeof(_opts));
+	}
+
+	return spdk_nvmf_subsystem_create_ext(tgt, nqn, type, opts ? opts : &_opts);
+}
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
@@ -400,11 +422,9 @@ test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs(void)
 	uint32_t nsid;
 	int rc;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	/* Empty subsystem advertises VWC.Present so a cache-backed namespace
@@ -453,11 +473,9 @@ test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs(void)
 	uint32_t nsid;
 	int rc;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
@@ -517,12 +535,10 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 	int rc;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -530,7 +546,7 @@ nvmf_test_create_subsystem(void)
 
 	/* valid name with complex reverse domain */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk-full--rev-domain.name:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -538,7 +554,7 @@ nvmf_test_create_subsystem(void)
 
 	/* Valid name discovery controller */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -546,12 +562,12 @@ nvmf_test_create_subsystem(void)
 
 	/* Invalid name, no user supplied string */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Valid name, only contains top-level domain name */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -560,27 +576,27 @@ nvmf_test_create_subsystem(void)
 	/* Invalid name, domain label > 63 characters */
 	snprintf(nqn, sizeof(nqn),
 		 "nqn.2016-06.io.abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz:sub");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label starts with digit */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.3spdk:sub");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label starts with - */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.-spdk:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label ends with - */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk-:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid name, domain label with multiple consecutive periods */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io..spdk:subsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Longest valid name */
@@ -588,7 +604,7 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -599,12 +615,12 @@ nvmf_test_create_subsystem(void)
 	memset(nqn + strlen(nqn), 'a', 224 - strlen(nqn));
 	nqn[224] = '\0';
 	CU_ASSERT(strlen(nqn) == 224);
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	CU_ASSERT(subsystem == NULL);
 
 	/* Valid name using uuid format */
 	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:ff9b6406-0fc8-4779-80ca-4dca14bda0d2");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -612,12 +628,12 @@ nvmf_test_create_subsystem(void)
 
 	/* Invalid name user string contains an invalid utf-8 character */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:\xFFsubsystem1");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Valid name with non-ascii but valid utf-8 characters */
 	snprintf(nqn, sizeof(nqn), "nqn.2016-06.io.spdk:\xe1\x8a\x88subsystem1\xca\x80");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
 	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
@@ -626,17 +642,17 @@ nvmf_test_create_subsystem(void)
 	/* Invalid uuid (too long) */
 	snprintf(nqn, sizeof(nqn),
 		 "nqn.2014-08.org.nvmexpress:uuid:ff9b6406-0fc8-4779-80ca-4dca14bda0d2aaaa");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid uuid (dashes placed incorrectly) */
 	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:ff9b64-060fc8-4779-80ca-4dca14bda0d2");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	/* Invalid uuid (invalid characters in uuid) */
 	snprintf(nqn, sizeof(nqn), "nqn.2014-08.org.nvmexpress:uuid:ff9hg406-0fc8-4779-80ca-4dca14bda0d2");
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem == NULL);
 
 	spdk_bit_array_free(&tgt.subsystem_ids);
@@ -3118,9 +3134,7 @@ test_spdk_nvmf_ns_event(void)
 	subsystem.ana_group = calloc(subsystem.max_nsid, sizeof(uint32_t));
 	SPDK_CU_ASSERT_FATAL(subsystem.ana_group != NULL);
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
 	spdk_io_device_register(&tgt,
 				nvmf_tgt_create_poll_group,
@@ -3216,11 +3230,9 @@ test_nvmf_subsystem_add_ctrlr(void)
 	char nqn[256] = "nqn.2016-06.io.spdk:subsystem1";
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	ctrlr.subsys = subsystem;
 
@@ -3246,17 +3258,14 @@ test_nvmf_subsystem_add_ctrlr_dup_hostid(void)
 	struct spdk_nvmf_subsystem_listener listener_b = {};
 	struct spdk_nvmf_ctrlr ctrlr_a = {};
 	struct spdk_nvmf_ctrlr ctrlr_b = {};
-	struct spdk_nvmf_tgt tgt = {
-		.max_subsystems = 1024,
-		.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER,
-	};
+	struct spdk_nvmf_tgt tgt = {};
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
+	tgt.dup_host_policy = SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER;
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1", SPDK_NVMF_SUBTYPE_NVME,
+					NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	ctrlr_a.subsys = subsystem;
@@ -3344,11 +3353,9 @@ test_spdk_nvmf_subsystem_add_host(void)
 	};
 	struct spdk_nvmf_transport *transport;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
-	subsystem = spdk_nvmf_subsystem_create(&tgt, subsystemnqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, subsystemnqn, SPDK_NVMF_SUBTYPE_NVME, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, subsystemnqn);
 
@@ -3380,7 +3387,8 @@ test_spdk_nvmf_subsystem_add_host(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(TAILQ_EMPTY(&subsystem->hosts));
 
-	spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	rc = spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
+	CU_ASSERT(rc == 0);
 	spdk_bit_array_free(&tgt.subsystem_ids);
 }
 
@@ -3634,15 +3642,13 @@ test_nvmf_subsystem_state_change(void)
 	struct spdk_nvmf_subsystem *subsystem, *discovery_subsystem;
 	int rc;
 
-	tgt.max_subsystems = 1024;
-	tgt.subsystem_ids = spdk_bit_array_create(tgt.max_subsystems);
-	RB_INIT(&tgt.subsystems);
+	ut_target_create(&tgt);
 
-	discovery_subsystem = spdk_nvmf_subsystem_create(&tgt, SPDK_NVMF_DISCOVERY_NQN,
-			      SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, 0);
+	discovery_subsystem = ut_subsystem_create(&tgt, SPDK_NVMF_DISCOVERY_NQN,
+			      SPDK_NVMF_SUBTYPE_DISCOVERY_CURRENT, NULL);
 	SPDK_CU_ASSERT_FATAL(discovery_subsystem != NULL);
-	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = ut_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1", SPDK_NVMF_SUBTYPE_NVME,
+					NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	spdk_io_device_register(&tgt,
