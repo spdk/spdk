@@ -251,14 +251,14 @@ struct nvme_io_path {
 
 struct nvme_bdev_channel {
 	struct nvme_io_path			*current_io_path;
-	enum spdk_bdev_nvme_multipath_policy	mp_policy;
-	enum spdk_bdev_nvme_multipath_selector	mp_selector;
+	bool					resetting;
+	uint8_t					mp_policy;
+	uint8_t					mp_selector;
 	uint32_t				rr_min_io;
 	uint32_t				rr_counter;
 	STAILQ_HEAD(, nvme_io_path)		io_path_list;
 	TAILQ_HEAD(retry_io_head, nvme_bdev_io)	retry_io_list;
 	struct spdk_poller			*retry_io_poller;
-	bool					resetting;
 };
 
 struct nvme_poll_group {
