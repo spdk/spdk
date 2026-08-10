@@ -2744,9 +2744,9 @@ generate_poll_fds(struct spdk_nvmf_rdma_transport *rtransport)
 	 */
 	int device_count = 0;
 	int i = 0;
-	struct spdk_nvmf_rdma_device *device, *tmp;
+	struct spdk_nvmf_rdma_device *device;
 
-	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+	TAILQ_FOREACH(device, &rtransport->devices, link) {
 		device_count++;
 	}
 
@@ -2761,7 +2761,7 @@ generate_poll_fds(struct spdk_nvmf_rdma_transport *rtransport)
 	rtransport->poll_fds[i].fd = rtransport->event_channel->fd;
 	rtransport->poll_fds[i++].events = POLLIN;
 
-	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
+	TAILQ_FOREACH(device, &rtransport->devices, link) {
 		rtransport->poll_fds[i].fd = device->context->async_fd;
 		rtransport->poll_fds[i++].events = POLLIN;
 	}
