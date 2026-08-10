@@ -4009,14 +4009,13 @@ nvmf_rdma_accept(void *ctx)
 	struct spdk_nvmf_transport *transport = ctx;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device *device, *tmp;
-	uint32_t count;
 	short revents;
 	bool do_retry;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 	do_retry = nvmf_rdma_retry_listen_port(rtransport);
 
-	count = nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
+	nfds = poll(rtransport->poll_fds, rtransport->npoll_fds, 0);
 
 	if (nfds <= 0) {
 		return do_retry ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
@@ -4051,7 +4050,7 @@ nvmf_rdma_accept(void *ctx)
 	/* check all flagged fd's have been served */
 	assert(nfds == 0);
 
-	return count > 0 ? SPDK_POLLER_BUSY : SPDK_POLLER_IDLE;
+	return SPDK_POLLER_BUSY;
 }
 
 static void
