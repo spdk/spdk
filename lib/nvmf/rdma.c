@@ -2985,11 +2985,7 @@ nvmf_rdma_manage_poller(struct spdk_nvmf_rdma_transport *rtransport,
 		*has_inflight = true;
 
 		poll_group = rgroup->group.group;
-		if (poll_group->thread != spdk_get_thread()) {
-			spdk_thread_send_msg(poll_group->thread, do_fn, ctx);
-		} else {
-			do_fn(ctx);
-		}
+		spdk_thread_exec_msg(poll_group->thread, do_fn, ctx);
 	}
 
 	if (!*has_inflight) {
