@@ -4427,9 +4427,6 @@ nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport		*rtransport;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
-	if (!rgroup) {
-		return;
-	}
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		nvmf_rdma_poller_destroy(poller);
