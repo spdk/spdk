@@ -3868,7 +3868,9 @@ nvme_rdma_qpair_process_submits(struct nvme_rdma_poll_group *group,
 		rqpair->num_completions = 0;
 	}
 
-	if (rqpair->num_outstanding_reqs == 0 && STAILQ_EMPTY(&qpair->queued_req)) {
+	if (rqpair->num_outstanding_reqs == 0 &&
+	    STAILQ_EMPTY(&qpair->queued_req) &&
+	    TAILQ_ENTRY_ENQUEUED(rqpair, link_active)) {
 		TAILQ_REMOVE_CLEAR(&group->active_qpairs, rqpair, link_active);
 	}
 }
