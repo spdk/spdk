@@ -1179,7 +1179,7 @@ request_prepare_transfer_in_part(struct spdk_nvmf_request *req, uint32_t num_rea
 	return 0;
 }
 
-static int
+static void
 request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req;
@@ -1246,8 +1246,6 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	assert(rqpair->current_send_depth + rdma_req->num_outstanding_data_wr + 1 <=
 	       rqpair->max_send_depth);
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr + 1;
-
-	return 0;
 }
 
 static int
@@ -2251,14 +2249,9 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_READY_TO_COMPLETE:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair);
-			rc = request_transfer_out(&rdma_req->req, &data_posted);
-			assert(rc == 0); /* No good way to handle this currently */
-			if (spdk_unlikely(rc)) {
-				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-			} else {
-				rdma_req->state = data_posted ? RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST :
-						  RDMA_REQUEST_STATE_COMPLETING;
-			}
+			request_transfer_out(&rdma_req->req, &data_posted);
+			rdma_req->state = data_posted ? RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST :
+					  RDMA_REQUEST_STATE_COMPLETING;
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST, 0, 0,
