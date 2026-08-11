@@ -81,11 +81,17 @@ dev = [
 [tool.hatch.version]
 path = "spdk/version.py"
 
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
+
 # TODO: this is not ideal, better move pyproject file to the top
 [tool.hatch.build.targets.sdist.force-include]
 "../scripts/rpc.py" = "../scripts/rpc.py"
 "../scripts/sma.py" = "../scripts/sma.py"
 "../scripts/spdkcli.py" = "../scripts/spdkcli.py"
+
+[tool.hatch.build.targets.wheel]
+core-metadata-version = "2.4"
 
 [tool.hatch.build.targets.wheel.force-include]
 "../scripts/rpc.py" = "spdk/spdk_rpc.py"
