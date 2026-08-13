@@ -1291,12 +1291,7 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 	uint32_t num_outstanding_reqs;
 
 	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-		if (spdk_unlikely(!nvme_qpair_is_connected(io_path->qpair))) {
-			/* The device is currently resetting. */
-			continue;
-		}
-
-		if (spdk_unlikely(!nvme_ns_is_active(io_path->nvme_ns))) {
+		if (spdk_unlikely(!nvme_io_path_is_available(io_path))) {
 			continue;
 		}
 
@@ -1315,6 +1310,7 @@ _bdev_nvme_find_io_path_min_qd(struct nvme_bdev_channel *nbdev_ch)
 			}
 			break;
 		default:
+			assert(false);
 			break;
 		}
 	}
