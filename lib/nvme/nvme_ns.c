@@ -131,6 +131,8 @@ struct nvme_ns_identify_ctx {
 	bool external_status;
 	void *dma_data;
 	struct spdk_nvme_ns *ns;
+	nvme_ns_async_cb_fn cb_fn;
+	void *cb_arg;
 };
 
 static void
@@ -157,7 +159,8 @@ nvme_ns_delete_identify_ctx_timeout(struct nvme_ns_identify_ctx *ctx)
 }
 
 static struct nvme_ns_identify_ctx *
-nvme_ns_create_identify_ctx(struct spdk_nvme_ns *ns, struct nvme_completion_poll_status *status)
+nvme_ns_create_identify_ctx(struct spdk_nvme_ns *ns, struct nvme_completion_poll_status *status,
+			    nvme_ns_async_cb_fn cb_fn, void *cb_arg)
 {
 	struct nvme_ns_identify_ctx *ctx;
 
@@ -187,6 +190,8 @@ nvme_ns_create_identify_ctx(struct spdk_nvme_ns *ns, struct nvme_completion_poll
 
 	ctx->ns = ns;
 	ctx->status = status;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 	return ctx;
 }
 
@@ -196,6 +201,7 @@ nvme_ns_identify_data_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	struct nvme_ns_identify_ctx *ctx = arg;
 	struct spdk_nvme_ns *ns = ctx->ns;
 	struct spdk_nvme_ctrlr *ctrlr;
+	int rc = 0;
 
 	if (ctx->status->timed_out) {
 		nvme_ns_delete_identify_ctx_timeout(ctx);
@@ -209,23 +215,31 @@ nvme_ns_identify_data_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (nvme_ctrlr_identify_ns_error_is_fatal(ctrlr, cpl)) {
 			NVME_CTRLR_ERRLOG(ctrlr, "Failed to retrieve NS %u data\n", ns->id);
 			ctx->status->cpl = *cpl;
-			return;
+			rc = -EIO;
+			goto out;
 		}
 
 		nvme_ns_mark_inactive(ns);
 	} else {
 		nvme_ns_set_identify_data(ns, ctx->dma_data);
 	}
+
+out:
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ns->id, ctx->cb_arg, rc);
+		nvme_ns_delete_identify_ctx(ctx);
+	}
 }
 
 static int
-nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
+nvme_ns_identify_data_async(struct spdk_nvme_ns *ns, struct nvme_completion_poll_status *status,
+			    nvme_ns_async_cb_fn cb_fn, void *cb_arg)
 {
 	struct nvme_ns_identify_ctx		*ctx;
 	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
 	int					rc;
 
-	ctx = nvme_ns_create_identify_ctx(ns, NULL);
+	ctx = nvme_ns_create_identify_ctx(ns, status, cb_fn, cb_arg);
 	if (!ctx) {
 		return -ENOMEM;
 	}
@@ -237,6 +251,10 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		goto out;
 	}
 
+	if (cb_fn) {
+		return 0;
+	}
+
 	rc = nvme_wait_for_adminq_completion(ctrlr, ctx->status, false);
 	if (ctx->status->timed_out) {
 		return rc;
@@ -245,6 +263,12 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 out:
 	nvme_ns_delete_identify_ctx(ctx);
 	return rc;
+}
+
+static int
+nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_identify_data_async(ns, NULL, NULL, NULL);
 }
 
 static int

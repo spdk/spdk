@@ -1275,6 +1275,7 @@ struct spdk_nvme_probe_ctx {
 };
 
 typedef void (*nvme_ctrlr_detach_cb)(struct spdk_nvme_ctrlr *ctrlr);
+typedef void (*nvme_ns_async_cb_fn)(uint32_t nsid, void *cb_arg, int status);
 
 enum nvme_ctrlr_detach_state {
 	NVME_CTRLR_DETACH_SET_CC,
