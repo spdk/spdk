@@ -355,6 +355,16 @@ _nvmf_ctrlr_add_admin_qpair(void *ctx)
 }
 
 static void
+nvmf_ctrlr_cleanup(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	assert(ctrlr != NULL);
+
+	spdk_bit_array_free(&ctrlr->visible_ns);
+	spdk_bit_array_free(&ctrlr->qpair_mask);
+	free(ctrlr);
+}
+
+static void
 _nvmf_subsystem_add_ctrlr(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -364,8 +374,7 @@ _nvmf_subsystem_add_ctrlr(void *ctx)
 
 	if (nvmf_subsystem_add_ctrlr(ctrlr->subsys, ctrlr)) {
 		SPDK_ERRLOG("Unable to add controller to subsystem\n");
-		spdk_bit_array_free(&ctrlr->qpair_mask);
-		free(ctrlr);
+		nvmf_ctrlr_cleanup(ctrlr);
 		qpair->ctrlr = NULL;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 		spdk_nvmf_request_complete(req);
@@ -480,7 +489,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->qpair_mask = spdk_bit_array_create(transport->opts.max_qpairs_per_ctrlr);
 	if (!ctrlr->qpair_mask) {
 		SPDK_ERRLOG("Failed to allocate controller qpair mask\n");
-		goto err_qpair_mask;
+		goto err;
 	}
 
 	nvmf_ctrlr_cdata_init(transport, subsystem, &ctrlr->cdata);
@@ -552,7 +561,7 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->visible_ns = spdk_bit_array_create(subsystem->max_nsid);
 	if (!ctrlr->visible_ns) {
 		SPDK_ERRLOG("Failed to allocate visible namespace array\n");
-		goto err_visible_ns;
+		goto err;
 	}
 	nvmf_ctrlr_init_visible_ns(ctrlr);
 
@@ -611,13 +620,13 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	if (ctrlr->subsys->opts.type == SPDK_NVMF_SUBTYPE_NVME) {
 		if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &listen_trid) != 0) {
 			SPDK_ERRLOG("Could not get listener transport ID\n");
-			goto err_listener;
+			goto err;
 		}
 
 		ctrlr->listener = nvmf_subsystem_find_listener(ctrlr->subsys, &listen_trid);
 		if (!ctrlr->listener) {
 			SPDK_ERRLOG("Listener was not found\n");
-			goto err_listener;
+			goto err;
 		}
 	}
 
@@ -625,12 +634,9 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
-err_listener:
-	spdk_bit_array_free(&ctrlr->visible_ns);
-err_visible_ns:
-	spdk_bit_array_free(&ctrlr->qpair_mask);
-err_qpair_mask:
-	free(ctrlr);
+
+err:
+	nvmf_ctrlr_cleanup(ctrlr);
 	return NULL;
 }
 
@@ -656,7 +662,6 @@ _nvmf_ctrlr_destruct(void *ctx)
 
 	nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
 	nvmf_ctrlr_stop_association_timer(ctrlr);
-	spdk_bit_array_free(&ctrlr->qpair_mask);
 
 	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
 		TAILQ_REMOVE(&ctrlr->log_head, log, link);
@@ -666,8 +671,7 @@ _nvmf_ctrlr_destruct(void *ctx)
 		STAILQ_REMOVE(&ctrlr->async_events, event, spdk_nvmf_async_event_completion, link);
 		free(event);
 	}
-	spdk_bit_array_free(&ctrlr->visible_ns);
-	free(ctrlr);
+	nvmf_ctrlr_cleanup(ctrlr);
 }
 
 void
