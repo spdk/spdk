@@ -41,7 +41,7 @@ SPDK_LOG_DEPRECATION_REGISTER(bdev_get_memory_domains,
 
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024 - 1)
 #define SPDK_BDEV_IO_CACHE_SIZE			256
-#define BDEV_IO_POPULATE_BATCH_SIZE		64
+#define BDEV_IO_BATCH_SIZE			64
 #define SPDK_BDEV_AUTO_EXAMINE			true
 #define BUF_SMALL_CACHE_SIZE			128
 #define BUF_LARGE_CACHE_SIZE			16
@@ -2195,15 +2195,23 @@ static void
 bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io *bdev_ios[BDEV_IO_BATCH_SIZE];
+	uint32_t count = 0;
 
 	spdk_iobuf_channel_fini(&ch->iobuf);
 
 	while (!STAILQ_EMPTY(&ch->per_thread_cache)) {
-		bdev_io = STAILQ_FIRST(&ch->per_thread_cache);
+		bdev_ios[count++] = STAILQ_FIRST(&ch->per_thread_cache);
 		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, internal.buf_link);
 		ch->per_thread_cache_count--;
-		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+		if (count == BDEV_IO_BATCH_SIZE) {
+			spdk_mempool_put_bulk(g_bdev_mgr.bdev_io_pool, (void **)bdev_ios, count);
+			count = 0;
+		}
+	}
+
+	if (count > 0) {
+		spdk_mempool_put_bulk(g_bdev_mgr.bdev_io_pool, (void **)bdev_ios, count);
 	}
 
 	assert(ch->per_thread_cache_count == 0);
@@ -2213,7 +2221,7 @@ static int
 bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
-	struct spdk_bdev_io *bdev_ios[BDEV_IO_POPULATE_BATCH_SIZE];
+	struct spdk_bdev_io *bdev_ios[BDEV_IO_BATCH_SIZE];
 	uint32_t i, remaining, count;
 	int rc;
 
@@ -2231,7 +2239,7 @@ bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	/* Pre-populate bdev_io cache to ensure this thread cannot be starved. */
 	ch->per_thread_cache_count = 0;
 	while (remaining > 0) {
-		count = spdk_min(remaining, BDEV_IO_POPULATE_BATCH_SIZE);
+		count = spdk_min(remaining, BDEV_IO_BATCH_SIZE);
 		rc = spdk_mempool_get_bulk(g_bdev_mgr.bdev_io_pool, (void **)bdev_ios, count);
 		if (rc) {
 			SPDK_ERRLOG("You need to increase bdev_io_pool_size using bdev_set_options RPC.\n");
