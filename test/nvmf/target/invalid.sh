@@ -70,8 +70,12 @@ out=$("$rpc" nvmf_subsystem_remove_listener "$nqn" -t "$TEST_TRANSPORT" -a "$IP"
 [[ $out != *"Unable to stop listener."* ]]
 
 # Attempt to create subsystem with invalid controller ID range - outside [1, 0xffef]
-out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -i 0 2>&1) && false
+# A valid serial used to leave rc set to 0. Reusing the NQN verifies failure cleanup.
+invalid_nqn=$nqn$RANDOM
+out=$("$rpc" nvmf_create_subsystem "$invalid_nqn" -s SPDK001 -i 0 2>&1) && false
 [[ $out == *"Invalid cntlid range"* ]]
+"$rpc" nvmf_create_subsystem "$invalid_nqn"
+"$rpc" nvmf_delete_subsystem "$invalid_nqn"
 out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -i 65520 2>&1) && false
 [[ $out == *"Invalid cntlid range"* ]]
 out=$("$rpc" nvmf_create_subsystem "$nqn$RANDOM" -I 0 2>&1) && false

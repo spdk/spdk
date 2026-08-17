@@ -298,7 +298,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	struct spdk_nvmf_subsystem_opts opts;
 	struct spdk_nvmf_subsystem *subsystem = NULL;
 	struct spdk_nvmf_tgt *tgt;
-	int rc = -1;
+	int rc;
 
 	req.min_cntlid = NVMF_MIN_CNTLID;
 	req.max_cntlid = NVMF_MAX_CNTLID;
@@ -362,6 +362,7 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 			    req.max_cntlid);
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Invalid cntlid range [%u-%u]", req.min_cntlid, req.max_cntlid);
+		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 		goto cleanup;
 	}
 
@@ -371,14 +372,11 @@ rpc_nvmf_create_subsystem(struct spdk_jsonrpc_request *request,
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "Failed to start subsystem");
+		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
 	}
 
 cleanup:
 	free_rpc_nvmf_create_subsystem(&req);
-
-	if (rc && subsystem) {
-		spdk_nvmf_subsystem_destroy(subsystem, NULL, NULL);
-	}
 }
 SPDK_RPC_REGISTER("nvmf_create_subsystem", rpc_nvmf_create_subsystem, SPDK_RPC_RUNTIME)
 
