@@ -565,7 +565,7 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 }
 
 static void
-test_nvme_ctrlr_identify_ns_iocs_specific(void)
+test_nvme_ns_identify_iocs_specific(void)
 {
 	struct spdk_nvme_ns ns = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
@@ -576,8 +576,8 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	ns.csi = SPDK_NVME_CSI_ZNS;
 	ns.id = 1;
 
-	/* case 1: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
-	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);
+	/* case 1: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
+	rc = nvme_ns_identify_iocs_specific(&ns);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(ns.nsdata_zns != NULL);
 	CU_ASSERT(ns.nsdata_zns->mar == 1024);
@@ -590,8 +590,8 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	ns.csi = SPDK_NVME_CSI_NVM;
 	ctrlr.cdata.ctratt.elbas = true;
 
-	/* case 3: Test nvme_ctrlr_identify_ns_iocs_specific. Expect: PASS. */
-	rc = nvme_ctrlr_identify_ns_iocs_specific(&ns);
+	/* case 3: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
+	rc = nvme_ns_identify_iocs_specific(&ns);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(ns.nsdata_nvm != NULL);
 	CU_ASSERT(ns.nsdata_nvm->lbstm == 0xFFFFFFFF);
@@ -685,7 +685,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_is_active);
 	CU_ADD_TEST(suite, spdk_nvme_ns_supports);
 	CU_ADD_TEST(suite, test_nvme_ns_has_supported_iocs_specific_data);
-	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_ns_iocs_specific);
+	CU_ADD_TEST(suite, test_nvme_ns_identify_iocs_specific);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_id_desc);
 	CU_ADD_TEST(suite, test_nvme_ns_find_id_desc);
 

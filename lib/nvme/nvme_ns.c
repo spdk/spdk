@@ -168,76 +168,33 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 }
 
 static int
-nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
+nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_zns_ns_data *nsdata_zns;
+	void *nsdata;
 	int rc;
 
 	nvme_ns_free_iocs_specific_data(ns);
 
-	nsdata_zns = spdk_zmalloc(sizeof(*nsdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				  SPDK_MALLOC_SHARE);
-	if (!nsdata_zns) {
+	nsdata = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY,
+			      SPDK_MALLOC_SHARE);
+	if (!nsdata) {
 		return -ENOMEM;
 	}
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		spdk_free(nsdata_zns);
+		spdk_free(nsdata);
 		return -ENOMEM;
 	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     nsdata_zns, sizeof(*nsdata_zns),
+				     nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
 				     nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		spdk_free(nsdata_zns);
-		free(status);
-		return rc;
-	}
-
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
 	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: %s\n", spdk_strerror(abs(rc)));
-		spdk_free(nsdata_zns);
-		return -ENXIO;
-	}
-
-	ns->nsdata_iocs = nsdata_zns;
-	return 0;
-}
-
-static int
-nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
-{
-	struct nvme_completion_poll_status *status;
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_nvm_ns_data *nsdata_nvm;
-	int rc;
-
-	nvme_ns_free_iocs_specific_data(ns);
-
-	nsdata_nvm = spdk_zmalloc(sizeof(*nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				  SPDK_MALLOC_SHARE);
-	if (!nsdata_nvm) {
-		return -ENOMEM;
-	}
-
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		spdk_free(nsdata_nvm);
-		return -ENOMEM;
-	}
-
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     nsdata_nvm, sizeof(*nsdata_nvm),
-				     nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		spdk_free(nsdata_nvm);
+		spdk_free(nsdata);
 		free(status);
 		return rc;
 	}
@@ -246,80 +203,12 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
-		spdk_free(nsdata_nvm);
+		spdk_free(nsdata);
 		return -ENXIO;
 	}
 
-	ns->nsdata_iocs = nsdata_nvm;
+	ns->nsdata_iocs = nsdata;
 	return 0;
-}
-
-static int
-nvme_ctrlr_identify_ns_kv_specific(struct spdk_nvme_ns *ns)
-{
-	struct nvme_completion_poll_status *status;
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	struct spdk_nvme_kv_ns_data *nsdata_kv;
-	int rc;
-
-	nvme_ns_free_iocs_specific_data(ns);
-
-	nsdata_kv = spdk_zmalloc(sizeof(*nsdata_kv), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				 SPDK_MALLOC_SHARE);
-	if (!nsdata_kv) {
-		return -ENOMEM;
-	}
-
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		spdk_free(nsdata_kv);
-		return -ENOMEM;
-	}
-
-	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     nsdata_kv, sizeof(*nsdata_kv),
-				     nvme_completion_poll_cb, status);
-	if (rc != 0) {
-		spdk_free(nsdata_kv);
-		free(status);
-		return rc;
-	}
-
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
-	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: %s\n", spdk_strerror(abs(rc)));
-		spdk_free(nsdata_kv);
-		return -ENXIO;
-	}
-
-	ns->nsdata_iocs = nsdata_kv;
-	return 0;
-}
-
-static int
-nvme_ctrlr_identify_ns_iocs_specific(struct spdk_nvme_ns *ns)
-{
-	switch (ns->csi) {
-	case SPDK_NVME_CSI_ZNS:
-		return nvme_ctrlr_identify_ns_zns_specific(ns);
-	case SPDK_NVME_CSI_KV:
-		return nvme_ctrlr_identify_ns_kv_specific(ns);
-	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.elbas) {
-			return nvme_ctrlr_identify_ns_nvm_specific(ns);
-		}
-	/* fallthrough */
-	default:
-		/*
-		 * This switch must handle all cases for which
-		 * nvme_ns_has_supported_iocs_specific_data() returns true,
-		 * other cases should never happen.
-		 */
-		assert(0);
-	}
-
-	return -EINVAL;
 }
 
 static int
@@ -771,7 +660,7 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 
 	if (nvme_ctrlr_multi_iocs_enabled(ctrlr) &&
 	    nvme_ns_has_supported_iocs_specific_data(ns)) {
-		rc = nvme_ctrlr_identify_ns_iocs_specific(ns);
+		rc = nvme_ns_identify_iocs_specific(ns);
 		if (rc != 0) {
 			return rc;
 		}
