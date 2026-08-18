@@ -2271,19 +2271,14 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 	return 0;
 }
 
-struct subsystem_ns_change_ctx {
-	struct spdk_nvmf_subsystem		*subsystem;
-	uint32_t				nsid;
-};
-
 static void
 _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 		    void *cb_arg, int status)
 {
-	struct subsystem_ns_change_ctx *ctx = cb_arg;
+	uint32_t nsid = (uint32_t)(uintptr_t)cb_arg;
 	int rc;
 
-	rc = spdk_nvmf_subsystem_remove_ns(subsystem, ctx->nsid);
+	rc = spdk_nvmf_subsystem_remove_ns(subsystem, nsid);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to make changes to NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
@@ -2292,75 +2287,44 @@ _nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
-
-	free(ctx);
 }
 
 static void
 nvmf_ns_hot_remove(void *remove_ctx)
 {
 	struct spdk_nvmf_ns *ns = remove_ctx;
-	struct subsystem_ns_change_ctx *ns_ctx;
 	int rc;
 
-	/* We have to allocate a new context because this op
-	 * is asynchronous and we could lose the ns in the middle.
-	 */
-	ns_ctx = calloc(1, sizeof(struct subsystem_ns_change_ctx));
-	if (!ns_ctx) {
-		SPDK_ERRLOG("Unable to allocate context to process namespace removal!\n");
-		return;
-	}
-
-	ns_ctx->subsystem = ns->subsystem;
-	ns_ctx->nsid = ns->opts.nsid;
-
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, ns_ctx->nsid, _nvmf_ns_hot_remove, ns_ctx);
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, ns->opts.nsid, _nvmf_ns_hot_remove,
+				       (void *)(uintptr_t)ns->opts.nsid);
 	if (rc) {
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
-		free(ns_ctx);
 	}
 }
 
 static void
 _nvmf_ns_resize(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
-	struct subsystem_ns_change_ctx *ctx = cb_arg;
+	uint32_t nsid = (uint32_t)(uintptr_t)cb_arg;
 
-	nvmf_subsystem_ns_changed(subsystem, ctx->nsid);
+	nvmf_subsystem_ns_changed(subsystem, nsid);
 	if (spdk_nvmf_subsystem_resume(subsystem, NULL, NULL) != 0) {
 		SPDK_ERRLOG("Failed to resume NVME-oF subsystem with id: %u\n", subsystem->id);
 	}
-
-	free(ctx);
 }
 
 static void
 nvmf_ns_resize(void *event_ctx)
 {
 	struct spdk_nvmf_ns *ns = event_ctx;
-	struct subsystem_ns_change_ctx *ns_ctx;
 	int rc;
-
-	/* We have to allocate a new context because this op
-	 * is asynchronous and we could lose the ns in the middle.
-	 */
-	ns_ctx = calloc(1, sizeof(struct subsystem_ns_change_ctx));
-	if (!ns_ctx) {
-		SPDK_ERRLOG("Unable to allocate context to process namespace removal!\n");
-		return;
-	}
-
-	ns_ctx->subsystem = ns->subsystem;
-	ns_ctx->nsid = ns->opts.nsid;
 
 	/* Specify 0 for the nsid here, because we do not need to pause the namespace.
 	 * Namespaces can only be resized bigger, so there is no need to quiesce I/O.
 	 */
-	rc = spdk_nvmf_subsystem_pause(ns->subsystem, 0, _nvmf_ns_resize, ns_ctx);
+	rc = spdk_nvmf_subsystem_pause(ns->subsystem, 0, _nvmf_ns_resize, (void *)(uintptr_t)ns->opts.nsid);
 	if (rc) {
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace resize!\n");
-		free(ns_ctx);
 	}
 }
 
