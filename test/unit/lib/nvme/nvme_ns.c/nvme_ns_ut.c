@@ -583,8 +583,8 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	CU_ASSERT(ns.nsdata_zns->mar == 1024);
 	CU_ASSERT(ns.nsdata_zns->mor == 1024);
 
-	/* case 2: Test nvme_ns_free_zns_specific_data. Expect: PASS. */
-	nvme_ns_free_zns_specific_data(&ns);
+	/* case 2: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
+	nvme_ns_free_iocs_specific_data(&ns);
 	CU_ASSERT(ns.nsdata_zns == NULL);
 
 	ns.csi = SPDK_NVME_CSI_NVM;
@@ -601,8 +601,8 @@ test_nvme_ctrlr_identify_ns_iocs_specific(void)
 	CU_ASSERT(ns.nsdata_nvm->elbaf[0].sts == 32);
 	CU_ASSERT(ns.nsdata_nvm->elbaf[0].pif == 0);
 
-	/* case 4: Test vnme_ns_free_nvm_specific_data. Expect: PASS. */
-	nvme_ns_free_nvm_specific_data(&ns);
+	/* case 4: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
+	nvme_ns_free_iocs_specific_data(&ns);
 	CU_ASSERT(ns.nsdata_nvm == NULL);
 }
 

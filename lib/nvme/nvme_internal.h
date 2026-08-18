@@ -1543,9 +1543,6 @@ bool	nvme_ctrlr_handle_identify_ns_error(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_ns *ns, const struct spdk_nvme_cpl *cpl);
 void	nvme_ns_set_identify_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, size_t buf_len);
-void	nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns);
-void	nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns);
-void	nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
 bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_identify(struct spdk_nvme_ns *ns);

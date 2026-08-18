@@ -43,7 +43,6 @@ DEFINE_STUB(nvme_ctrlr_cmd_set_host_id, int,
 DEFINE_STUB_V(nvme_ns_set_id_desc_list_data, (struct spdk_nvme_ns *ns, const uint8_t *buf,
 		size_t buf_len));
 DEFINE_STUB_V(nvme_ns_reset_id_desc_data, (struct spdk_nvme_ns *ns));
-DEFINE_STUB_V(nvme_ns_free_iocs_specific_data, (struct spdk_nvme_ns *ns));
 DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(spdk_nvme_poll_group_remove, int, (struct spdk_nvme_poll_group *group,
 		struct spdk_nvme_qpair *qpair), 0);
@@ -714,41 +713,15 @@ nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
 }
 
 void
-nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
+nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns)
 {
 	if (!ns->id) {
 		return;
 	}
 
-	if (ns->nsdata_zns) {
-		spdk_free(ns->nsdata_zns);
-		ns->nsdata_zns = NULL;
-	}
-}
-
-void
-nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	if (ns->nsdata_kv) {
-		spdk_free(ns->nsdata_kv);
-		ns->nsdata_kv = NULL;
-	}
-}
-
-void
-nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	if (ns->nsdata_nvm) {
-		spdk_free(ns->nsdata_nvm);
-		ns->nsdata_nvm = NULL;
+	if (ns->nsdata_iocs) {
+		spdk_free(ns->nsdata_iocs);
+		ns->nsdata_iocs = NULL;
 	}
 }
 
@@ -757,6 +730,7 @@ nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
 	ns->active = false;
 	ns->identify_pending = false;
+	nvme_ns_free_iocs_specific_data(ns);
 }
 
 uint32_t g_nvme_ns_constructed;
@@ -3426,7 +3400,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(ns_ctrlr[4].state_timeout_tsc == NVME_TIMEOUT_INFINITE);
 
 	for (int i = 0; i < 5; i++) {
-		nvme_ns_free_zns_specific_data(&ns[i]);
+		nvme_ns_free_iocs_specific_data(&ns[i]);
 	}
 
 	/* case 4: nvme_ctrlr_identify_ns_iocs_specific_async return 1, expect: false */
@@ -3439,6 +3413,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+	nvme_ns_free_iocs_specific_data(&ns[1]);
 
 	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 }

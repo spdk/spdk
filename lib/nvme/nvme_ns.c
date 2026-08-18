@@ -175,7 +175,7 @@ nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_zns_ns_data *nsdata_zns;
 	int rc;
 
-	nvme_ns_free_zns_specific_data(ns);
+	nvme_ns_free_iocs_specific_data(ns);
 
 	nsdata_zns = spdk_zmalloc(sizeof(*nsdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				  SPDK_MALLOC_SHARE);
@@ -206,7 +206,7 @@ nvme_ctrlr_identify_ns_zns_specific(struct spdk_nvme_ns *ns)
 		return -ENXIO;
 	}
 
-	ns->nsdata_zns = nsdata_zns;
+	ns->nsdata_iocs = nsdata_zns;
 	return 0;
 }
 
@@ -218,7 +218,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_nvm_ns_data *nsdata_nvm;
 	int rc;
 
-	nvme_ns_free_nvm_specific_data(ns);
+	nvme_ns_free_iocs_specific_data(ns);
 
 	nsdata_nvm = spdk_zmalloc(sizeof(*nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				  SPDK_MALLOC_SHARE);
@@ -250,7 +250,7 @@ nvme_ctrlr_identify_ns_nvm_specific(struct spdk_nvme_ns *ns)
 		return -ENXIO;
 	}
 
-	ns->nsdata_nvm = nsdata_nvm;
+	ns->nsdata_iocs = nsdata_nvm;
 	return 0;
 }
 
@@ -262,7 +262,7 @@ nvme_ctrlr_identify_ns_kv_specific(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_kv_ns_data *nsdata_kv;
 	int rc;
 
-	nvme_ns_free_kv_specific_data(ns);
+	nvme_ns_free_iocs_specific_data(ns);
 
 	nsdata_kv = spdk_zmalloc(sizeof(*nsdata_kv), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
 				 SPDK_MALLOC_SHARE);
@@ -293,7 +293,7 @@ nvme_ctrlr_identify_ns_kv_specific(struct spdk_nvme_ns *ns)
 		return -ENXIO;
 	}
 
-	ns->nsdata_kv = nsdata_kv;
+	ns->nsdata_iocs = nsdata_kv;
 	return 0;
 }
 
@@ -701,45 +701,6 @@ nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, size_
 enum spdk_nvme_csi
 spdk_nvme_ns_get_csi(const struct spdk_nvme_ns *ns) {
 	return ns->csi;
-}
-
-void
-nvme_ns_free_zns_specific_data(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	if (ns->nsdata_zns) {
-		spdk_free(ns->nsdata_zns);
-		ns->nsdata_zns = NULL;
-	}
-}
-
-void
-nvme_ns_free_kv_specific_data(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	if (ns->nsdata_kv) {
-		spdk_free(ns->nsdata_kv);
-		ns->nsdata_kv = NULL;
-	}
-}
-
-void
-nvme_ns_free_nvm_specific_data(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	if (ns->nsdata_nvm) {
-		spdk_free(ns->nsdata_nvm);
-		ns->nsdata_nvm = NULL;
-	}
 }
 
 void
