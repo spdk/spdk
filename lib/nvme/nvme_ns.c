@@ -326,10 +326,38 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 	return 0;
 }
 
-static int
-nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
+static void
+nvme_ns_identify_id_desc_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status      *status;
+	struct nvme_ns_identify_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = ctx->ns;
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	if (ctx->status->timed_out) {
+		nvme_ns_delete_identify_ctx_timeout(ctx);
+		return;
+	}
+
+	ctrlr = ns->ctrlr;
+	ctx->status->done = true;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_WARNLOG(ctrlr, "Failed to retrieve NS ID Descriptor List\n");
+	} else {
+		nvme_ns_set_id_desc_list_data(ns, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ns->id, ctx->cb_arg, 0);
+		nvme_ns_delete_identify_ctx(ctx);
+	}
+}
+
+static int
+nvme_ns_identify_id_desc_async(struct spdk_nvme_ns *ns, struct nvme_completion_poll_status *status,
+			       nvme_ns_async_cb_fn cb_fn, void *cb_arg)
+{
+	struct nvme_ns_identify_ctx             *ctx;
 	struct spdk_nvme_ctrlr                  *ctrlr = ns->ctrlr;
 	int                                     rc;
 
@@ -337,45 +365,44 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
+		if (cb_fn) {
+			cb_fn(ns->id, cb_arg, 0);
+		}
+
 		return 0;
 	}
 
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		return -ENOMEM;
-	}
-
-	status->dma_data = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
-					SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-	if (!status->dma_data) {
-		free(status);
+	ctx = nvme_ns_create_identify_ctx(ns, status, cb_fn, cb_arg);
+	if (!ctx) {
 		return -ENOMEM;
 	}
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Attempting to retrieve NS ID Descriptor List\n");
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST, 0, ns->id,
-				     0, status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
-				     nvme_completion_poll_cb, status);
-	if (rc < 0) {
-		spdk_free(status->dma_data);
-		free(status);
-		return rc;
-	}
-
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
-	if (status->timed_out) {
-		return rc;
-	}
+				     0, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
+				     nvme_ns_identify_id_desc_cb, ctx);
 	if (rc) {
-		NVME_CTRLR_WARNLOG(ctrlr, "Failed to retrieve NS ID Descriptor List\n");
-	} else {
-		nvme_ns_set_id_desc_list_data(ns, status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
+		goto out;
 	}
 
-	spdk_free(status->dma_data);
-	free(status);
+	if (cb_fn) {
+		return 0;
+	}
+
+	rc = nvme_wait_for_adminq_completion(ctrlr, ctx->status, false);
+	if (ctx->status->timed_out) {
+		return rc;
+	}
+
+out:
+	nvme_ns_delete_identify_ctx(ctx);
 	return rc;
+}
+
+static int
+nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_identify_id_desc_async(ns, NULL, NULL, NULL);
 }
 
 uint32_t
