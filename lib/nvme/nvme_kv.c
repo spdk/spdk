@@ -42,11 +42,19 @@ nvme_kv_cmd_with_data(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct spdk_nvme_cmd *cmd;
 
 	if (key == NULL || key_len < SPDK_NVME_KV_KEY_MIN_LEN || key_len > SPDK_NVME_KV_KEY_MAX_LEN ||
-	    data == NULL || data_len == 0) {
+	    (data == NULL && data_len != 0)) {
 		return -EINVAL;
 	}
 
-	req = nvme_allocate_request_contig(qpair, data, data_len, cb_fn, cb_arg);
+	/* A zero length value is legal. Store creates a KV pair with an empty
+	 * value, and Retrieve with a zero length host buffer transfers nothing
+	 * and reports the value size in CDW0 of the completion. Neither needs a
+	 * data transfer, so allocate the request without a payload. */
+	if (data_len == 0) {
+		req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	} else {
+		req = nvme_allocate_request_contig(qpair, data, data_len, cb_fn, cb_arg);
+	}
 	if (req == NULL) {
 		return -ENOMEM;
 	}

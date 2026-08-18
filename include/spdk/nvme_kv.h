@@ -63,8 +63,8 @@ spdk_nvme_kv_ctrlr_get_data(const struct spdk_nvme_ctrlr *ctrlr);
  * \param qpair I/O queue pair to submit the request.
  * \param key Pointer to the key buffer.
  * \param key_len Length of the key in bytes (SPDK_NVME_KV_KEY_MIN_LEN to SPDK_NVME_KV_KEY_MAX_LEN).
- * \param value Pointer to the value buffer.
- * \param value_len Length of the value in bytes.
+ * \param value Pointer to the value buffer. May be NULL if value_len is 0.
+ * \param value_len Length of the value in bytes. 0 stores an empty value.
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  * \param options Store options, see spdk_nvme_kv_store_option in nvme_spec.h.
@@ -91,8 +91,10 @@ int spdk_nvme_kv_store(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
  * \param qpair I/O queue pair to submit the request.
  * \param key Pointer to the key buffer.
  * \param key_len Length of the key in bytes (SPDK_NVME_KV_KEY_MIN_LEN to SPDK_NVME_KV_KEY_MAX_LEN).
- * \param value Pointer to the value buffer to store the retrieved value.
- * \param value_len Length of the value buffer in bytes.
+ * \param value Pointer to the value buffer to store the retrieved value. May be
+ * NULL if value_len is 0.
+ * \param value_len Length of the value buffer in bytes. 0 transfers no data and
+ * only reports the value size in CDW0 of the completion.
  * \param cb_fn Callback function to invoke when the I/O is completed.
  * \param cb_arg Argument to pass to the callback function.
  * \param options Retrieve options, see spdk_nvme_kv_retrieve_option in nvme_spec.h.
