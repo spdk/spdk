@@ -1416,6 +1416,51 @@ pdu_hdr_op_login_test(void)
 }
 
 static void
+pdu_hdr_handle_login_reject_test(void)
+{
+	struct spdk_iscsi_conn conn = {};
+	struct spdk_iscsi_pdu pdu = {};
+	struct spdk_iscsi_pdu *rsp_pdu;
+	struct iscsi_bhs_login_rsp *rsph;
+	int rc;
+
+	/* Receiving a non-login PDU in the login phase enters the login reject
+	 * path.  The generated login response must keep the conn and ref fields
+	 * set by iscsi_get_pdu().  Regression test for the reject response
+	 * initialization zeroing the entire PDU structure, which caused a NULL
+	 * pdu->conn dereference in the write-done callback during connection
+	 * teardown.
+	 */
+	conn.full_feature = false;
+	conn.state = ISCSI_CONN_STATE_RUNNING;
+
+	pdu.bhs.opcode = ISCSI_OP_NOPOUT;
+	to_be32(&pdu.bhs.itt, 0x1234);
+
+	rc = iscsi_pdu_hdr_handle(&conn, &pdu);
+	CU_ASSERT(rc == SPDK_ISCSI_LOGIN_ERROR_RESPONSE);
+
+	rsp_pdu = TAILQ_FIRST(&g_write_pdu_list);
+	SPDK_CU_ASSERT_FATAL(rsp_pdu != NULL);
+
+	CU_ASSERT(rsp_pdu->conn == &conn);
+	CU_ASSERT(rsp_pdu->ref == 1);
+
+	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	CU_ASSERT(rsph->opcode == ISCSI_OP_LOGIN_RSP);
+	CU_ASSERT(rsph->version_max == ISCSI_VERSION);
+	CU_ASSERT(rsph->version_act == ISCSI_VERSION);
+	CU_ASSERT(rsph->status_class == ISCSI_CLASS_INITIATOR_ERROR);
+	CU_ASSERT(rsph->status_detail == ISCSI_LOGIN_INVALID_LOGIN_REQUEST);
+	CU_ASSERT(rsph->itt == pdu.bhs.itt);
+
+	TAILQ_REMOVE(&g_write_pdu_list, rsp_pdu, tailq);
+	iscsi_put_pdu(rsp_pdu);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_write_pdu_list));
+}
+
+static void
 pdu_hdr_op_text_test(void)
 {
 	struct spdk_iscsi_sess sess = {};
@@ -2614,6 +2659,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, build_iovs_test);
 	CU_ADD_TEST(suite, build_iovs_with_md_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_login_test);
+	CU_ADD_TEST(suite, pdu_hdr_handle_login_reject_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_text_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_logout_test);
 	CU_ADD_TEST(suite, pdu_hdr_op_scsi_test);
