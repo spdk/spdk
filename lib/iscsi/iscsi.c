@@ -4386,8 +4386,8 @@ init_login_reject_response(struct spdk_iscsi_pdu *pdu, struct spdk_iscsi_pdu *rs
 {
 	struct iscsi_bhs_login_rsp *rsph;
 
-	memset(rsp_pdu, 0, sizeof(struct spdk_iscsi_pdu));
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
+	memset(rsph, 0, sizeof(*rsph));
 	rsph->version_max = ISCSI_VERSION;
 	rsph->version_act = ISCSI_VERSION;
 	rsph->opcode = ISCSI_OP_LOGIN_RSP;
