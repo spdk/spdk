@@ -727,6 +727,8 @@ struct nvmf_bdev_ctrlr_unmap {
 	struct spdk_bdev		*bdev;
 	struct spdk_io_channel		*ch;
 	uint32_t			range_index;
+	int				cur_iov_idx;
+	size_t				cur_iov_offset;
 };
 
 static void
@@ -811,7 +813,10 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		unmap_ctx->count--;	/* dequeued */
 	}
 
+	/* Resume reading DSM ranges from where we left off on resubmission. */
 	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	ix.cur_iov_idx = unmap_ctx->cur_iov_idx;
+	ix.cur_iov_offset = unmap_ctx->cur_iov_offset;
 
 	for (i = unmap_ctx->range_index; i < nr; i++) {
 		struct spdk_nvme_dsm_range dsm_range = { 0 };
@@ -850,6 +855,11 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				* unmaps already sent to complete */
 			break;
 		}
+		/* Record the iov position after this range so a later -ENOMEM
+		 * resubmission continues from the next (unprocessed) range.
+		 */
+		unmap_ctx->cur_iov_idx = ix.cur_iov_idx;
+		unmap_ctx->cur_iov_offset = ix.cur_iov_offset;
 		unmap_ctx->range_index++;
 	}
 

@@ -250,17 +250,25 @@ struct ut_unmap_record {
 #define UT_MAX_UNMAP_CALLS 16
 static struct ut_unmap_record g_unmap_records[UT_MAX_UNMAP_CALLS];
 static int g_unmap_call_count;
+static int g_unmap_success_count;
+static int g_unmap_fail_at = -1;
 
 int
 spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	if (g_unmap_call_count < UT_MAX_UNMAP_CALLS) {
-		g_unmap_records[g_unmap_call_count].offset_blocks = offset_blocks;
-		g_unmap_records[g_unmap_call_count].num_blocks = num_blocks;
-		g_unmap_records[g_unmap_call_count].cb = cb;
-		g_unmap_records[g_unmap_call_count].cb_arg = cb_arg;
+	if (g_unmap_call_count == g_unmap_fail_at) {
+		g_unmap_call_count++;
+		return -ENOMEM;
+	}
+
+	if (g_unmap_success_count < UT_MAX_UNMAP_CALLS) {
+		g_unmap_records[g_unmap_success_count].offset_blocks = offset_blocks;
+		g_unmap_records[g_unmap_success_count].num_blocks = num_blocks;
+		g_unmap_records[g_unmap_success_count].cb = cb;
+		g_unmap_records[g_unmap_success_count].cb_arg = cb_arg;
+		g_unmap_success_count++;
 	}
 
 	g_unmap_call_count++;
@@ -272,7 +280,7 @@ ut_unmap_complete_io(void)
 {
 	int i;
 
-	for (i = 0; i < g_unmap_call_count; i++) {
+	for (i = 0; i < g_unmap_success_count; i++) {
 		g_unmap_records[i].cb(NULL, true, g_unmap_records[i].cb_arg);
 	}
 }
@@ -281,6 +289,8 @@ static void
 ut_unmap_clear_globals(void)
 {
 	g_unmap_call_count = 0;
+	g_unmap_success_count = 0;
+	g_unmap_fail_at = -1;
 	memset(g_unmap_records, 0, sizeof(g_unmap_records));
 }
 
@@ -1207,6 +1217,62 @@ test_nvmf_bdev_ctrlr_dsm_limits(void)
 	ut_unmap_clear_globals();
 }
 
+static void
+test_nvmf_bdev_ctrlr_unmap_resubmit(void)
+{
+	struct spdk_bdev bdev = { .blockcnt = 100000, .blocklen = 512 };
+	struct spdk_bdev_desc desc = { .bdev = &bdev };
+	struct spdk_io_channel ch = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_poll_group group = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = { .qpair = &qpair, .cmd = &cmd, .rsp = &rsp };
+	struct spdk_nvme_dsm_range ranges[3] = {};
+	struct nvmf_bdev_ctrlr_unmap *unmap_ctx;
+	int rc;
+
+	qpair.group = &group;
+
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, ranges, sizeof(ranges));
+	req.length = sizeof(ranges);
+	cmd.nvme_cmd.cdw11_bits.dsm.ad = 1;
+	cmd.nvme_cmd.cdw10_bits.dsm.nr = SPDK_COUNTOF(ranges) - 1;
+
+	ranges[0] = (struct spdk_nvme_dsm_range) { .starting_lba = 0,   .length = 100 };
+	ranges[1] = (struct spdk_nvme_dsm_range) { .starting_lba = 200, .length = 100 };
+	ranges[2] = (struct spdk_nvme_dsm_range) { .starting_lba = 400, .length = 100 };
+
+	ut_unmap_clear_globals();
+	g_unmap_fail_at = 1;
+
+	rc = nvmf_bdev_ctrlr_dsm_cmd(&bdev, &desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(g_unmap_call_count == 2);
+	CU_ASSERT(g_unmap_success_count == 1);
+	CU_ASSERT(g_unmap_records[0].offset_blocks == ranges[0].starting_lba);
+	CU_ASSERT(g_unmap_records[0].num_blocks == ranges[0].length);
+
+	unmap_ctx = g_unmap_records[0].cb_arg;
+	CU_ASSERT(unmap_ctx != NULL);
+
+	/* Simulate the bdev layer becoming available again. */
+	g_unmap_fail_at = -1;
+	nvmf_bdev_ctrlr_unmap_resubmit(unmap_ctx);
+
+	CU_ASSERT(g_unmap_call_count == 4);
+	CU_ASSERT(g_unmap_success_count == SPDK_COUNTOF(ranges));
+	CU_ASSERT(g_unmap_records[1].offset_blocks == ranges[1].starting_lba);
+	CU_ASSERT(g_unmap_records[1].num_blocks == ranges[1].length);
+	CU_ASSERT(g_unmap_records[2].offset_blocks == ranges[2].starting_lba);
+	CU_ASSERT(g_unmap_records[2].num_blocks == ranges[2].length);
+
+	ut_unmap_complete_io();
+	ut_unmap_clear_globals();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1228,6 +1294,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_read_write_cmd);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_nvme_passthru);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_dsm_limits);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_unmap_resubmit);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
