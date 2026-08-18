@@ -241,7 +241,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
                 Name=el["name"],
                 Optional="Required" if el.get("required", False) else "Optional",
                 Type=el["type"],
-                Description=el["description"],
+                Description=" ".join(el["description"].split()),
             )
             for el in method["params"]
         ]
@@ -257,7 +257,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
                 Name=el["name"],
                 Optional="Required" if el.get("required", False) else "Optional",
                 Type=el["type"],
-                Description=el["description"],
+                Description=" ".join(el["description"].split()),
             )
             for el in obj["fields"]
         ]
