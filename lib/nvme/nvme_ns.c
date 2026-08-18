@@ -271,59 +271,82 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 	return nvme_ns_identify_data_async(ns, NULL, NULL, NULL);
 }
 
-static int
-nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
+static void
+nvme_ns_identify_iocs_specific_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct nvme_completion_poll_status *status;
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct nvme_ns_identify_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = ctx->ns;
+	struct spdk_nvme_ctrlr *ctrlr;
 	void *prev_nsdata_iocs;
-	int rc;
+	int rc = 0;
 
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		return -ENOMEM;
+	if (ctx->status->timed_out) {
+		nvme_ns_delete_identify_ctx_timeout(ctx);
+		return;
 	}
 
-	status->dma_data = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
-					SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-	if (!status->dma_data) {
-		free(status);
+	ctrlr = ns->ctrlr;
+	ctx->status->done = true;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to retrieve NS %u IOCS specific data\n", ns->id);
+		if (nvme_ctrlr_identify_ns_error_is_fatal(ctrlr, cpl)) {
+			ctx->status->cpl = *cpl;
+			rc = -ENXIO;
+			goto out;
+		}
+	} else {
+		prev_nsdata_iocs = ns->nsdata_iocs;
+		ns->nsdata_iocs = ctx->dma_data;
+		spdk_free(prev_nsdata_iocs);
+		ctx->dma_data = NULL;
+	}
+
+out:
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ns->id, ctx->cb_arg, rc);
+		nvme_ns_delete_identify_ctx(ctx);
+	}
+}
+
+static int
+nvme_ns_identify_iocs_specific_async(struct spdk_nvme_ns *ns,
+				     struct nvme_completion_poll_status *status, nvme_ns_async_cb_fn cb_fn, void *cb_arg)
+{
+	struct nvme_ns_identify_ctx *ctx;
+	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	int rc;
+
+	ctx = nvme_ns_create_identify_ctx(ns, status, cb_fn, cb_arg);
+	if (!ctx) {
 		return -ENOMEM;
 	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
-				     nvme_completion_poll_cb, status);
+				     ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
+				     nvme_ns_identify_iocs_specific_cb, ctx);
 	if (rc) {
-		spdk_free(status->dma_data);
-		free(status);
-		return rc;
+		goto out;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
-	if (status->timed_out) {
+	if (cb_fn) {
+		return 0;
+	}
+
+	rc = nvme_wait_for_adminq_completion(ctrlr, ctx->status, false);
+	if (ctx->status->timed_out) {
 		return -ENXIO;
 	}
 
-	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
-				  spdk_strerror(abs(rc)));
-		if (nvme_ctrlr_identify_ns_error_is_fatal(ctrlr, &status->cpl)) {
-			spdk_free(status->dma_data);
-			free(status);
-			return -ENXIO;
-		}
-	} else {
-		prev_nsdata_iocs = ns->nsdata_iocs;
-		ns->nsdata_iocs = status->dma_data;
-		spdk_free(prev_nsdata_iocs);
-		status->dma_data = NULL;
-	}
+out:
+	nvme_ns_delete_identify_ctx(ctx);
+	return rc;
+}
 
-	spdk_free(status->dma_data);
-	free(status);
-	return 0;
+static int
+nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
+{
+	return nvme_ns_identify_iocs_specific_async(ns, NULL, NULL, NULL);
 }
 
 static void

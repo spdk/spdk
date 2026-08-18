@@ -76,10 +76,12 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		if (csi == SPDK_NVME_CSI_ZNS) {
 			assert(payload_size == sizeof(struct spdk_nvme_zns_ns_data));
 			memcpy(payload, &nsdata_zns, sizeof(struct spdk_nvme_zns_ns_data));
+			fake_cpl_sc(cb_fn, cb_arg);
 			return 0;
 		} else if (csi == SPDK_NVME_CSI_NVM) {
 			assert(payload_size == sizeof(struct spdk_nvme_nvm_ns_data));
 			memcpy(payload, &nsdata_nvm, sizeof(struct spdk_nvme_nvm_ns_data));
+			fake_cpl_sc(cb_fn, cb_arg);
 			return 0;
 		}
 	} else if (cns == SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST) {
