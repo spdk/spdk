@@ -2302,16 +2302,18 @@ print_performance(void)
 	TAILQ_FOREACH(worker, &g_workers, link) {
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			if (ns_ctx->stats.io_completed != 0) {
-				io_per_second = (double)ns_ctx->stats.io_completed * 1000 * 1000 / g_elapsed_time_in_usec;
+				io_per_second = (double)ns_ctx->stats.io_completed * SPDK_SEC_TO_USEC /
+						g_elapsed_time_in_usec;
 				mb_per_second = io_per_second * g_max_io_size_bytes / (1024 * 1024);
-				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) * 1000 * 1000 /
+				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) *
+						  SPDK_SEC_TO_USEC /
 						  g_tsc_rate;
-				min_latency = (double)ns_ctx->stats.min_tsc * 1000 * 1000 / g_tsc_rate;
+				min_latency = (double)ns_ctx->stats.min_tsc * SPDK_SEC_TO_USEC / g_tsc_rate;
 				if (min_latency < min_latency_so_far) {
 					min_latency_so_far = min_latency;
 				}
 
-				max_latency = (double)ns_ctx->stats.max_tsc * 1000 * 1000 / g_tsc_rate;
+				max_latency = (double)ns_ctx->stats.max_tsc * SPDK_SEC_TO_USEC / g_tsc_rate;
 				if (max_latency > max_latency_so_far) {
 					max_latency_so_far = max_latency;
 				}
@@ -2330,7 +2332,7 @@ print_performance(void)
 	}
 
 	if (ns_count != 0 && total_io_completed) {
-		sum_ave_latency = ((double)total_io_tsc / total_io_completed) * 1000 * 1000 / g_tsc_rate;
+		sum_ave_latency = ((double)total_io_tsc / total_io_completed) * SPDK_SEC_TO_USEC / g_tsc_rate;
 		printf("========================================================\n");
 		printf("%-*s: %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 		       max_strlen + 13, "Total", total_io_per_second, total_mb_per_second,
