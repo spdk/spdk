@@ -303,7 +303,7 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                 if types[param['type']] != newtype:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'type' field is mismatched")
                 help_str = _strip_argparse_default_hint(action)
-                if param['description'] != help_str and not method['name'].startswith('bdev_'):
+                if param['description'] != help_str and not method['name'].startswith('bdev_nvme_'):
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'description' field is mismatched")
 
 

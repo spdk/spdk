@@ -1376,7 +1376,7 @@ methods:
         description: Maximum number of spdk_bdev_io structures cached per thread
       - name: bdev_auto_examine
         type: boolean
-        description: If set to false, the bdev layer will not examine every disks automatically
+        description: If set to false, the bdev layer will not examine every disk automatically
       - name: iobuf_small_cache_size
         type: uint32
         description: Size of the small iobuf per thread cache
@@ -1529,7 +1529,7 @@ methods:
       - name: period
         type: uint64
         required: true
-        description: period (in microseconds).If set to 0, polling will be disabled.
+        description: Period in microseconds. If set to 0, polling will be disabled.
   - name: bdev_crypto_create
     description: Create a new crypto bdev on a given base bdev.
     result:
@@ -1543,7 +1543,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Name of the crypto vbdev to create
+        description: Name of the crypto vbdev
       - name: crypto_pmd
         type: string
         description: Name of the crypto device driver. Obsolete, see dpdk_cryptodev_set_driver
@@ -1552,10 +1552,10 @@ methods:
         description: Key in hex form. Obsolete, see accel_crypto_key_create
       - name: cipher
         type: string
-        description: Cipher to use, AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create
+        description: 'Cipher to use: AES_CBC or AES_XTS (QAT and MLX5). Obsolete, see accel_crypto_key_create'
       - name: key2
         type: string
-        description: 2nd key in hex form only required for cipher AET_XTS. Obsolete, see accel_crypto_key_create
+        description: 2nd key in hex form, required for AES_XTS cipher. Obsolete, see accel_crypto_key_create
       - name: key_name
         type: string
         description: Name of the key created with accel_crypto_key_create
@@ -1582,7 +1582,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name to use
+        description: Name of resulting OCF bdev
       - name: mode
         type: string
         required: true
@@ -1607,14 +1607,14 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the OCF bdev
   - name: bdev_ocf_get_stats
     description: Get statistics of chosen OCF block device.
     params:
       - name: name
         type: string
         required: true
-        description: Block device name
+        description: Name of the OCF bdev
   - name: bdev_ocf_reset_stats
     description: Reset statistics of chosen OCF block device.
     result:
@@ -1624,7 +1624,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Block device name
+        description: Name of the OCF bdev
   - name: bdev_ocf_get_bdevs
     description: Get list of OCF devices including unregistered ones.
     params:
@@ -1640,7 +1640,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the OCF bdev
       - name: mode
         type: string
         required: true
@@ -1654,7 +1654,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of OCF cache bdev
       - name: policy
         type: string
         required: true
@@ -1684,7 +1684,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the OCF bdev
   - name: bdev_ocf_flush_status
     description: |
       Get flush status of OCF cache device.
@@ -1701,7 +1701,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the OCF bdev
   - name: bdev_kvmalloc_create
     description: |
       Construct a Key-Value bdev backed by malloc memory. The bdev reports support for the NVMe KV
@@ -1757,39 +1757,39 @@ methods:
     params:
       - name: name
         type: string
-        description: Bdev name to use
+        description: Name of the malloc bdev
       - name: block_size
         type: uint32
         required: true
-        description: Data block size in bytes -must be multiple of 512
+        description: Data block size in bytes, must be multiple of 512
       - name: num_blocks
         type: uint64
         required: true
         description: Number of blocks
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
       - name: optimal_io_boundary
         type: uint32
-        description: Split on optimal IO boundary, in number of blocks, default 0
+        description: 'Split on optimal IO boundary in blocks. Default: 0 (disabled)'
       - name: md_size
         type: uint32
         description: Metadata size for this bdev (0, 8, 16, 32, 64, or 128). Default is 0.
       - name: md_interleave
         type: boolean
-        description: Metadata location, interleaved if true, and separated if false. Default is false.
+        description: 'Metadata location, interleaved if `true`, separated if `false`. Default: `false`'
       - name: dif_type
         type: int32
-        description: Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
+        description: 'Protection information type. --md-size must be set when --dif-type is non-zero. Default: 0 (no protection)'
       - name: dif_is_head_of_md
         type: boolean
         description: Protection information is in the first 8 bytes of metadata. Default=false.
       - name: physical_block_size
         type: uint32
-        description: Physical block size of device; must be a power of 2 and at least 512
+        description: Physical block size in bytes, must be a power of 2 and at least 512
       - name: dif_pi_format
         type: uint32
-        description: protection information format
+        description: 'Protection information format. 0=16b Guard PI, 1=32b Guard PI, 2=64b Guard PI. Default: 0'
       - name: numa_id
         type: int32
         required: false
@@ -1803,7 +1803,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the malloc bdev
   - name: bdev_null_create
     description: 'Construct @ref bdev_config_null "a Null bdev"'
     result:
@@ -1813,7 +1813,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name to use
+        description: Name of the null bdev
       - name: block_size
         type: uint32
         required: true
@@ -1824,7 +1824,7 @@ methods:
         description: Number of blocks
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
       - name: physical_block_size
         type: uint32
         description: Physical block size for this bdev.
@@ -1836,7 +1836,7 @@ methods:
         description: Protection information type. Parameter --md-size needs to be set along --dif-type. Default=0 - no protection.
       - name: dif_pi_format
         type: uint32
-        description: protection information format
+        description: 'Protection information format: 0=16b Guard PI, 1=32b Guard PI, 2=64b Guard PI. Default: 0'
       - name: dif_is_head_of_md
         type: boolean
         description: Protection information is in the first 8 bytes of metadata. Default=false.
@@ -1864,7 +1864,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the null bdev
   - name: bdev_null_resize
     description: 'Resize @ref bdev_config_null "a Null bdev".'
     result:
@@ -1874,11 +1874,11 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the null bdev
       - name: new_size
         type: uint64
         required: true
-        description: Bdev new capacity in MiB
+        description: New bdev size in MiB
   - name: bdev_aio_create
     description: 'Construct @ref bdev_config_aio "an AIO bdev".'
     result:
@@ -1888,26 +1888,26 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name to use
+        description: Name of the aio bdev
       - name: filename
         type: string
         required: true
-        description: Path to device or file
+        description: 'Path to device or file (ex: /dev/sda)'
       - name: block_size
         type: uint32
-        description: Block size in bytes
+        description: 'Block size in bytes. Default: 0 (auto-detect from device)'
       - name: readonly
         type: boolean
-        description: set aio bdev as read-only
+        description: Set the aio bdev as read-only
       - name: fallocate
         type: boolean
-        description: Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall.
+        description: Enable UNMAP and WRITE ZEROES support via fallocate. For testing only due to synchronous syscall
       - name: blkdiscard
         type: boolean
         description: Enable UNMAP support using the BLKDISCARD ioctl. Can be combined with fallocate, which then only services WRITE ZEROES. The specified device must be a block device, otherwise creation will fail. Mutually exclusive with readonly. Intended only for testing purposes due to synchronous syscall.
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
       - name: nowait
         type: boolean
         description: Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel.
@@ -1920,7 +1920,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the aio bdev
   - name: bdev_aio_delete
     description: 'Delete @ref bdev_config_aio "an AIO bdev".'
     result:
@@ -1930,7 +1930,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the aio bdev
   - name: bdev_nvme_set_options
     description: |
       Set global parameters for all bdev NVMe. This RPC may only be called before SPDK subsystems have been initialized
@@ -2431,11 +2431,11 @@ methods:
       - name: name
         type: string
         required: true
-        description: Name of the Zone device
+        description: Name of the zone bdev
       - name: base_bdev
         type: string
         required: true
-        description: Name of the Base bdev
+        description: Name of the non-zoned base bdev
       - name: zone_capacity
         type: uint64
         required: true
@@ -2453,7 +2453,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Name of the Zone device
+        description: Name of the zone bdev
   - name: bdev_nvme_apply_firmware
     description: Download and commit firmware to NVMe device.
     params:
@@ -2539,7 +2539,7 @@ methods:
     params:
       - name: name
         type: string
-        description: Bdev name
+        description: Name of the RBD bdev
       - name: user_id
         type: string
         description: Ceph ID (i.e. admin, not client.admin)
@@ -2560,13 +2560,13 @@ methods:
         description: Explicit librados configuration
       - name: cluster_name
         type: string
-        description: Rados cluster object name created in this module.
+        description: Rados cluster object name
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
       - name: read_only
         type: boolean
-        description: set rbd bdev as read-only
+        description: Set bdev as read-only
   - name: bdev_rbd_delete
     description: |
       Delete @ref bdev_config_rbd "an RBD bdev"
@@ -2579,7 +2579,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the RBD bdev
   - name: bdev_rbd_resize
     description: |
       Resize @ref bdev_config_rbd "an RBD bdev"
@@ -2592,7 +2592,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the RBD bdev
       - name: new_size
         type: uint64
         required: true
@@ -2608,30 +2608,30 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the delay bdev
       - name: base_bdev_name
         type: string
         required: true
-        description: Base bdev name
+        description: Name of the base bdev
       - name: avg_read_latency
         type: uint64
         required: true
-        description: average read latency (us)
+        description: Average read latency in microseconds
       - name: p99_read_latency
         type: uint64
         required: true
-        description: p99 read latency (us)
+        description: p99 read latency in microseconds
       - name: avg_write_latency
         type: uint64
         required: true
-        description: average write latency (us)
+        description: Average write latency in microseconds
       - name: p99_write_latency
         type: uint64
         required: true
-        description: p99 write latency (us)
+        description: p99 write latency in microseconds
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
   - name: bdev_delay_delete
     description: Delete delay bdev.
     result:
@@ -2641,7 +2641,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the delay bdev
   - name: bdev_delay_update_latency
     description: |
       Update a target latency value associated with a given delay bdev. Any currently
@@ -2662,7 +2662,7 @@ methods:
       - name: latency_us
         type: uint64
         required: true
-        description: The new latency value in microseconds
+        description: New latency value in microseconds
   - name: bdev_error_create
     description: Construct error bdev.
     result:
@@ -2702,23 +2702,23 @@ methods:
         type: enum
         class: bdev_error_inject_io_type
         required: true
-        description: io type 'clear' 'read' 'write' 'unmap' 'flush' 'all'
+        description: 'IO type: clear, read, write, unmap, flush, all'
       - name: error_type
         type: enum
         class: bdev_error_inject_error_type
         required: true
-        description: error type 'failure' 'nvme_failure' 'pending' 'corrupt_data' 'nomem'
+        description: 'Error type: failure, nvme_failure, pending, corrupt_data, nomem'
       - name: nvme_sct
         type: uint32
         required: false
-        description: the NVMe SCT error for 'nvme_failure' type (default:0)
+        description: The NVMe SCT error for 'nvme_failure' type. Default is 0.
       - name: nvme_sc
         type: uint32
         required: false
-        description: the NVMe SC error for 'nvme_failure' type (default:0)
+        description: The NVMe SC error for 'nvme_failure' type. Default is 0.
       - name: num
         type: uint32
-        description: the number of commands you want to fail.(default:1)
+        description: 'Number of commands to fail. Default: 1'
       - name: queue_depth
         type: uint64
         description: the queue depth at which to trigger the error
@@ -2748,7 +2748,7 @@ methods:
     params:
       - name: timeout_sec
         type: uint64
-        description: Timeout for command, in seconds, if 0, don't track timeout
+        description: Timeout for command in seconds. 0 means do not track timeout
   - name: bdev_iscsi_create
     description: |
       Connect to iSCSI target and create bdev backed by this connection.
@@ -2761,15 +2761,15 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the iSCSI bdev
       - name: initiator_iqn
         type: string
         required: true
-        description: IQN name used during connection
+        description: Initiator IQN for the connection
       - name: url
         type: string
         required: true
-        description: iSCSI resource URI
+        description: iSCSI URL of the target LUN
   - name: bdev_iscsi_delete
     description: |
       Delete iSCSI bdev and terminate connection to target.
@@ -2782,7 +2782,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the iSCSI bdev
   - name: bdev_ftl_create
     description: |
       Create FTL bdev.
@@ -2796,7 +2796,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
       - name: base_bdev
         type: string
         required: true
@@ -2813,7 +2813,7 @@ methods:
         description: CPU core(s) possible for placement of the ftl core thread, application main thread by default
       - name: overprovisioning
         type: uint64
-        description: Percentage of base device used for relocation, 20% by default
+        description: 'Percentage of base device used for relocation. Default: 20'
       - name: fast_shutdown
         type: boolean
         description: When set FTL will minimize persisted data on target application shutdown and rely on shared memory during next load
@@ -2832,7 +2832,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
       - name: fast_shutdown
         type: boolean
         description: When set FTL will minimize persisted data during deletion and rely on shared memory during next load
@@ -2848,7 +2848,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
       - name: lba
         type: uint64
         required: true
@@ -2866,14 +2866,14 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
   - name: bdev_ftl_get_properties
     description: Get FTL properties
     params:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
   - name: bdev_ftl_set_property
     description: Set FTL property. Trying to set a read-only property will result in an error.
     result:
@@ -2883,11 +2883,11 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the FTL bdev
       - name: ftl_property
         type: string
         required: true
-        description: Name of the property to modify
+        description: Name of the property to be set
       - name: value
         type: string
         required: true
@@ -2903,14 +2903,14 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the pass through bdev
       - name: base_bdev_name
         type: string
         required: true
-        description: Base bdev name
+        description: Name of the base bdev
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
   - name: bdev_passthru_delete
     description: Delete passthru bdev.
     result:
@@ -2920,7 +2920,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Pass through bdev name
   - name: bdev_xnvme_create
     description: Create xnvme bdev. This bdev type redirects all IO to its underlying backend.
     result:
@@ -2934,14 +2934,14 @@ methods:
       - name: filename
         type: string
         required: true
-        description: 'path to device or file (ex: /dev/nvme0n1)'
+        description: 'Path to device or file (ex: /dev/nvme0n1)'
       - name: io_mechanism
         type: string
         required: true
         description: 'IO mechanism to use (ex: libaio, io_uring, io_uring_cmd, etc.)'
       - name: conserve_cpu
         type: boolean
-        description: 'Whether or not to conserve CPU when polling (default: false)'
+        description: 'Whether or not to conserve CPU when polling. Default: `false`'
   - name: bdev_xnvme_delete
     description: Delete xnvme bdev.
     result:
@@ -2951,7 +2951,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: name of xnvme bdev to delete
+        description: Name of the xNVMe bdev
   - name: bdev_virtio_attach_controller
     description: 'Create new initiator @ref bdev_config_virtio_scsi "Virtio SCSI" or @ref bdev_config_virtio_blk "Virtio Block" bdev and expose all found bdevs.'
     result:
@@ -4868,7 +4868,7 @@ methods:
         description: UUID for this RAID bdev
       - name: superblock
         type: boolean
-        description: 'If set, information about raid bdev will be stored in superblock on each base bdev (default: `false`)'
+        description: 'Store raid bdev information in superblock on each base bdev. Default: `false`'
   - name: bdev_raid_delete
     description: Removes RAID bdev.
     result:
@@ -4893,7 +4893,7 @@ methods:
       - name: raid_bdev
         type: string
         required: true
-        description: Raid bdev name
+        description: RAID bdev name
       - name: base_bdev
         type: string
         required: true
@@ -4918,10 +4918,10 @@ methods:
       - name: split_count
         type: uint32
         required: true
-        description: number of splits
+        description: Number of splits to create from the base bdev
       - name: split_size_mb
         type: uint64
-        description: size in MB to restrict the size
+        description: 'Size in MiB for each split bdev. Default: 0 (base bdev size / split_count)'
   - name: bdev_split_delete
     description: This is used to remove the split vbdevs.
     result:
@@ -4941,17 +4941,17 @@ methods:
       - name: filename
         type: string
         required: true
-        description: 'path to device or file (ex: /dev/nvme0n1)'
+        description: 'Path to device or file (ex: /dev/nvme0n1)'
       - name: name
         type: string
         required: true
-        description: name of bdev
+        description: Name of the uring bdev
       - name: block_size
         type: uint32
-        description: block size of device (If omitted, get the block size from the file)
+        description: 'Block size in bytes. Default: 0 (auto-detect from device)'
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
   - name: bdev_uring_rescan
     description: Rescan the size of a uring bdev.
     result:
@@ -4961,7 +4961,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: name of uring bdev to rescan
+        description: Name of the uring bdev
   - name: bdev_uring_delete
     description: Remove a uring bdev.
     result:
@@ -4971,7 +4971,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: name of uring bdev to delete
+        description: Name of the uring bdev
   - name: bdev_nvme_opal_init
     description: 'This is used to initialize OPAL of a given NVMe ctrlr, including taking ownership and activating.'
     result:
@@ -4981,7 +4981,7 @@ methods:
       - name: nvme_ctrlr_name
         type: string
         required: true
-        description: name of nvme ctrlr
+        description: Name of NVMe controller
       - name: password
         type: string
         required: true
@@ -5009,11 +5009,11 @@ methods:
       - name: nvme_ctrlr_name
         type: string
         required: true
-        description: name of nvme ctrlr that supports OPAL
+        description: Name of NVMe controller that supports OPAL
       - name: nsid
         type: uint32
         required: true
-        description: namespace ID
+        description: Namespace ID
       - name: locking_range_id
         type: uint16
         required: true
@@ -5025,22 +5025,22 @@ methods:
       - name: range_length
         type: uint64
         required: true
-        description: locking range length
+        description: Locking range length in blocks
       - name: password
         type: string
         required: true
-        description: admin password of OPAL
+        description: Admin password of OPAL
   - name: bdev_opal_get_info
     description: This is used to get information of a given OPAL bdev.
     params:
       - name: bdev_name
         type: string
         required: true
-        description: name of OPAL vbdev
+        description: Name of OPAL vbdev
       - name: password
         type: string
         required: true
-        description: admin password
+        description: Admin password
   - name: bdev_opal_delete
     description: This is used to delete OPAL vbdev.
     result:
@@ -5050,11 +5050,11 @@ methods:
       - name: bdev_name
         type: string
         required: true
-        description: name of OPAL vbdev
+        description: Name of OPAL vbdev
       - name: password
         type: string
         required: true
-        description: admin password
+        description: Admin password
   - name: bdev_opal_new_user
     description: |
       This enables a new user to the specified opal bdev so that the user can lock/unlock the bdev.
@@ -5066,19 +5066,19 @@ methods:
       - name: bdev_name
         type: string
         required: true
-        description: name of OPAL vbdev
+        description: Name of OPAL vbdev
       - name: admin_password
         type: string
         required: true
-        description: admin password
+        description: Admin password
       - name: user_id
         type: uint16
         required: true
-        description: user ID
+        description: User ID
       - name: user_password
         type: string
         required: true
-        description: user password
+        description: User password
   - name: bdev_opal_set_lock_state
     description: This is used to lock/unlock specific opal bdev providing user ID and password.
     result:
@@ -5088,19 +5088,19 @@ methods:
       - name: bdev_name
         type: string
         required: true
-        description: name of OPAL vbdev
+        description: Name of OPAL vbdev
       - name: user_id
         type: uint16
         required: true
-        description: user ID
+        description: User ID
       - name: password
         type: string
         required: true
-        description: user password
+        description: User password
       - name: lock_state
         type: string
         required: true
-        description: lock state
+        description: 'Lock state: readwrite, readonly, rwlock'
   - name: notify_get_types
     description: Return list of all supported notification types.
     result:
@@ -5466,29 +5466,29 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name to use
+        description: Name of the DAOS bdev
       - name: pool
         type: string
         required: true
-        description: DAOS pool label or its uuid
+        description: DAOS pool label or UUID
       - name: cont
         type: string
         required: true
-        description: DAOS cont label or its uuid
+        description: DAOS container label or UUID
       - name: block_size
         type: uint32
         required: true
-        description: Block size in bytes -must be multiple of 512
+        description: Block size in bytes, must be multiple of 512
       - name: num_blocks
         type: uint64
         required: true
         description: Number of blocks
       - name: uuid
         type: uuid
-        description: UUID of new bdev
+        description: UUID of the bdev
       - name: oclass
         type: string
-        description: DAOS object class (default SX)
+        description: 'DAOS object class. Default: SX'
   - name: bdev_daos_delete
     description: 'Delete @ref bdev_config_daos "a DAOS bdev"'
     result:
@@ -5498,7 +5498,7 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the DAOS bdev
   - name: bdev_daos_resize
     description: 'Resize @ref bdev_config_daos "a DAOS bdev".'
     result:
@@ -5508,11 +5508,11 @@ methods:
       - name: name
         type: string
         required: true
-        description: Bdev name
+        description: Name of the DAOS bdev
       - name: new_size
         type: uint64
         required: true
-        description: Bdev new capacity in MiB
+        description: New bdev size in MiB
   - name: iobuf_set_options
     description: Set iobuf buffer pool options.
     result:

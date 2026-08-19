@@ -652,13 +652,13 @@ def add_parser(subparsers):
                                              range_length=args.range_length,
                                              password=args.password))
 
-    p = subparsers.add_parser('bdev_opal_create', help="This is used to create an OPAL virtual bdev.")
-    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
-    p.add_argument('-n', '--nsid', help='namespace ID (only support nsid=1 for now)', type=int, required=True)
-    p.add_argument('-i', '--locking-range-id', help='locking range id', type=int, required=True)
+    p = subparsers.add_parser('bdev_opal_create', help='This is used to create an OPAL virtual bdev.')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='Name of NVMe controller that supports OPAL', required=True)
+    p.add_argument('-n', '--nsid', help='Namespace ID', type=int, required=True)
+    p.add_argument('-i', '--locking-range-id', help='OPAL locking range ID', type=int, required=True)
     p.add_argument('-s', '--range-start', help='locking range start LBA', type=int, required=True)
-    p.add_argument('-l', '--range-length', help='locking range length (in blocks)', type=int, required=True)
-    p.add_argument('-p', '--password', help='admin password', required=True)
+    p.add_argument('-l', '--range-length', help='Locking range length in blocks', type=int, required=True)
+    p.add_argument('-p', '--password', help='Admin password of OPAL', required=True)
     p.set_defaults(func=bdev_opal_create)
 
     def bdev_opal_get_info(args):
@@ -666,9 +666,9 @@ def add_parser(subparsers):
                                                bdev_name=args.bdev_name,
                                                password=args.password))
 
-    p = subparsers.add_parser('bdev_opal_get_info', help="This is used to get information of a given OPAL bdev.")
-    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
-    p.add_argument('-p', '--password', help='password', required=True)
+    p = subparsers.add_parser('bdev_opal_get_info', help='This is used to get information of a given OPAL bdev.')
+    p.add_argument('-b', '--bdev-name', help='Name of OPAL vbdev', required=True)
+    p.add_argument('-p', '--password', help='Admin password', required=True)
     p.set_defaults(func=bdev_opal_get_info)
 
     def bdev_opal_delete(args):
@@ -676,9 +676,9 @@ def add_parser(subparsers):
                                   bdev_name=args.bdev_name,
                                   password=args.password)
 
-    p = subparsers.add_parser('bdev_opal_delete', help="This is used to delete OPAL vbdev.")
-    p.add_argument('-b', '--bdev-name', help='opal virtual bdev', required=True)
-    p.add_argument('-p', '--password', help='admin password', required=True)
+    p = subparsers.add_parser('bdev_opal_delete', help='This is used to delete OPAL vbdev.')
+    p.add_argument('-b', '--bdev-name', help='Name of OPAL vbdev', required=True)
+    p.add_argument('-p', '--password', help='Admin password', required=True)
     p.set_defaults(func=bdev_opal_delete)
 
     def bdev_opal_new_user(args):
@@ -689,13 +689,14 @@ def add_parser(subparsers):
                                     user_password=args.user_password)
 
     p = subparsers.add_parser('bdev_opal_new_user',
-                              help="This enables a new user to the specified opal bdev so that the user"
-                                   " can lock/unlock the bdev. Recalling this for the same opal bdev,"
-                                   " only the newest user will have the privilege.")
-    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
-    p.add_argument('-p', '--admin-password', help='admin password', required=True)
-    p.add_argument('-i', '--user-id', help='ID for new user', type=int, required=True)
-    p.add_argument('-u', '--user-password', help='password set for this user', required=True)
+                              help="This enables a new user to the specified opal bdev so that "
+                                   "the user can lock/unlock the bdev.\n"
+                                   "Recalling this for the same opal bdev, only the newest user "
+                                   "will have the privilege.")
+    p.add_argument('-b', '--bdev-name', help='Name of OPAL vbdev', required=True)
+    p.add_argument('-p', '--admin-password', help='Admin password', required=True)
+    p.add_argument('-i', '--user-id', help='User ID', type=int, required=True)
+    p.add_argument('-u', '--user-password', help='User password', required=True)
     p.set_defaults(func=bdev_opal_new_user)
 
     def bdev_opal_set_lock_state(args):
@@ -705,11 +706,11 @@ def add_parser(subparsers):
                                           password=args.password,
                                           lock_state=args.lock_state)
 
-    p = subparsers.add_parser('bdev_opal_set_lock_state', help="This is used to lock/unlock specific opal bdev providing user ID and"
-                                                                " password.")
-    p.add_argument('-b', '--bdev-name', help='opal bdev', required=True)
-    p.add_argument('-i', '--user-id', help='ID of the user who want to set lock state, either admin or a user assigned to this bdev',
-                   type=int, required=True)
-    p.add_argument('-p', '--password', help='password of this user', required=True)
-    p.add_argument('-l', '--lock-state', help='lock state to set, choose from {readwrite, readonly, rwlock}', required=True)
+    p = subparsers.add_parser('bdev_opal_set_lock_state',
+                              help='This is used to lock/unlock specific opal bdev '
+                                   'providing user ID and password.')
+    p.add_argument('-b', '--bdev-name', help='Name of OPAL vbdev', required=True)
+    p.add_argument('-i', '--user-id', help='User ID', type=int, required=True)
+    p.add_argument('-p', '--password', help='User password', required=True)
+    p.add_argument('-l', '--lock-state', help='Lock state: readwrite, readonly, rwlock', required=True)
     p.set_defaults(func=bdev_opal_set_lock_state)
