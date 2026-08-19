@@ -74,6 +74,13 @@ struct ns_fn_table;
 
 #define MAX_WORKLOADS 16
 
+struct ns_workload_ctx {
+	/** Number of workload-sized I/Os used to bound random LBA selection; always nonzero. */
+	uint64_t		size_in_ios;
+	/** Precomputed workload I/O size in blocks. */
+	uint32_t		io_size_blocks;
+};
+
 struct ns_entry {
 	/** Backend type (NVMe, uring, aio). */
 	enum entry_type		type;
@@ -100,12 +107,22 @@ struct ns_entry {
 
 	/** Entry in g_namespaces TAILQ. */
 	TAILQ_ENTRY(ns_entry)	link;
-	/** g_max_io_size_bytes expressed in blocks of this namespace. */
-	uint32_t		io_size_blocks;
+	/**
+	 * Total device or file size in bytes; used to compute per-workload
+	 * size_in_ios and the --number-ios-percent target.
+	 */
+	uint64_t		capacity_bytes;
+	/**
+	 * capacity_bytes expressed in blocks; bounds the shared sequential
+	 * cursor without a division in the submission path.
+	 */
+	uint64_t		capacity_blocks;
 	/** Number of NVMe request objects to reserve per qpair; sizes opts.io_queue_requests. */
 	uint32_t		num_io_requests;
-	/** Device capacity in units of io_size_blocks; bounds the random LBA range. */
-	uint64_t		size_in_ios;
+	/**
+	 * Per-workload context indexed by g_workloads[] position.
+	 */
+	struct ns_workload_ctx	workload_ctx[MAX_WORKLOADS];
 	/** Extended logical block size, including interleaved metadata if any. */
 	uint32_t		block_size;
 	/** Per-block metadata size in bytes. */
@@ -113,8 +130,7 @@ struct ns_entry {
 	/** True if metadata is interleaved with data blocks. */
 	bool			md_interleave;
 	/**
-	 * Zipf generator for skewed random LBA selection; NULL when sequential or
-	 * g_zipf_theta == 0.
+	 * Zipf generator for skewed random LBA selection.
 	 */
 	struct spdk_zipf	*zipf;
 	/** PI location within the metadata region. */
@@ -184,8 +200,12 @@ struct ns_worker_ctx {
 	uint64_t		current_queue_depth;
 	/** Submission limit (0 = unlimited), set from --number-ios or its percentage form. */
 	uint64_t		number_ios;
-	/** Sequential cursor, in units of io_size_blocks. */
-	uint64_t		offset_in_ios;
+	/** Shared sequential cursor, in blocks. Advances by each workload's
+	 * io_size_blocks so that a mixed-size sequential stream stays contiguous
+	 * and never overlaps; no individual workload is sequential in isolation,
+	 * only the combined stream is.
+	 */
+	uint64_t		seq_offset_blocks;
 	/** True once the worker has stopped submitting new I/Os and is waiting for in-flight I/Os
 	 * to complete.
 	 */
@@ -243,6 +263,10 @@ struct perf_task {
 	bool			is_read;
 	/** Number of blocks for this I/O. */
 	uint32_t		io_size_blocks;
+	/** Index into g_workloads[] for the workload that was selected for this
+	 * I/O; used to credit the correct per-workload stat counter.
+	 */
+	int			workload_idx;
 	/** DIF context for end-to-end data integrity operations. */
 	struct spdk_dif_ctx	dif_ctx;
 	/** Extended I/O options (PI, fused commands, etc.). */
@@ -311,6 +335,7 @@ static int g_rw_percentage = -1;
 static int g_is_random;
 static struct workload g_workloads[MAX_WORKLOADS];
 static int g_num_workloads = 0;
+static uint8_t g_workload_lookup[WORKLOAD_PCT_TOTAL];
 static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
@@ -828,8 +853,9 @@ static int
 register_file(const char *path)
 {
 	struct ns_entry *entry;
+	struct ns_workload_ctx *zipf_wctx = NULL;
 
-	int flags, fd;
+	int flags, fd, w_idx;
 	uint64_t size;
 	uint32_t blklen;
 
@@ -898,14 +924,37 @@ register_file(const char *path)
 		entry->u.aio.fd = fd;
 #endif
 	}
-	entry->size_in_ios = size / g_max_io_size_bytes;
-	entry->io_size_blocks = g_max_io_size_bytes / blklen;
+	entry->capacity_bytes = size;
+	entry->capacity_blocks = size / blklen;
 	entry->block_size = blklen;
 
-	if (g_is_random) {
-		if (g_zipf_theta > 0) {
-			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		struct workload *wl = &g_workloads[w_idx];
+		struct ns_workload_ctx *wctx = &entry->workload_ctx[w_idx];
+
+		if (wl->io_size_bytes % blklen != 0) {
+			printf("WARNING: IO size %u (workload %d) is not a multiple of "
+			       "device %s block size %u. Removing this device from test\n",
+			       wl->io_size_bytes, w_idx, path, blklen);
+			goto skip_device;
 		}
+
+		wctx->size_in_ios = size / wl->io_size_bytes;
+		wctx->io_size_blocks = wl->io_size_bytes / blklen;
+		if (wctx->size_in_ios == 0) {
+			printf("WARNING: IO size %u (workload %d) is larger than device "
+			       "%s size %" PRIu64 ". Removing this device from test\n",
+			       wl->io_size_bytes, w_idx, path, size);
+			goto skip_device;
+		}
+
+		if (zipf_wctx == NULL && wl->is_random) {
+			zipf_wctx = wctx;
+		}
+	}
+
+	if (g_zipf_theta > 0 && zipf_wctx != NULL) {
+		entry->zipf = spdk_zipf_create(zipf_wctx->size_in_ios, g_zipf_theta, 0);
 	}
 
 	snprintf(entry->name, sizeof(entry->name), "%s", path);
@@ -914,6 +963,12 @@ register_file(const char *path)
 	g_num_async_devs++;
 	TAILQ_INSERT_TAIL(&g_namespaces, entry, link);
 
+	return 0;
+
+skip_device:
+	g_warn = true;
+	free(entry);
+	close(fd);
 	return 0;
 }
 
@@ -1341,10 +1396,12 @@ static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
+	struct ns_workload_ctx *zipf_wctx = NULL;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries, sector_size;
+	uint32_t max_xfer_size, entries, sector_size, max_io_size_blocks;
 	uint64_t ns_size;
 	struct spdk_nvme_io_qpair_opts opts;
+	int w_idx;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -1398,14 +1455,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->u.nvme.ns = ns;
 	entry->num_io_requests = entries * spdk_divide_round_up(g_queue_depth, g_nr_io_queues_per_ns);
 
-	entry->size_in_ios = ns_size / g_max_io_size_bytes;
-	entry->io_size_blocks = g_max_io_size_bytes / sector_size;
-
-	if (g_is_random) {
-		if (g_zipf_theta > 0) {
-			entry->zipf = spdk_zipf_create(entry->size_in_ios, g_zipf_theta, 0);
-		}
-	}
+	entry->capacity_bytes = ns_size;
 
 	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
 	entry->md_size = spdk_nvme_ns_get_md_size(ns);
@@ -1430,21 +1480,52 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		entry->block_size = spdk_nvme_ns_get_sector_size(ns);
 	}
 
-	if (g_max_io_size_bytes % entry->block_size != 0) {
-		printf("WARNING: IO size %u (-o) is not a multiple of nsid %u sector size %u."
-		       " Removing this ns from test\n", g_max_io_size_bytes, spdk_nvme_ns_get_id(ns), entry->block_size);
-		g_warn = true;
-		spdk_zipf_free(&entry->zipf);
-		free(entry);
-		return;
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		struct workload *wl = &g_workloads[w_idx];
+		struct ns_workload_ctx *wctx = &entry->workload_ctx[w_idx];
+
+		if (wl->io_size_bytes % entry->block_size != 0) {
+			printf("WARNING: IO size %u (workload %d) is not a multiple of "
+			       "nsid %u sector size %u. Removing this ns from test\n",
+			       wl->io_size_bytes, w_idx,
+			       spdk_nvme_ns_get_id(ns), entry->block_size);
+			g_warn = true;
+			free(entry);
+			return;
+		}
+
+		wctx->size_in_ios = ns_size / wl->io_size_bytes;
+		wctx->io_size_blocks = wl->io_size_bytes / entry->block_size;
+		if (wctx->size_in_ios == 0) {
+			printf("WARNING: IO size %u (workload %d) is larger than nsid %u "
+			       "size %" PRIu64 ". Removing this ns from test\n",
+			       wl->io_size_bytes, w_idx, spdk_nvme_ns_get_id(ns), ns_size);
+			g_warn = true;
+			free(entry);
+			return;
+		}
+
+		if (zipf_wctx == NULL && wl->is_random) {
+			zipf_wctx = wctx;
+		}
+	}
+
+	entry->capacity_blocks = ns_size / entry->block_size;
+
+	if (g_zipf_theta > 0 && zipf_wctx != NULL) {
+		entry->zipf = spdk_zipf_create(zipf_wctx->size_in_ios, g_zipf_theta, 0);
 	}
 
 	if (g_max_io_md_size < entry->md_size) {
 		g_max_io_md_size = entry->md_size;
 	}
 
-	if (g_max_io_size_blocks < entry->io_size_blocks) {
-		g_max_io_size_blocks = entry->io_size_blocks;
+	/* Metadata buffers are sized for the largest IO of any namespace, expressed
+	 * in data blocks of that namespace.
+	 */
+	max_io_size_blocks = g_max_io_size_bytes / sector_size;
+	if (g_max_io_size_blocks < max_io_size_blocks) {
+		g_max_io_size_blocks = max_io_size_blocks;
 	}
 
 	spdk_nvme_build_name(entry->name, sizeof(entry->name), ctrlr, ns);
@@ -1565,40 +1646,43 @@ static __thread uint64_t seed = 0;
 static inline void
 submit_single_io(struct perf_task *task)
 {
-	uint64_t		rand_value, offset_in_ios, lba;
-	int			rc;
+	uint64_t		rand_value, lba;
+	int			rc, workload_idx;
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
+	struct workload		*workload;
 
 	assert(!ns_ctx->is_draining);
 
-	if (entry->zipf) {
-		offset_in_ios = spdk_zipf_generate(entry->zipf);
-	} else if (g_is_random) {
-		rand_value = spdk_rand_xorshift64(&seed);
-		offset_in_ios = rand_value % entry->size_in_ios;
+	/* Select the workload for this IO. */
+	if (g_num_workloads == 1) {
+		workload_idx = 0;
 	} else {
-		offset_in_ios = ns_ctx->offset_in_ios++;
-		if (ns_ctx->offset_in_ios == entry->size_in_ios) {
-			ns_ctx->offset_in_ios = 0;
-		}
+		workload_idx = g_workload_lookup[spdk_rand_xorshift64(&seed) % WORKLOAD_PCT_TOTAL];
 	}
-	task->io_size_blocks = entry->io_size_blocks;
+	workload = &g_workloads[workload_idx];
+	task->workload_idx = workload_idx;
+	task->is_read = workload->is_read;
+	task->io_size_blocks = entry->workload_ctx[workload_idx].io_size_blocks;
 
-	/* Convert to an LBA once here, rather than in each backend's submit_io(),
-	 * so that every backend receives the same unit.
+	/* Random LBAs are aligned to the selected workload's I/O size. Sequential
+	 * workloads share a contiguous block-based cursor.
 	 */
-	lba = offset_in_ios * task->io_size_blocks;
+	if (workload->is_random && entry->zipf) {
+		lba = spdk_zipf_generate(entry->zipf) * task->io_size_blocks;
+	} else if (workload->is_random) {
+		rand_value = spdk_rand_xorshift64(&seed);
+		lba = (rand_value % entry->workload_ctx[workload_idx].size_in_ios) *
+		      task->io_size_blocks;
+	} else {
+		if (ns_ctx->seq_offset_blocks + task->io_size_blocks > entry->capacity_blocks) {
+			ns_ctx->seq_offset_blocks = 0;
+		}
+		lba = ns_ctx->seq_offset_blocks;
+		ns_ctx->seq_offset_blocks += task->io_size_blocks;
+	}
 
 	task->submit_tsc = spdk_get_ticks();
-
-	if ((g_rw_percentage == 100) ||
-	    (g_rw_percentage != 0 &&
-	     ((spdk_rand_xorshift64(&seed) % 100) < (uint64_t)g_rw_percentage))) {
-		task->is_read = true;
-	} else {
-		task->is_read = false;
-	}
 
 	rc = entry->fn_table->submit_io(task, ns_ctx, entry, lba);
 
@@ -2652,6 +2736,7 @@ static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
+	int idx, w_idx;
 	long int val;
 	uint64_t val_u64;
 	int rc;
@@ -3106,6 +3191,45 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		g_num_workloads = 2;
 	}
 
+	/* Build the percentage-weighted workload lookup table. */
+	idx = 0;
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		uint32_t j;
+
+		for (j = 0; j < g_workloads[w_idx].percentage; j++) {
+			if (idx >= WORKLOAD_PCT_TOTAL) {
+				fprintf(stderr, "Workload percentages exceed %d\n", WORKLOAD_PCT_TOTAL);
+				return 1;
+			}
+			g_workload_lookup[idx++] = (uint8_t)w_idx;
+		}
+	}
+	if (idx != WORKLOAD_PCT_TOTAL) {
+		fprintf(stderr, "Workload percentages total %d, expected %d\n", idx,
+			WORKLOAD_PCT_TOTAL);
+		return 1;
+	}
+
+	/* A shared Zipf generator requires equal I/O sizes for random workloads. */
+	if (g_zipf_theta > 0) {
+		uint32_t zipf_io_size = 0;
+		bool zipf_io_size_set = false;
+
+		for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+			if (!g_workloads[w_idx].is_random) {
+				continue;
+			}
+			if (!zipf_io_size_set) {
+				zipf_io_size = g_workloads[w_idx].io_size_bytes;
+				zipf_io_size_set = true;
+			} else if (g_workloads[w_idx].io_size_bytes != zipf_io_size) {
+				fprintf(stderr, "-F (--zipf) is not supported when random workloads "
+					"use different IO sizes\n");
+				return 1;
+			}
+		}
+	}
+
 	if (g_sock_zcopy_threshold > 0) {
 		if (!g_sock_threshold_impl) {
 			fprintf(stderr,
@@ -3382,7 +3506,7 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 	ns_ctx->entry = entry;
 	ns_ctx->histogram = spdk_histogram_data_alloc();
 	if (g_number_ios_percent > 0) {
-		ns_ctx->number_ios = entry->size_in_ios * g_number_ios_percent / 100;
+		ns_ctx->number_ios = entry->capacity_bytes / g_max_io_size_bytes * g_number_ios_percent / 100;
 		printf("number_ios for namespace %s set to %lu (%d%% of namespace size)\n",
 		       entry->name, ns_ctx->number_ios, g_number_ios_percent);
 	} else {
