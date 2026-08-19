@@ -17,7 +17,14 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvmf)
 
-DEFINE_STUB(spdk_nvmf_request_complete, int, (struct spdk_nvmf_request *req), -1);
+static int g_nvmf_request_complete_count;
+
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	g_nvmf_request_complete_count++;
+	return 0;
+}
 
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), "test");
 
@@ -252,15 +259,19 @@ static struct ut_unmap_record g_unmap_records[UT_MAX_UNMAP_CALLS];
 static int g_unmap_call_count;
 static int g_unmap_success_count;
 static int g_unmap_fail_at = -1;
+static int g_unmap_fail_rc = -ENOMEM;
+static void *g_unmap_last_ctx;
 
 int
 spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	g_unmap_last_ctx = cb_arg;
+
 	if (g_unmap_call_count == g_unmap_fail_at) {
 		g_unmap_call_count++;
-		return -ENOMEM;
+		return g_unmap_fail_rc;
 	}
 
 	if (g_unmap_success_count < UT_MAX_UNMAP_CALLS) {
@@ -291,6 +302,8 @@ ut_unmap_clear_globals(void)
 	g_unmap_call_count = 0;
 	g_unmap_success_count = 0;
 	g_unmap_fail_at = -1;
+	g_unmap_fail_rc = -ENOMEM;
+	g_unmap_last_ctx = NULL;
 	memset(g_unmap_records, 0, sizeof(g_unmap_records));
 }
 
@@ -1273,9 +1286,62 @@ test_nvmf_bdev_ctrlr_unmap_resubmit(void)
 	ut_unmap_clear_globals();
 }
 
+static void
+test_nvmf_bdev_ctrlr_unmap_resubmit_complete(void)
+{
+	struct spdk_bdev bdev = { .blockcnt = 100000, .blocklen = 512 };
+	struct spdk_bdev_desc desc = { .bdev = &bdev };
+	struct spdk_io_channel ch = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ctrlr ctrlr = { .subsys = &subsystem };
+	struct spdk_nvmf_qpair qpair = { .ctrlr = &ctrlr };
+	struct spdk_nvmf_poll_group group = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = { .qpair = &qpair, .cmd = &cmd, .rsp = &rsp };
+	struct spdk_nvme_dsm_range ranges[1] = {};
+	struct nvmf_bdev_ctrlr_unmap *unmap_ctx;
+	int rc;
+
+	qpair.group = &group;
+
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, ranges, sizeof(ranges));
+	req.length = sizeof(ranges);
+	cmd.nvme_cmd.cdw11_bits.dsm.ad = 1;
+	cmd.nvme_cmd.cdw10_bits.dsm.nr = 0;
+
+	ranges[0] = (struct spdk_nvme_dsm_range) { .starting_lba = 0, .length = 100 };
+
+	ut_unmap_clear_globals();
+	g_nvmf_request_complete_count = 0;
+	g_unmap_fail_at = 0;
+	g_unmap_fail_rc = -ENOMEM;
+
+	rc = nvmf_bdev_ctrlr_dsm_cmd(&bdev, &desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+	CU_ASSERT(g_unmap_call_count == 1);
+	CU_ASSERT(g_unmap_success_count == 0);
+
+	unmap_ctx = g_unmap_last_ctx;
+	CU_ASSERT(unmap_ctx != NULL);
+
+	/* On resubmit the range fails with a hard error, so the request
+	 * completes synchronously.
+	 */
+	g_unmap_fail_at = 1;
+	g_unmap_fail_rc = -EIO;
+	nvmf_bdev_ctrlr_unmap_resubmit(unmap_ctx);
+
+	CU_ASSERT(g_nvmf_request_complete_count == 1);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+
+	ut_unmap_clear_globals();
+}
+
 int
 main(int argc, char **argv)
 {
+
 	CU_pSuite	suite = NULL;
 	unsigned int	num_failures;
 
@@ -1295,6 +1361,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_nvme_passthru);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_dsm_limits);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_unmap_resubmit);
+	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_unmap_resubmit_complete);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();

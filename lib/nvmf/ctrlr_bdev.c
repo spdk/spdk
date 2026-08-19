@@ -769,8 +769,12 @@ nvmf_bdev_ctrlr_unmap_resubmit(void *arg)
 	struct spdk_bdev_desc *desc = unmap_ctx->desc;
 	struct spdk_bdev *bdev = unmap_ctx->bdev;
 	struct spdk_io_channel *ch = unmap_ctx->ch;
+	int rc;
 
-	nvmf_bdev_ctrlr_unmap(bdev, desc, ch, req, unmap_ctx);
+	rc = nvmf_bdev_ctrlr_unmap(bdev, desc, ch, req, unmap_ctx);
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
 }
 
 static int
