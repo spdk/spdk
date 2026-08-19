@@ -241,6 +241,8 @@ struct perf_task {
 	uint64_t		submit_tsc;
 	/** True if this I/O is a read. */
 	bool			is_read;
+	/** Number of blocks for this I/O. */
+	uint32_t		io_size_blocks;
 	/** DIF context for end-to-end data integrity operations. */
 	struct spdk_dif_ctx	dif_ctx;
 	/** Extended I/O options (PI, fused commands, etc.). */
@@ -584,6 +586,7 @@ uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		return -1;
 	}
 
+	task->iovs[0].iov_len = task->io_size_blocks * entry->block_size;
 	if (task->is_read) {
 		io_uring_prep_readv(sqe, entry->u.uring.fd, task->iovs, 1, offset_bytes);
 	} else {
@@ -734,6 +737,7 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 {
 	uint64_t offset_bytes = lba * entry->block_size;
 
+	task->iovs[0].iov_len = task->io_size_blocks * entry->block_size;
 	if (task->is_read) {
 		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
 				  task->iovs, offset_bytes, task);
@@ -1012,7 +1016,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
 				       entry->md_interleave, entry->pi_loc,
 				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
-				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks, 0, 0, &dif_opts);
+				       lba, 0xFFFF, (uint16_t)task->io_size_blocks, 0, 0, &dif_opts);
 		if (rc != 0) {
 			fprintf(stderr, "Initialization of DIF context failed\n");
 			exit(1);
@@ -1026,19 +1030,19 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 
 	if (task->is_read) {
 		return spdk_nvme_ns_cmd_read_iov(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
-						 entry->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
+						 task->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
 
 	} else {
 		switch (mode) {
 		case DIF_MODE_DIF:
-			rc = spdk_dif_generate(task->iovs, task->iovcnt, entry->io_size_blocks, &task->dif_ctx);
+			rc = spdk_dif_generate(task->iovs, task->iovcnt, task->io_size_blocks, &task->dif_ctx);
 			if (rc != 0) {
 				fprintf(stderr, "Generation of DIF failed\n");
 				return rc;
 			}
 			break;
 		case DIF_MODE_DIX:
-			rc = spdk_dix_generate(task->iovs, task->iovcnt, &task->md_iov, entry->io_size_blocks,
+			rc = spdk_dix_generate(task->iovs, task->iovcnt, &task->md_iov, task->io_size_blocks,
 					       &task->dif_ctx);
 			if (rc != 0) {
 				fprintf(stderr, "Generation of DIX failed\n");
@@ -1049,7 +1053,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			break;
 		}
 		return spdk_nvme_ns_cmd_write_iov(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num], lba,
-						  entry->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
+						  task->io_size_blocks, io_complete, task, task->iovs, task->iovcnt, &task->ext_opts);
 	}
 }
 
@@ -1092,14 +1096,14 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 	}
 
 	if (entry->md_interleave) {
-		rc = spdk_dif_verify(task->iovs, task->iovcnt, entry->io_size_blocks, &task->dif_ctx,
+		rc = spdk_dif_verify(task->iovs, task->iovcnt, task->io_size_blocks, &task->dif_ctx,
 				     &err_blk);
 		if (rc != 0) {
 			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
 				err_blk.err_type, err_blk.err_offset);
 		}
 	} else {
-		rc = spdk_dix_verify(task->iovs, task->iovcnt, &task->md_iov, entry->io_size_blocks,
+		rc = spdk_dix_verify(task->iovs, task->iovcnt, &task->md_iov, task->io_size_blocks,
 				     &task->dif_ctx, &err_blk);
 		if (rc != 0) {
 			fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
@@ -1579,10 +1583,12 @@ submit_single_io(struct perf_task *task)
 			ns_ctx->offset_in_ios = 0;
 		}
 	}
+	task->io_size_blocks = entry->io_size_blocks;
+
 	/* Convert to an LBA once here, rather than in each backend's submit_io(),
 	 * so that every backend receives the same unit.
 	 */
-	lba = offset_in_ios * entry->io_size_blocks;
+	lba = offset_in_ios * task->io_size_blocks;
 
 	task->submit_tsc = spdk_get_ticks();
 
