@@ -847,6 +847,13 @@ static const struct ns_fn_table aio_fn_table = {
 
 #endif /* HAVE_LIBAIO */
 
+static void
+ns_worker_stats_reset(struct ns_worker_stats *stats)
+{
+	memset(stats, 0, sizeof(*stats));
+	stats->min_tsc = UINT64_MAX;
+}
+
 #if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
 
 static int
@@ -2018,8 +2025,7 @@ work_fn(void *arg)
 				tsc_end = tsc_start + g_time_in_sec * g_tsc_rate;
 
 				TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
-					memset(&ns_ctx->stats, 0, sizeof(ns_ctx->stats));
-					ns_ctx->stats.min_tsc = UINT64_MAX;
+					ns_worker_stats_reset(&ns_ctx->stats);
 					spdk_histogram_data_reset(ns_ctx->histogram);
 				}
 
@@ -3502,7 +3508,7 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 	}
 
 	printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-	ns_ctx->stats.min_tsc = UINT64_MAX;
+	ns_worker_stats_reset(&ns_ctx->stats);
 	ns_ctx->entry = entry;
 	ns_ctx->histogram = spdk_histogram_data_alloc();
 	if (g_number_ios_percent > 0) {
