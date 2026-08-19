@@ -67,6 +67,11 @@ a bdev of the correct size.
 
 ### nvme
 
+#### `spdk_nvme_error_information_entry.error_location`
+
+The `error_location` field in `struct spdk_nvme_error_information_entry` is deprecated and will be
+removed in v27.01. Use the `pel` field instead; `pel.raw` provides equivalent raw-value access.
+
 #### `nvme_ns_get_format_index`
 
 `spdk_nvme_ns_get_format_index` is deprecated and will be removed in v27.01.

@@ -4097,6 +4097,7 @@ struct spdk_nvme_error_information_entry {
 	uint16_t		cid;
 	struct spdk_nvme_status	status;
 	union {
+		/** \deprecated Use \c pel instead. This field will be removed in v27.01. */
 		uint16_t					error_location;
 		union spdk_nvme_parameter_error_location	pel;
 	};
