@@ -262,7 +262,7 @@ struct ns_fn_table {
 	void	(*setup_payload)(struct perf_task *task, uint8_t pattern);
 
 	int	(*submit_io)(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-			     struct ns_entry *entry, uint64_t offset_in_ios);
+			     struct ns_entry *entry, uint64_t lba);
 
 	int64_t	(*check_io)(struct ns_worker_ctx *ns_ctx);
 
@@ -573,9 +573,10 @@ uring_setup_payload(struct perf_task *task, uint8_t pattern)
 
 static int
 uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-		struct ns_entry *entry, uint64_t offset_in_ios)
+		struct ns_entry *entry, uint64_t lba)
 {
 	struct io_uring_sqe *sqe;
+	uint64_t offset_bytes = lba * entry->block_size;
 
 	sqe = io_uring_get_sqe(&ns_ctx->u.uring.ring);
 	if (!sqe) {
@@ -584,9 +585,9 @@ uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		io_uring_prep_readv(sqe, entry->u.uring.fd, task->iovs, 1, offset_in_ios * task->iovs[0].iov_len);
+		io_uring_prep_readv(sqe, entry->u.uring.fd, task->iovs, 1, offset_bytes);
 	} else {
-		io_uring_prep_writev(sqe, entry->u.uring.fd, task->iovs, 1, offset_in_ios * task->iovs[0].iov_len);
+		io_uring_prep_writev(sqe, entry->u.uring.fd, task->iovs, 1, offset_bytes);
 	}
 
 	io_uring_sqe_set_data(sqe, task);
@@ -709,14 +710,14 @@ aio_setup_payload(struct perf_task *task, uint8_t pattern)
 
 static int
 aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd,
-	   struct iovec *iov, uint64_t offset, void *cb_ctx)
+	   struct iovec *iov, uint64_t offset_bytes, void *cb_ctx)
 {
 	iocb->aio_fildes = fd;
 	iocb->aio_reqprio = 0;
 	iocb->aio_lio_opcode = cmd;
 	iocb->u.c.buf = iov->iov_base;
 	iocb->u.c.nbytes = iov->iov_len;
-	iocb->u.c.offset = offset * iov->iov_len;
+	iocb->u.c.offset = offset_bytes;
 	iocb->data = cb_ctx;
 
 	if (io_submit(aio_ctx, 1, &iocb) < 0) {
@@ -729,14 +730,16 @@ aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd
 
 static int
 aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-	      struct ns_entry *entry, uint64_t offset_in_ios)
+	      struct ns_entry *entry, uint64_t lba)
 {
+	uint64_t offset_bytes = lba * entry->block_size;
+
 	if (task->is_read) {
 		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
-				  task->iovs, offset_in_ios, task);
+				  task->iovs, offset_bytes, task);
 	} else {
 		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE,
-				  task->iovs, offset_in_ios, task);
+				  task->iovs, offset_bytes, task);
 	}
 }
 
@@ -893,6 +896,7 @@ register_file(const char *path)
 	}
 	entry->size_in_ios = size / g_max_io_size_bytes;
 	entry->io_size_blocks = g_max_io_size_bytes / blklen;
+	entry->block_size = blklen;
 
 	if (g_is_random) {
 		if (g_zipf_theta > 0) {
@@ -976,9 +980,8 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 
 static int
 nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-	       struct ns_entry *entry, uint64_t offset_in_ios)
+	       struct ns_entry *entry, uint64_t lba)
 {
-	uint64_t lba;
 	int rc;
 	int qp_num;
 	struct spdk_dif_ctx_init_ext_opts dif_opts;
@@ -988,8 +991,6 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		DIF_MODE_DIF = 1,
 		DIF_MODE_DIX = 2,
 	}  mode = DIF_MODE_NONE;
-
-	lba = offset_in_ios * entry->io_size_blocks;
 
 	if (entry->md_size != 0 && !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
 		if (entry->md_interleave) {
@@ -1560,7 +1561,7 @@ static __thread uint64_t seed = 0;
 static inline void
 submit_single_io(struct perf_task *task)
 {
-	uint64_t		rand_value, offset_in_ios;
+	uint64_t		rand_value, offset_in_ios, lba;
 	int			rc;
 	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
@@ -1578,6 +1579,10 @@ submit_single_io(struct perf_task *task)
 			ns_ctx->offset_in_ios = 0;
 		}
 	}
+	/* Convert to an LBA once here, rather than in each backend's submit_io(),
+	 * so that every backend receives the same unit.
+	 */
+	lba = offset_in_ios * entry->io_size_blocks;
 
 	task->submit_tsc = spdk_get_ticks();
 
@@ -1589,7 +1594,7 @@ submit_single_io(struct perf_task *task)
 		task->is_read = false;
 	}
 
-	rc = entry->fn_table->submit_io(task, ns_ctx, entry, offset_in_ios);
+	rc = entry->fn_table->submit_io(task, ns_ctx, entry, lba);
 
 	if (spdk_unlikely(rc != 0)) {
 		if (g_continue_on_error) {
