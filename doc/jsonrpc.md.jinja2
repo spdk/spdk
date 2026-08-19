@@ -618,7 +618,7 @@ Example request:
   "id": 1,
   "params": {
     "name": "static",
-    "period": "1000000"
+    "period": 1000000
   }
 }
 ~~~
@@ -658,7 +658,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "framework_set_scheduler",
+  "method": "framework_get_scheduler",
   "id": 1
 }
 ~~~
@@ -903,7 +903,7 @@ Example request:
   "method": "thread_set_cpumask",
   "id": 1,
   "params": {
-    "id": "1",
+    "id": 1,
     "cpumask": "1"
   }
 }
@@ -1004,7 +1004,7 @@ Example request:
   "id": 1,
   "params": {
     "name": "bdev",
-    "tpoint_mask": "0x1"
+    "tpoint_mask": 1
   }
 }
 ~~~
@@ -1038,7 +1038,7 @@ Example request:
   "id": 1,
   "params": {
     "name": "bdev",
-    "tpoint_mask": "0x1"
+    "tpoint_mask": 1
   }
 }
 ~~~
@@ -1709,18 +1709,16 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": [
-    {
-      "copy": "software",
-      "fill": "software",
-      "dualcast": "software",
-      "compare": "software",
-      "crc32c": "software",
-      "copy_crc32c": "software",
-      "compress": "software",
-      "decompress": "software"
-    }
-  ]
+  "result": {
+    "copy": "software",
+    "fill": "software",
+    "dualcast": "software",
+    "compare": "software",
+    "crc32c": "software",
+    "copy_crc32c": "software",
+    "compress": "software",
+    "decompress": "software"
+  }
 }
 ~~~
 
@@ -1813,7 +1811,7 @@ Example request:
   "method": "accel_crypto_key_destroy",
   "id": 1,
   "params": {
-    "name": "super_key"
+    "key_name": "super_key"
   }
 }
 ~~~
@@ -5069,7 +5067,7 @@ Example request:
 {
   "params": {
     "name": "Rbd0",
-    "new_size": "4096"
+    "new_size": 4096
   },
   "jsonrpc": "2.0",
   "method": "bdev_rbd_resize",
@@ -5108,10 +5106,10 @@ Example request:
   "params": {
     "base_bdev_name": "Null0",
     "name": "Delay0",
-    "avg_read_latency": "15",
-    "p99_read_latency": "50",
-    "avg_write_latency": "40",
-    "p99_write_latency": "110"
+    "avg_read_latency": 15,
+    "p99_read_latency": 50,
+    "avg_write_latency": 40,
+    "p99_write_latency": 110
   },
   "jsonrpc": "2.0",
   "method": "bdev_delay_create",
@@ -5183,7 +5181,7 @@ Example request:
   "params": {
     "delay_bdev_name": "Delay0",
     "latency_type": "avg_read",
-    "latency_us": "100"
+    "latency_us": 100
   },
   "jsonrpc": "2.0",
   "method": "bdev_delay_update_latency",
@@ -5195,7 +5193,7 @@ Example response:
 
 ~~~json
 {
-  "result": "true"
+  "result": true
 }
 ~~~
 
@@ -5537,8 +5535,8 @@ Example request:
 {
   "params": {
     "name": "ftl0",
-    "lba": "0",
-    "num_blocks": "1024"
+    "lba": 0,
+    "num_blocks": 1024
   },
   "jsonrpc": "2.0",
   "method": "bdev_ftl_unmap",
@@ -5797,7 +5795,7 @@ Example request:
 {
   "params": {
     "name": "ftl0",
-    "property": "nv_cache.flush",
+    "ftl_property": "nv_cache.flush",
     "value": "true"
   },
   "jsonrpc": "2.0",
@@ -6109,8 +6107,8 @@ Example request:
 ~~~json
 {
   "params": {
-    "enable": "true",
-    "period-us": "1000000"
+    "enable": true,
+    "period_us": 1000000
   },
   "jsonrpc": "2.0",
   "method": "bdev_virtio_blk_set_hotplug",
@@ -6206,25 +6204,28 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
-    "allow_duplicated_isid": true,
-    "default_time2retain": 60,
-    "first_burst_length": 8192,
-    "immediate_data": true,
+    "auth_file": "/usr/local/etc/spdk/auth.conf",
     "node_base": "iqn.2016-06.io.spdk",
-    "mutual_chap": false,
-    "nop_in_interval": 30,
-    "chap_group": 0,
+    "max_sessions": 128,
     "max_connections_per_session": 2,
     "max_queue_depth": 64,
-    "nop_timeout": 30,
-    "max_sessions": 128,
-    "error_recovery_level": 0,
-    "auth_file": "/usr/local/etc/spdk/auth.conf",
-    "disable_chap": true,
     "default_time2wait": 2,
+    "default_time2retain": 20,
+    "first_burst_length": 8192,
+    "immediate_data": true,
+    "allow_duplicated_isid": false,
+    "error_recovery_level": 0,
+    "nop_timeout": 60,
+    "nop_in_interval": 30,
+    "disable_chap": false,
     "require_chap": false,
+    "mutual_chap": false,
+    "chap_group": 0,
     "max_large_datain_per_connection": 64,
-    "max_r2t_per_connection": 4
+    "max_r2t_per_connection": 4,
+    "pdu_pool_size": 36864,
+    "immediate_data_pool_size": 16384,
+    "data_out_pool_size": 2048
   }
 }
 ~~~
@@ -8022,7 +8023,7 @@ Example request:
     "nqn": "nqn.2024-06.io.spdk:cnode1",
     "host": "nqn.2024-06.io.spdk:host1",
     "dhchap_key": "key0",
-    "dchap_ctrlr_key": "key1"
+    "dhchap_ctrlr_key": "key1"
   }
 }
 ~~~
@@ -8409,7 +8410,9 @@ Example request:
   "id": 1,
   "method": "nvmf_set_config",
   "params": {
-    "acceptor_poll_rate": 10000
+    "admin_cmd_passthru": {
+      "identify_ctrlr": true
+    }
   }
 }
 ~~~
@@ -9290,7 +9293,7 @@ Example request:
     "lvs_name": "LVS0",
     "bdev_name": "Malloc0",
     "clear_method": "write_zeroes",
-    "md_page_size": "4096"
+    "md_page_size": 4096
   }
 }
 ~~~
@@ -10671,7 +10674,7 @@ Example request:
   "params": {
     "bdev_name": "nvme0n1r1",
     "admin_password": "*****",
-    "user_id": "1",
+    "user_id": 1,
     "user_password": "********"
   }
 }
@@ -10706,7 +10709,7 @@ Example request:
   "id": 1,
   "params": {
     "bdev_name": "nvme0n1r1",
-    "user_id": "1",
+    "user_id": 1,
     "user_password": "********",
     "lock_state": "rwlock"
   }
@@ -11069,7 +11072,7 @@ Example request:
 ~~~json
 {
   "params": {
-    "ublk_id": "1",
+    "ublk_id": 1,
     "bdev_name": "Malloc1"
   },
   "jsonrpc": "2.0",
@@ -11109,7 +11112,7 @@ Example request:
 ~~~json
 {
   "params": {
-    "ublk_id": "1",
+    "ublk_id": 1,
     "bdev_name": "Malloc1"
   },
   "jsonrpc": "2.0",
@@ -11149,7 +11152,7 @@ Example request:
 ~~~json
 {
   "params": {
-    "ublk_id": "1"
+    "ublk_id": 1
   },
   "jsonrpc": "2.0",
   "method": "ublk_stop_disk",
@@ -11289,7 +11292,7 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": "true"
+  "result": true
 }
 ~~~
 
@@ -12281,7 +12284,7 @@ Example request:
 ~~~json
 {
   "jsonrpc": "2.0",
-  "method": "fsdev_get_opts",
+  "method": "fsdev_set_opts",
   "id": 1,
   "params": {
     "fsdev_io_pool_size": 65535,
@@ -12296,10 +12299,7 @@ Example response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": {
-    "fsdev_io_pool_size": 65535,
-    "fsdev_io_cache_size": 256
-  }
+  "result": true
 }
 ~~~
 
