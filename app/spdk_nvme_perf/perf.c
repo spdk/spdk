@@ -66,6 +66,14 @@ enum entry_type {
 
 struct ns_fn_table;
 
+/* Workload percentages must sum to this value. The lookup table used for O(1)
+ * workload selection has one slot per percent, so its size and the modulo
+ * used to index it are both WORKLOAD_PCT_TOTAL.
+ */
+#define WORKLOAD_PCT_TOTAL 100
+
+#define MAX_WORKLOADS 16
+
 struct ns_entry {
 	/** Backend type (NVMe, uring, aio). */
 	enum entry_type		type;
@@ -117,6 +125,21 @@ struct ns_entry {
 	uint32_t		io_flags;
 	/** Device or file path string, used in output. */
 	char			name[1024];
+};
+
+struct workload {
+	/** Requested I/O size in bytes for this workload. */
+	uint32_t	io_size_bytes;
+	/** Share of the total I/O *count* for this workload (1-100); all workload
+	 * percentages must sum to WORKLOAD_PCT_TOTAL. Note that this is a count
+	 * share, not a bandwidth share: when workloads use different io_size_bytes,
+	 * the resulting byte ratio differs from the configured percentages.
+	 */
+	uint32_t	percentage;
+	/** True for reads, false for writes. */
+	bool		is_read;
+	/** True for random LBA selection, false for sequential. */
+	bool		is_random;
 };
 
 static const double g_latency_cutoffs[] = {
@@ -284,6 +307,8 @@ static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage = -1;
 static int g_is_random;
+static struct workload g_workloads[MAX_WORKLOADS];
+static int g_num_workloads = 0;
 static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
@@ -3046,6 +3071,28 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			"-w (--io-pattern) io pattern type must be one of\n"
 			"(read, write, randread, randwrite, rw, randrw)\n");
 		return 1;
+	}
+
+	/* Populate the workload array from the single-workload options.
+	 * For pure read/write: one workload at 100%.
+	 * For rw/randrw: two workloads (read at rw_percentage, write at remainder).
+	 */
+	if (g_rw_percentage == 100 || g_rw_percentage == 0) {
+		g_workloads[0].io_size_bytes = g_max_io_size_bytes;
+		g_workloads[0].is_read = (g_rw_percentage == 100);
+		g_workloads[0].is_random = g_is_random;
+		g_workloads[0].percentage = WORKLOAD_PCT_TOTAL;
+		g_num_workloads = 1;
+	} else {
+		g_workloads[0].io_size_bytes = g_max_io_size_bytes;
+		g_workloads[0].is_read = true;
+		g_workloads[0].is_random = g_is_random;
+		g_workloads[0].percentage = g_rw_percentage;
+		g_workloads[1].io_size_bytes = g_max_io_size_bytes;
+		g_workloads[1].is_read = false;
+		g_workloads[1].is_random = g_is_random;
+		g_workloads[1].percentage = WORKLOAD_PCT_TOTAL - g_rw_percentage;
+		g_num_workloads = 2;
 	}
 
 	if (g_sock_zcopy_threshold > 0) {
