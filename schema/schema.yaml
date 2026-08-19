@@ -1947,32 +1947,32 @@ methods:
       - name: action_on_timeout
         type: enum
         class: bdev_nvme_timeout_action
-        description: 'Action to take on command time out: none, reset or abort'
+        description: Action to take on command time out.
       - name: timeout_us
         type: uint64
         description: Timeout for each command, in microseconds. If 0, don't track timeouts. Can be changed while
-          controllers are attached, but not to or from 0
+          controllers are attached, but not to or from 0.
       - name: timeout_admin_us
         type: uint64
-        description: Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us')
+        description: Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us').
       - name: keep_alive_timeout_ms
         type: uint32
-        description: Keep alive timeout period in milliseconds, default is 10s
+        description: Keep alive timeout period in milliseconds, default is 10s. If 0, disable keep-alive.
       - name: arbitration_burst
         type: uint32
-        description: The value is expressed as a power of two, a value of 111b indicates no limit
+        description: The value is expressed as a power of two, a value of 7 indicates no limit.
       - name: low_priority_weight
         type: uint32
-        description: The maximum number of commands that the controller may launch at one time from a low priority queue
+        description: The maximum number of commands that the controller may launch at one time from a low priority queue.
       - name: medium_priority_weight
         type: uint32
-        description: The maximum number of commands that the controller may launch at one time from a medium priority queue
+        description: The maximum number of commands that the controller may launch at one time from a medium priority queue.
       - name: high_priority_weight
         type: uint32
-        description: The maximum number of commands that the controller may launch at one time from a high priority queue
+        description: The maximum number of commands that the controller may launch at one time from a high priority queue.
       - name: nvme_adminq_poll_period_us
         type: uint64
-        description: How often the admin queue is polled for asynchronous events in microseconds
+        description: How often the admin queue is polled for asynchronous events.
       - name: nvme_ioq_poll_period_us
         type: uint64
         description: 'How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).'
@@ -1993,13 +1993,29 @@ methods:
         description: Time to wait ack until retransmission for RDMA or connection close for TCP. Range 0-31 where 0 means use default.
       - name: ctrlr_loss_timeout_sec
         type: int32
-        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+        description: >-
+          Time to wait until ctrlr is reconnected before deleting ctrlr.
+          -1 means infinite reconnects. 0 means no reconnect.
+          If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+          If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
+          This can be overridden by bdev_nvme_attach_controller.
       - name: reconnect_delay_sec
         type: uint32
-        description: Time to delay a reconnect trial. 0 means no reconnect.
+        description: >-
+          Time to delay a reconnect trial. 0 means no reconnect.
+          If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+          If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+          If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero
+          and less than ctrlr_loss_timeout_sec.
+          This can be overridden by bdev_nvme_attach_controller.
       - name: fast_io_fail_timeout_sec
         type: uint32
-        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+        description: >-
+          Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+          0 means no such timeout.
+          If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec
+          and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
+          This can be overridden by bdev_nvme_attach_controller.
       - name: disable_auto_failback
         type: boolean
         description: Disable automatic failback. The RPC bdev_nvme_set_preferred_path can be used to do manual failback.
@@ -2017,33 +2033,33 @@ methods:
         description: 'Set the size of a shared rdma receive queue. Default: 0 (disabled).'
       - name: io_path_stat
         type: boolean
-        description: 'Enable collecting I/O stat of each nvme bdev io path. Default: `false`.'
+        description: 'Enable collecting I/O stat of each NVMe bdev io path. Default: `false`.'
       - name: allow_accel_sequence
         type: boolean
         description: 'Allow NVMe bdevs to advertise support for accel sequences if the controller also supports them.  Default: `false`.'
       - name: rdma_max_cq_size
         type: uint32
-        description: 'Set the maximum size of a rdma completion queue. Default: 0 (unlimited)'
+        description: 'Set the maximum size of a rdma completion queue. Default: 0 (unlimited).'
       - name: rdma_cm_event_timeout_ms
         type: uint16
         description: 'Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver).'
       - name: dhchap_digests
         type: bitmask
         class: dhchap_digests
-        description: List of allowed DH-HMAC-CHAP digests.
+        description: Comma-separated list of allowed DH-HMAC-CHAP digests.
       - name: dhchap_dhgroups
         type: bitmask
         class: dhchap_dhgroups
-        description: List of allowed DH-HMAC-CHAP DH groups.
+        description: Comma-separated list of allowed DH-HMAC-CHAP DH groups.
       - name: rdma_umr_per_io
         type: boolean
-        description: Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system
+        description: Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system.
       - name: tcp_connect_timeout_ms
         type: uint32
         description: 'Time to wait until TCP connection is done. Default: 0 (no timeout).'
       - name: enable_flush
         type: boolean
-        description: 'If true, pass flush to nvme devices when volatile write cache is present. Default : `false`.'
+        description: 'If true, pass flush to NVMe devices when volatile write cache is present. Default: `false`.'
       - name: multipath_opts
         type: object
         class: bdev_nvme_multipath_opts
@@ -2059,7 +2075,7 @@ methods:
       - name: enable
         type: boolean
         required: true
-        description: True to enable, false to disable
+        description: Enable or disable hotplug.
       - name: period_us
         type: uint64
         description: 'How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.'
@@ -2090,14 +2106,14 @@ methods:
       - name: trtype
         type: string
         required: true
-        description: 'NVMe-oF target trtype: rdma or pcie'
+        description: 'NVMe-oF target trtype: e.g., RDMA, PCIe'
       - name: traddr
         type: string
         required: true
-        description: 'NVMe-oF target address: ip or BDF'
+        description: 'NVMe-oF target address: e.g., an ip address or BDF'
       - name: adrfam
         type: string
-        description: 'NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host'
+        description: 'NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host'
       - name: trsvcid
         type: string
         description: 'NVMe-oF target trsvcid: port number'
@@ -2118,35 +2134,48 @@ methods:
         description: 'NVMe-oF host trsvcid: port number'
       - name: prchk_reftag
         type: boolean
-        description: Enable checking of PI reference tag for I/O processing
+        description: Enable checking of PI reference tag for I/O processing.
       - name: prchk_guard
         type: boolean
-        description: Enable checking of PI guard for I/O processing
+        description: Enable checking of PI guard for I/O processing.
       - name: hdgst
         type: boolean
-        description: Enable TCP header digest
+        description: Enable TCP header digest.
       - name: ddgst
         type: boolean
-        description: Enable TCP data digest
+        description: Enable TCP data digest.
       - name: fabrics_connect_timeout_us
         type: uint64
-        description: Timeout for fabrics connect (in microseconds)
+        description: Timeout for fabrics connect (in microseconds).
       - name: multipath
         type: enum
         class: bdev_nvme_multipath_mode
-        description: 'Multipathing behavior: disable, failover, multipath. Default is failover.'
+        description: Multipathing behavior. Default is failover.
       - name: num_io_queues
         type: uint32
         description: 'The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.'
       - name: ctrlr_loss_timeout_sec
         type: int32
-        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+        description: >-
+          Time to wait until ctrlr is reconnected before deleting ctrlr.
+          -1 means infinite reconnects. 0 means no reconnect.
+          If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+          If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
       - name: reconnect_delay_sec
         type: uint32
-        description: Time to delay a reconnect trial. 0 means no reconnect.
+        description: >-
+          Time to delay a reconnect trial. 0 means no reconnect.
+          If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+          If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+          If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero
+          and less than ctrlr_loss_timeout_sec.
       - name: fast_io_fail_timeout_sec
         type: uint32
-        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+        description: >-
+          Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+          0 means no such timeout.
+          If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec
+          and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
       - name: psk
         type: string
         description: Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)
@@ -2155,7 +2184,7 @@ methods:
         description: The size of the name array for newly created bdevs. Default is 128.
       - name: dhchap_key
         type: string
-        description: DH-HMAC-CHAP key name (required if controller key is specified)
+        description: DH-HMAC-CHAP key name (required if controller key is specified).
       - name: dhchap_ctrlr_key
         type: string
         description: DH-HMAC-CHAP controller key name.
@@ -2195,13 +2224,13 @@ methods:
         description: Controller name
       - name: trtype
         type: string
-        description: 'NVMe-oF target trtype: rdma or tcp'
+        description: 'NVMe-oF target trtype: e.g., RDMA, TCP'
       - name: traddr
         type: string
-        description: 'NVMe-oF target address: ip or BDF'
+        description: 'NVMe-oF target address: e.g., an ip address or BDF'
       - name: adrfam
         type: string
-        description: 'NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host'
+        description: 'NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host'
       - name: trsvcid
         type: string
         description: 'NVMe-oF target trsvcid: port number'
@@ -2252,10 +2281,10 @@ methods:
       - name: name
         type: string
         required: true
-        description: NVMe controller name (or NVMe bdev controller name for multipath)
+        description: NVMe controller name
       - name: cntlid
         type: uint16
-        description: NVMe controller ID (used as NVMe controller name for multipath)
+        description: NVMe controller ID
   - name: bdev_nvme_disable_controller
     description: |
       For non NVMe multipath, disable an NVMe controller whose name is given by the `name` parameter.
@@ -2273,10 +2302,10 @@ methods:
       - name: name
         type: string
         required: true
-        description: NVMe controller name (or NVMe bdev controller name for multipath)
+        description: NVMe controller name
       - name: cntlid
         type: uint16
-        description: NVMe controller ID (used as NVMe controller name for multipath)
+        description: NVMe controller ID
   - name: bdev_nvme_start_discovery
     description: |
       Start a discovery service for the discovery subsystem of the specified transport ID.
@@ -2304,14 +2333,14 @@ methods:
       - name: trtype
         type: string
         required: true
-        description: 'NVMe-oF target trtype: rdma or tcp'
+        description: 'NVMe-oF target trtype: e.g., RDMA, TCP'
       - name: traddr
         type: string
         required: true
-        description: 'NVMe-oF target address: ip'
+        description: 'NVMe-oF target address: e.g., an ip address'
       - name: adrfam
         type: string
-        description: 'NVMe-oF target adrfam: ipv4, ipv6'
+        description: 'NVMe-oF target adrfam: e.g., ipv4, ipv6'
       - name: trsvcid
         type: string
         description: 'NVMe-oF target trsvcid: port number'
@@ -2320,19 +2349,32 @@ methods:
         description: NVMe-oF target hostnqn
       - name: wait_for_attach
         type: boolean
-        description: Wait to complete until all discovered NVM subsystems are attached
+        description: Wait to complete until all discovered NVM subsystems are attached.
       - name: attach_timeout_ms
         type: uint64
-        description: Time to wait until the discovery and all discovered NVM subsystems are attached
+        description: Time to wait until the discovery and all discovered NVM subsystems are attached.
       - name: ctrlr_loss_timeout_sec
         type: int32
-        description: Time to wait until ctrlr is reconnected before deleting ctrlr.  -1 means infinite reconnects. 0 means no reconnect.
+        description: >-
+          Time to wait until ctrlr is reconnected before deleting ctrlr.
+          -1 means infinite reconnects. 0 means no reconnect.
+          If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
+          If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.
       - name: reconnect_delay_sec
         type: uint32
-        description: Time to delay a reconnect trial. 0 means no reconnect.
+        description: >-
+          Time to delay a reconnect trial. 0 means no reconnect.
+          If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
+          If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
+          If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero
+          and less than ctrlr_loss_timeout_sec.
       - name: fast_io_fail_timeout_sec
         type: uint32
-        description: Time to wait until ctrlr is reconnected before failing I/O to ctrlr. 0 means no such timeout.
+        description: >-
+          Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
+          0 means no such timeout.
+          If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec
+          and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
   - name: bdev_nvme_stop_discovery
     description: |
       Stop a discovery service. This includes detaching any controllers that were
@@ -2371,8 +2413,6 @@ methods:
         type: uint16
         required: true
         description: NVMe-oF controller ID
-
-
   - name: bdev_nvme_get_path_iostat
     description: |
       Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set io_path_stat
@@ -2419,10 +2459,10 @@ methods:
         description: Name of the NVMe controller
       - name: dhchap_key
         type: string
-        description: DH-HMAC-CHAP key name (required if controller key is specified)
+        description: DH-HMAC-CHAP key name (required if controller key is specified).
       - name: dhchap_ctrlr_key
         type: string
-        description: DH-HMAC-CHAP controller key name
+        description: DH-HMAC-CHAP controller key name.
   - name: bdev_zone_block_create
     description: Creates a virtual zone device on top of existing non-zoned bdev.
     result:
@@ -4996,7 +5036,7 @@ methods:
       - name: nvme_ctrlr_name
         type: string
         required: true
-        description: name of nvme ctrlr
+        description: Name of NVMe controller
       - name: password
         type: string
         required: true
@@ -5378,7 +5418,7 @@ methods:
         description: Metadata length required to transfer from controller to host
       - name: timeout_ms
         type: uint32
-        description: Command execution timeout value, in milliseconds
+        description: 'Command execution timeout value, in milliseconds. If 0, don''t track timeout.'
   - name: vmd_enable
     description: Enable VMD enumeration.
     result:
@@ -5422,26 +5462,26 @@ methods:
         type: enum
         class: bdev_nvme_cmd_type
         required: true
-        description: Type of NVMe command
+        description: Type of NVMe command.
       - name: opc
         type: uint8
         required: true
-        description: Opcode for which the error injection is applied
+        description: NVMe command opcode for which the error injection is applied.
       - name: do_not_submit
         type: boolean
-        description: Set to true if request should not be submitted to the controller (default false)
+        description: Set to true if request should not be submitted to the controller (default false).
       - name: timeout_in_us
         type: uint64
-        description: Wait specified microseconds when do_not_submit is true. Held commands are subject to the timeout_us and timeout_admin_us timeouts set by bdev_nvme_set_options
+        description: Wait time in microseconds when do_not_submit is true.
       - name: err_count
         type: uint32
-        description: Number of matching NVMe commands to inject errors
+        description: Number of matching NVMe commands to inject errors.
       - name: sct
         type: uint8
-        description: Status code type (default 0)
+        description: Status code type (default 0).
       - name: sc
         type: uint8
-        description: Status code (default 0)
+        description: Status code (default 0).
   - name: bdev_nvme_remove_error_injection
     description: Remove a NVMe command error injection.
     result:
@@ -5456,11 +5496,11 @@ methods:
         type: enum
         class: bdev_nvme_cmd_type
         required: true
-        description: Type of NVMe command
+        description: Type of NVMe command.
       - name: opc
         type: uint8
         required: true
-        description: Opcode for which the error injection is applied
+        description: NVMe command opcode for which the error injection is applied.
   - name: bdev_daos_create
     description: 'Construct @ref bdev_config_daos "a DAOS bdev"'
     result:

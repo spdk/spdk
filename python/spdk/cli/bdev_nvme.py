@@ -38,9 +38,9 @@ def add_parser(subparsers):
                                    " entry has been removed from the log page, it will automatically"
                                    " detach from that controller as well. The 'name' is also used to"
                                    " later stop the discovery service.")
-    p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
-    p.add_argument('-s', '--svcname', help='Service type to discover: e.g., _nvme-disc._tcp', required=True)
-    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+    p.add_argument('-b', '--name', help="Prefix for NVMe discovery services found", required=True)
+    p.add_argument('-s', '--svcname', help='Service to discover: e.g. _nvme-disc._tcp', required=True)
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF hostnqn')
     p.set_defaults(func=bdev_nvme_start_mdns_discovery)
 
     def bdev_nvme_stop_mdns_discovery(args):
@@ -50,7 +50,7 @@ def add_parser(subparsers):
                               help="Stops a mDNS discovery service. This includes detaching any"
                                    " controllers that were discovered via the service that is being"
                                    " stopped.")
-    p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
+    p.add_argument('-b', '--name', help="Name of mDNS discovery instance to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_mdns_discovery)
 
     def bdev_nvme_get_mdns_discovery_info(args):
@@ -76,99 +76,103 @@ def add_parser(subparsers):
                                    " `bdev_nvme_attach_controller`.")
     p.add_argument('-a', '--action-on-timeout',
                    choices=['none', 'reset', 'abort'],
-                   help="Action to take on command time out")
+                   help="Action to take on command time out.")
     p.add_argument('-t', '--timeout-us',
                    help="Timeout for each command, in microseconds. If 0, don't track timeouts. Can be"
                         " changed while controllers are attached, but not to or from 0.", type=int)
     p.add_argument('--timeout-admin-us',
-                   help="Timeout for each admin command, in microseconds. If 0, treat same as io timeouts.", type=int)
+                   help="Timeout for each admin command, in microseconds. If 0, treat same as io timeouts ('timeout_us').",
+                   type=int)
     p.add_argument('-k', '--keep-alive-timeout-ms',
-                   help="Keep alive timeout period in millisecond. If 0, disable keep-alive.", type=int)
+                   help="Keep alive timeout period in milliseconds, default is 10s. If 0, disable keep-alive.", type=int)
     p.add_argument('--arbitration-burst',
-                   help='the value is expressed as a power of two', type=int)
+                   help='The value is expressed as a power of two, a value of 7 indicates no limit.', type=int)
     p.add_argument('--low-priority-weight',
-                   help='the maximum number of commands that the controller may launch at one time from a low priority queue', type=int)
+                   help='The maximum number of commands that the controller may launch at one time from a low priority queue.',
+                   type=int)
     p.add_argument('--medium-priority-weight',
-                   help='the maximum number of commands that the controller may launch at one time from a medium priority queue', type=int)
+                   help='The maximum number of commands that the controller may launch at one time from a medium priority queue.',
+                   type=int)
     p.add_argument('--high-priority-weight',
-                   help='the maximum number of commands that the controller may launch at one time from a high priority queue', type=int)
+                   help='The maximum number of commands that the controller may launch at one time from a high priority queue.',
+                   type=int)
     p.add_argument('-p', '--nvme-adminq-poll-period-us',
-                   help='How often the admin queue is polled for asynchronous events', type=int)
+                   help='How often the admin queue is polled for asynchronous events.', type=int)
     p.add_argument('-i', '--nvme-ioq-poll-period-us',
-                   help='How often to poll I/O queues for completions', type=int)
+                   help='How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).',
+                   type=int)
     p.add_argument('-s', '--io-queue-requests',
-                   help='The number of requests allocated for each NVMe I/O queue. Default: 512', type=int)
-    p.add_argument('-d', '--disable-delay-cmd-submit',
-                   help='Disable delaying NVMe command submission, i.e. no batching of multiple commands',
-                   action='store_false', dest='delay_cmd_submit')
+                   help='The number of requests allocated for each NVMe I/O queue. Default: 512.', type=int)
+    p.add_argument('--delay-cmd-submit', action=argparse.BooleanOptionalAction,
+                   help='Enable delaying NVMe command submission to allow batching of multiple commands. Default: `true`.')
     p.add_argument('-c', '--transport-retry-count',
-                   help='the number of attempts per I/O in the transport layer when an I/O fails.', type=int)
+                   help='The number of attempts per I/O in the transport layer before an I/O fails.', type=int)
     p.add_argument('-r', '--bdev-retry-count',
-                   help='the number of attempts per I/O in the bdev layer when an I/O fails. -1 means infinite retries.', type=int)
+                   help='The number of attempts per I/O in the bdev layer before an I/O fails. -1 means infinite retries.',
+                   type=int)
     p.add_argument('-e', '--transport-ack-timeout',
-                   help="""Time to wait ack until packet retransmission for RDMA or until closes connection for TCP.
-                   Range 0-31 where 0 is driver-specific default value.""", type=int)
+                   help='Time to wait ack until retransmission for RDMA or connection close for TCP. '
+                        'Range 0-31 where 0 means use default.', type=int)
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
-                   -1 means infinite reconnect retries. 0 means no reconnect retry.
-                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
-                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
-                   reconnect_delay_sec.
-                   This can be overridden by bdev_nvme_attach_controller.""",
+                   help='Time to wait until ctrlr is reconnected before deleting ctrlr.'
+                        ' -1 means infinite reconnects. 0 means no reconnect.'
+                        ' If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.'
+                        ' If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.'
+                        ' This can be overridden by bdev_nvme_attach_controller.',
                    type=int)
     p.add_argument('-o', '--reconnect-delay-sec',
-                   help="""Time to delay a reconnect retry.
-                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
-                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
-                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
-                   less than ctrlr_loss_timeout_sec.
-                   This can be overridden by bdev_nvme_attach_controller.""",
+                   help='Time to delay a reconnect trial. 0 means no reconnect.'
+                        ' If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.'
+                        ' If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.'
+                        ' If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero'
+                        ' and less than ctrlr_loss_timeout_sec.'
+                        ' This can be overridden by bdev_nvme_attach_controller.',
                    type=int)
     p.add_argument('-u', '--fast-io-fail-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
-                   0 means no such timeout.
-                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
-                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.
-                   This can be overridden by bdev_nvme_attach_controller.""",
+                   help='Time to wait until ctrlr is reconnected before failing I/O to ctrlr.'
+                        ' 0 means no such timeout.'
+                        ' If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec'
+                        ' and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.'
+                        ' This can be overridden by bdev_nvme_attach_controller.',
                    type=int)
     p.add_argument('-f', '--disable-auto-failback',
-                   help="""Disable automatic failback. bdev_nvme_set_preferred_path can be used to do manual failback.
-                   By default, immediately failback to the preferred I/O path if it restored.""",
+                   help='Disable automatic failback. The RPC bdev_nvme_set_preferred_path '
+                        'can be used to do manual failback.',
                    action='store_true')
     p.add_argument('--generate-uuids',
-                   help="""Enable generation of unique identifiers for NVMe bdevs only if they do
-                   not provide UUID themselves. These strings are based on device serial number and
-                   namespace ID and will always be the same for that device.""", action='store_true')
+                   help='Enable generation of UUIDs for NVMe bdevs that do not provide '
+                        'this value themselves.', action='store_true')
     p.add_argument('--transport-tos',
-                   help="""IPv4 Type of Service value. Only applicable for RDMA transports.
-                   The default is 0 which means no TOS is applied.""", type=int)
+                   help='IPv4 Type of Service value. Only applicable for RDMA transport. '
+                        'Default: 0 (no TOS is applied).', type=int)
     p.add_argument('-m', '--nvme-error-stat', help="Enable collecting NVMe error counts.", action='store_true')
     p.add_argument('-q', '--rdma-srq-size',
-                   help='Set the size of a shared rdma receive queue. Default: 0 (disabled)', type=int)
+                   help='Set the size of a shared rdma receive queue. Default: 0 (disabled).', type=int)
     p.add_argument('--io-path-stat',
-                   help="""Enable collecting I/O path stat of each io path.""",
+                   help='Enable collecting I/O stat of each NVMe bdev io path. Default: `false`.',
                    action='store_true')
     p.add_argument('--allow-accel-sequence',
-                   help='''Allow NVMe bdevs to advertise support for accel sequences if the
-                   controller also supports them.''', action='store_true')
+                   help='Allow NVMe bdevs to advertise support for accel sequences if the '
+                        'controller also supports them.  Default: `false`.', action='store_true')
     p.add_argument('--rdma-max-cq-size',
-                   help='The maximum size of a rdma completion queue. Default: 0 (unlimited)', type=int)
+                   help='Set the maximum size of a rdma completion queue. Default: 0 (unlimited).', type=int)
     p.add_argument('--rdma-cm-event-timeout-ms',
-                   help='Time to wait for RDMA CM event. Only applicable for RDMA transports.', type=int)
-    p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests',
+                   help='Time to wait for RDMA CM events. Default: 0 (0 means using default value of driver).', type=int)
+    p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests.',
                    type=partial(str.split, sep=','))
-    p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',
+    p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups.',
                    type=partial(str.split, sep=','))
     p.add_argument('--rdma-umr-per-io', action=argparse.BooleanOptionalAction,
-                   help='Enable or disable scatter-gather RDMA Memory Region per IO if supported by the system.')
+                   help='Enable/disable scatter-gather UMR per IO in RDMA transport if supported by system.')
     p.add_argument('--tcp-connect-timeout-ms',
                    help='Time to wait until TCP connection is done. Default: 0 (no timeout).', type=int)
-    p.add_argument('--enable-flush', help='Pass flush to NVMe when volatile write cache is present',
+    p.add_argument('--enable-flush',
+                   help='If true, pass flush to NVMe devices when volatile write cache is present. Default: `false`.',
                    action='store_true')
     p.add_argument('--policy', choices=['active_passive', 'active_active'], help='Multipath policy')
     p.add_argument('--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
     p.add_argument('--min-io', type=int,
-                   help='Number of IO to route to a path before switching (round_robin selector only)')
+                   help='Number of IO to route to a path before switching (round_robin selector only).')
 
     p.set_defaults(func=bdev_nvme_set_options)
 
@@ -180,9 +184,10 @@ def add_parser(subparsers):
                                    " bdevs will be automatically discovered on insertion and deleted on"
                                    " removal.")
     p.add_argument('--hotplug', dest='enable', action=argparse.BooleanOptionalAction,
-                   required=True, help='Enable or disable hotplug')
+                   required=True, help='Enable or disable hotplug.')
     p.add_argument('-r', '--period-us',
-                   help='How often the hotplug is processed for insert and remove events', type=int)
+                   help='How often to poll for hot-insert and hot-remove events. Values: 0 - reset/use default or 1 to 10000000.',
+                   type=int)
     p.set_defaults(func=bdev_nvme_set_hotplug)
 
     def bdev_nvme_attach_controller(args):
@@ -210,21 +215,21 @@ def add_parser(subparsers):
                                    " controller must use identical multipath options.")
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
-                   help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
+                   help='NVMe-oF target trtype: e.g., RDMA, PCIe', required=True)
     p.add_argument('-a', '--traddr',
                    help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
     p.add_argument('-f', '--adrfam',
                    help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid',
-                   help='NVMe-oF target trsvcid: e.g., a port number')
+                   help='NVMe-oF target trsvcid: port number')
     p.add_argument('-p', '--priority',
-                   help='NVMe-oF connection priority: e.g., a priority number')
+                   help='Transport connection priority. Supported by TCP transport with POSIX sock module (see socket(7) man page).')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
-    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF target hostnqn')
     p.add_argument('-i', '--hostaddr',
-                   help='NVMe-oF host address: e.g., an ip address')
+                   help='NVMe-oF host address: ip address')
     p.add_argument('-c', '--hostsvcid',
-                   help='NVMe-oF host svcid: e.g., a port number')
+                   help='NVMe-oF host trsvcid: port number')
     p.add_argument('-r', '--prchk-reftag',
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
@@ -233,43 +238,44 @@ def add_parser(subparsers):
                    help='Enable TCP header digest.', action='store_true')
     p.add_argument('-d', '--ddgst',
                    help='Enable TCP data digest.', action='store_true')
-    p.add_argument('--fabrics-timeout', type=int, help='Fabrics connect timeout in microseconds',
+    p.add_argument('--fabrics-timeout', type=int, help='Timeout for fabrics connect (in microseconds).',
                    dest="fabrics_connect_timeout_us")
     p.add_argument('-x', '--multipath', choices=['disable', 'failover', 'multipath'],
-                   help='Set multipath behavior')
-    p.add_argument('--num-io-queues', type=int, help='Set the number of IO queues to request during initialization.')
+                   help='Multipathing behavior. Default is failover.')
+    p.add_argument('--num-io-queues', type=int,
+                   help='The number of IO queues to request during initialization. Range: (0, UINT16_MAX + 1], Default is 1024.')
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
-                   -1 means infinite reconnect retries. 0 means no reconnect retry.
-                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
-                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
-                   reconnect_delay_sec.""",
+                   help='Time to wait until ctrlr is reconnected before deleting ctrlr.'
+                        ' -1 means infinite reconnects. 0 means no reconnect.'
+                        ' If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.'
+                        ' If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.',
                    type=int)
     p.add_argument('-o', '--reconnect-delay-sec',
-                   help="""Time to delay a reconnect retry.
-                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
-                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
-                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
-                   less than ctrlr_loss_timeout_sec.""",
+                   help='Time to delay a reconnect trial. 0 means no reconnect.'
+                        ' If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.'
+                        ' If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.'
+                        ' If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero'
+                        ' and less than ctrlr_loss_timeout_sec.',
                    type=int)
     p.add_argument('-u', '--fast-io-fail-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
-                   0 means no such timeout.
-                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
-                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
+                   help='Time to wait until ctrlr is reconnected before failing I/O to ctrlr.'
+                        ' 0 means no such timeout.'
+                        ' If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec'
+                        ' and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.',
                    type=int)
     p.add_argument('-k', '--psk',
                    help='Name of the pre-shared key to be used for TLS (Enables SSL socket implementation for TCP)')
     p.add_argument('-m', '--max-bdevs', type=int,
-                   help='The size of the name array for newly created bdevs. Default is 128')
-    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
-    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
-    p.add_argument('-U', '--allow-unrecognized-csi', help="""Allow attaching namespaces with unrecognized command set identifiers.
-                   These will only support NVMe passthrough.""", action='store_true')
+                   help='The size of the name array for newly created bdevs. Default is 128.')
+    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name (required if controller key is specified).')
+    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name.')
+    p.add_argument('-U', '--allow-unrecognized-csi',
+                   help='Allow attaching namespaces with unrecognized command set identifiers. '
+                        'These will only support NVMe passthrough.', action='store_true')
     p.add_argument('--policy', choices=['active_passive', 'active_active'], help='Multipath policy')
     p.add_argument('--selector', choices=['round_robin', 'queue_depth'], help='Multipath selector')
     p.add_argument('--min-io', type=int,
-                   help='Number of IO to route to a path before switching (round_robin selector only)')
+                   help='Number of IO to route to a path before switching (round_robin selector only).')
     p.add_argument('--disable-sq-flow-control', help='Disable SQ flow control (set bit 2 of cattr in Fabrics Connect command).',
                    action='store_true')
 
@@ -279,8 +285,8 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_nvme_get_controllers(name=args.name))
 
     p = subparsers.add_parser(
-        'bdev_nvme_get_controllers', help="Get information about NVMe controllers.")
-    p.add_argument('-n', '--name', help="Name of the NVMe controller. Example: Nvme0")
+        'bdev_nvme_get_controllers', help='Get information about NVMe controllers.')
+    p.add_argument('-n', '--name', help="NVMe controller name")
     p.set_defaults(func=bdev_nvme_get_controllers)
 
     def bdev_nvme_detach_controller(args):
@@ -302,20 +308,20 @@ def add_parser(subparsers):
                                    " controller being detached and the associated bdevs being deleted."
                                    " returns true if the controller and bdevs were successfully"
                                    " destroyed or the address was properly removed, false otherwise.")
-    p.add_argument('name', help="Name of the controller")
+    p.add_argument('name', help="Controller name")
     p.add_argument('-t', '--trtype',
-                   help='NVMe-oF target trtype: e.g., rdma, pcie')
+                   help='NVMe-oF target trtype: e.g., RDMA, TCP')
     p.add_argument('-a', '--traddr',
                    help='NVMe-oF target address: e.g., an ip address or BDF')
     p.add_argument('-f', '--adrfam',
                    help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid',
-                   help='NVMe-oF target trsvcid: e.g., a port number')
+                   help='NVMe-oF target trsvcid: port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.add_argument('-i', '--hostaddr',
-                   help='NVMe-oF host address: e.g., an ip address')
+                   help='NVMe-oF host address: ip')
     p.add_argument('-c', '--hostsvcid',
-                   help='NVMe-oF host svcid: e.g., a port number')
+                   help='NVMe-oF host svcid: port number')
     p.set_defaults(func=bdev_nvme_detach_controller)
 
     def bdev_nvme_reset_controller(args):
@@ -333,8 +339,8 @@ def add_parser(subparsers):
                                    " `cntlid` parameter is specified, or all NVMe-oF controllers in an"
                                    " NVMe bdev controller if it is omitted. Returns true if the"
                                    " controller reset was successful, false otherwise.")
-    p.add_argument('name', help="Name of the NVMe controller")
-    p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
+    p.add_argument('name', help="NVMe controller name (or NVMe bdev controller name for multipath)")
+    p.add_argument('-c', '--cntlid', help="NVMe controller ID (used as NVMe controller name for multipath)", type=int)
     p.set_defaults(func=bdev_nvme_reset_controller)
 
     def bdev_nvme_enable_controller(args):
@@ -353,7 +359,7 @@ def add_parser(subparsers):
                                    " NVMe bdev controller if it is omitted. Returns true if the"
                                    " controller enablement was successful or a controller was already"
                                    " enabled, false otherwise.")
-    p.add_argument('name', help="Name of the NVMe controller")
+    p.add_argument('name', help="NVMe controller name")
     p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_enable_controller)
 
@@ -373,7 +379,7 @@ def add_parser(subparsers):
                                    " NVMe bdev controller if it is omitted. Returns true if the"
                                    " controller disablement was successful or a controller was already"
                                    " disabled, false otherwise.")
-    p.add_argument('name', help="Name of the NVMe controller")
+    p.add_argument('name', help="NVMe controller name")
     p.add_argument('-c', '--cntlid', help="NVMe controller ID", type=int)
     p.set_defaults(func=bdev_nvme_disable_controller)
 
@@ -405,41 +411,38 @@ def add_parser(subparsers):
                                    " service sees that a subsystem entry has been removed from the log"
                                    " page, it will automatically detach from that controller as well."
                                    " The 'name' is also used to later stop the discovery service.")
-    p.add_argument('-b', '--name', help="Name of the NVMe controller prefix for each bdev name", required=True)
+    p.add_argument('-b', '--name', help="Prefix for NVMe controllers", required=True)
     p.add_argument('-t', '--trtype',
-                   help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
+                   help='NVMe-oF target trtype: e.g., RDMA, TCP', required=True)
     p.add_argument('-a', '--traddr',
-                   help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+                   help='NVMe-oF target address: e.g., an ip address', required=True)
     p.add_argument('-f', '--adrfam',
-                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
+                   help='NVMe-oF target adrfam: e.g., ipv4, ipv6')
     p.add_argument('-s', '--trsvcid',
-                   help='NVMe-oF target trsvcid: e.g., a port number')
-    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
+                   help='NVMe-oF target trsvcid: port number')
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF target hostnqn')
     p.add_argument('-w', '--wait-for-attach', action='store_true',
-                   help='Do not complete RPC until all discovered NVM subsystems are attached')
+                   help='Wait to complete until all discovered NVM subsystems are attached.')
     p.add_argument('-T', '--attach-timeout-ms', type=int,
-                   help="""Time to wait until the discovery and all discovered NVM subsystems
-                        are attached (default: 0, meaning wait indefinitely).  Automatically
-                        selects the --wait-for-attach option.""")
+                   help='Time to wait until the discovery and all discovered NVM subsystems are attached.')
     p.add_argument('-l', '--ctrlr-loss-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before deleting ctrlr.
-                   -1 means infinite reconnect retries. 0 means no reconnect retry.
-                   If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.
-                   If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than
-                   reconnect_delay_sec.""",
+                   help='Time to wait until ctrlr is reconnected before deleting ctrlr.'
+                        ' -1 means infinite reconnects. 0 means no reconnect.'
+                        ' If reconnect_delay_sec is zero, ctrlr_loss_timeout_sec has to be zero.'
+                        ' If reconnect_delay_sec is non-zero, ctrlr_loss_timeout_sec has to be -1 or not less than reconnect_delay_sec.',
                    type=int)
     p.add_argument('-o', '--reconnect-delay-sec',
-                   help="""Time to delay a reconnect retry.
-                   If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.
-                   If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.
-                   If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero and
-                   less than ctrlr_loss_timeout_sec.""",
+                   help='Time to delay a reconnect trial. 0 means no reconnect.'
+                        ' If ctrlr_loss_timeout_sec is zero, reconnect_delay_sec has to be zero.'
+                        ' If ctrlr_loss_timeout_sec is -1, reconnect_delay_sec has to be non-zero.'
+                        ' If ctrlr_loss_timeout_sec is not -1 or zero, reconnect_delay_sec has to be non-zero'
+                        ' and less than ctrlr_loss_timeout_sec.',
                    type=int)
     p.add_argument('-u', '--fast-io-fail-timeout-sec',
-                   help="""Time to wait until ctrlr is reconnected before failing I/O to ctrlr.
-                   0 means no such timeout.
-                   If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec and
-                   less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.""",
+                   help='Time to wait until ctrlr is reconnected before failing I/O to ctrlr.'
+                        ' 0 means no such timeout.'
+                        ' If fast_io_fail_timeout_sec is not zero, it has to be not less than reconnect_delay_sec'
+                        ' and less than ctrlr_loss_timeout_sec if ctrlr_loss_timeout_sec is not -1.',
                    type=int)
     p.set_defaults(func=bdev_nvme_start_discovery)
 
@@ -449,7 +452,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_stop_discovery',
                               help="Stop a discovery service. This includes detaching any controllers"
                                    " that were discovered via the service that is being stopped.")
-    p.add_argument('-b', '--name', help="Name of the service to stop", required=True)
+    p.add_argument('-b', '--name', help="Name of service to stop", required=True)
     p.set_defaults(func=bdev_nvme_stop_discovery)
 
     def bdev_nvme_get_discovery_info(args):
@@ -477,7 +480,6 @@ def add_parser(subparsers):
     p.add_argument('-c', '--cntlid', help='NVMe-oF controller ID', type=int, required=True)
     p.set_defaults(func=bdev_nvme_set_preferred_path)
 
-
     def bdev_nvme_get_path_iostat(args):
         print_dict(args.client.bdev_nvme_get_path_iostat(name=args.name))
 
@@ -485,7 +487,7 @@ def add_parser(subparsers):
                               help="Get I/O statistics for IO paths of the block device. Call RPC"
                                    " bdev_nvme_set_options to set io_path_stat true before using this"
                                    " RPC.")
-    p.add_argument('-b', '--name', help="Name of the Blockdev. Example: NVMe0n1", required=True)
+    p.add_argument('-b', '--name', help="Name of the NVMe bdev", required=True)
     p.set_defaults(func=bdev_nvme_get_path_iostat)
 
     def bdev_nvme_cuse_register(args):
@@ -494,7 +496,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_cuse_register',
                               help="Register CUSE device on NVMe controller.")
     p.add_argument('-n', '--name',
-                   help='Name of the NVMe controller. Example: Nvme0', required=True)
+                   help='Name of the NVMe controller', required=True)
     p.set_defaults(func=bdev_nvme_cuse_register)
 
     def bdev_nvme_cuse_unregister(args):
@@ -503,7 +505,7 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_cuse_unregister',
                               help="Unregister CUSE device on NVMe controller.")
     p.add_argument('-n', '--name',
-                   help='Name of the NVMe controller. Example: Nvme0', required=True)
+                   help='Name of the NVMe controller', required=True)
     p.set_defaults(func=bdev_nvme_cuse_unregister)
 
     def bdev_nvme_set_keys(args):
@@ -518,8 +520,8 @@ def add_parser(subparsers):
                                    " won't be authenticated. If successful, existing qpairs won't be"
                                    " disconnected/reconnected.")
     p.add_argument('name', help='Name of the NVMe controller')
-    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name')
-    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name')
+    p.add_argument('--dhchap-key', help='DH-HMAC-CHAP key name (required if controller key is specified).')
+    p.add_argument('--dhchap-ctrlr-key', help='DH-HMAC-CHAP controller key name.')
     p.set_defaults(func=bdev_nvme_set_keys)
 
     def bdev_nvme_apply_firmware(args):
@@ -530,9 +532,10 @@ def add_parser(subparsers):
 
     p = subparsers.add_parser('bdev_nvme_apply_firmware', help="Download and commit firmware to NVMe device.")
     p.add_argument('filename', help='filename of the firmware to download')
-    p.add_argument('bdev_name', help='name of the NVMe device')
+    p.add_argument('bdev_name', help='Name of the NVMe block device')
     p.add_argument('commit_action', choices=['replace_and_enable', 'activate_immediate'], nargs='?',
-                   help='Firmware commit action (replace_and_enable: activate at next reset, activate_immediate: activate immediately)')
+                   help='Firmware commit action. replace_and_enable: activate at next reset.'
+                   ' activate_immediate: activate immediately. Default: replace_and_enable')
     p.set_defaults(func=bdev_nvme_apply_firmware)
 
     def bdev_nvme_get_transport_statistics(args):
@@ -546,8 +549,8 @@ def add_parser(subparsers):
         print_dict(args.client.bdev_nvme_get_controller_health_info(name=args.name))
 
     p = subparsers.add_parser('bdev_nvme_get_controller_health_info',
-                              help="Display health log of the required NVMe bdev device.")
-    p.add_argument('-c', '--name', help="Name of the NVMe bdev controller. Example: Nvme0", required=True)
+                              help='Display health log of the required NVMe bdev device.')
+    p.add_argument('-c', '--name', help="Name of the NVMe bdev controller", required=True)
     p.set_defaults(func=bdev_nvme_get_controller_health_info)
 
     # opal
@@ -556,20 +559,22 @@ def add_parser(subparsers):
                                      nvme_ctrlr_name=args.nvme_ctrlr_name,
                                      password=args.password)
 
-    p = subparsers.add_parser('bdev_nvme_opal_init', help="This is used to initialize OPAL of a given NVMe ctrlr, including taking"
-                                                           " ownership and activating.")
-    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
-    p.add_argument('-p', '--password', help='password for admin', required=True)
+    p = subparsers.add_parser('bdev_nvme_opal_init',
+                              help='This is used to initialize OPAL of a given NVMe ctrlr, '
+                                   'including taking ownership and activating.')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='Name of NVMe controller', required=True)
+    p.add_argument('-p', '--password', help='admin password of OPAL', required=True)
     p.set_defaults(func=bdev_nvme_opal_init)
 
     def bdev_nvme_opal_revert(args):
         args.client.bdev_nvme_opal_revert(
                                        nvme_ctrlr_name=args.nvme_ctrlr_name,
                                        password=args.password)
-    p = subparsers.add_parser('bdev_nvme_opal_revert', help="This is used to revert OPAL to its factory settings. Erase all user"
-                                                             " configuration and data.")
-    p.add_argument('-b', '--nvme-ctrlr-name', help='nvme ctrlr name', required=True)
-    p.add_argument('-p', '--password', help='password', required=True)
+    p = subparsers.add_parser('bdev_nvme_opal_revert',
+                              help='This is used to revert OPAL to its factory settings. '
+                                   'Erase all user configuration and data.')
+    p.add_argument('-b', '--nvme-ctrlr-name', help='Name of NVMe controller', required=True)
+    p.add_argument('-p', '--password', help='admin password of OPAL', required=True)
     p.set_defaults(func=bdev_nvme_opal_revert)
 
     # bdev_nvme_send_cmd
@@ -593,7 +598,7 @@ def add_parser(subparsers):
                                    " parameters. Illegal command contents or mismatching buffer size may"
                                    " result in unpredictable behavior.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command', required=True)
     p.add_argument('-r', '--data-direction', choices=['c2h', 'h2c'], help='Direction of data transfer', required=True)
     p.add_argument('-c', '--cmdbuf', help="""NVMe command encoded by base64 urlsafe""", required=True)
     p.add_argument('-d', '--data', help="""Data transferring to controller from host, encoded by base64 urlsafe""")
@@ -602,7 +607,7 @@ def add_parser(subparsers):
     p.add_argument('-M', '--metadata-length', dest='metadata_len',
                    help="""Metadata length required to transfer from controller to host""", type=int)
     p.add_argument('-T', '--timeout-ms',
-                   help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int)
+                   help="Command execution timeout value, in milliseconds. If 0, don't track timeout.", type=int)
     p.set_defaults(func=bdev_nvme_send_cmd)
 
     # bdev_nvme_add_error_injection
@@ -619,18 +624,15 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_add_error_injection',
                               help="Add a NVMe command error injection for a bdev nvme controller.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command', required=True)
-    p.add_argument('-o', '--opc', help="""Opcode of the NVMe command.""", required=True, type=int)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command.', required=True)
+    p.add_argument('-o', '--opc', help="NVMe command opcode for which the error injection is applied.", required=True, type=int)
     p.add_argument('-s', '--do-not-submit',
-                   help="""Set to true if request should not be submitted to the controller""",
+                   help="Set to true if request should not be submitted to the controller (default false).",
                    dest="do_not_submit", action='store_true')
-    p.add_argument('-w', '--timeout-in-us',
-                   help="""Wait specified microseconds when do_not_submit is true. Held commands are subject to the """
-                        """timeout_us and timeout_admin_us timeouts set by bdev_nvme_set_options""",
-                   type=int)
-    p.add_argument('-e', '--err-count', help="""Number of matching NVMe commands to inject errors""", type=int)
-    p.add_argument('-u', '--sct', help="""Status code type""", type=int)
-    p.add_argument('-c', '--sc', help="""Status code""", type=int)
+    p.add_argument('-w', '--timeout-in-us', help="Wait time in microseconds when do_not_submit is true.", type=int)
+    p.add_argument('-e', '--err-count', help="Number of matching NVMe commands to inject errors.", type=int)
+    p.add_argument('-u', '--sct', help="Status code type (default 0).", type=int)
+    p.add_argument('-c', '--sc', help="Status code (default 0).", type=int)
     p.set_defaults(func=bdev_nvme_add_error_injection)
 
     # bdev_nvme_remove_error_injection
@@ -642,8 +644,8 @@ def add_parser(subparsers):
     p = subparsers.add_parser('bdev_nvme_remove_error_injection',
                               help="Remove a NVMe command error injection.")
     p.add_argument('-n', '--nvme-name', dest='name', help="""Name of the operating NVMe controller""", required=True)
-    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe cmd', required=True)
-    p.add_argument('-o', '--opc', help="""Opcode of the nvme cmd.""", required=True, type=int)
+    p.add_argument('-t', '--cmd-type', choices=['admin', 'io'], help='Type of NVMe command.', required=True)
+    p.add_argument('-o', '--opc', help="NVMe command opcode for which the error injection is applied.", required=True, type=int)
     p.set_defaults(func=bdev_nvme_remove_error_injection)
 
     # opal
