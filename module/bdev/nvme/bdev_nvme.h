@@ -195,15 +195,16 @@ struct nvme_error_stat {
 
 struct nvme_bdev {
 	struct spdk_bdev			disk;
-	uint32_t				nsid;
 	struct nvme_bdev_ctrlr			*nbdev_ctrlr;
 
-	/* Used for namespace list, multipath settings and err stats protection. */
+	/* Used for namespace list and err stats protection. */
 	pthread_mutex_t				mutex;
 
+	uint32_t				nsid;
 	int					ref;
-	enum spdk_bdev_nvme_multipath_policy	mp_policy;
-	enum spdk_bdev_nvme_multipath_selector	mp_selector;
+	bool					opal;
+	uint8_t					mp_policy;
+	uint8_t					mp_selector;
 	uint32_t				rr_min_io;
 
 	/* This list is modified on the app thread only but can be accessed on other threads:
@@ -212,7 +213,6 @@ struct nvme_bdev {
 	 * - Access on other threads must use the mutex.
 	 */
 	TAILQ_HEAD(, nvme_ns)			nvme_ns_list;
-	bool					opal;
 	TAILQ_ENTRY(nvme_bdev)			tailq;
 	struct nvme_error_stat			*err_stat;
 };
