@@ -523,6 +523,9 @@ bitmasks:
 methods:
   - name: spdk_kill_instance
     description: Send a signal to the application.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: sig_name
         type: enum
@@ -616,6 +619,9 @@ methods:
       Set options for scheduler.
 
       This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: scheduling_core
         type: uint32
@@ -668,6 +674,9 @@ methods:
     description: |
       Enable trace on a specific tpoint group. For example "bdev" for bdev trace group,
       "all" for all trace groups.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -677,6 +686,9 @@ methods:
     description: |
       Disable trace on a specific tpoint group. For example "bdev" for bdev trace group,
       "all" for all trace groups.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -689,6 +701,9 @@ methods:
       disable already active tracepoints or those not specified in the mask. For a full description
       of all available trace groups, see
       [tracepoint documentation](https://spdk.io/doc/tracepoints.html).
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -704,6 +719,9 @@ methods:
       and 0x1 to disable the first tracepoint inside the group (BDEV_IO_START). For a full description
       of all available trace groups, see
       [tracepoint documentation](https://spdk.io/doc/tracepoints.html).
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -721,6 +739,9 @@ methods:
       Clear trace history. All entries recorded before this call will be
       hidden from subsequent reads by external trace tools such as spdk_trace.
       This does not disable tracing; new entries continue to be recorded.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: trace_get_info
     description: |
@@ -731,6 +752,9 @@ methods:
     description: |
       Set the current level at which output will additionally be
       sent to the current console.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: level
         type: enum
@@ -741,9 +765,15 @@ methods:
     description: |
       Get the current level at which output will additionally be
       sent to the current console.
+    result:
+      type: string
+      description: Current log print level
     params: []
   - name: log_set_level
     description: 'Set the current logging level output by the `log` module.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: level
         type: enum
@@ -752,12 +782,18 @@ methods:
         description: Log level
   - name: log_get_level
     description: 'Get the current logging level output by the `log` module.'
+    result:
+      type: string
+      description: Current log level
     params: []
   - name: log_set_flag
     description: |
       Enable logging for specific portions of the application. The list of possible
       log flags can be obtained using the `log_get_flags` RPC and may be different
       for each application.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: flag
         type: string
@@ -768,6 +804,9 @@ methods:
       Disable logging for specific portions of the application. The list of possible
       log flags can be obtained using the `log_get_flags` RPC and may be different
       for each application.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: flag
         type: string
@@ -780,6 +819,9 @@ methods:
     params: []
   - name: log_enable_timestamps
     description: Enable or disable timestamps.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: enabled
         type: boolean
@@ -802,6 +844,9 @@ methods:
     params: []
   - name: accel_assign_opc
     description: Manually assign an operation to a module.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: opname
         type: string
@@ -813,6 +858,9 @@ methods:
         description: Name of the accel module to assign the operation to
   - name: accel_crypto_key_create
     description: Create a crypto key which will be used in accel framework
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: cipher
         type: enum
@@ -836,6 +884,9 @@ methods:
         description: Name of the key
   - name: accel_crypto_key_destroy
     description: Destroy a crypto key. The user is responsible for ensuring that the deleted key is not used by acceleration modules.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: key_name
         type: string
@@ -851,12 +902,18 @@ methods:
     description: |
       Select platform driver to execute operation chains.  Until a driver is selected, all operations are
       executed through accel modules.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
         description: Name of the platform driver, or empty string to disable
   - name: accel_set_options
     description: Set accel framework's options.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: small_cache_size
         type: uint32
@@ -882,6 +939,9 @@ methods:
     description: |
       Inject an error to execution of a given operation.  Note, that in order for the errors to be
       actually injected, the error module must be assigned to that operation via `accel_assign_opc`.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: opcode
         type: enum
@@ -907,6 +967,9 @@ methods:
       Set config and enable compressdev accel module offload.
       Select the DPDK polled mode driver (pmd) for the accel compress module,
       0 = auto-select, 1= QAT only, 2 = mlx5_pci only, 3 = uadk only.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: pmd
         type: uint32
@@ -916,6 +979,9 @@ methods:
     description: |
       Set config and enable dsa accel module offload.
       This feature is considered as experimental.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: config_kernel_mode
         type: boolean
@@ -924,18 +990,33 @@ methods:
     description: |
       Enable IAA accel module offload.
       This feature is considered as experimental.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: ioat_scan_accel_module
     description: Enable ioat accel module offload.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: ae4dma_scan_accel_module
     description: Enable ae4dma accel module offload.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: dpdk_cryptodev_scan_accel_module
     description: Enable dpdk_cryptodev accel offload
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: dpdk_cryptodev_set_driver
     description: Set the DPDK cryptodev driver
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: driver_name
         type: enum
@@ -944,9 +1025,15 @@ methods:
         description: DPDK crypto driver
   - name: dpdk_cryptodev_get_driver
     description: Get the DPDK cryptodev driver
+    result:
+      type: string
+      description: Name of the current DPDK crypto driver
     params: []
   - name: mlx5_scan_accel_module
     description: Enable mlx5 accel offload
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: qp_size
         type: uint16
@@ -972,11 +1059,17 @@ methods:
         description: Verbosity level
   - name: cuda_scan_accel_module
     description: Enable cuda accel module offload.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: bdev_set_options
     description: |
       Set global parameters for the block device (bdev) subsystem.  This RPC may only be called
       before SPDK subsystems have been initialized.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: bdev_io_pool_size
         type: uint32
@@ -1040,6 +1133,9 @@ methods:
     description: |
       Reset I/O statistics of block devices (bdevs). Note that if one consumer resets I/O statistics,
       it affects all other consumers.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1050,6 +1146,9 @@ methods:
         description: 'Mode to reset I/O statistics: all, maxmin, error, none (default: all)'
   - name: bdev_enable_histogram
     description: Control whether collecting data for histogram is enabled for specified bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1092,6 +1191,9 @@ methods:
         description: Array of buckets in microseconds to dump histogram into
   - name: bdev_set_qos_limit
     description: Set the quality of service rate limit on a bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1111,6 +1213,9 @@ methods:
         description: Number of Write megabytes per second to allow. 0 means unlimited.
   - name: bdev_set_qd_sampling_period
     description: Enable queue depth tracking on a specified bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1151,6 +1256,9 @@ methods:
         description: Name of the key created with accel_crypto_key_create
   - name: bdev_crypto_delete
     description: Delete a crypto bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1187,6 +1295,9 @@ methods:
         description: Name of underlying core bdev
   - name: bdev_ocf_delete
     description: Delete the OCF bdev
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1261,6 +1372,9 @@ methods:
       hasn't been flushed for a long time.
       This RPC returns immediately, and flush is then being performed in the
       background. To see the status of flushing operation use bdev_ocf_flush_status.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1340,6 +1454,9 @@ methods:
         description: NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. Default is -1.
   - name: bdev_malloc_delete
     description: 'Delete @ref bdev_config_malloc'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1398,6 +1515,9 @@ methods:
         description: Preferred unmap alignment in blocks
   - name: bdev_null_delete
     description: 'Delete @ref bdev_config_null.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1405,6 +1525,9 @@ methods:
         description: Bdev name
   - name: bdev_null_resize
     description: 'Resize @ref bdev_config_null.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1445,6 +1568,9 @@ methods:
         description: Enable the RWF_NOWAIT flag for block devices. If the flag is not defined, or if the specified device is not a block device, creation will fail. Note that this feature is not advertised by the kernel to userspace. Use with caution, and only if the device is known to work correctly with your kernel.
   - name: bdev_aio_rescan
     description: 'Rescan the size of @ref bdev_config_aio.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1452,6 +1578,9 @@ methods:
         description: Bdev name
   - name: bdev_aio_delete
     description: 'Delete @ref bdev_config_aio.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1466,6 +1595,9 @@ methods:
       They can be overridden if they are given by the RPC bdev_nvme_attach_controller.
       The `multipath_opts` parameter sets the default creation-time multipath policy, selector, and minimum
       I/O count. These defaults can also be overridden by `bdev_nvme_attach_controller`.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: action_on_timeout
         type: enum
@@ -1574,6 +1706,9 @@ methods:
     description: |
       Change settings of the NVMe hotplug feature. If enabled, PCIe NVMe bdevs will be automatically discovered on insertion
       and deleted on removal.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: enable
         type: boolean
@@ -1700,6 +1835,9 @@ methods:
 
       returns true if the controller and bdevs were successfully destroyed
       or the address was properly removed, false otherwise.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1736,6 +1874,9 @@ methods:
       parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
 
       Returns true if the controller reset was successful, false otherwise.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1754,6 +1895,9 @@ methods:
       parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
 
       Returns true if the controller enablement was successful or a controller was already enabled, false otherwise.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1772,6 +1916,9 @@ methods:
       parameter is specified, or all NVMe-oF controllers in an NVMe bdev controller if it is omitted.
 
       Returns true if the controller disablement was successful or a controller was already disabled, false otherwise.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1796,6 +1943,9 @@ methods:
       from the log page, it will automatically detach from that controller as well.
 
       The 'name' is also used to later stop the discovery service.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1837,6 +1987,9 @@ methods:
     description: |
       Stop a discovery service. This includes detaching any controllers that were
       discovered via the service that is being stopped.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1856,6 +2009,9 @@ methods:
       Set the preferred I/O path for an NVMe bdev in multipath mode.
 
       NOTE: This RPC does not support NVMe bdevs in failover mode.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1865,6 +2021,8 @@ methods:
         type: uint16
         required: true
         description: NVMe-oF controller ID
+
+
   - name: bdev_nvme_get_path_iostat
     description: |
       Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set enable_io_path_stat
@@ -1876,6 +2034,9 @@ methods:
         description: Name of the NVMe bdev
   - name: bdev_nvme_cuse_register
     description: Register CUSE device on NVMe controller.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1883,6 +2044,9 @@ methods:
         description: Name of the NVMe controller
   - name: bdev_nvme_cuse_unregister
     description: Unregister CUSE device on NVMe controller.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1895,6 +2059,9 @@ methods:
       qpairs won't be authenticated.
 
       If successful, existing qpairs won't be disconnected/reconnected.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -1908,6 +2075,9 @@ methods:
         description: DH-HMAC-CHAP controller key name
   - name: bdev_zone_block_create
     description: Creates a virtual zone device on top of existing non-zoned bdev.
+    result:
+      type: string
+      description: Name of the newly created zone bdev
     params:
       - name: name
         type: string
@@ -1927,6 +2097,9 @@ methods:
         description: Number of zones required to reach optimal write speed
   - name: bdev_zone_block_delete
     description: Deletes a virtual zone device.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2103,6 +2276,9 @@ methods:
         description: UUID of new bdev
   - name: bdev_delay_delete
     description: Delete delay bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2131,6 +2307,9 @@ methods:
         description: The new latency value in microseconds
   - name: bdev_error_create
     description: Construct error bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: base_name
         type: string
@@ -2153,6 +2332,9 @@ methods:
     description: |
       Inject an error via an error bdev. Create an error bdev on base bdev first. Default 'num'
       value is 1 and if 'num' is set to zero, the specified injection is disabled.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2190,6 +2372,9 @@ methods:
         description: the value for xor (1-255, 0 is invalid)
   - name: bdev_error_resume_pending
     description: Resume all error bdev pending requests.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2197,6 +2382,9 @@ methods:
         description: Name of the error injection bdev
   - name: bdev_iscsi_set_options
     description: 'This RPC can be called at any time, but the new value will only take effect for new iSCSI bdevs.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: timeout_sec
         type: uint64
@@ -2227,6 +2415,9 @@ methods:
       Delete iSCSI bdev and terminate connection to target.
 
       This method is available only if SPDK was built with iSCSI initiator support.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2270,6 +2461,9 @@ methods:
       Delete FTL bdev.
 
       This RPC is subject to change.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2283,6 +2477,9 @@ methods:
       Unmap range of LBAs.
 
       This RPC is subject to change.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2315,6 +2512,9 @@ methods:
         description: Bdev name
   - name: bdev_ftl_set_property
     description: Set FTL property. Trying to set a read-only property will result in an error.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2349,6 +2549,9 @@ methods:
         description: UUID of new bdev
   - name: bdev_passthru_delete
     description: Delete passthru bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2377,6 +2580,9 @@ methods:
         description: 'Whether or not to conserve CPU when polling (default: false)'
   - name: bdev_xnvme_delete
     description: Delete xnvme bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2414,6 +2620,9 @@ methods:
     params: []
   - name: bdev_virtio_detach_controller
     description: Remove a Virtio device. This command can be used to remove any type of virtio device.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2437,6 +2646,9 @@ methods:
       Set global parameters for iSCSI targets.
 
       This RPC may only be called before SPDK subsystems have been initialized. This RPC can be called only once.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: auth_file
         type: string
@@ -2512,6 +2724,9 @@ methods:
     params: []
   - name: iscsi_set_discovery_auth
     description: Set CHAP authentication for sessions dynamically.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: disable_chap
         type: boolean
@@ -2527,6 +2742,9 @@ methods:
         description: CHAP authentication group ID for discovery session (non-zero values must reference a precreated group)
   - name: iscsi_create_auth_group
     description: Create an authentication group for CHAP authentication.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2541,6 +2759,9 @@ methods:
           Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 msecret:ms2'
   - name: iscsi_delete_auth_group
     description: Delete an existing authentication group for CHAP authentication.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2551,6 +2772,9 @@ methods:
     params: []
   - name: iscsi_auth_group_add_secret
     description: Add a secret to an existing authentication group for CHAP authentication.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2572,6 +2796,9 @@ methods:
         description: Secret for mutual (bidirectional) CHAP authentication
   - name: iscsi_auth_group_remove_secret
     description: Remove a secret from an existing authentication group for CHAP authentication.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2586,6 +2813,9 @@ methods:
     params: []
   - name: iscsi_create_initiator_group
     description: Add an initiator group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2607,6 +2837,9 @@ methods:
           Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_delete_initiator_group
     description: Delete an existing initiator group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2614,6 +2847,9 @@ methods:
         description: Initiator group tag (unique, integer > 0)
   - name: iscsi_initiator_group_add_initiators
     description: Add initiators to an existing initiator group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2634,6 +2870,9 @@ methods:
           This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_initiator_group_remove_initiators
     description: Remove initiators from an initiator group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2657,6 +2896,9 @@ methods:
     params: []
   - name: iscsi_create_target_node
     description: Add an iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2711,6 +2953,9 @@ methods:
         description: Require Data Digest for this target node
   - name: iscsi_target_node_set_auth
     description: Set CHAP authentication to an existing iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2730,6 +2975,9 @@ methods:
         description: Authentication group ID for this target node (non-zero values must reference a precreated group)
   - name: iscsi_target_node_add_pg_ig_maps
     description: Add initiator group to portal group mappings to an existing iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2747,6 +2995,9 @@ methods:
           *** The Portal/Initiator Groups must be precreated ***
   - name: iscsi_target_node_remove_pg_ig_maps
     description: Delete initiator group to portal group mappings from an existing iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2764,6 +3015,9 @@ methods:
           *** The Portal/Initiator Groups must be precreated ***
   - name: iscsi_delete_target_node
     description: Delete an iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2774,6 +3028,9 @@ methods:
     params: []
   - name: iscsi_create_portal_group
     description: Add a portal group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2803,6 +3060,9 @@ methods:
     description: |
       Start listening on portals if the portal group is not started yet, or do nothing
       if the portal group already started. Return a success response for both cases.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2810,6 +3070,9 @@ methods:
         description: Portal group tag (unique, integer > 0)
   - name: iscsi_delete_portal_group
     description: Delete an existing portal group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2819,6 +3082,9 @@ methods:
     description: |
       Set CHAP authentication for discovery sessions specific for the existing iSCSI portal group.
       This RPC overwrites the setting by the global parameters for the iSCSI portal group.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tag
         type: int32
@@ -2844,6 +3110,9 @@ methods:
     params: []
   - name: iscsi_target_node_add_lun
     description: Add an LUN to an existing iSCSI target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2858,6 +3127,9 @@ methods:
         description: LUN ID. -1 or omitted assigns the lowest free ID
   - name: iscsi_target_node_set_redirect
     description: 'Update redirect portal of the primary portal group for the target node,'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2877,6 +3149,9 @@ methods:
     description: |
       For the target node, request connections whose portal group tag match to logout,
       or request all connections to logout if portal group tag is omitted.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2887,6 +3162,9 @@ methods:
         description: Portal group tag (unique, integer > 0)
   - name: iscsi_enable_histogram
     description: Control whether collecting data for histogram is enabled for specified iscsi target node.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -2936,6 +3214,9 @@ methods:
     params: []
   - name: nvmf_create_transport
     description: Initialize an NVMe-oF transport with the given options.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: trtype
         type: string
@@ -3060,6 +3341,9 @@ methods:
         description: Parent NVMe-oF target name
   - name: nvmf_create_subsystem
     description: Construct an NVMe over Fabrics target subsystem.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3106,6 +3390,9 @@ methods:
         description: Enable NSSR (NVMe subsystem reset)
   - name: nvmf_delete_subsystem
     description: Delete an existing NVMe-oF subsystem.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3119,6 +3406,9 @@ methods:
       Add a new listen address to an NVMe-oF subsystem.
 
       This method will fail if listener with given address already exists.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3148,6 +3438,9 @@ methods:
         description: Required NUMA node ID for all namespaces, if -1 then any namespace can be used. Default is -1. Relevant only for VFIOUSER transport.
   - name: nvmf_subsystem_remove_listener
     description: Remove a listen address from an NVMe-oF subsystem.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3165,6 +3458,9 @@ methods:
     description: |
       Set ANA state of a listener for an NVMe-oF subsystem. Only the ANA state of the specified ANA
       group is updated, or ANA states of all ANA groups if ANA group is not specified.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3188,6 +3484,9 @@ methods:
         description: ANA group ID
   - name: nvmf_subsystem_add_ns
     description: Add a namespace to a subsystem. The namespace ID is returned as the result.
+    result:
+      type: uint32
+      description: Namespace ID of the added namespace
     params:
       - name: nqn
         type: string
@@ -3203,6 +3502,9 @@ methods:
         description: Parent NVMe-oF target name
   - name: nvmf_subsystem_remove_ns
     description: Remove a namespace from a subsystem.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3217,6 +3519,9 @@ methods:
         description: Parent NVMe-oF target name
   - name: nvmf_subsystem_set_ns_ana_group
     description: Change ANA group ID of a namespace in a subsystem.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3237,6 +3542,9 @@ methods:
     description: |
       Add a host NQN to the list of allowed hosts.  Adding an already allowed host will result in an
       error.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3260,6 +3568,9 @@ methods:
         description: DH-HMAC-CHAP controller key name
   - name: nvmf_subsystem_remove_host
     description: Remove a host NQN from the list of allowed hosts.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3277,6 +3588,9 @@ methods:
         description: Timeout in ms to wait for I/Os to complete (optional). Default value is derived from the controller CAP.TO.
   - name: nvmf_subsystem_allow_any_host
     description: Configure a subsystem to allow any host to connect or to enforce the host NQN list.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3294,6 +3608,9 @@ methods:
       Set keys required for a host to connect to a given subsystem.  This will overwrite the keys set by
       `nvmf_subsystem_add_host`.  If none of the keys are provided, host's keys will be cleared, allowing
       it to connect without authentication.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3349,6 +3666,9 @@ methods:
 
       Note: the namespace must have been added with no_auto_visible = false
       (see @ref rpc_nvmf_subsystem_add_ns).
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3372,6 +3692,9 @@ methods:
 
       Note: the namespace must have been added to the subsystem with
       no_auto_visible = false (see @ref rpc_nvmf_subsystem_add_ns).
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nqn
         type: string
@@ -3392,6 +3715,9 @@ methods:
     description: |
       Set the maximum allowed subsystems for the NVMe-oF target.  This RPC may only be called
       before SPDK subsystems have been initialized.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: max_subsystems
         type: uint32
@@ -3401,6 +3727,9 @@ methods:
     description: |
       Add a discovery service referral to an NVMe-oF target. If a referral with the given
       parameters already exists, no action will be taken.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tgt_name
         type: string
@@ -3418,6 +3747,9 @@ methods:
         description: Subsystem NQN
   - name: nvmf_discovery_remove_referral
     description: Remove a discovery service referral from an NVMe-oF target.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tgt_name
         type: string
@@ -3440,6 +3772,9 @@ methods:
     description: |
       Set global configuration of NVMe-oF target.  This RPC may only be called before SPDK subsystems
       have been initialized.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: admin_cmd_passthru
         type: object
@@ -3502,6 +3837,9 @@ methods:
         description: Command Retry Delay Time 3 in units of 100 milliseconds
   - name: vfu_tgt_set_base_path
     description: Set base path of Unix Domain socket file.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: path
         type: string
@@ -3509,6 +3847,9 @@ methods:
         description: Base path for the vfio-user UNIX sockets
   - name: vfu_virtio_delete_endpoint
     description: Delete PCI device via endpoint name.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3516,6 +3857,9 @@ methods:
         description: Name of the endpoint
   - name: vfu_virtio_create_blk_endpoint
     description: Create vfio-user virtio-blk PCI endpoint.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3539,6 +3883,9 @@ methods:
         description: 'Enable packed virtqueue layout. Default: false'
   - name: vfu_virtio_scsi_add_target
     description: Add block device to specified SCSI target of vfio-user virtio-scsi PCI endpoint.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3554,6 +3901,9 @@ methods:
         description: Name of the backing block device
   - name: vfu_virtio_scsi_remove_target
     description: Remove a SCSI target of vfio-user virtio-scsi PCI endpoint.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3565,6 +3915,9 @@ methods:
         description: 'SCSI target number: 0-7'
   - name: vfu_virtio_create_scsi_endpoint
     description: Create vfio-user virtio-scsi PCI endpoint.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3584,6 +3937,9 @@ methods:
         description: 'Enable packed virtqueue layout. Default: false'
   - name: vfu_virtio_create_fs_endpoint
     description: Create vfio-user virtio-fs PCI endpoint.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3615,6 +3971,9 @@ methods:
       there is no hardcoded limit for this parameter. Only limitation is that final delay in CPU ticks might not overflow
       32 bit unsigned integer (which is more than 1s @ 4GHz CPU). In real scenarios `delay_base_us` should be much lower
       than 150us. To disable coalescing set `delay_base_us` to 0.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3630,6 +3989,9 @@ methods:
         description: IOPS threshold above which coalescing kicks in (must be > 0)
   - name: vhost_create_scsi_controller
     description: Construct vhost SCSI target.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3643,6 +4005,9 @@ methods:
         description: 'Delay controller startup. Default: false'
   - name: vhost_start_scsi_controller
     description: 'Start vhost SCSI controller, if controller is already started, do nothing.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3671,6 +4036,9 @@ methods:
       Remove SCSI target ID `scsi_target_num` from vhost target `scsi_target_num`.
 
       This method will fail if initiator is connected, but doesn't support hot-remove (the `VIRTIO_SCSI_F_HOTPLUG` is not negotiated).
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3682,6 +4050,9 @@ methods:
         description: SCSI target number (0-7)
   - name: virtio_blk_create_transport
     description: Create virtio blk transport.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3699,6 +4070,9 @@ methods:
 
       If `readonly` is `true` then vhost block target will be created as read only and fail any write requests.
       The `VIRTIO_BLK_F_RO` feature flag will be offered to the initiator.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3732,6 +4106,9 @@ methods:
 
       This call will fail if there is an initiator connected or there is at least one SCSI target configured in case of
       vhost SCSI target. In the later case please remove all SCSI targets first using @ref rpc_vhost_scsi_controller_remove_target.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: ctrlr
         type: string
@@ -3766,6 +4143,9 @@ methods:
         description: Metadata page size in bytes
   - name: bdev_lvol_delete_lvstore
     description: Destroy a logical volume store.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: uuid
         type: string
@@ -3784,6 +4164,9 @@ methods:
         description: Name of the logical volume store to retrieve information about
   - name: bdev_lvol_rename_lvstore
     description: Rename a logical volume store.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: old_name
         type: string
@@ -3802,6 +4185,9 @@ methods:
       bdev_lvol_get_lvstores RPC.
 
       This RPC can be called to grow an lvolstore when the underlying bdev has increased in size.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: uuid
         type: string
@@ -3891,6 +4277,9 @@ methods:
         description: Name for the logical volume to create
   - name: bdev_lvol_rename
     description: Rename a logical volume. New name will rename only the alias of the logical volume.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: old_name
         type: string
@@ -3902,6 +4291,9 @@ methods:
         description: New logical volume name
   - name: bdev_lvol_resize
     description: Resize a logical volume.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3913,6 +4305,9 @@ methods:
         description: Desired size of the logical volume in MiB
   - name: bdev_lvol_set_read_only
     description: Mark logical volume as read only.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3920,6 +4315,9 @@ methods:
         description: UUID or alias of the logical volume to set as read only
   - name: bdev_lvol_delete
     description: Destroy a logical volume.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3929,6 +4327,9 @@ methods:
     description: |
       Inflate a logical volume. All unallocated clusters are allocated and copied from the parent or zero filled
       if not allocated in the parent. Then all dependencies on the parent are removed.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3939,6 +4340,9 @@ methods:
       Decouple the parent of a logical volume. For unallocated clusters which is allocated in the parent, they are
       allocated and copied from the parent, but for unallocated clusters which is thin provisioned in the parent,
       they are kept thin provisioned. Then all dependencies on the parent are removed.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -3962,6 +4366,9 @@ methods:
       The previous parent of the lvol, if any, can be another snapshot or an external snapshot; if the
       lvol is not a clone, it must be thin-provisioned.
       Lvol and parent snapshot must have the same size and must belong to the same lvol store.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: lvol_name
         type: string
@@ -3978,6 +4385,9 @@ methods:
       The previous parent of the lvol, if any, can be another external snapshot or a snapshot; if the
       lvol is not a clone, it must be thin-provisioned.
       The size of the external snapshot device must be an integer multiple of cluster size of lvol's lvolstore.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: lvol_name
         type: string
@@ -4024,6 +4434,9 @@ methods:
       rebuild. Any positive value or zero is valid, zero means no bandwidth limitation for background process.
       It can only limit the process bandwidth but doesn't guarantee it can be reached. Changing this value will
       not affect existing processes, it will only take effect on new processes generated after the RPC is completed.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: process_window_size_kb
         type: uint32
@@ -4047,6 +4460,9 @@ methods:
         description: all or online or configuring or offline
   - name: bdev_raid_create
     description: Constructs new RAID bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4073,6 +4489,9 @@ methods:
         description: 'If set, information about raid bdev will be stored in superblock on each base bdev (default: `false`)'
   - name: bdev_raid_delete
     description: Removes RAID bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4085,6 +4504,9 @@ methods:
     description: |
       Add base bdev to existing raid bdev. The raid bdev must have an empty base bdev slot.
       The bdev must be large enough and have the same block size and metadata format as the other base bdevs.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: raid_bdev
         type: string
@@ -4096,6 +4518,9 @@ methods:
         description: Base bdev name
   - name: bdev_raid_remove_base_bdev
     description: Remove base bdev from existing raid bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4117,6 +4542,9 @@ methods:
         description: size in MB to restrict the size
   - name: bdev_split_delete
     description: This is used to remove the split vbdevs.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: base_bdev
         type: string
@@ -4124,6 +4552,9 @@ methods:
         description: base bdev name
   - name: bdev_uring_create
     description: Create a bdev with io_uring backend.
+    result:
+      type: string
+      description: Name of the newly created uring bdev
     params:
       - name: filename
         type: string
@@ -4141,6 +4572,9 @@ methods:
         description: UUID of new bdev
   - name: bdev_uring_rescan
     description: Rescan the size of a uring bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4148,6 +4582,9 @@ methods:
         description: name of uring bdev to rescan
   - name: bdev_uring_delete
     description: Remove a uring bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4155,6 +4592,9 @@ methods:
         description: name of uring bdev to delete
   - name: bdev_nvme_opal_init
     description: 'This is used to initialize OPAL of a given NVMe ctrlr, including taking ownership and activating.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nvme_ctrlr_name
         type: string
@@ -4166,6 +4606,9 @@ methods:
         description: admin password of OPAL
   - name: bdev_nvme_opal_revert
     description: This is used to revert OPAL to its factory settings. Erase all user configuration and data.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nvme_ctrlr_name
         type: string
@@ -4218,6 +4661,9 @@ methods:
         description: admin password
   - name: bdev_opal_delete
     description: This is used to delete OPAL vbdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: bdev_name
         type: string
@@ -4231,6 +4677,9 @@ methods:
     description: |
       This enables a new user to the specified opal bdev so that the user can lock/unlock the bdev.
       Recalling this for the same opal bdev, only the newest user will have the privilege.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: bdev_name
         type: string
@@ -4250,6 +4699,9 @@ methods:
         description: user password
   - name: bdev_opal_set_lock_state
     description: This is used to lock/unlock specific opal bdev providing user ID and password.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: bdev_name
         type: string
@@ -4285,6 +4737,9 @@ methods:
         description: 'Maximum number of events to return. Default: no limit'
   - name: keyring_file_add_key
     description: Add a file-based key to a keyring.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4296,6 +4751,9 @@ methods:
         description: Path to the file containing the key
   - name: keyring_file_remove_key
     description: Remove a file-based key from a keyring.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4309,6 +4767,9 @@ methods:
     params: []
   - name: keyring_linux_set_options
     description: Set options of the keyring_linux module.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: enable
         type: boolean
@@ -4398,6 +4859,9 @@ methods:
         description: 'Path to the NBD device, e.g. "/dev/nbd0". Default: first available device'
   - name: nbd_stop_disk
     description: Stop one NBD disk which is based on SPDK bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: nbd_device
         type: string
@@ -4517,6 +4981,9 @@ methods:
     params: []
   - name: vmd_remove_device
     description: Remove a device behind a VMD.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: addr
         type: string
@@ -4618,6 +5085,9 @@ methods:
         description: DAOS object class (default SX)
   - name: bdev_daos_delete
     description: 'Delete @ref bdev_config_daos'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4625,6 +5095,9 @@ methods:
         description: Bdev name
   - name: bdev_daos_resize
     description: 'Resize @ref bdev_config_daos.'
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4636,6 +5109,9 @@ methods:
         description: Bdev new capacity in MiB
   - name: iobuf_set_options
     description: Set iobuf buffer pool options.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: small_pool_count
         type: uint64
@@ -4675,6 +5151,9 @@ methods:
       from the log page, it will automatically detach from that controller as well.
 
       The 'name' is also used to later stop the discovery service.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4691,6 +5170,9 @@ methods:
     description: |
       Stops a mDNS discovery service. This includes detaching any controllers that were
       discovered via the service that is being stopped.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4704,6 +5186,9 @@ methods:
       This interface is used to publish an NVMf target's service location using mDNS
       (Multicast DNS) protocol. It allows clients to discover the NVMf target using
       the published service location.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tgt_name
         type: string
@@ -4713,6 +5198,9 @@ methods:
       This interface is used to stop publishing the NVMf target's service location
       using mDNS (Multicast DNS) protocol. It removes the published service location,
       preventing clients from discovering the NVMf target.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: tgt_name
         type: string
@@ -4733,6 +5221,9 @@ methods:
         description: Size of the per-thread fsdev IO objects cache
   - name: fsdev_aio_create
     description: Create an AIO fsdev.
+    result:
+      type: string
+      description: Name of the newly created AIO fsdev
     params:
       - name: name
         type: string
@@ -4756,6 +5247,9 @@ methods:
         description: 'Skip read and write operations and complete them immediately (for benchmarking). Default: false'
   - name: fsdev_aio_delete
     description: Delete an AIO fsdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
