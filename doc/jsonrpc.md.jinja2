@@ -262,7 +262,7 @@ Example response:
 
 #### Response
 
-Completion status of SPDK subsystem initialization is returned as a boolean.
+{{ framework_start_init_response }}
 
 #### Example
 
@@ -290,7 +290,7 @@ Example response:
 
 #### Response
 
-Returns True when subsystems have been initialized.
+{{ framework_wait_init_response }}
 
 #### Example
 
@@ -549,7 +549,7 @@ Example response:
 
 #### Response
 
-Completion status of the operation is returned as a boolean.
+{{ framework_set_scheduler_response }}
 
 #### Example
 
@@ -686,7 +686,7 @@ Example response:
 
 #### Response
 
-true on success
+{{ framework_enable_cpumask_locks_response }}
 
 #### Example
 
@@ -714,7 +714,7 @@ Example response:
 
 #### Response
 
-true on success
+{{ framework_disable_cpumask_locks_response }}
 
 #### Example
 
@@ -785,7 +785,7 @@ Example response:
 
 #### Response
 
-Completion status of the operation is returned as a boolean.
+{{ thread_set_cpumask_response }}
 
 #### Example
 
@@ -2065,7 +2065,7 @@ Example response:
 
 #### Response
 
-The response is an array of objects containing I/O statistics of the requested block devices.
+{{ bdev_examine_response }}
 
 #### Example
 
@@ -2093,7 +2093,7 @@ Example response:
 
 #### Response
 
-The response is sent when all bdev modules had a chance to examine every bdev.
+{{ bdev_wait_for_examine_response }}
 
 #### Example
 
@@ -2373,7 +2373,7 @@ afd9477abf50254219ccb75965fbe39f23ebead5676e292582a0a67f66b88215
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_crypto_create_response }}
 
 #### Example
 
@@ -2425,7 +2425,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_ocf_create_response }}
 
 #### Example
 
@@ -2682,7 +2682,7 @@ Example response:
 
 #### Response
 
-Completion status of reset statistics operation returned as a boolean.
+{{ bdev_ocf_reset_stats_response }}
 
 #### Example
 
@@ -2751,7 +2751,7 @@ Example response:
 
 #### Response
 
-New cache mode name.
+{{ bdev_ocf_set_cache_mode_response }}
 
 #### Example
 
@@ -2858,7 +2858,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_malloc_create_response }}
 
 #### Example
 
@@ -2910,7 +2910,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_null_create_response }}
 
 #### Example
 
@@ -2986,7 +2986,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_aio_create_response }}
 
 #### Example
 
@@ -3826,7 +3826,7 @@ is specified, it will get configuration file and key file from the default locat
 
 #### Response
 
-Name of newly created Rados cluster object.
+{{ bdev_rbd_register_cluster_response }}
 
 #### Example
 
@@ -3854,7 +3854,7 @@ Example response:
 
 #### Response
 
-`true` if Rados cluster object with provided name was deleted or `false` otherwise.
+{{ bdev_rbd_unregister_cluster_response }}
 
 #### Example
 
@@ -3928,7 +3928,7 @@ for SPDK to get up to your projections.
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_rbd_create_response }}
 
 #### Example
 
@@ -3970,7 +3970,7 @@ Example response:
 
 #### Response
 
-`true` if bdev with provided name was deleted or `false` otherwise.
+{{ bdev_rbd_delete_response }}
 
 #### Example
 
@@ -3998,7 +3998,7 @@ Example response:
 
 #### Response
 
-`true` if bdev with provided name was resized or `false` otherwise.
+{{ bdev_rbd_resize_response }}
 
 #### Example
 
@@ -4026,7 +4026,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_delay_create_response }}
 
 #### Example
 
@@ -4078,7 +4078,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_delay_update_latency_response }}
 
 #### Example
 
@@ -4128,7 +4128,7 @@ Example response:
 
 #### Response
 
-`true` if bdev with provided name was deleted or `false` otherwise.
+{{ bdev_error_delete_response }}
 
 #### Example
 
@@ -4228,7 +4228,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_iscsi_create_response }}
 
 #### Example
 
@@ -4590,7 +4590,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_passthru_create_response }}
 
 #### Example
 
@@ -4642,7 +4642,7 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_xnvme_create_response }}
 
 #### Example
 
@@ -4795,7 +4795,7 @@ value. When the enable is false then the period-us is not required.
 
 #### Response
 
-True the rpc is successful otherwise false
+{{ bdev_virtio_blk_set_hotplug_response }}
 
 #### Example
 
@@ -6872,7 +6872,7 @@ Example response:
 
 #### Response
 
-SCSI target ID.
+{{ vhost_scsi_controller_add_target_response }}
 
 #### Example
 
@@ -7158,7 +7158,7 @@ parameter from the bdev_lvol_get_lvstores RPC.
 
 #### Response
 
-UUID of the created logical volume store is returned.
+{{ bdev_lvol_create_lvstore_response }}
 
 #### Example
 
@@ -7303,7 +7303,7 @@ lvol_name will be used in the alias of the created logical volume.
 
 #### Response
 
-UUID of the created logical volume is returned.
+{{ bdev_lvol_create_response }}
 
 #### Example
 
@@ -7331,7 +7331,7 @@ Example response:
 
 #### Response
 
-UUID of the created logical volume snapshot is returned.
+{{ bdev_lvol_snapshot_response }}
 
 #### Example
 
@@ -7359,7 +7359,7 @@ Example response:
 
 #### Response
 
-UUID of the created logical volume clone is returned.
+{{ bdev_lvol_clone_response }}
 
 #### Example
 
@@ -7387,7 +7387,7 @@ Example response:
 
 #### Response
 
-UUID of the created logical volume clone is returned.
+{{ bdev_lvol_clone_bdev_response }}
 
 #### Example
 
@@ -8092,7 +8092,7 @@ Example response:
 
 #### Response
 
-The response is the name of created OPAL virtual bdev.
+{{ bdev_opal_create_response }}
 
 #### Example
 
@@ -8428,9 +8428,7 @@ To export a device over ublk, first make sure the Linux kernel ublk driver is lo
 
 #### Response
 
- Name   | Type    | Description
-------- | ------- | -------------------------------------------------------------------
- result | boolean | True if ublk target initialization is successful; False if failed.
+{{ ublk_create_target_response }}
 
 #### Example
 
@@ -8458,9 +8456,7 @@ Example response:
 
 #### Response
 
- Name   | Type    | Description
-------- | ------- | ----------------------------------------------------------------
- result | boolean | True if ublk target destruction is successful; False if failed.
+{{ ublk_destroy_target_response }}
 
 #### Example
 
@@ -8488,9 +8484,7 @@ Example response:
 
 #### Response
 
- Name   | Type   | Description
-------- | ------ | ---------------
- result | int    | UBLK device ID
+{{ ublk_start_disk_response }}
 
 #### Example
 
@@ -8518,9 +8512,7 @@ Example response:
 
 #### Response
 
- Name   | Type   | Description
-------- | ------ | ---------------
- result | int    | UBLK device ID
+{{ ublk_recover_disk_response }}
 
 #### Example
 
@@ -8548,9 +8540,7 @@ Example response:
 
 #### Response
 
- Name   | Type    | Description
-------- | ------- | --------------------------------------------------------------
- result | boolean | True if UBLK device is deleted successfully; False if failed.
+{{ ublk_stop_disk_response }}
 
 #### Example
 
@@ -8627,7 +8617,7 @@ In order to export a device over nbd, first make sure the Linux kernel nbd drive
 
 #### Response
 
-Path of exported NBD disk
+{{ nbd_start_disk_response }}
 
 #### Example
 
@@ -8757,9 +8747,7 @@ Example response:
 
 #### Response
 
- Name   | Type    | Description
-------- | ------- | ----------------------------------------------------
- result | boolean | True if socket layer options were set successfully.
+{{ sock_impl_set_options_response }}
 
 #### Example
 
@@ -8787,9 +8775,7 @@ Example response:
 
 #### Response
 
- Name   | Type    | Description
-------- | ------- | ---------------------------------------------------------------------
- result | boolean | True if the default socket layer configuration was set successfully.
+{{ sock_set_default_impl_response }}
 
 #### Example
 
@@ -8886,7 +8872,7 @@ Example response:
 
 #### Response
 
-Completion status of enumeration is returned as a boolean.
+{{ vmd_enable_response }}
 
 #### Example
 
@@ -9043,7 +9029,7 @@ Example response:
 
 #### Response
 
-true on success
+{{ bdev_nvme_add_error_injection_response }}
 
 #### Example
 
@@ -9071,7 +9057,7 @@ Example response:
 
 #### Response
 
-true on success
+{{ bdev_nvme_remove_error_injection_response }}
 
 #### Example
 
@@ -9104,7 +9090,7 @@ for instance, `SX` or `EC_4P2G2` rather than in DAOS header file `OC_SX` or `OC_
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_daos_create_response }}
 
 #### Example
 

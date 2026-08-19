@@ -312,6 +312,9 @@ def generate_docs(schema: Dict[str, Any]) -> str:
             else "This method has no parameters."
         )
         transformation[f"{method['name']}_description"] = method['description'].rstrip('\n')
+        if 'result' in method:
+            result = method['result']
+            transformation[f"{method['name']}_response"] = " ".join(result['description'].split())
     transformation["example_request"] = example_request
     for obj in schema['objects']:
         fields = [

@@ -540,11 +540,17 @@ methods:
       Start initialization of SPDK subsystems when it is deferred by starting SPDK application with option -w.
       During its deferral some RPCs can be used to set global parameters for SPDK subsystems.
       This RPC can be called only once.
+    result:
+      type: boolean
+      description: Completion status of SPDK subsystem initialization is returned as a boolean.
     params: []
   - name: framework_wait_init
     description: |
       Do not return until all subsystems have been initialized and the RPC system state is running.
       If the application is already running, this call will return immediately. This RPC can be called at any time.
+    result:
+      type: boolean
+      description: Returns True when subsystems have been initialized.
     params: []
   - name: rpc_get_methods
     description: Get an array of supported RPC methods.
@@ -576,6 +582,9 @@ methods:
     description: |
       Select thread scheduler that will be activated.
       This feature is considered as experimental.
+    result:
+      type: boolean
+      description: Completion status of the operation is returned as a boolean.
     params:
       - name: name
         type: string
@@ -621,6 +630,9 @@ methods:
       line option when launching SPDK.
 
       This RPC may be called after locks have already been enabled, with no effect and no error response.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: framework_disable_cpumask_locks
     description: |
@@ -629,6 +641,9 @@ methods:
 
       This RPC may be called after locks have already been disabled, with no effect and no error
       response.
+    result:
+      type: boolean
+      description: true on success
     params: []
   - name: thread_get_stats
     description: Retrieve current statistics of all the threads.
@@ -637,6 +652,9 @@ methods:
     description: |
       Set the cpumask of the thread to the specified value. The thread may be migrated
       to one of the specified CPUs.
+    result:
+      type: boolean
+      description: Completion status of the operation is returned as a boolean.
     params:
       - name: id
         type: uint64
@@ -990,6 +1008,9 @@ methods:
       new bdevs if metadata is found. This is only necessary if `auto_examine` has
       been set to false using `bdev_set_options`. By default, `auto_examine` is true
       and bdev examination is automatic.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -997,6 +1018,9 @@ methods:
         description: Block device name
   - name: bdev_wait_for_examine
     description: Report when all bdevs have been examined by every bdev module.
+    result:
+      type: boolean
+      description: The response is sent when all bdev modules had a chance to examine every bdev.
     params: []
   - name: bdev_get_iostat
     description: Get I/O statistics of block devices (bdevs).
@@ -1098,6 +1122,9 @@ methods:
         description: period (in microseconds).If set to 0, polling will be disabled.
   - name: bdev_crypto_create
     description: Create a new crypto bdev on a given base bdev.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: base_bdev_name
         type: string
@@ -1135,6 +1162,9 @@ methods:
       Command accepts cache mode that is going to be used.
       You can find more details about supported cache modes in the
       [OCF documentation](https://open-cas.github.io/cache_configuration.html#cache-mode)
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1171,6 +1201,9 @@ methods:
         description: Block device name
   - name: bdev_ocf_reset_stats
     description: Reset statistics of chosen OCF block device.
+    result:
+      type: boolean
+      description: Completion status of reset statistics operation returned as a boolean.
     params:
       - name: name
         type: string
@@ -1184,6 +1217,9 @@ methods:
         description: Name of OCF vbdev or name of cache device or name of core device
   - name: bdev_ocf_set_cache_mode
     description: Set new cache mode on OCF bdev.
+    result:
+      type: string
+      description: New cache mode name.
     params:
       - name: name
         type: string
@@ -1259,6 +1295,9 @@ methods:
       If the `dif_type` is 3, the malloc bdev does not check the reference tag.
       The application tag is not checked by the malloc bdev because the current block device API does not expose
       it to the upper layer yet.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1308,6 +1347,9 @@ methods:
         description: Bdev name
   - name: bdev_null_create
     description: 'Construct @ref bdev_config_null'
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1374,6 +1416,9 @@ methods:
         description: Bdev new capacity in MiB
   - name: bdev_aio_create
     description: 'Construct @ref bdev_config_aio.'
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1910,6 +1955,9 @@ methods:
         description: Name of the NVMe bdev controller
   - name: bdev_rbd_register_cluster
     description: This method is available only if SPDK was build with Ceph RBD support.
+    result:
+      type: string
+      description: Name of newly created Rados cluster object.
     params:
       - name: name
         type: string
@@ -1935,6 +1983,9 @@ methods:
       This method is available only if SPDK was build with Ceph RBD support.
       If there is still rbd bdev using this cluster, the unregisteration operation
       will fail.
+    result:
+      type: boolean
+      description: '`true` if Rados cluster object with provided name was deleted or `false` otherwise.'
     params:
       - name: name
         type: string
@@ -1951,6 +2002,9 @@ methods:
       Create @ref bdev_config_rbd bdev
 
       This method is available only if SPDK was build with Ceph RBD support.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1987,6 +2041,9 @@ methods:
       Delete @ref bdev_config_rbd bdev
 
       This method is available only if SPDK was build with Ceph RBD support.
+    result:
+      type: boolean
+      description: '`true` if bdev with provided name was deleted or `false` otherwise.'
     params:
       - name: name
         type: string
@@ -1997,6 +2054,9 @@ methods:
       Resize @ref bdev_config_rbd bdev
 
       This method is available only if SPDK was build with Ceph RBD support.
+    result:
+      type: boolean
+      description: '`true` if bdev with provided name was resized or `false` otherwise.'
     params:
       - name: name
         type: string
@@ -2010,6 +2070,9 @@ methods:
     description: |
       Create delay bdev. This bdev type redirects all IO to it's base bdev and inserts a delay on the completion
       path to create an artificial drive latency. All latency values supplied to this bdev should be in microseconds.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -2049,6 +2112,9 @@ methods:
     description: |
       Update a target latency value associated with a given delay bdev. Any currently
       outstanding I/O will be completed with the old latency.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: delay_bdev_name
         type: string
@@ -2075,6 +2141,9 @@ methods:
         description: UUID for this bdev
   - name: bdev_error_delete
     description: Delete error bdev
+    result:
+      type: boolean
+      description: '`true` if bdev with provided name was deleted or `false` otherwise.'
     params:
       - name: name
         type: string
@@ -2137,6 +2206,9 @@ methods:
       Connect to iSCSI target and create bdev backed by this connection.
 
       This method is available only if SPDK was build with iSCSI initiator support.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -2260,6 +2332,9 @@ methods:
     description: |
       Create passthru bdev. This bdev type redirects all IO to it's base bdev. It has no other purpose than being an example
       and a starting point in development of new bdev type.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -2281,6 +2356,9 @@ methods:
         description: Bdev name
   - name: bdev_xnvme_create
     description: Create xnvme bdev. This bdev type redirects all IO to its underlying backend.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -2343,6 +2421,9 @@ methods:
         description: Name of the virtio bdev (e.g. "VirtioUser0")
   - name: bdev_virtio_blk_set_hotplug
     description: Enable/Disable the virtio blk hotplug monitor or change the monitor period time
+    result:
+      type: boolean
+      description: True the rpc is successful otherwise false
     params:
       - name: enable
         type: boolean
@@ -3569,6 +3650,9 @@ methods:
         description: Name of the vhost controller
   - name: vhost_scsi_controller_add_target
     description: 'In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bdev_name` as LUN 0.'
+    result:
+      type: uint32
+      description: SCSI target ID.
     params:
       - name: ctrlr
         type: string
@@ -3655,6 +3739,9 @@ methods:
         description: Name of the vhost controller
   - name: bdev_lvol_create_lvstore
     description: Construct a logical volume store.
+    result:
+      type: string
+      description: UUID of the created logical volume store is returned.
     params:
       - name: bdev_name
         type: string
@@ -3724,6 +3811,9 @@ methods:
         description: Name of the logical volume store to grow
   - name: bdev_lvol_create
     description: Create a logical volume on a logical volume store.
+    result:
+      type: string
+      description: UUID of the created logical volume is returned.
     params:
       - name: lvol_name
         type: string
@@ -3748,6 +3838,9 @@ methods:
         description: Per-cluster clear method
   - name: bdev_lvol_snapshot
     description: Capture a snapshot of the current state of a logical volume.
+    result:
+      type: string
+      description: UUID of the created logical volume snapshot is returned.
     params:
       - name: lvol_name
         type: string
@@ -3759,6 +3852,9 @@ methods:
         description: Name for the newly created snapshot
   - name: bdev_lvol_clone
     description: Create a logical volume based on a snapshot.
+    result:
+      type: string
+      description: UUID of the created logical volume clone is returned.
     params:
       - name: snapshot_name
         type: string
@@ -3777,6 +3873,9 @@ methods:
       Regardless of whether the bdev is specified by name or UUID, the bdev UUID will be stored
       in the logical volume's metadata for use while the lvolstore is loading. For this reason,
       it is important that the bdev chosen has a static UUID.
+    result:
+      type: string
+      description: UUID of the created logical volume clone is returned.
     params:
       - name: bdev
         type: string
@@ -4078,6 +4177,9 @@ methods:
         description: admin password of OPAL
   - name: bdev_opal_create
     description: This is used to create an OPAL virtual bdev.
+    result:
+      type: string
+      description: The response is the name of created OPAL virtual bdev.
     params:
       - name: nvme_ctrlr_name
         type: string
@@ -4215,6 +4317,9 @@ methods:
     description: |
       Start to create ublk threads and initialize ublk target. It will return an error if user calls this RPC twice without
       ublk_destroy_target in between. It will use current cpumask in SPDK when user does not specify cpumask option.
+    result:
+      type: boolean
+      description: True if ublk target initialization is successful; False if failed.
     params:
       - name: cpumask
         type: string
@@ -4224,9 +4329,15 @@ methods:
         description: 'Disable the ublk user-copy feature. Default: false'
   - name: ublk_destroy_target
     description: Release all UBLK devices and destroy ublk target.
+    result:
+      type: boolean
+      description: True if ublk target destruction is successful; False if failed.
     params: []
   - name: ublk_start_disk
     description: Start to export one SPDK bdev as a UBLK device
+    result:
+      type: uint32
+      description: UBLK device ID
     params:
       - name: bdev_name
         type: string
@@ -4244,6 +4355,9 @@ methods:
         description: 'Number of queues to create on the device. Default: 1'
   - name: ublk_recover_disk
     description: Recover original UBLK device with ID and block device
+    result:
+      type: uint32
+      description: UBLK device ID
     params:
       - name: bdev_name
         type: string
@@ -4255,6 +4369,9 @@ methods:
         description: ID of the ublk device to recover
   - name: ublk_stop_disk
     description: Delete a UBLK device
+    result:
+      type: boolean
+      description: True if UBLK device is deleted successfully; False if failed.
     params:
       - name: ublk_id
         type: uint32
@@ -4268,6 +4385,9 @@ methods:
         description: 'ID of a ublk device to query. Default: list all'
   - name: nbd_start_disk
     description: Start to export one SPDK bdev as NBD disk
+    result:
+      type: string
+      description: Path of exported NBD disk
     params:
       - name: bdev_name
         type: string
@@ -4298,6 +4418,9 @@ methods:
         description: Socket implementation name (e.g. "posix", "ssl", "uring")
   - name: sock_impl_set_options
     description: Set parameters for the socket layer implementation.
+    result:
+      type: boolean
+      description: True if socket layer options were set successfully.
     params:
       - name: impl_name
         type: string
@@ -4335,6 +4458,9 @@ methods:
         description: 'Enable Kernel TLS (ssl only). Default: false'
   - name: sock_set_default_impl
     description: Set the default sock implementation.
+    result:
+      type: boolean
+      description: True if the default socket layer configuration was set successfully.
     params:
       - name: impl_name
         type: string
@@ -4385,6 +4511,9 @@ methods:
         description: Command execution timeout value, in milliseconds
   - name: vmd_enable
     description: Enable VMD enumeration.
+    result:
+      type: boolean
+      description: Completion status of enumeration is returned as a boolean.
     params: []
   - name: vmd_remove_device
     description: Remove a device behind a VMD.
@@ -4404,6 +4533,9 @@ methods:
     params: []
   - name: bdev_nvme_add_error_injection
     description: Add a NVMe command error injection for a bdev nvme controller.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4435,6 +4567,9 @@ methods:
         description: Status code (default 0)
   - name: bdev_nvme_remove_error_injection
     description: Remove a NVMe command error injection.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
@@ -4451,6 +4586,9 @@ methods:
         description: Opcode for which the error injection is applied
   - name: bdev_daos_create
     description: 'Construct @ref bdev_config_daos'
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
