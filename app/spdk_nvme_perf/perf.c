@@ -67,9 +67,12 @@ enum entry_type {
 struct ns_fn_table;
 
 struct ns_entry {
+	/** Backend type (NVMe, uring, aio). */
 	enum entry_type		type;
+	/** Function table for submit, check, verify, etc. */
 	const struct ns_fn_table	*fn_table;
 
+	/** Backend-specific state (ctrlr+ns for NVMe; fd for uring/aio). */
 	union {
 		struct {
 			struct spdk_nvme_ctrlr	*ctrlr;
@@ -87,17 +90,32 @@ struct ns_entry {
 #endif
 	} u;
 
+	/** Entry in g_namespaces TAILQ. */
 	TAILQ_ENTRY(ns_entry)	link;
+	/** g_max_io_size_bytes expressed in blocks of this namespace. */
 	uint32_t		io_size_blocks;
+	/** Number of NVMe request objects to reserve per qpair; sizes opts.io_queue_requests. */
 	uint32_t		num_io_requests;
+	/** Device capacity in units of io_size_blocks; bounds the random LBA range. */
 	uint64_t		size_in_ios;
+	/** Extended logical block size, including interleaved metadata if any. */
 	uint32_t		block_size;
+	/** Per-block metadata size in bytes. */
 	uint32_t		md_size;
+	/** True if metadata is interleaved with data blocks. */
 	bool			md_interleave;
+	/**
+	 * Zipf generator for skewed random LBA selection; NULL when sequential or
+	 * g_zipf_theta == 0.
+	 */
 	struct spdk_zipf	*zipf;
+	/** PI location within the metadata region. */
 	bool			pi_loc;
+	/** End-to-end PI type (type 1/2/3 or none). */
 	enum spdk_nvme_pi_type	pi_type;
+	/** NVMe command I/O flags (e.g. PRCHK, PRACT). */
 	uint32_t		io_flags;
+	/** Device or file path string, used in output. */
 	char			name[1024];
 };
 
@@ -135,13 +153,22 @@ struct ns_worker_stats {
 };
 
 struct ns_worker_ctx {
+	/** The namespace or file target being driven. */
 	struct ns_entry		*entry;
+	/** I/O counters and latency accumulators. */
 	struct ns_worker_stats	stats;
+	/** Number of I/Os currently in flight. */
 	uint64_t		current_queue_depth;
+	/** Submission limit (0 = unlimited), set from --number-ios or its percentage form. */
 	uint64_t		number_ios;
+	/** Sequential cursor, in units of io_size_blocks. */
 	uint64_t		offset_in_ios;
+	/** True once the worker has stopped submitting new I/Os and is waiting for in-flight I/Os
+	 * to complete.
+	 */
 	bool			is_draining;
 
+	/** Backend-specific queue state (NVMe qpairs, uring ring, or aio context). */
 	union {
 		struct {
 			int				num_active_qpairs;
@@ -168,22 +195,32 @@ struct ns_worker_ctx {
 #endif
 	} u;
 
+	/** Entry in the worker's ns_ctx TAILQ. */
 	TAILQ_ENTRY(ns_worker_ctx)	link;
 
+	/** Tasks that could not be submitted immediately and are waiting to be retried. */
 	TAILQ_HEAD(, perf_task)		queued_tasks;
 
+	/** Latency histogram for this namespace/worker pair. */
 	struct spdk_histogram_data	*histogram;
+	/** Completion status; non-zero signals a fatal error. */
 	int				status;
 };
 
 struct perf_task {
+	/** Back-pointer to the per-namespace worker context. */
 	struct ns_worker_ctx	*ns_ctx;
 	struct iovec		*iovs; /* array of iovecs to transfer. */
 	int			iovcnt; /* Number of iovecs in iovs array. */
+	/** Iovec for the metadata buffer (DIF/DIX only). */
 	struct iovec		md_iov;
+	/** TSC value at submission time; used to compute latency on completion. */
 	uint64_t		submit_tsc;
+	/** True if this I/O is a read. */
 	bool			is_read;
+	/** DIF context for end-to-end data integrity operations. */
 	struct spdk_dif_ctx	dif_ctx;
+	/** Extended I/O options (PI, fused commands, etc.). */
 	struct spdk_nvme_ns_cmd_ext_io_opts	ext_opts;
 #if HAVE_LIBAIO
 	struct iocb		iocb;
