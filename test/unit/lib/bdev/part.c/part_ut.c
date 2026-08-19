@@ -196,13 +196,60 @@ __io_type_supported(void *ctx, enum spdk_bdev_io_type type)
 	return true;
 }
 
+#define PART_UT_READ_PATTERN 0xA5
+
+static void *g_base_read_buf;
+static enum spdk_bdev_io_status g_base_read_status;
+static struct spdk_bdev_io *g_part_read_io;
+static bool g_part_read_done;
+static bool g_part_read_success;
+
+static void
+part_ut_base_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+			     bool success)
+{
+	CU_ASSERT(success == true);
+
+	if (bdev_io->internal.f.has_buf) {
+		/* The bdev layer allocated the data buffer on this (base) bdev_io */
+		g_base_read_buf = bdev_io->u.bdev.iovs[0].iov_base;
+		CU_ASSERT(bdev_io->internal.buf.ptr == g_base_read_buf);
+	}
+
+	memset(bdev_io->u.bdev.iovs[0].iov_base, PART_UT_READ_PATTERN,
+	       bdev_io->u.bdev.iovs[0].iov_len);
+	spdk_bdev_io_complete(bdev_io, g_base_read_status);
+}
+
+static void
+part_ut_base_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	SPDK_CU_ASSERT_FATAL(bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
+
+	/* Like a real base bdev module, allocate a data buffer if the caller didn't provide one */
+	spdk_bdev_io_get_buf(bdev_io, part_ut_base_read_get_buf_cb,
+			     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+}
+
+static void
+part_ut_part_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_part_channel *part_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	rc = spdk_bdev_part_submit_request(part_ch, bdev_io);
+	CU_ASSERT(rc == 0);
+}
+
 static struct spdk_bdev_fn_table base_fn_table = {
 	.destruct		= __destruct,
+	.submit_request	= part_ut_base_submit_request,
 	.get_io_channel = part_ut_get_io_channel,
 	.io_type_supported	= __io_type_supported,
 };
 static struct spdk_bdev_fn_table part_fn_table = {
 	.destruct		= __destruct,
+	.submit_request	= part_ut_part_submit_request,
 	.io_type_supported	= __io_type_supported,
 };
 
@@ -435,6 +482,216 @@ part_construct_ext(void)
 	poll_threads();
 }
 
+struct part_io_test_ctx {
+	struct spdk_bdev		bdev_base;
+	struct spdk_bdev_part_base	*base;
+	struct spdk_bdev_part		*part;
+	struct spdk_bdev_desc		*desc;
+	struct spdk_io_channel		*io_ch;
+	SPDK_BDEV_PART_TAILQ		tailq;
+};
+
+static void
+part_ut_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	g_part_read_done = true;
+	g_part_read_success = success;
+	/* Hold on to the bdev_io like a real upper layer that keeps consuming the data
+	 * after the completion callback (e.g. a target queueing it for transmission)
+	 * and calls spdk_bdev_free_io() only when done. */
+	g_part_read_io = bdev_io;
+}
+
+static void
+ut_part_io_test_setup(struct part_io_test_ctx *ctx)
+{
+	int rc;
+
+	ut_init_bdev();
+
+	TAILQ_INIT(&ctx->tailq);
+	ctx->bdev_base.name = "base";
+	ctx->bdev_base.blocklen = 512;
+	ctx->bdev_base.blockcnt = 1024;
+	ctx->bdev_base.fn_table = &base_fn_table;
+	ctx->bdev_base.module = &bdev_ut_if;
+	rc = spdk_bdev_register(&ctx->bdev_base);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_part_base_construct_ext("base", NULL, &vbdev_ut_if,
+					       &part_fn_table, &ctx->tailq, NULL,
+					       NULL, sizeof(struct spdk_bdev_part_channel),
+					       NULL, NULL, &ctx->base);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(ctx->base != NULL);
+
+	ctx->part = calloc(1, sizeof(*ctx->part));
+	SPDK_CU_ASSERT_FATAL(ctx->part != NULL);
+	rc = spdk_bdev_part_construct(ctx->part, ctx->base, "test", 0, 100, "test");
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	rc = spdk_bdev_open_ext("test", true, bdev_ut_event_cb, NULL, &ctx->desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(ctx->desc != NULL);
+
+	ctx->io_ch = spdk_bdev_get_io_channel(ctx->desc);
+	SPDK_CU_ASSERT_FATAL(ctx->io_ch != NULL);
+
+	g_base_read_buf = NULL;
+	g_base_read_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	g_part_read_io = NULL;
+	g_part_read_done = false;
+	g_part_read_success = false;
+}
+
+static void
+ut_part_io_test_teardown(struct part_io_test_ctx *ctx)
+{
+	int rc;
+
+	spdk_put_io_channel(ctx->io_ch);
+	spdk_bdev_close(ctx->desc);
+	spdk_bdev_unregister(&ctx->part->internal.bdev, NULL, NULL);
+	poll_threads();
+
+	rc = spdk_bdev_part_free(ctx->part);
+	CU_ASSERT(rc == 1);
+	poll_threads();
+	CU_ASSERT(TAILQ_EMPTY(&ctx->tailq));
+
+	spdk_bdev_unregister(&ctx->bdev_base, NULL, NULL);
+	ut_fini_bdev();
+}
+
+static void
+part_read_bdev_buf_ownership_test(void)
+{
+	struct part_io_test_ctx ctx = {};
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+	uint8_t *buf;
+	void *probe_buf;
+	int rc;
+
+	ut_part_io_test_setup(&ctx);
+
+	/* iov-less read: the base bdev allocates the data buffer on the child bdev_io */
+	rc = spdk_bdev_read_blocks(ctx.desc, ctx.io_ch, NULL, 0, 1, part_ut_io_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_part_read_done == true);
+	CU_ASSERT(g_part_read_success == true);
+	SPDK_CU_ASSERT_FATAL(g_part_read_io != NULL);
+	SPDK_CU_ASSERT_FATAL(g_base_read_buf != NULL);
+
+	/* The base (child) bdev_io was already freed. Ownership of its buffer must have
+	 * been transferred to the part bdev_io, keeping the data valid for the upper layer. */
+	CU_ASSERT(g_part_read_io->internal.f.has_buf == true);
+	CU_ASSERT(g_part_read_io->internal.buf.ptr == g_base_read_buf);
+	CU_ASSERT(g_part_read_io->u.bdev.iovs[0].iov_base == g_base_read_buf);
+	buf = g_base_read_buf;
+	CU_ASSERT(buf[0] == PART_UT_READ_PATTERN);
+	CU_ASSERT(buf[511] == PART_UT_READ_PATTERN);
+
+	/* The buffer must not be back in the iobuf pool while the upper layer still holds
+	 * the part bdev_io - a new allocation must not hand out the same buffer.
+	 * The iobuf per-channel cache is LIFO, so without the ownership transfer this
+	 * would deterministically return g_base_read_buf. */
+	mgmt_ch = g_part_read_io->internal.ch->shared_resource->mgmt_ch;
+	probe_buf = spdk_iobuf_get(&mgmt_ch->iobuf, 512, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(probe_buf != NULL);
+	CU_ASSERT(probe_buf != g_base_read_buf);
+	spdk_iobuf_put(&mgmt_ch->iobuf, probe_buf, 512);
+
+	/* Freeing the part bdev_io returns the buffer to the pool (exactly once) */
+	spdk_bdev_free_io(g_part_read_io);
+	probe_buf = spdk_iobuf_get(&mgmt_ch->iobuf, 512, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(probe_buf != NULL);
+	CU_ASSERT(probe_buf == g_base_read_buf);
+	spdk_iobuf_put(&mgmt_ch->iobuf, probe_buf, 512);
+
+	ut_part_io_test_teardown(&ctx);
+}
+
+static void
+part_read_bdev_buf_ownership_failed_io_test(void)
+{
+	struct part_io_test_ctx ctx = {};
+	struct spdk_bdev_mgmt_channel *mgmt_ch;
+	void *probe_buf, *probe_buf2;
+	int rc;
+
+	ut_part_io_test_setup(&ctx);
+	g_base_read_status = SPDK_BDEV_IO_STATUS_FAILED;
+
+	/* On a failed read the upper layer only propagates the error and must not
+	 * consume the data, so no ownership transfer happens: freeing the child
+	 * bdev_io returns the buffer to the pool right away, and freeing the part
+	 * bdev_io must not release it a second time. */
+	rc = spdk_bdev_read_blocks(ctx.desc, ctx.io_ch, NULL, 0, 1, part_ut_io_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_part_read_done == true);
+	CU_ASSERT(g_part_read_success == false);
+	SPDK_CU_ASSERT_FATAL(g_part_read_io != NULL);
+	SPDK_CU_ASSERT_FATAL(g_base_read_buf != NULL);
+	CU_ASSERT(g_part_read_io->internal.f.has_buf == false);
+
+	/* The child bdev_io was freed with the buffer still owned by it, so the
+	 * buffer is already back in the pool (the per-channel cache is LIFO). */
+	mgmt_ch = g_part_read_io->internal.ch->shared_resource->mgmt_ch;
+	probe_buf = spdk_iobuf_get(&mgmt_ch->iobuf, 512, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(probe_buf != NULL);
+	CU_ASSERT(probe_buf == g_base_read_buf);
+	spdk_iobuf_put(&mgmt_ch->iobuf, probe_buf, 512);
+
+	spdk_bdev_free_io(g_part_read_io);
+
+	/* Freeing the part bdev_io must not return the buffer a second time -
+	 * a double free would make two consecutive allocations hand out the
+	 * same buffer. */
+	probe_buf = spdk_iobuf_get(&mgmt_ch->iobuf, 512, NULL, NULL);
+	probe_buf2 = spdk_iobuf_get(&mgmt_ch->iobuf, 512, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(probe_buf != NULL);
+	SPDK_CU_ASSERT_FATAL(probe_buf2 != NULL);
+	CU_ASSERT(probe_buf == g_base_read_buf);
+	CU_ASSERT(probe_buf2 != g_base_read_buf);
+	spdk_iobuf_put(&mgmt_ch->iobuf, probe_buf2, 512);
+	spdk_iobuf_put(&mgmt_ch->iobuf, probe_buf, 512);
+
+	ut_part_io_test_teardown(&ctx);
+}
+
+static void
+part_read_user_buf_test(void)
+{
+	struct part_io_test_ctx ctx = {};
+	uint8_t user_buf[512] = {};
+	int rc;
+
+	ut_part_io_test_setup(&ctx);
+
+	/* Read with a caller-provided buffer: nothing is allocated on the child bdev_io,
+	 * so no ownership is transferred to the part bdev_io. */
+	rc = spdk_bdev_read_blocks(ctx.desc, ctx.io_ch, user_buf, 0, 1, part_ut_io_done, NULL);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+
+	CU_ASSERT(g_part_read_done == true);
+	CU_ASSERT(g_part_read_success == true);
+	SPDK_CU_ASSERT_FATAL(g_part_read_io != NULL);
+	CU_ASSERT(g_base_read_buf == NULL);
+	CU_ASSERT(g_part_read_io->internal.f.has_buf == false);
+	CU_ASSERT(g_part_read_io->u.bdev.iovs[0].iov_base == user_buf);
+	CU_ASSERT(user_buf[0] == PART_UT_READ_PATTERN);
+	CU_ASSERT(user_buf[511] == PART_UT_READ_PATTERN);
+
+	spdk_bdev_free_io(g_part_read_io);
+
+	ut_part_io_test_teardown(&ctx);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -449,6 +706,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, part_free_test);
 	CU_ADD_TEST(suite, part_get_io_channel_test);
 	CU_ADD_TEST(suite, part_construct_ext);
+	CU_ADD_TEST(suite, part_read_bdev_buf_ownership_test);
+	CU_ADD_TEST(suite, part_read_bdev_buf_ownership_failed_io_test);
+	CU_ADD_TEST(suite, part_read_user_buf_test);
 
 	allocate_cores(1);
 	allocate_threads(1);
