@@ -241,6 +241,19 @@ bdev_part_remap_dif(struct spdk_bdev_io *bdev_io, uint32_t offset,
 }
 
 static void
+bdev_part_take_buf_ownership(struct spdk_bdev_io *bdev_io, struct spdk_bdev_io *part_io)
+{
+	if (bdev_io->internal.f.has_buf && !part_io->internal.f.has_buf) {
+		/* underlying bdev_io allocated buffer - we shall transfer ownership */
+		part_io->internal.buf = bdev_io->internal.buf;
+		part_io->internal.f.has_buf = true;
+		bdev_io->internal.f.has_buf = false;
+		bdev_io->internal.buf.ptr = NULL;
+		bdev_io->internal.buf.len = 0;
+	}
+}
+
+static void
 bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *part_io = cb_arg;
@@ -254,7 +267,9 @@ bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			remapped_offset = part_io->u.bdev.offset_blocks;
 
 			rc = bdev_part_remap_dif(bdev_io, offset, remapped_offset);
-			if (rc != 0) {
+			if (rc == 0) {
+				bdev_part_take_buf_ownership(bdev_io, part_io);
+			} else {
 				success = false;
 			}
 		}
