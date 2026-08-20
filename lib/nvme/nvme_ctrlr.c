@@ -17,7 +17,7 @@ struct nvme_active_ns_ctx;
 
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
-static void nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
+static int nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
 static int nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns);
@@ -2609,7 +2609,11 @@ out:
 	nvme_ctrlr_identify_active_ns_async_done(ctx);
 }
 
-static void
+/*
+ * If the callback is set it is invoked exactly once, including synchronously before
+ * an error is returned.
+ */
+static int
 nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
@@ -2659,15 +2663,17 @@ nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST, 0, ctx->next_nsid, 0,
 				     &ctx->new_ns_list[1024 * (ctx->page_count - 1)], sizeof(struct spdk_nvme_ns_list),
 				     nvme_ctrlr_identify_active_ns_async_cb, ctx);
-	if (rc != 0) {
+	if (rc) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
 		goto out;
 	}
 
-	return;
+	return 0;
 
 out:
+	rc = ctx->state == NVME_ACTIVE_NS_STATE_ERROR ? -ENXIO : 0;
 	nvme_ctrlr_identify_active_ns_async_done(ctx);
+	return rc;
 }
 
 static void
@@ -2719,10 +2725,9 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 
-	nvme_ctrlr_identify_active_ns_async(ctx);
-	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
-		nvme_active_ns_ctx_destroy(ctx);
-		return -ENXIO;
+	rc = nvme_ctrlr_identify_active_ns_async(ctx);
+	if (rc) {
+		goto out;
 	}
 
 	rc = nvme_wait_for_adminq_completion(ctrlr, &ctx->status, false);
@@ -2737,6 +2742,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
+out:
 	nvme_active_ns_ctx_destroy(ctx);
 	return rc;
 }
