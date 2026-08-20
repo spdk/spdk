@@ -358,6 +358,8 @@ static int g_is_random;
 static struct workload g_workloads[MAX_WORKLOADS];
 static int g_num_workloads = 0;
 static uint8_t g_workload_lookup[WORKLOAD_PCT_TOTAL];
+/* True when the mixed workload option is specified. */
+static bool g_mixed_workload_opt;
 /* True when the per-workload statistics should be collected and displayed,
  * i.e. only for an explicitly mixed workload with more than one workload.
  * Legacy invocations, including -w rw/randrw, keep their output byte-for-byte
@@ -3312,18 +3314,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		usage(argv[0]);
 		return 1;
 	}
-	if (!g_max_io_size_bytes) {
-		fprintf(stderr, "missing -o (--io-size) operand\n");
-		usage(argv[0]);
-		return 1;
-	}
 	if (!g_io_unit_size || g_io_unit_size % 4) {
 		fprintf(stderr, "io unit size can not be 0 or non 4-byte aligned\n");
-		return 1;
-	}
-	if (!g_workload_type) {
-		fprintf(stderr, "missing -w (--io-pattern) operand\n");
-		usage(argv[0]);
 		return 1;
 	}
 	if (!g_time_in_sec) {
@@ -3337,58 +3329,70 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		return 1;
 	}
 
-	if (strncmp(g_workload_type, "rand", 4) == 0) {
-		g_is_random = 1;
-		g_workload_type = &g_workload_type[4];
-	}
-
 	if (ssl_used && strncmp(sock_impl, "ssl", 3) != 0) {
 		fprintf(stderr, "sock impl is not SSL but tried to use one of the SSL only options\n");
 		usage(argv[0]);
 		return 1;
 	}
 
-
-	if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
-		g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
-		if (g_mix_specified) {
-			fprintf(stderr, "Ignoring -M (--rwmixread) option... Please use -M option"
-				" only when using rw or randrw.\n");
-		}
-	} else if (strcmp(g_workload_type, "rw") == 0) {
-		if (g_rw_percentage < 0 || g_rw_percentage > 100) {
-			fprintf(stderr,
-				"-M (--rwmixread) must be specified to value from 0 to 100 "
-				"for rw or randrw.\n");
+	if (!g_mixed_workload_opt) {
+		if (!g_max_io_size_bytes) {
+			fprintf(stderr, "missing -o (--io-size) operand\n");
+			usage(argv[0]);
 			return 1;
 		}
-	} else {
-		fprintf(stderr,
-			"-w (--io-pattern) io pattern type must be one of\n"
-			"(read, write, randread, randwrite, rw, randrw)\n");
-		return 1;
-	}
+		if (!g_workload_type) {
+			fprintf(stderr, "missing -w (--io-pattern) operand\n");
+			usage(argv[0]);
+			return 1;
+		}
 
-	/* Populate the workload array from the single-workload options.
-	 * For pure read/write: one workload at 100%.
-	 * For rw/randrw: two workloads (read at rw_percentage, write at remainder).
-	 */
-	if (g_rw_percentage == 100 || g_rw_percentage == 0) {
-		g_workloads[0].io_size_bytes = g_max_io_size_bytes;
-		g_workloads[0].is_read = (g_rw_percentage == 100);
-		g_workloads[0].is_random = g_is_random;
-		g_workloads[0].percentage = WORKLOAD_PCT_TOTAL;
-		g_num_workloads = 1;
-	} else {
-		g_workloads[0].io_size_bytes = g_max_io_size_bytes;
-		g_workloads[0].is_read = true;
-		g_workloads[0].is_random = g_is_random;
-		g_workloads[0].percentage = g_rw_percentage;
-		g_workloads[1].io_size_bytes = g_max_io_size_bytes;
-		g_workloads[1].is_read = false;
-		g_workloads[1].is_random = g_is_random;
-		g_workloads[1].percentage = WORKLOAD_PCT_TOTAL - g_rw_percentage;
-		g_num_workloads = 2;
+		if (strncmp(g_workload_type, "rand", 4) == 0) {
+			g_is_random = 1;
+			g_workload_type = &g_workload_type[4];
+		}
+
+		if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
+			g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
+			if (g_mix_specified) {
+				fprintf(stderr, "Ignoring -M (--rwmixread) option... Please use -M option"
+					" only when using rw or randrw.\n");
+			}
+		} else if (strcmp(g_workload_type, "rw") == 0) {
+			if (g_rw_percentage < 0 || g_rw_percentage > 100) {
+				fprintf(stderr,
+					"-M (--rwmixread) must be specified to value from 0 to 100 "
+					"for rw or randrw.\n");
+				return 1;
+			}
+		} else {
+			fprintf(stderr,
+				"-w (--io-pattern) io pattern type must be one of\n"
+				"(read, write, randread, randwrite, rw, randrw)\n");
+			return 1;
+		}
+
+		/* Populate the workload array from the single-workload options.
+		 * For pure read/write: one workload at 100%.
+		 * For rw/randrw: two workloads (read at rw_percentage, write at remainder).
+		 */
+		if (g_rw_percentage == 100 || g_rw_percentage == 0) {
+			g_workloads[0].io_size_bytes = g_max_io_size_bytes;
+			g_workloads[0].is_read = (g_rw_percentage == 100);
+			g_workloads[0].is_random = g_is_random;
+			g_workloads[0].percentage = WORKLOAD_PCT_TOTAL;
+			g_num_workloads = 1;
+		} else {
+			g_workloads[0].io_size_bytes = g_max_io_size_bytes;
+			g_workloads[0].is_read = true;
+			g_workloads[0].is_random = g_is_random;
+			g_workloads[0].percentage = g_rw_percentage;
+			g_workloads[1].io_size_bytes = g_max_io_size_bytes;
+			g_workloads[1].is_read = false;
+			g_workloads[1].is_random = g_is_random;
+			g_workloads[1].percentage = WORKLOAD_PCT_TOTAL - g_rw_percentage;
+			g_num_workloads = 2;
+		}
 	}
 
 	/* Build the percentage-weighted workload lookup table. */
