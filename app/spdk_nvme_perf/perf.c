@@ -2213,11 +2213,16 @@ usage_basic(char *program_name)
 	printf("  -t, --time <sec>         Test duration in seconds (required)\n");
 	printf("  -r, --transport <fmt>    Target device/transport (required)\n");
 	printf("  -c, --core-mask <mask>   CPU core mask (default: 1)\n");
+	printf("  --mixed-workload <spec>  Blend several I/O sizes and patterns in one run,\n");
+	printf("                           as <size>:<pattern>:<pct>[,...] (mutually exclusive\n");
+	printf("                           with -o/-w/-M)\n");
 	printf("\n");
 	printf("EXAMPLES:\n");
 	printf("  Local NVMe:  %s -q 64 -o 4k -w randread -t 60 -r 'trtype:PCIe traddr:0000:01:00.0'\n",
 	       program_name);
 	printf("  NVMe-oF TCP: %s -q 64 -o 4K -w randread -t 60 -r 'trtype:TCP adrfam:IPv4 traddr:192.168.1.100 trsvcid:4420'\n",
+	       program_name);
+	printf("  Mixed:       %s -q 64 -t 60 --mixed-workload 4k:randread:70,128k:randwrite:30 -r 'trtype:PCIe traddr:0000:01:00.0'\n",
 	       program_name);
 	printf("\n");
 	printf("For complete options: %s --help-full or -v\n", program_name);
@@ -2238,6 +2243,15 @@ usage(char *program_name)
 	printf("\t-w, --io-pattern <pattern> io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)\n");
 	printf("\t-M, --rwmixread <0-100> rwmixread (100 for reads, 0 for writes)\n");
+	printf("\t--mixed-workload <spec> mixed workload specification (mutually exclusive with -o/-w/-M)\n");
+	printf("\t\tFormat: <size>:<pattern>:<percentage>[,<size>:<pattern>:<percentage>,...]\n");
+	printf("\t\t<pattern> is one of read, write, randread, randwrite\n");
+	printf("\t\tExample: 4k:randread:70,128k:randwrite:30\n");
+	printf("\t\tPercentages are shares of the total I/O count, not of bandwidth,\n");
+	printf("\t\tand must sum to 100\n");
+	printf("\t\tRandom workloads draw offsets aligned to their own I/O size;\n");
+	printf("\t\tsequential workloads share one cursor per queue, so a mix of sizes\n");
+	printf("\t\tforms a single contiguous stream rather than several colliding ones\n");
 	printf("\t-t, --time <sec> time in seconds\n");
 	printf("\t-a, --warmup-time <sec> warmup time in seconds\n");
 	printf("\t-c, --core-mask <mask> core mask for I/O submission/completion.\n");
@@ -2914,6 +2928,11 @@ static const struct option g_perf_cmdline_opts[] = {
 	{"umr",				no_argument,	NULL, PERF_UMR},
 #define PERF_NO_UMR		280
 	{"no-umr",			no_argument,	NULL, PERF_NO_UMR},
+#define PERF_MIXED_WORKLOAD	281
+	{"mixed-workload",		required_argument,	NULL, PERF_MIXED_WORKLOAD},
+	/* PERF_HELP_FULL is meant to always be the last named option, right before
+	 * the terminator below.
+	 */
 #define PERF_HELP_FULL 'v'
 	{"help-full", no_argument, NULL, PERF_HELP_FULL},
 	/* Should be the last element */
@@ -2935,6 +2954,127 @@ parse_percent(const char *arg)
 }
 
 static int
+parse_workload_io_size(const char *str, uint32_t *io_size)
+{
+	uint64_t size_val;
+
+	if (spdk_parse_capacity(str, &size_val, NULL) != 0 || size_val == 0) {
+		return -EINVAL;
+	}
+	if (size_val > UINT32_MAX) {
+		return -ERANGE;
+	}
+
+	*io_size = (uint32_t)size_val;
+	return 0;
+}
+
+static int
+parse_mixed_workload(const char *arg)
+{
+	char *str, *token, *saveptr;
+	char *size_str, *pattern_str, *pct_str;
+	char *inner_saveptr;
+	uint32_t total_percentage = 0;
+	uint32_t largest_io_size = 0;
+	int rc;
+
+	str = strdup(arg);
+	if (!str) {
+		fprintf(stderr, "Failed to allocate memory for mixed workload parsing\n");
+		return -1;
+	}
+
+	g_num_workloads = 0;
+	token = strtok_r(str, ",", &saveptr);
+	while (token != NULL) {
+		struct workload *wl;
+		long pct;
+
+		if (g_num_workloads == MAX_WORKLOADS) {
+			fprintf(stderr, "Too many mixed workloads (max %d)\n", MAX_WORKLOADS);
+			goto err;
+		}
+		wl = &g_workloads[g_num_workloads];
+
+		size_str = strtok_r(token, ":", &inner_saveptr);
+		pattern_str = strtok_r(NULL, ":", &inner_saveptr);
+		pct_str = strtok_r(NULL, ":", &inner_saveptr);
+		if (!size_str || !pattern_str || !pct_str) {
+			fprintf(stderr, "Invalid --mixed-workload format. Expected: <size>:<pattern>:<percentage>\n");
+			goto err;
+		}
+
+		rc = parse_workload_io_size(size_str, &wl->io_size_bytes);
+		if (rc == -ERANGE) {
+			fprintf(stderr, "IO size in --mixed-workload out of range: %s\n", size_str);
+			goto err;
+		} else if (rc != 0) {
+			fprintf(stderr, "Invalid IO size in --mixed-workload: %s\n"
+				"Must be a decimal number with an optional k/K/m/M/g/G suffix\n",
+				size_str);
+			goto err;
+		}
+
+		if (strcmp(pattern_str, "randread") == 0) {
+			wl->is_random = true;
+			wl->is_read = true;
+		} else if (strcmp(pattern_str, "randwrite") == 0) {
+			wl->is_random = true;
+			wl->is_read = false;
+		} else if (strcmp(pattern_str, "read") == 0) {
+			wl->is_random = false;
+			wl->is_read = true;
+		} else if (strcmp(pattern_str, "write") == 0) {
+			wl->is_random = false;
+			wl->is_read = false;
+		} else {
+			fprintf(stderr, "Invalid pattern in --mixed-workload: %s\n"
+				"Must be one of: read, write, randread, randwrite\n",
+				pattern_str);
+			goto err;
+		}
+
+		pct = spdk_strtol(pct_str, 10);
+		if (pct <= 0 || pct > WORKLOAD_PCT_TOTAL) {
+			fprintf(stderr, "Invalid mixed workload percentage: %s (expected 1-%d)\n",
+				pct_str, WORKLOAD_PCT_TOTAL);
+			goto err;
+		}
+		wl->percentage = (uint32_t)pct;
+		total_percentage += wl->percentage;
+
+		if (wl->io_size_bytes > largest_io_size) {
+			largest_io_size = wl->io_size_bytes;
+		}
+
+		g_num_workloads++;
+		token = strtok_r(NULL, ",", &saveptr);
+	}
+
+	if (total_percentage != WORKLOAD_PCT_TOTAL) {
+		fprintf(stderr, "Mixed workload percentages must sum to %d (got %u)\n",
+			WORKLOAD_PCT_TOTAL, total_percentage);
+		goto err;
+	}
+	free(str);
+
+	/* g_max_io_size_bytes sizes the shared per-task IO buffer and the namespace
+	 * geometry, so set it to the largest workload size. Per-IO transfer sizes
+	 * come from each workload's io_size_bytes, not from this global.
+	 */
+	g_max_io_size_bytes = largest_io_size;
+	g_mixed_workload_opt = true;
+
+	return 0;
+
+err:
+	free(str);
+	g_num_workloads = 0;
+	return -1;
+}
+
+static int
 parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 {
 	int op, long_idx;
@@ -2948,6 +3088,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	uint32_t trid_count = 0;
 	bool log_level_set = false;
 	bool debug_implied = false;
+	bool io_size_specified = false;
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -3026,6 +3167,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			switch (op) {
 			case PERF_IO_SIZE:
 				g_max_io_size_bytes = (uint32_t)val_u64;
+				io_size_specified = true;
 				break;
 			case PERF_IO_UNIT_SIZE:
 				g_io_unit_size = (uint32_t)val_u64;
@@ -3285,6 +3427,12 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 			log_level_set = true;
 			break;
+		case PERF_MIXED_WORKLOAD:
+			rc = parse_mixed_workload(optarg);
+			if (rc != 0) {
+				return 1;
+			}
+			break;
 		case PERF_HELP:
 			usage_basic(argv[0]);
 			return HELP_RETURN_CODE;
@@ -3335,7 +3483,27 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		return 1;
 	}
 
-	if (!g_mixed_workload_opt) {
+	if (g_mixed_workload_opt) {
+		/* --mixed-workload was used; g_workloads[] and g_max_io_size_bytes
+		 * are already populated by parse_mixed_workload(). Reject the
+		 * traditional workload options, which would otherwise be silently
+		 * ignored or overwrite g_max_io_size_bytes.
+		 */
+		if (g_workload_type || io_size_specified || g_mix_specified) {
+			fprintf(stderr, "--mixed-workload cannot be combined with "
+				"-o (--io-size), -w (--io-pattern), or -M (--rwmixread)\n");
+			return 1;
+		}
+		printf("Mixed workload configuration (%d entries):\n", g_num_workloads);
+		for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+			printf("  [%d] %uB %s%s %u%%\n", w_idx,
+			       g_workloads[w_idx].io_size_bytes,
+			       g_workloads[w_idx].is_random ? "rand" : "seq",
+			       g_workloads[w_idx].is_read ? "read" : "write",
+			       g_workloads[w_idx].percentage);
+		}
+	} else {
+		/* Traditional workload mode: -o and -w are required */
 		if (!g_max_io_size_bytes) {
 			fprintf(stderr, "missing -o (--io-size) operand\n");
 			usage(argv[0]);
@@ -3372,7 +3540,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			return 1;
 		}
 
-		/* Populate the workload array from the single-workload options.
+		/* Populate the workload array from the traditional workload options.
 		 * For pure read/write: one workload at 100%.
 		 * For rw/randrw: two workloads (read at rw_percentage, write at remainder).
 		 */
@@ -3433,6 +3601,12 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			}
 		}
 	}
+
+	/* Only an explicitly mixed workload with more than one workload gets the
+	 * per-workload counters and the extra output. -w rw/randrw also expands to
+	 * two workloads, and its output must stay exactly as it was.
+	 */
+	g_workload_stats = g_mixed_workload_opt && g_num_workloads > 1;
 
 	if (g_sock_zcopy_threshold > 0) {
 		if (!g_sock_threshold_impl) {
@@ -3710,7 +3884,28 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 	ns_ctx->entry = entry;
 	ns_ctx->histogram = spdk_histogram_data_alloc();
 	if (g_number_ios_percent > 0) {
-		ns_ctx->number_ios = entry->capacity_bytes / g_max_io_size_bytes * g_number_ios_percent / 100;
+		/* Weighted-average IO size across all workloads: ensures that the total
+		 * bytes submitted covers g_number_ios_percent% of the namespace for any
+		 * IO size mix. For a single workload this reduces to
+		 * capacity_bytes / io_size_bytes * percent/100.
+		 */
+		uint64_t weighted_sum = 0;
+		uint64_t avg_io_bytes;
+		int w;
+
+		for (w = 0; w < g_num_workloads; w++) {
+			weighted_sum += (uint64_t)g_workloads[w].io_size_bytes *
+					g_workloads[w].percentage;
+		}
+		avg_io_bytes = weighted_sum / WORKLOAD_PCT_TOTAL;
+		if (avg_io_bytes == 0) {
+			fprintf(stderr, "Average workload IO size is zero\n");
+			spdk_histogram_data_free(ns_ctx->histogram);
+			free(ns_ctx);
+			return -1;
+		}
+		ns_ctx->number_ios = entry->capacity_bytes / avg_io_bytes * g_number_ios_percent /
+				     WORKLOAD_PCT_TOTAL;
 		printf("number_ios for namespace %s set to %lu (%d%% of namespace size)\n",
 		       entry->name, ns_ctx->number_ios, g_number_ios_percent);
 
