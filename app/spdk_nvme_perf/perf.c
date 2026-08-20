@@ -331,7 +331,6 @@ static int g_latency_sw_tracking_level;
 static bool g_fua;
 
 static bool g_vmd;
-static const char *g_workload_type;
 static TAILQ_HEAD(, ctrlr_entry) g_controllers = TAILQ_HEAD_INITIALIZER(g_controllers);
 static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces);
 static uint32_t g_num_namespaces = 0;
@@ -353,8 +352,6 @@ static uint32_t g_max_io_md_size;
 static uint32_t g_max_io_size_blocks;
 static uint32_t g_metacfg_pract_flag;
 static uint32_t g_metacfg_prchk_flags;
-static int g_rw_percentage = -1;
-static int g_is_random;
 static struct workload g_workloads[MAX_WORKLOADS];
 static int g_num_workloads = 0;
 static uint8_t g_workload_lookup[WORKLOAD_PCT_TOTAL];
@@ -383,7 +380,6 @@ static bool g_header_digest;
 static bool g_data_digest;
 static bool g_no_shn_notification;
 static bool g_disable_sq_flow_control;
-static bool g_mix_specified;
 static char *g_tpoint_group_mask = NULL;
 /* The flag is used to exit the program while keep alive fails on the transport */
 static bool g_exit;
@@ -891,27 +887,61 @@ ns_worker_stats_reset(struct ns_worker_stats *stats)
 	}
 }
 
+static bool
+workload_has_read(void)
+{
+	int w_idx;
+
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		if (g_workloads[w_idx].is_read) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+static bool
+workload_has_write(void)
+{
+	int w_idx;
+
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		if (!g_workloads[w_idx].is_read) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 #if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
+
+static int
+workload_open_flags(void)
+{
+	bool has_read = workload_has_read();
+	bool has_write = workload_has_write();
+
+	if (has_read && has_write) {
+		return O_RDWR;
+	} else if (has_read) {
+		return O_RDONLY;
+	} else {
+		return O_WRONLY;
+	}
+}
 
 static int
 register_file(const char *path)
 {
 	struct ns_entry *entry;
 	struct ns_workload_ctx *zipf_wctx = NULL;
-
 	int flags, fd, w_idx;
 	uint64_t size;
 	uint32_t blklen;
 
-	if (g_rw_percentage == 100) {
-		flags = O_RDONLY;
-	} else if (g_rw_percentage == 0) {
-		flags = O_WRONLY;
-	} else {
-		flags = O_RDWR;
-	}
-
-	flags |= O_DIRECT;
+	flags = workload_open_flags() | O_DIRECT;
 
 	fd = open(path, flags);
 	if (fd < 0) {
@@ -2650,10 +2680,10 @@ print_stats(void)
 {
 	print_performance();
 	if (g_latency_ssd_tracking_enable) {
-		if (g_rw_percentage != 0) {
+		if (workload_has_read()) {
 			print_latency_statistics("Read", SPDK_NVME_INTEL_LOG_READ_CMD_LATENCY);
 		}
-		if (g_rw_percentage != 100) {
+		if (workload_has_write()) {
 			print_latency_statistics("Write", SPDK_NVME_INTEL_LOG_WRITE_CMD_LATENCY);
 		}
 	}
@@ -3089,6 +3119,10 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 	bool log_level_set = false;
 	bool debug_implied = false;
 	bool io_size_specified = false;
+	const char *workload_type = NULL;
+	int rw_percentage = -1;
+	int is_random = 0;
+	bool mix_specified = false;
 
 	while ((op = getopt_long(argc, argv, PERF_GETOPT_SHORT, g_perf_cmdline_opts, &long_idx)) != -1) {
 		switch (op) {
@@ -3127,8 +3161,8 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 				g_time_in_sec = val;
 				break;
 			case PERF_RW_MIXREAD:
-				g_rw_percentage = val;
-				g_mix_specified = true;
+				rw_percentage = val;
+				mix_specified = true;
 				break;
 			case PERF_CONTINUE_ON_ERROR:
 				g_quiet_count = val;
@@ -3247,7 +3281,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			++trid_count;
 			break;
 		case PERF_IO_PATTERN:
-			g_workload_type = optarg;
+			workload_type = optarg;
 			break;
 		case PERF_DISABLE_SQ_CMB:
 			g_disable_sq_cmb = 1;
@@ -3489,7 +3523,7 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		 * traditional workload options, which would otherwise be silently
 		 * ignored or overwrite g_max_io_size_bytes.
 		 */
-		if (g_workload_type || io_size_specified || g_mix_specified) {
+		if (workload_type || io_size_specified || mix_specified) {
 			fprintf(stderr, "--mixed-workload cannot be combined with "
 				"-o (--io-size), -w (--io-pattern), or -M (--rwmixread)\n");
 			return 1;
@@ -3509,25 +3543,25 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 			usage(argv[0]);
 			return 1;
 		}
-		if (!g_workload_type) {
+		if (!workload_type) {
 			fprintf(stderr, "missing -w (--io-pattern) operand\n");
 			usage(argv[0]);
 			return 1;
 		}
 
-		if (strncmp(g_workload_type, "rand", 4) == 0) {
-			g_is_random = 1;
-			g_workload_type = &g_workload_type[4];
+		if (strncmp(workload_type, "rand", 4) == 0) {
+			is_random = 1;
+			workload_type = &workload_type[4];
 		}
 
-		if (strcmp(g_workload_type, "read") == 0 || strcmp(g_workload_type, "write") == 0) {
-			g_rw_percentage = strcmp(g_workload_type, "read") == 0 ? 100 : 0;
-			if (g_mix_specified) {
+		if (strcmp(workload_type, "read") == 0 || strcmp(workload_type, "write") == 0) {
+			rw_percentage = strcmp(workload_type, "read") == 0 ? WORKLOAD_PCT_TOTAL : 0;
+			if (mix_specified) {
 				fprintf(stderr, "Ignoring -M (--rwmixread) option... Please use -M option"
 					" only when using rw or randrw.\n");
 			}
-		} else if (strcmp(g_workload_type, "rw") == 0) {
-			if (g_rw_percentage < 0 || g_rw_percentage > 100) {
+		} else if (strcmp(workload_type, "rw") == 0) {
+			if (rw_percentage < 0 || rw_percentage > WORKLOAD_PCT_TOTAL) {
 				fprintf(stderr,
 					"-M (--rwmixread) must be specified to value from 0 to 100 "
 					"for rw or randrw.\n");
@@ -3544,21 +3578,21 @@ parse_args(int argc, char **argv, struct spdk_env_opts *env_opts)
 		 * For pure read/write: one workload at 100%.
 		 * For rw/randrw: two workloads (read at rw_percentage, write at remainder).
 		 */
-		if (g_rw_percentage == 100 || g_rw_percentage == 0) {
+		if (rw_percentage == WORKLOAD_PCT_TOTAL || rw_percentage == 0) {
 			g_workloads[0].io_size_bytes = g_max_io_size_bytes;
-			g_workloads[0].is_read = (g_rw_percentage == 100);
-			g_workloads[0].is_random = g_is_random;
+			g_workloads[0].is_read = (rw_percentage == WORKLOAD_PCT_TOTAL);
+			g_workloads[0].is_random = is_random;
 			g_workloads[0].percentage = WORKLOAD_PCT_TOTAL;
 			g_num_workloads = 1;
 		} else {
 			g_workloads[0].io_size_bytes = g_max_io_size_bytes;
 			g_workloads[0].is_read = true;
-			g_workloads[0].is_random = g_is_random;
-			g_workloads[0].percentage = g_rw_percentage;
+			g_workloads[0].is_random = is_random;
+			g_workloads[0].percentage = rw_percentage;
 			g_workloads[1].io_size_bytes = g_max_io_size_bytes;
 			g_workloads[1].is_read = false;
-			g_workloads[1].is_random = g_is_random;
-			g_workloads[1].percentage = WORKLOAD_PCT_TOTAL - g_rw_percentage;
+			g_workloads[1].is_random = is_random;
+			g_workloads[1].percentage = WORKLOAD_PCT_TOTAL - rw_percentage;
 			g_num_workloads = 2;
 		}
 	}
