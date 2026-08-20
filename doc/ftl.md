@@ -115,11 +115,13 @@ well as on the base devices. The following types of metadata are persisted:
 
 - L2P - see the [L2P](#ftl_l2p) section for details
 
-- Band - stores the state of bands - write pointers, their OPEN/FREE/CLOSE state; stored on cache, mirrored to a different section of the cache device
+- Band - stores the state of bands - write pointers, their OPEN/FREE/CLOSE state;
+  stored on cache, mirrored to a different section of the cache device
 
 - Valid map - bitmask of all the valid physical addresses, used for improving [relocation](#ftl_reloc)
 
-- Chunk - stores the state of chunks - write pointers, their OPEN/FREE/CLOSE state; stored on cache, mirrored to a different section of the cache device
+- Chunk - stores the state of chunks - write pointers, their OPEN/FREE/CLOSE state;
+  stored on cache, mirrored to a different section of the cache device
 
 - P2L - stores the address mapping (P2L, see [band](#ftl_band)) of currently open bands. This allows for the recovery of open
  bands after dirty shutdown without needing VSS DIX metadata on the base device; stored on the cache device

@@ -1133,7 +1133,8 @@ methods:
     description: |
       Construct new OCF bdev.
       Command accepts cache mode that is going to be used.
-      You can find more details about supported cache modes in the [OCF documentation](https://open-cas.github.io/cache_configuration.html#cache-mode)
+      You can find more details about supported cache modes in the
+      [OCF documentation](https://open-cas.github.io/cache_configuration.html#cache-mode)
     params:
       - name: name
         type: string
@@ -1195,7 +1196,8 @@ methods:
   - name: bdev_ocf_set_seqcutoff
     description: |
       Set sequential cutoff parameters on all cores for the given OCF cache device.
-      A brief description of this functionality can be found in [OpenCAS documentation](https://open-cas.github.io/guide_tool_details.html#seq-cutoff).
+      A brief description of this functionality can be found in
+      [OpenCAS documentation](https://open-cas.github.io/guide_tool_details.html#seq-cutoff).
     params:
       - name: name
         type: string
@@ -1545,7 +1547,8 @@ methods:
       The parameters, `ctrlr_loss_timeout_sec`, `reconnect_delay_sec`, and `fast_io_fail_timeout_sec`, are mutually dependent.
       If `reconnect_delay_sec` is non-zero, `ctrlr_loss_timeout_sec` has to be -1 or not less than `reconnect_delay_sec`.
       If `reconnect_delay_sec` is zero, `ctrlr_loss_timeout_sec` has to be zero.
-      If `fast_io_fail_timeout_sec` is not zero, it has to be not less than `reconnect_delay_sec` and less than `ctrlr_loss_timeout_sec` if `ctrlr_loss_timeout_sec` is not -1.
+      If `fast_io_fail_timeout_sec` is not zero, it has to be not less than `reconnect_delay_sec` and less than
+      `ctrlr_loss_timeout_sec` if `ctrlr_loss_timeout_sec` is not -1.
 
       The `multipath_opts` parameter configures the policy when the controller is created. Every path
       attached to the same multipath controller must use identical multipath options.
