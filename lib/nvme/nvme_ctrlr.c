@@ -2438,7 +2438,7 @@ enum nvme_active_ns_state {
 };
 
 typedef void (*nvme_ctrlr_active_ns_cb)(struct spdk_nvme_ctrlr *ctrlr,
-					struct nvme_active_ns_ctx *ctx, int status);
+					void *cb_arg, int status);
 
 struct nvme_active_ns_ctx {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -2446,6 +2446,7 @@ struct nvme_active_ns_ctx {
 	uint32_t next_nsid;
 	uint32_t *new_ns_list;
 	nvme_ctrlr_active_ns_cb cb_fn;
+	void *cb_arg;
 	struct nvme_completion_poll_status *status;
 	bool external_status;
 
@@ -2454,7 +2455,7 @@ struct nvme_active_ns_ctx {
 
 static struct nvme_active_ns_ctx *
 nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, struct nvme_completion_poll_status *status,
-			  nvme_ctrlr_active_ns_cb cb_fn)
+			  nvme_ctrlr_active_ns_cb cb_fn, void *cb_arg)
 {
 	struct nvme_active_ns_ctx *ctx;
 	uint32_t *new_ns_list = NULL;
@@ -2489,6 +2490,7 @@ nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, struct nvme_completion_
 	ctx->new_ns_list = new_ns_list;
 	ctx->ctrlr = ctrlr;
 	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 	ctx->status = status;
 	return ctx;
 }
@@ -2589,7 +2591,7 @@ nvme_ctrlr_identify_active_ns_async_done(struct nvme_active_ns_ctx *ctx)
 	ctx->status->done = true;
 
 	if (ctx->cb_fn) {
-		ctx->cb_fn(ctrlr, ctx, status);
+		ctx->cb_fn(ctrlr, ctx->cb_arg, status);
 	}
 
 	nvme_active_ns_ctx_destroy(ctx);
@@ -2709,8 +2711,7 @@ out:
 }
 
 static void
-nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_active_ns_ctx *ctx, int status)
+nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr, void *cb_arg, int status)
 {
 	struct spdk_nvme_ns *ns;
 
@@ -2718,8 +2719,6 @@ nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
-
-	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
 
 	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
 		nvme_ns_free_iocs_specific_data(ns);
@@ -2733,7 +2732,7 @@ nvme_ctrlr_init_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_active_ns_ctx *ctx;
 
-	ctx = nvme_active_ns_ctx_create(ctrlr, NULL, nvme_ctrlr_init_identify_active_ns_finish);
+	ctx = nvme_active_ns_ctx_create(ctrlr, NULL, nvme_ctrlr_init_identify_active_ns_finish, NULL);
 	if (!ctx) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2757,7 +2756,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENOMEM;
 	}
 
-	ctx = nvme_active_ns_ctx_create(ctrlr, status, NULL);
+	ctx = nvme_active_ns_ctx_create(ctrlr, status, NULL, NULL);
 	if (!ctx) {
 		spdk_free(status);
 		return -ENOMEM;
