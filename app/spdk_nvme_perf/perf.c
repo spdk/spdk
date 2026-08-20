@@ -3713,6 +3713,21 @@ allocate_ns_worker(struct ns_entry *entry, struct worker_thread *worker)
 		ns_ctx->number_ios = entry->capacity_bytes / g_max_io_size_bytes * g_number_ios_percent / 100;
 		printf("number_ios for namespace %s set to %lu (%d%% of namespace size)\n",
 		       entry->name, ns_ctx->number_ios, g_number_ios_percent);
+
+		/* A limit below the queue depth cannot be honoured: the initial fill
+		 * submits g_queue_depth I/Os unconditionally. Zero is worse still - it is
+		 * the encoding for "no limit".
+		 */
+		if (ns_ctx->number_ios < g_queue_depth) {
+			fprintf(stderr,
+				"%s: --number-ios-percent %d%% of the namespace is %" PRIu64
+				" I/Os, which is below -q (--io-depth) %u\n",
+				entry->name, g_number_ios_percent, ns_ctx->number_ios,
+				g_queue_depth);
+			spdk_histogram_data_free(ns_ctx->histogram);
+			free(ns_ctx);
+			return -1;
+		}
 	} else {
 		ns_ctx->number_ios = g_number_ios;
 	}
