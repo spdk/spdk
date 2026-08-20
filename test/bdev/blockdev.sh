@@ -719,6 +719,64 @@ function numa_id_test_suite() {
 	killprocess "$spdk_tgt_pid"
 }
 
+# blkdiscard needs a real block device, so back the aio bdev with a loop device
+# over a sparse file, with fallocate also enabled. Check that both settings
+# survive save_config/load_config and that UNMAP still reaches the device as a
+# discard, not as the write zeroes that fallocate issues on a block device: the
+# loop device's discard count must rise, and the unmapped data must read back
+# as zeroes.
+function aio_blkdiscard_test_suite() {
+	local aio_dev="AIO_BLKDISCARD"
+	local size_mb=16
+	local loop_stat discards
+
+	# Not local: the EXIT trap runs after this function's locals are gone.
+	blkdiscard_file="$SPDK_TEST_STORAGE/aio_blkdiscard"
+	blkdiscard_conf="$testdir/aio_blkdiscard.json"
+
+	truncate -s "${size_mb}M" "$blkdiscard_file"
+	blkdiscard_loop=$(losetup -f --show "$blkdiscard_file")
+	loop_stat="/sys/block/${blkdiscard_loop##*/}/stat"
+
+	run_app_bg "$SPDK_BIN_DIR/spdk_tgt" "$env_ctx"
+	AIO_PID=$!
+	trap 'cleanup; killprocess $AIO_PID; losetup -d "$blkdiscard_loop"; rm -f "$blkdiscard_file" "$blkdiscard_conf"; exit 1' SIGINT SIGTERM EXIT
+	waitforlisten $AIO_PID
+
+	# Pass a block size, so that only the block device check can reject the regular file.
+	NOT $rpc_py bdev_aio_create "$blkdiscard_file" AIO_FILE 512 --blkdiscard
+	$rpc_py bdev_aio_create "$blkdiscard_loop" "$aio_dev" --blkdiscard --fallocate
+	[[ $($rpc_py bdev_get_bdevs -b "$aio_dev" | jq -r '.[0].supported_io_types.unmap') == true ]]
+
+	cat <<- CONF > "$blkdiscard_conf"
+		{"subsystems":[
+		$("$rpc_py" save_subsystem_config -n bdev)
+		]}
+	CONF
+	killprocess $AIO_PID
+
+	dd if=/dev/urandom of="$blkdiscard_loop" bs=1M count="$size_mb" oflag=direct
+
+	run_app_bg "$rootdir/build/examples/bdevperf" -z --json "$blkdiscard_conf" -q 1 -o 1048576 -w unmap -t 1 "$env_ctx"
+	AIO_PID=$!
+	waitforlisten $AIO_PID
+
+	[[ $($rpc_py bdev_get_bdevs -b "$aio_dev" | jq -r '.[0].driver_specific.aio | .blkdiscard and .fallocate') == true ]]
+	[[ $($rpc_py bdev_get_bdevs -b "$aio_dev" | jq -r '.[0].supported_io_types.unmap') == true ]]
+
+	# Field 12 of the block device stat file counts completed discards.
+	discards=$(awk '{print $12}' "$loop_stat")
+	"$rootdir/examples/bdev/bdevperf/bdevperf.py" perform_tests
+	killprocess $AIO_PID
+
+	(($(awk '{print $12}' "$loop_stat") > discards))
+	cmp -n $((size_mb * 1024 * 1024)) "$blkdiscard_loop" /dev/zero
+
+	losetup -d "$blkdiscard_loop"
+	rm -f "$blkdiscard_file" "$blkdiscard_conf"
+	trap - SIGINT SIGTERM EXIT
+}
+
 function bdev_gpt_uuid() {
 	local bdev
 
@@ -902,6 +960,9 @@ if [[ $test_type == bdev ]]; then
 	run_test "bdev_stat" stat_test_suite "$env_ctx"
 	run_test "bdev_dif_insert_strip" dif_insert_strip_test_suite "$env_ctx"
 	run_test "bdev_numa_id" numa_id_test_suite "$env_ctx"
+	if [[ $(uname -s) == Linux ]]; then
+		run_test "bdev_aio_blkdiscard" aio_blkdiscard_test_suite "$env_ctx"
+	fi
 fi
 
 if [[ $test_type == gpt ]]; then

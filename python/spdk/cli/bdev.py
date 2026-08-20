@@ -3,6 +3,7 @@
 #  All rights reserved.
 #  Copyright (c) 2022 Dell Inc, or its subsidiaries.
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#  Copyright Hewlett Packard Enterprise Development LP
 #
 
 import argparse
@@ -343,6 +344,7 @@ def add_parser(subparsers):
                                             block_size=args.block_size,
                                             readonly=args.readonly,
                                             fallocate=args.fallocate,
+                                            blkdiscard=args.blkdiscard,
                                             uuid=args.uuid,
                                             nowait=args.nowait))
 
@@ -350,7 +352,12 @@ def add_parser(subparsers):
     p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
     p.add_argument('name', help='Block device name')
     p.add_argument('block_size', help='Block size for this bdev', type=int, nargs='?')
-    p.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
+    g = p.add_mutually_exclusive_group()
+    g.add_argument("-r", "--readonly", action='store_true', help='Set this bdev as read-only')
+    g.add_argument("--blkdiscard", action='store_true',
+                   help='Enable UNMAP support using the BLKDISCARD ioctl. Can be combined with fallocate, which then only services '
+                        'WRITE ZEROES. The specified device must be a block device, otherwise creation will fail. Mutually exclusive '
+                        'with readonly. Intended only for testing purposes due to synchronous syscall.')
     p.add_argument("--fallocate", action='store_true', help='Support unmap/writezeros by fallocate')
     p.add_argument('-u', '--uuid', help="UUID of the bdev (optional)")
     p.add_argument('--no-wait', dest='nowait', action='store_true',

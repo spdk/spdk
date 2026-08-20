@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
+ *   Copyright Hewlett Packard Enterprise Development LP
  */
 
 #ifndef SPDK_BDEV_AIO_H
@@ -12,7 +13,7 @@
 typedef void (*delete_aio_bdev_complete)(void *cb_arg, int bdeverrno);
 
 int create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		    bool falloc, const struct spdk_uuid *uuid, bool nowait);
+		    bool falloc, bool blkdiscard, const struct spdk_uuid *uuid, bool nowait);
 
 int bdev_aio_rescan(const char *name);
 void bdev_aio_delete(const char *name, delete_aio_bdev_complete cb_fn, void *cb_arg);

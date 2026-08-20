@@ -2,6 +2,7 @@
  *   Copyright (C) 2017 Intel Corporation.
  *   All rights reserved.
  *   Copyright (c) 2022 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+ *   Copyright Hewlett Packard Enterprise Development LP
  */
 
 #include "bdev_aio.h"
@@ -25,6 +26,7 @@
 
 #ifndef __FreeBSD__
 #include <libaio.h>
+#include <linux/fs.h>
 #endif
 
 #define AIO_FDISK_LOG_FMT "%s,fdisk:%p,filename:%s"
@@ -95,6 +97,7 @@ struct file_disk {
 	bool			block_size_override;
 	bool			readonly;
 	bool			fallocate;
+	bool			blkdiscard;
 
 	bool			hot_remove_in_progress;
 };
@@ -341,11 +344,36 @@ bdev_aio_fallocate(struct spdk_bdev_io *bdev_io, int mode)
 }
 
 static void
+bdev_aio_blkdiscard(struct spdk_bdev_io *bdev_io)
+{
+	struct file_disk *fdisk = fdisk_from_bdev(bdev_io->bdev);
+	struct bdev_aio_task *aio_task = (struct bdev_aio_task *)bdev_io->driver_ctx;
+	uint64_t offset_bytes = bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen;
+	uint64_t length_bytes = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	uint64_t range[2] = {offset_bytes, length_bytes};
+	int rc;
+
+	assert(fdisk->blkdiscard);
+
+	rc = ioctl(fdisk->fd, BLKDISCARD, &range);
+	if (rc == 0) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete_aio_status(spdk_bdev_io_from_ctx(aio_task), -errno);
+	}
+}
+
+static void
 bdev_aio_unmap(struct spdk_bdev_io *bdev_io)
 {
+	struct file_disk *fdisk = fdisk_from_bdev(bdev_io->bdev);
 	int mode = FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE;
 
-	bdev_aio_fallocate(bdev_io, mode);
+	if (fdisk->blkdiscard) {
+		bdev_aio_blkdiscard(bdev_io);
+	} else {
+		bdev_aio_fallocate(bdev_io, mode);
+	}
 }
 
 
@@ -787,6 +815,7 @@ bdev_aio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return true;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return fdisk->fallocate || fdisk->blkdiscard;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return fdisk->fallocate;
 
@@ -882,6 +911,7 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "block_size_override", fdisk->block_size_override);
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
 	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
+	spdk_json_write_named_bool(w, "blkdiscard", fdisk->blkdiscard);
 	spdk_json_write_named_bool(w, "nowait", fdisk->use_nowait);
 	spdk_json_write_object_end(w);
 	return 0;
@@ -904,6 +934,7 @@ bdev_aio_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	spdk_json_write_named_string(w, "filename", fdisk->filename);
 	spdk_json_write_named_bool(w, "readonly", fdisk->readonly);
 	spdk_json_write_named_bool(w, "fallocate", fdisk->fallocate);
+	spdk_json_write_named_bool(w, "blkdiscard", fdisk->blkdiscard);
 	if (!spdk_uuid_is_null(uuid)) {
 		spdk_json_write_named_uuid(w, "uuid", uuid);
 	}
@@ -1001,11 +1032,12 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 
 int
 create_aio_bdev(const char *name, const char *filename, uint32_t block_size, bool readonly,
-		bool fallocate, const struct spdk_uuid *uuid, bool nowait)
+		bool fallocate, bool blkdiscard, const struct spdk_uuid *uuid, bool nowait)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
 	uint64_t disk_size;
+	struct stat st;
 	int rc;
 
 #ifdef __FreeBSD__
@@ -1013,7 +1045,17 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 		SPDK_ERRLOG("Unable to support fallocate on this platform\n");
 		return -ENOTSUP;
 	}
+
+	if (blkdiscard) {
+		SPDK_ERRLOG("Unable to support blkdiscard on this platform\n");
+		return -ENOTSUP;
+	}
 #endif
+
+	if (readonly && blkdiscard) {
+		SPDK_ERRLOG("readonly and blkdiscard are mutually exclusive\n");
+		return -EINVAL;
+	}
 
 	fdisk = calloc(1, sizeof(*fdisk));
 	if (!fdisk) {
@@ -1022,6 +1064,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	}
 	fdisk->readonly = readonly;
 	fdisk->fallocate = fallocate;
+	fdisk->blkdiscard = blkdiscard;
 	fdisk->fd = -1;
 
 	fdisk->filename = strdup(filename);
@@ -1039,6 +1082,20 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size, boo
 	if (bdev_aio_open(fdisk, nowait)) {
 		rc = -errno;
 		goto error_return;
+	}
+
+	if (blkdiscard) {
+		if (fstat(fdisk->fd, &st) != 0) {
+			rc = -errno;
+			AIO_FDISK_ERRLOG(fdisk, "fstat() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
+			goto error_return;
+		}
+
+		if (!S_ISBLK(st.st_mode)) {
+			AIO_FDISK_ERRLOG(fdisk, "Device is not block device; do not enable blkdiscard usage.\n");
+			rc = -EINVAL;
+			goto error_return;
+		}
 	}
 
 	disk_size = spdk_fd_get_size(fdisk->fd);

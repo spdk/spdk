@@ -1,6 +1,7 @@
 /*   SPDX-License-Identifier: BSD-3-Clause
  *   Copyright (C) 2016 Intel Corporation.
  *   All rights reserved.
+ *   Copyright Hewlett Packard Enterprise Development LP
  */
 
 #include "bdev_aio.h"
@@ -48,7 +49,8 @@ rpc_bdev_aio_create(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 	rc = create_aio_bdev(ctx->name, ctx->filename, ctx->block_size,
-			     ctx->readonly, ctx->fallocate, &ctx->uuid, ctx->nowait);
+			     ctx->readonly, ctx->fallocate, ctx->blkdiscard, &ctx->uuid,
+			     ctx->nowait);
 	if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
 		free_rpc_bdev_aio_create(ctx);

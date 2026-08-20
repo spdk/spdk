@@ -1,6 +1,7 @@
 #  SPDX-License-Identifier: BSD-3-Clause
 #  Copyright (c) 2025 Dell Inc, or its subsidiaries.
 #  All rights reserved.
+#  Copyright Hewlett Packard Enterprise Development LP
 enums:
   - name: bdev_nvme_cmd_type
     fields:
@@ -1901,6 +1902,9 @@ methods:
       - name: fallocate
         type: boolean
         description: Enable UNMAP and WRITE ZEROES support. Intended only for testing purposes due to synchronous syscall.
+      - name: blkdiscard
+        type: boolean
+        description: Enable UNMAP support using the BLKDISCARD ioctl. Can be combined with fallocate, which then only services WRITE ZEROES. The specified device must be a block device, otherwise creation will fail. Mutually exclusive with readonly. Intended only for testing purposes due to synchronous syscall.
       - name: uuid
         type: uuid
         description: UUID of new bdev

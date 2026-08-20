@@ -31,6 +31,9 @@ function unittest_bdev() {
 	$valgrind $testdir/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
 	$valgrind $testdir/lib/bdev/vbdev_zone_block.c/vbdev_zone_block_ut
 	$valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
+	if [ $(uname -s) = Linux ]; then
+		$valgrind $testdir/lib/bdev/aio.c/aio_ut
+	fi
 }
 
 function unittest_blob() {
