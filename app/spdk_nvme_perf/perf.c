@@ -74,6 +74,11 @@ struct ns_fn_table;
 
 #define MAX_WORKLOADS 16
 
+/* Maximum number of workloads listed inline in the once-per-second progress
+ * line, which has to stay on a single terminal row.
+ */
+#define PERIODIC_BREAKDOWN_MAX_WORKLOADS 4
+
 struct ns_workload_ctx {
 	/** Number of workload-sized I/Os used to bound random LBA selection; always nonzero. */
 	uint64_t		size_in_ios;
@@ -177,6 +182,14 @@ static const double g_latency_cutoffs[] = {
 	-1,
 };
 
+struct ns_workload_stats {
+	uint64_t		io_completed;
+	uint64_t		last_io_completed;
+	uint64_t		total_tsc;
+	uint64_t		min_tsc;
+	uint64_t		max_tsc;
+};
+
 struct ns_worker_stats {
 	uint64_t		io_submitted;
 	uint64_t		io_completed;
@@ -189,6 +202,15 @@ struct ns_worker_stats {
 	uint64_t		idle_tsc;
 	uint64_t		last_busy_tsc;
 	uint64_t		last_idle_tsc;
+
+	/* Per-workload counters, indexed by g_workloads[] position. Only the
+	 * owning worker thread ever writes any field in this struct; other
+	 * threads only read it periodically. So placing this array last, after
+	 * the existing hot fields, is just for readability, not cache-line
+	 * isolation. Only maintained when g_workload_stats is set, i.e. for an
+	 * explicit multi-workload --mixed-workload run; see task_complete().
+	 */
+	struct ns_workload_stats workload[MAX_WORKLOADS];
 };
 
 struct ns_worker_ctx {
@@ -336,6 +358,12 @@ static int g_is_random;
 static struct workload g_workloads[MAX_WORKLOADS];
 static int g_num_workloads = 0;
 static uint8_t g_workload_lookup[WORKLOAD_PCT_TOTAL];
+/* True when the per-workload statistics should be collected and displayed,
+ * i.e. only for an explicitly mixed workload with more than one workload.
+ * Legacy invocations, including -w rw/randrw, keep their output byte-for-byte
+ * identical.
+ */
+static bool g_workload_stats;
 static uint32_t g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
 static int g_nr_unused_io_queues;
@@ -850,8 +878,15 @@ static const struct ns_fn_table aio_fn_table = {
 static void
 ns_worker_stats_reset(struct ns_worker_stats *stats)
 {
+	struct ns_workload_stats *workload;
+	int w_idx;
+
 	memset(stats, 0, sizeof(*stats));
 	stats->min_tsc = UINT64_MAX;
+	for (w_idx = 0; w_idx < g_num_workloads; w_idx++) {
+		workload = &stats->workload[w_idx];
+		workload->min_tsc = UINT64_MAX;
+	}
 }
 
 #if defined(HAVE_LIBAIO) || defined(SPDK_CONFIG_URING)
@@ -1735,6 +1770,24 @@ task_complete(struct perf_task *task)
 	if (spdk_unlikely(ns_ctx->stats.max_tsc < tsc_diff)) {
 		ns_ctx->stats.max_tsc = tsc_diff;
 	}
+	if (spdk_unlikely(g_workload_stats)) {
+		/* The aggregate counters above blend every transfer size, which is not
+		 * meaningful for a mixed workload; track IOPS/MiB/s/latency per
+		 * workload as well so the effect of one workload on another is
+		 * visible. Only touched for an explicit multi-workload run, so a
+		 * legacy single-workload run pays no extra cost here.
+		 */
+		struct ns_workload_stats *workload = &ns_ctx->stats.workload[task->workload_idx];
+
+		workload->io_completed++;
+		workload->total_tsc += tsc_diff;
+		if (workload->min_tsc > tsc_diff) {
+			workload->min_tsc = tsc_diff;
+		}
+		if (workload->max_tsc < tsc_diff) {
+			workload->max_tsc = tsc_diff;
+		}
+	}
 	if (spdk_unlikely(g_latency_sw_tracking_level > 0)) {
 		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
 	}
@@ -1838,14 +1891,17 @@ static void
 print_periodic_performance(bool warmup)
 {
 	uint64_t io_this_second;
+	uint64_t workload_io_this_second[MAX_WORKLOADS] = {0};
 	double mb_this_second;
 	struct worker_thread *worker;
 	struct ns_worker_ctx *ns_ctx;
+	struct ns_workload_stats *workload;
 	uint64_t busy_tsc;
 	uint64_t idle_tsc;
 	uint64_t core_busy_tsc = 0;
 	uint64_t core_idle_tsc = 0;
 	double core_busy_perc = 0;
+	int i;
 
 	if (!isatty(STDOUT_FILENO)) {
 		/* Don't print periodic stats if output is not going
@@ -1853,6 +1909,7 @@ print_periodic_performance(bool warmup)
 		 */
 		return;
 	}
+
 	io_this_second = 0;
 	TAILQ_FOREACH(worker, &g_workers, link) {
 		busy_tsc = 0;
@@ -1860,6 +1917,15 @@ print_periodic_performance(bool warmup)
 		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
 			io_this_second += ns_ctx->stats.io_completed - ns_ctx->stats.last_io_completed;
 			ns_ctx->stats.last_io_completed = ns_ctx->stats.io_completed;
+
+			if (g_workload_stats) {
+				for (i = 0; i < g_num_workloads; i++) {
+					workload = &ns_ctx->stats.workload[i];
+					workload_io_this_second[i] +=
+						workload->io_completed - workload->last_io_completed;
+					workload->last_io_completed = workload->io_completed;
+				}
+			}
 
 			if (g_monitor_perf_cores) {
 				busy_tsc += ns_ctx->stats.busy_tsc - ns_ctx->stats.last_busy_tsc;
@@ -1873,9 +1939,43 @@ print_periodic_performance(bool warmup)
 			core_idle_tsc += idle_tsc;
 		}
 	}
-	mb_this_second = (double)io_this_second * g_max_io_size_bytes / (1024 * 1024);
 
+	if (g_workload_stats) {
+		/* Account for each workload's I/O size. */
+		mb_this_second = 0;
+		for (i = 0; i < g_num_workloads; i++) {
+			mb_this_second += (double)workload_io_this_second[i] *
+					  g_workloads[i].io_size_bytes / (1024 * 1024);
+		}
+	} else {
+		mb_this_second = (double)io_this_second * g_max_io_size_bytes / (1024 * 1024);
+	}
+
+	if (g_workload_stats) {
+		/* The per-workload breakdown has variable width. */
+		printf("%c[2K", 27);
+	}
 	printf("%s%9ju IOPS, %8.2f MiB/s", warmup ? "[warmup] " : "", io_this_second, mb_this_second);
+	if (g_workload_stats) {
+		/* Keep the line printable on one row; print_workload_breakdown() shows
+		 * every workload at the end of the run.
+		 */
+		int shown = spdk_min(g_num_workloads, PERIODIC_BREAKDOWN_MAX_WORKLOADS);
+
+		printf(" [");
+		for (i = 0; i < shown; i++) {
+			printf("%s%uB-%s%s: %juIOPS",
+			       i > 0 ? " | " : "",
+			       g_workloads[i].io_size_bytes,
+			       g_workloads[i].is_random ? "rand" : "seq",
+			       g_workloads[i].is_read ? "read" : "write",
+			       workload_io_this_second[i]);
+		}
+		if (shown < g_num_workloads) {
+			printf(" | +%d more", g_num_workloads - shown);
+		}
+		printf("]");
+	}
 	if (g_monitor_perf_cores) {
 		core_busy_perc = (double)core_busy_tsc / (core_idle_tsc + core_busy_tsc) * 100;
 		printf("%3d Core(s): %6.2f%% Busy", g_num_workers, core_busy_perc);
@@ -2029,8 +2129,8 @@ work_fn(void *arg)
 					spdk_histogram_data_reset(ns_ctx->histogram);
 				}
 
-				if (worker->lcore == g_main_core && isatty(STDOUT_FILENO)) {
-					/* warmup stage prints a longer string to stdout, need to erase it */
+				if (!g_workload_stats && worker->lcore == g_main_core && isatty(STDOUT_FILENO)) {
+					/* The warmup prefix makes the previous line longer. */
 					printf("%c[2K", 27);
 				}
 
@@ -2267,6 +2367,93 @@ print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
 	       so_far_pct, count);
 }
 
+static double
+compute_ns_mb_per_second(struct ns_worker_ctx *ns_ctx)
+{
+	struct ns_workload_stats *workload;
+	double mb = 0;
+	int i;
+
+	for (i = 0; i < g_num_workloads; i++) {
+		workload = &ns_ctx->stats.workload[i];
+		mb += (double)workload->io_completed * g_workloads[i].io_size_bytes / (1024 * 1024);
+	}
+	return mb * SPDK_SEC_TO_USEC / g_elapsed_time_in_usec;
+}
+
+static void
+print_workload_breakdown(uint64_t total_io_completed)
+{
+	struct ns_workload_stats workload_total[MAX_WORKLOADS] = {0};
+	struct ns_workload_stats *workload, *total;
+	uint64_t workload_bytes, total_bytes = 0;
+	struct worker_thread *worker;
+	struct ns_worker_ctx *ns_ctx;
+	double workload_iops, workload_mbps, workload_io_pct, workload_byte_pct;
+	double avg_latency, min_latency, max_latency;
+	char label[64];
+	int i;
+
+	for (i = 0; i < g_num_workloads; i++) {
+		workload_total[i].min_tsc = UINT64_MAX;
+	}
+
+	/* Single pass over all ns_ctx accumulating per-workload totals */
+	TAILQ_FOREACH(worker, &g_workers, link) {
+		TAILQ_FOREACH(ns_ctx, &worker->ns_ctx, link) {
+			for (i = 0; i < g_num_workloads; i++) {
+				workload = &ns_ctx->stats.workload[i];
+				total = &workload_total[i];
+				total->io_completed += workload->io_completed;
+				total->total_tsc += workload->total_tsc;
+				total->min_tsc = spdk_min(total->min_tsc, workload->min_tsc);
+				total->max_tsc = spdk_max(total->max_tsc, workload->max_tsc);
+			}
+		}
+	}
+
+	for (i = 0; i < g_num_workloads; i++) {
+		total = &workload_total[i];
+		total_bytes += total->io_completed * g_workloads[i].io_size_bytes;
+	}
+
+	printf("Per-workload breakdown:\n");
+	printf("%-30s %12s %12s %6s %7s %10s %10s %10s\n",
+	       "Workload", "IOPS", "MiB/s", "IO%", "Bytes%",
+	       "AvgLat(us)", "MinLat(us)", "MaxLat(us)");
+	for (i = 0; i < g_num_workloads; i++) {
+		total = &workload_total[i];
+		workload_bytes = total->io_completed * g_workloads[i].io_size_bytes;
+		workload_iops = (double)total->io_completed * SPDK_SEC_TO_USEC / g_elapsed_time_in_usec;
+		workload_mbps = (double)workload_bytes * SPDK_SEC_TO_USEC / g_elapsed_time_in_usec /
+				(1024 * 1024);
+		workload_io_pct = total_io_completed > 0 ?
+				  (double)total->io_completed * 100.0 / total_io_completed : 0;
+		workload_byte_pct = total_bytes > 0 ? (double)workload_bytes * 100.0 / total_bytes : 0;
+
+		if (total->io_completed > 0) {
+			avg_latency = ((double)total->total_tsc / total->io_completed) *
+				      SPDK_SEC_TO_USEC / g_tsc_rate;
+			min_latency = (double)total->min_tsc * SPDK_SEC_TO_USEC / g_tsc_rate;
+			max_latency = (double)total->max_tsc * SPDK_SEC_TO_USEC / g_tsc_rate;
+		} else {
+			avg_latency = min_latency = max_latency = 0;
+		}
+
+		snprintf(label, sizeof(label), "%uB %s%s (%u%% cfg)",
+			 g_workloads[i].io_size_bytes,
+			 g_workloads[i].is_random ? "rand" : "seq",
+			 g_workloads[i].is_read ? "read" : "write",
+			 g_workloads[i].percentage);
+		printf("%-30s %12.2f %12.2f %5.1f%% %6.1f%% %10.2f %10.2f %10.2f\n",
+		       label, workload_iops, workload_mbps, workload_io_pct, workload_byte_pct,
+		       avg_latency, min_latency, max_latency);
+	}
+	printf("\nIO%% is the share of completed I/Os, which is what --mixed-workload\n"
+	       "percentages configure; Bytes%% is the resulting share of bandwidth.\n");
+	printf("\n");
+}
+
 static void
 print_performance(void)
 {
@@ -2304,7 +2491,8 @@ print_performance(void)
 			if (ns_ctx->stats.io_completed != 0) {
 				io_per_second = (double)ns_ctx->stats.io_completed * SPDK_SEC_TO_USEC /
 						g_elapsed_time_in_usec;
-				mb_per_second = io_per_second * g_max_io_size_bytes / (1024 * 1024);
+				mb_per_second = g_workload_stats ? compute_ns_mb_per_second(ns_ctx) :
+						io_per_second * g_max_io_size_bytes / (1024 * 1024);
 				average_latency = ((double)ns_ctx->stats.total_tsc / ns_ctx->stats.io_completed) *
 						  SPDK_SEC_TO_USEC /
 						  g_tsc_rate;
@@ -2338,6 +2526,10 @@ print_performance(void)
 		       max_strlen + 13, "Total", total_io_per_second, total_mb_per_second,
 		       sum_ave_latency, min_latency_so_far, max_latency_so_far);
 		printf("\n");
+
+		if (g_workload_stats) {
+			print_workload_breakdown(total_io_completed);
+		}
 	}
 
 	if (g_latency_sw_tracking_level == 0 || total_io_completed == 0) {
