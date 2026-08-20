@@ -370,7 +370,8 @@ Example response:
   "id": 1,
   "result": [
     {% for name in all_methods | sort -%}
-    "{{ name }}"{% if not loop.last %},{% endif %}
+    "{{ name }}"{% if not loop.last %},
+    {% endif -%}
     {% endfor %}
   ]
 }

@@ -317,6 +317,10 @@ _build_doc() {
 	doxygenv=$(doxygen --version)
 
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS Q=@ &> "$out"/doxygen.log
+	if hash mdl 2> /dev/null; then
+		echo "Checking generated jsonrpc.md markdown format..."
+		mdl -s "$rootdir/mdl_rules.rb" "$rootdir/doc/jsonrpc.md"
+	fi
 	if [ -s "$out"/doxygen.log ]; then
 		if [[ "$doxygenv" == "1.8.20" ]]; then
 			# Doxygen 1.8.20 produces false positives, see:
