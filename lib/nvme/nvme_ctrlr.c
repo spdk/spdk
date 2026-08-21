@@ -2446,13 +2446,15 @@ struct nvme_active_ns_ctx {
 	uint32_t next_nsid;
 	uint32_t *new_ns_list;
 	nvme_ctrlr_active_ns_cb cb_fn;
-	struct nvme_completion_poll_status status;
+	struct nvme_completion_poll_status *status;
+	bool external_status;
 
 	enum nvme_active_ns_state state;
 };
 
 static struct nvme_active_ns_ctx *
-nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, nvme_ctrlr_active_ns_cb cb_fn)
+nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, struct nvme_completion_poll_status *status,
+			  nvme_ctrlr_active_ns_cb cb_fn)
 {
 	struct nvme_active_ns_ctx *ctx;
 	uint32_t *new_ns_list = NULL;
@@ -2471,16 +2473,33 @@ nvme_active_ns_ctx_create(struct spdk_nvme_ctrlr *ctrlr, nvme_ctrlr_active_ns_cb
 		return NULL;
 	}
 
+	ctx->external_status = !!status;
+
+	if (!status) {
+		status = spdk_zmalloc(sizeof(*status), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		if (!status) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate completion status tracker\n");
+			spdk_free(new_ns_list);
+			free(ctx);
+			return NULL;
+		}
+	}
+
 	ctx->page_count = 1;
 	ctx->new_ns_list = new_ns_list;
 	ctx->ctrlr = ctrlr;
 	ctx->cb_fn = cb_fn;
+	ctx->status = status;
 	return ctx;
 }
 
 static void
 nvme_active_ns_ctx_destroy(struct nvme_active_ns_ctx *ctx)
 {
+	if (!ctx->external_status) {
+		spdk_free(ctx->status);
+	}
+
 	spdk_free(ctx->new_ns_list);
 	free(ctx);
 }
@@ -2562,15 +2581,18 @@ nvme_ctrlr_identify_active_ns_async_done(struct nvme_active_ns_ctx *ctx)
 	}
 
 	status = ctx->state == NVME_ACTIVE_NS_STATE_ERROR ? -ENXIO : 0;
-	if (status && !spdk_nvme_cpl_is_error(&ctx->status.cpl)) {
-		ctx->status.cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-		ctx->status.cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	if (status && !spdk_nvme_cpl_is_error(&ctx->status->cpl)) {
+		ctx->status->cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+		ctx->status->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	}
 
-	ctx->status.done = true;
+	ctx->status->done = true;
+
 	if (ctx->cb_fn) {
 		ctx->cb_fn(ctrlr, ctx, status);
 	}
+
+	nvme_active_ns_ctx_destroy(ctx);
 }
 
 static void
@@ -2579,12 +2601,15 @@ nvme_ctrlr_identify_active_ns_async_cb(void *arg, const struct spdk_nvme_cpl *cp
 	struct nvme_active_ns_ctx *ctx = arg;
 	uint32_t *new_ns_list = NULL;
 
-	if (ctx->status.timed_out) {
-		nvme_active_ns_ctx_destroy(ctx);
+	if (ctx->status->timed_out) {
+		spdk_free(ctx->status);
+		spdk_free(ctx->new_ns_list);
+		free(ctx);
 		return;
 	}
 
-	memcpy(&ctx->status.cpl, cpl, sizeof(*cpl));
+	memcpy(&ctx->status->cpl, cpl, sizeof(*cpl));
+
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		ctx->state = NVME_ACTIVE_NS_STATE_ERROR;
 		goto out;
@@ -2607,8 +2632,8 @@ nvme_ctrlr_identify_active_ns_async_cb(void *arg, const struct spdk_nvme_cpl *cp
 	}
 
 	ctx->new_ns_list = new_ns_list;
-	ctx->status.timeout_tsc = spdk_get_ticks() + ctx->ctrlr->opts.admin_timeout_ms * 1000 *
-				  spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
+	ctx->status->timeout_tsc = spdk_get_ticks() + ctx->ctrlr->opts.admin_timeout_ms * 1000 *
+				   spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	nvme_ctrlr_identify_active_ns_async(ctx);
 	return;
 
@@ -2618,7 +2643,7 @@ out:
 
 /*
  * If the callback is set it is invoked exactly once, including synchronously before
- * an error is returned.
+ * an error is returned. Always takes ownership of ctx.
  */
 static int
 nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx)
@@ -2690,7 +2715,6 @@ nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_ns *ns;
 
 	if (status) {
-		nvme_active_ns_ctx_destroy(ctx);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
@@ -2701,7 +2725,6 @@ nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ns_free_iocs_specific_data(ns);
 	}
 
-	nvme_active_ns_ctx_destroy(ctx);
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS, ctrlr->opts.admin_timeout_ms);
 }
 
@@ -2710,7 +2733,7 @@ nvme_ctrlr_init_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_active_ns_ctx *ctx;
 
-	ctx = nvme_active_ns_ctx_create(ctrlr, nvme_ctrlr_init_identify_active_ns_finish);
+	ctx = nvme_active_ns_ctx_create(ctrlr, NULL, nvme_ctrlr_init_identify_active_ns_finish);
 	if (!ctx) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2724,34 +2747,40 @@ nvme_ctrlr_init_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 int
 nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
+	struct nvme_completion_poll_status *status;
 	struct nvme_active_ns_ctx *ctx;
 	int rc;
 
-	ctx = nvme_active_ns_ctx_create(ctrlr, NULL);
+	status = spdk_zmalloc(sizeof(*status), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!status) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
+		return -ENOMEM;
+	}
+
+	ctx = nvme_active_ns_ctx_create(ctrlr, status, NULL);
 	if (!ctx) {
+		spdk_free(status);
 		return -ENOMEM;
 	}
 
 	rc = nvme_ctrlr_identify_active_ns_async(ctx);
 	if (rc) {
-		goto out;
+		spdk_free(status);
+		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, &ctx->status, false);
-	if (rc) {
-		if (!ctx->status.timed_out) {
-			nvme_active_ns_ctx_destroy(ctx);
-		}
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
+	if (!status->timed_out) {
+		spdk_free(status);
+	}
 
+	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_identify_active_ns_async failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
 		return -ENXIO;
 	}
 
-	assert(ctx->state == NVME_ACTIVE_NS_STATE_DONE);
-out:
-	nvme_active_ns_ctx_destroy(ctx);
-	return rc;
+	return 0;
 }
 
 static struct spdk_nvme_ns *
