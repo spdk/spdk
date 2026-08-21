@@ -2438,7 +2438,7 @@ enum nvme_active_ns_state {
 };
 
 typedef void (*nvme_ctrlr_active_ns_cb)(struct spdk_nvme_ctrlr *ctrlr,
-					struct nvme_active_ns_ctx *ctx);
+					struct nvme_active_ns_ctx *ctx, int status);
 
 struct nvme_active_ns_ctx {
 	struct spdk_nvme_ctrlr *ctrlr;
@@ -2555,14 +2555,21 @@ static void
 nvme_ctrlr_identify_active_ns_async_done(struct nvme_active_ns_ctx *ctx)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+	int status;
 
 	if (ctx->state == NVME_ACTIVE_NS_STATE_DONE) {
 		nvme_ctrlr_identify_active_ns_swap(ctrlr, ctx->new_ns_list, ctx->page_count * 1024);
 	}
 
+	status = ctx->state == NVME_ACTIVE_NS_STATE_ERROR ? -ENXIO : 0;
+	if (status && !spdk_nvme_cpl_is_error(&ctx->status.cpl)) {
+		ctx->status.cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
+		ctx->status.cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	}
+
 	ctx->status.done = true;
 	if (ctx->cb_fn) {
-		ctx->cb_fn(ctrlr, ctx);
+		ctx->cb_fn(ctrlr, ctx, status);
 	}
 }
 
@@ -2678,11 +2685,11 @@ out:
 
 static void
 nvme_ctrlr_init_identify_active_ns_finish(struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_active_ns_ctx *ctx)
+		struct nvme_active_ns_ctx *ctx, int status)
 {
 	struct spdk_nvme_ns *ns;
 
-	if (ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
+	if (status) {
 		nvme_active_ns_ctx_destroy(ctx);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2731,7 +2738,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	rc = nvme_wait_for_adminq_completion(ctrlr, &ctx->status, false);
-	if (rc || ctx->state == NVME_ACTIVE_NS_STATE_ERROR) {
+	if (rc) {
 		if (!ctx->status.timed_out) {
 			nvme_active_ns_ctx_destroy(ctx);
 		}
