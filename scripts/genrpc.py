@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 import rpc
 import yaml
 from jinja2 import Environment, FileSystemLoader, Template
+from spdk.rpc.client import JSONRPCDryRunClient
 from tabulate import tabulate
 
 # Get directory of this script
@@ -258,6 +259,16 @@ def lint_py_cli(schema: Dict[str, Any]) -> None:
                     raise ValueError(f"For method {method['name']}: parameter '{param['name']}': 'description' field is mismatched")
 
 
+def example_request(method_name: str, *cli_args: str) -> str:
+    """Jinja2 callable: parse CLI args, dry-run via JSONRPCDryRunClient, return fenced JSON."""
+    rpc.suppress_cli_prints()
+    parser, _ = rpc.create_parser()
+    args = parser.parse_args([method_name, *list(cli_args)])
+    args.client = JSONRPCDryRunClient(batch_mode=True)
+    args.func(args)
+    return "~~~json\n" + json.dumps(args.client._reqs[0], indent=2) + "\n~~~"
+
+
 def generate_docs(schema: Dict[str, Any]) -> str:
     env = Environment(loader=FileSystemLoader(base_dir / "doc"),
                       keep_trailing_newline=True,
@@ -283,6 +294,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
             else "This method has no parameters."
         )
         transformation[f"{method['name']}_description"] = method['description'].rstrip('\n')
+    transformation["example_request"] = example_request
     for obj in schema['objects']:
         fields = [
             dict(

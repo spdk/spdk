@@ -208,16 +208,7 @@ file can be converted to JSON-RPC using python tool:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "spdk_kill_instance",
-  "params": {
-    "sig_name": "SIGINT"
-  }
-}
-~~~
+{{ example_request("spdk_kill_instance", "SIGINT") }}
 
 Example response:
 
@@ -247,16 +238,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_monitor_context_switch",
-  "params": {
-    "enabled": false
-  }
-}
-~~~
+{{ example_request("framework_monitor_context_switch", "--no-monitor") }}
 
 Example response:
 
@@ -286,13 +268,7 @@ Completion status of SPDK subsystem initialization is returned as a boolean.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_start_init"
-}
-~~~
+{{ example_request("framework_start_init") }}
 
 Example response:
 
@@ -320,13 +296,7 @@ Returns True when subsystems have been initialized.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_wait_init"
-}
-~~~
+{{ example_request("framework_wait_init") }}
 
 Example response:
 
@@ -354,13 +324,7 @@ The response is an array of supported RPC methods.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "rpc_get_methods"
-}
-~~~
+{{ example_request("rpc_get_methods") }}
 
 Example response:
 
@@ -393,13 +357,7 @@ The response is an array of name and dependency relationship of SPDK subsystems 
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_get_subsystems"
-}
-~~~
+{{ example_request("framework_get_subsystems") }}
 
 Example response:
 
@@ -479,16 +437,7 @@ Null is returned if it is not retrievable by the framework_get_config method and
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_get_config",
-  "params": {
-    "name": "bdev"
-  }
-}
-~~~
+{{ example_request("framework_get_config", "bdev") }}
 
 Example response:
 
@@ -559,13 +508,7 @@ The response is an array of all reactors.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "framework_get_reactors",
-  "id": 1
-}
-~~~
+{{ example_request("framework_get_reactors") }}
 
 Example response:
 
@@ -612,17 +555,7 @@ Completion status of the operation is returned as a boolean.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "framework_set_scheduler",
-  "id": 1,
-  "params": {
-    "name": "static",
-    "period": 1000000
-  }
-}
-~~~
+{{ example_request("framework_set_scheduler", "static", "-p", "1000000") }}
 
 Example response:
 
@@ -656,13 +589,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "framework_get_scheduler",
-  "id": 1
-}
-~~~
+{{ example_request("framework_get_scheduler") }}
 
 Example response:
 
@@ -696,13 +623,7 @@ Displays the current governor name, power env, frequencies available and frequen
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "framework_get_governor",
-  "id": 1
-}
-~~~
+{{ example_request("framework_get_governor") }}
 
 Example response:
 
@@ -743,17 +664,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "scheduler_set_options",
-  "params": {
-    "scheduling_core": 1,
-    "isolated_core_mask": "0x4"
-  }
-}
-~~~
+{{ example_request("scheduler_set_options", "-i", "0x4", "-s", "1") }}
 
 Example response:
 
@@ -781,13 +692,7 @@ true on success
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_enable_cpumask_locks"
-}
-~~~
+{{ example_request("framework_enable_cpumask_locks") }}
 
 Example response:
 
@@ -815,13 +720,7 @@ true on success
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_disable_cpumask_locks"
-}
-~~~
+{{ example_request("framework_disable_cpumask_locks") }}
 
 Example response:
 
@@ -849,13 +748,7 @@ The response is an array of objects containing threads statistics.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "thread_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("thread_get_stats") }}
 
 Example response:
 
@@ -898,17 +791,7 @@ Completion status of the operation is returned as a boolean.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "thread_set_cpumask",
-  "id": 1,
-  "params": {
-    "id": 1,
-    "cpumask": "1"
-  }
-}
-~~~
+{{ example_request("thread_set_cpumask", "-i", "1", "-m", "1") }}
 
 Example response:
 
@@ -932,16 +815,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_enable_tpoint_group",
-  "id": 1,
-  "params": {
-    "name": "bdev"
-  }
-}
-~~~
+{{ example_request("trace_enable_tpoint_group", "bdev") }}
 
 Example response:
 
@@ -965,16 +839,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_disable_tpoint_group",
-  "id": 1,
-  "params": {
-    "name": "bdev"
-  }
-}
-~~~
+{{ example_request("trace_disable_tpoint_group", "bdev") }}
 
 Example response:
 
@@ -998,17 +863,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_set_tpoint_mask",
-  "id": 1,
-  "params": {
-    "name": "bdev",
-    "tpoint_mask": 1
-  }
-}
-~~~
+{{ example_request("trace_set_tpoint_mask", "bdev", "1") }}
 
 Example response:
 
@@ -1032,17 +887,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_clear_tpoint_mask",
-  "id": 1,
-  "params": {
-    "name": "bdev",
-    "tpoint_mask": 1
-  }
-}
-~~~
+{{ example_request("trace_clear_tpoint_mask", "bdev", "1") }}
 
 Example response:
 
@@ -1066,13 +911,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_get_tpoint_group_mask",
-  "id": 1
-}
-~~~
+{{ example_request("trace_get_tpoint_group_mask") }}
 
 Example response:
 
@@ -1151,13 +990,7 @@ This method has no parameters.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_clear",
-  "id": 1
-}
-~~~
+{{ example_request("trace_clear") }}
 
 Example response:
 
@@ -1181,13 +1014,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "trace_get_info",
-  "id": 1
-}
-~~~
+{{ example_request("trace_get_info") }}
 
 Example response:
 
@@ -1246,16 +1073,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_set_print_level",
-  "id": 1,
-  "params": {
-    "level": "ERROR"
-  }
-}
-~~~
+{{ example_request("log_set_print_level", "ERROR") }}
 
 Example response:
 
@@ -1279,13 +1097,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_get_print_level",
-  "id": 1
-}
-~~~
+{{ example_request("log_get_print_level") }}
 
 Example response:
 
@@ -1309,16 +1121,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_set_level",
-  "id": 1,
-  "params": {
-    "level": "ERROR"
-  }
-}
-~~~
+{{ example_request("log_set_level", "ERROR") }}
 
 Example response:
 
@@ -1342,13 +1145,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_get_level",
-  "id": 1
-}
-~~~
+{{ example_request("log_get_level") }}
 
 Example response:
 
@@ -1372,16 +1169,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_set_flag",
-  "id": 1,
-  "params": {
-    "flag": "all"
-  }
-}
-~~~
+{{ example_request("log_set_flag", "all") }}
 
 Example response:
 
@@ -1405,16 +1193,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_clear_flag",
-  "id": 1,
-  "params": {
-    "flag": "all"
-  }
-}
-~~~
+{{ example_request("log_clear_flag", "all") }}
 
 Example response:
 
@@ -1438,13 +1217,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_get_flags",
-  "id": 1
-}
-~~~
+{{ example_request("log_get_flags") }}
 
 Example response:
 
@@ -1473,16 +1246,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "log_enable_timestamps",
-  "id": 1,
-  "params": {
-    "enabled": true
-  }
-}
-~~~
+{{ example_request("log_enable_timestamps", "--timestamps") }}
 
 Example response:
 
@@ -1510,13 +1274,7 @@ The response is an array of objects containing pollers of all the threads.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "thread_get_pollers",
-  "id": 1
-}
-~~~
+{{ example_request("thread_get_pollers") }}
 
 Example response:
 
@@ -1564,13 +1322,7 @@ The response is an array of objects containing IO channels of all the threads.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "thread_get_io_channels",
-  "id": 1
-}
-~~~
+{{ example_request("thread_get_io_channels") }}
 
 Example response:
 
@@ -1611,13 +1363,7 @@ The response is a pathname to a text file containing the memory stats.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "env_dpdk_get_mem_stats",
-  "id": 1
-}
-~~~
+{{ example_request("env_dpdk_get_mem_stats") }}
 
 Example response:
 
@@ -1645,13 +1391,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_get_module_info",
-  "id": 1
-}
-~~~
+{{ example_request("accel_get_module_info") }}
 
 Example response:
 
@@ -1696,13 +1436,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_get_opc_assignments",
-  "id": 1
-}
-~~~
+{{ example_request("accel_get_opc_assignments") }}
 
 Example response:
 
@@ -1735,17 +1469,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_assign_opc",
-  "id": 1,
-  "params": {
-    "opname": "copy",
-    "module": "software"
-  }
-}
-~~~
+{{ example_request("accel_assign_opc", "-o", "copy", "-m", "software") }}
 
 Example response:
 
@@ -1769,20 +1493,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_crypto_key_create",
-  "id": 1,
-  "params": {
-    "cipher": "AES_XTS",
-    "key": "00112233445566778899001122334455",
-    "key2": "00112233445566778899001122334455",
-    "tweak_mode": "SIMPLE_LBA",
-    "name": "super_key"
-  }
-}
-~~~
+{{ example_request("accel_crypto_key_create", "-c", "AES_XTS", "-k", "00112233445566778899001122334455", "-e", "00112233445566778899001122334455", "-t", "SIMPLE_LBA", "-n", "super_key") }}
 
 Example response:
 
@@ -1806,16 +1517,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_crypto_key_destroy",
-  "id": 1,
-  "params": {
-    "key_name": "super_key"
-  }
-}
-~~~
+{{ example_request("accel_crypto_key_destroy", "-n", "super_key") }}
 
 Example response:
 
@@ -1839,13 +1541,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_crypto_keys_get",
-  "id": 1
-}
-~~~
+{{ example_request("accel_crypto_keys_get") }}
 
 Example response:
 
@@ -1884,16 +1580,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_set_driver",
-  "id": 1,
-  "params": {
-    "name": "xeon"
-  }
-}
-~~~
+{{ example_request("accel_set_driver", "--name", "xeon") }}
 
 Example response:
 
@@ -1917,17 +1604,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_set_options",
-  "id": 1,
-  "params": {
-    "small_cache_size": 128,
-    "large_cache_size": 32
-  }
-}
-~~~
+{{ example_request("accel_set_options", "--small-cache-size", "128", "--large-cache-size", "32") }}
 
 Example response:
 
@@ -1951,13 +1628,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("accel_get_stats") }}
 
 Example response:
 
@@ -2001,17 +1672,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "method": "accel_error_inject_error",
-  "params": {
-    "opcode": "crc32c",
-    "type": "corrupt",
-    "count": 10000,
-    "interval": 8
-  }
-}
-~~~
+{{ example_request("accel_error_inject_error", "-o", "crc32c", "-t", "corrupt", "-c", "10000", "-i", "8") }}
 
 Example response:
 
@@ -2035,16 +1696,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "pmd": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "compressdev_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("compressdev_scan_accel_module", "-p", "1") }}
 
 Example response:
 
@@ -2068,16 +1720,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "config_kernel_mode": false
-  },
-  "jsonrpc": "2.0",
-  "method": "dsa_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("dsa_scan_accel_module") }}
 
 Example response:
 
@@ -2101,13 +1744,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iaa_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("iaa_scan_accel_module") }}
 
 Example response:
 
@@ -2131,13 +1768,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "ioat_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("ioat_scan_accel_module") }}
 
 Example response:
 
@@ -2161,13 +1792,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "ae4dma_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("ae4dma_scan_accel_module") }}
 
 Example response:
 
@@ -2191,13 +1816,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "cuda_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("cuda_scan_accel_module") }}
 
 Example response:
 
@@ -2221,13 +1840,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "dpdk_cryptodev_scan_accel_module",
-  "id": 1
-}
-~~~
+{{ example_request("dpdk_cryptodev_scan_accel_module") }}
 
 Example response:
 
@@ -2251,16 +1864,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "dpdk_cryptodev_set_driver",
-  "id": 1,
-  "params": {
-    "crypto_pmd": "crypto_aesni_mb"
-  }
-}
-~~~
+{{ example_request("dpdk_cryptodev_set_driver", "-d", "crypto_aesni_mb") }}
 
 Example response:
 
@@ -2284,13 +1888,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "dpdk_cryptodev_get_driver",
-  "id": 1
-}
-~~~
+{{ example_request("dpdk_cryptodev_get_driver") }}
 
 Example response:
 
@@ -2314,17 +1912,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "mlx5_scan_accel_module",
-  "id": 1,
-  "params": {
-    "qp_size": 256,
-    "num_requests": 2047
-  }
-}
-~~~
+{{ example_request("mlx5_scan_accel_module", "-q", "256", "-r", "2047") }}
 
 Example response:
 
@@ -2348,16 +1936,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "accel_mlx5_dump_stats",
-  "id": 1,
-  "params": {
-    "level": "total"
-  }
-}
-~~~
+{{ example_request("accel_mlx5_dump_stats", "-l", "total") }}
 
 Example response:
 
@@ -2411,17 +1990,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_set_options",
-  "params": {
-    "bdev_io_pool_size": 65536,
-    "bdev_io_cache_size": 256
-  }
-}
-~~~
+{{ example_request("bdev_set_options", "-p", "65536", "-c", "256") }}
 
 Example response:
 
@@ -2454,16 +2023,7 @@ The response is an array of objects containing information about the requested b
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_get_bdevs",
-  "params": {
-    "name": "Malloc0"
-  }
-}
-~~~
+{{ example_request("bdev_get_bdevs", "-b", "Malloc0") }}
 
 Example response:
 
@@ -2511,16 +2071,7 @@ The response is an array of objects containing I/O statistics of the requested b
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_examine",
-  "params": {
-    "name": "Nvme0n1"
-  }
-}
-~~~
+{{ example_request("bdev_examine", "-b", "Nvme0n1") }}
 
 Example response:
 
@@ -2548,13 +2099,7 @@ The response is sent when all bdev modules had a chance to examine every bdev.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_wait_for_examine",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_wait_for_examine") }}
 
 Example response:
 
@@ -2585,17 +2130,7 @@ The response is an array of objects containing I/O statistics of the requested b
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_get_iostat",
-  "params": {
-    "names": ["Nvme0n1", "Nvme0n2"],
-    "per_channel": false
-  }
-}
-~~~
+{{ example_request("bdev_get_iostat", "--names", "Nvme0n1,Nvme0n2") }}
 
 Example response:
 
@@ -2658,16 +2193,7 @@ a block device may be specified by name.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_reset_iostat",
-  "params": {
-    "name": "Nvme0n1"
-  }
-}
-~~~
+{{ example_request("bdev_reset_iostat", "-b", "Nvme0n1") }}
 
 Example response:
 
@@ -2691,21 +2217,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_enable_histogram",
-  "params": {
-    "name": "Nvme0n1",
-    "enable": true,
-    "opc": "read",
-    "granularity": 7,
-    "min_nsec": 1000,
-    "max_nsec": 1000000000
-  }
-}
-~~~
+{{ example_request("bdev_enable_histogram", "Nvme0n1", "--histogram", "-o", "read", "--granularity", "7", "--min-nsec", "1000", "--max-nsec", "1000000000") }}
 
 Example response:
 
@@ -2741,16 +2253,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_get_histogram",
-  "params": {
-    "name": "Nvme0n1"
-  }
-}
-~~~
+{{ example_request("bdev_get_histogram", "Nvme0n1") }}
 
 Example response:
 
@@ -2788,23 +2291,7 @@ Note that last value represents total number of elements in histogram (i.e. +Inf
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_get_histogram_borders",
-  "params": {
-    "name": "Nvme0n1",
-    "borders": [
-      100,
-      200,
-      1000,
-      5000,
-      100000
-    ]
-  }
-}
-~~~
+{{ example_request("bdev_get_histogram_borders", "Nvme0n1", "--borders", "100,200,1000,5000,100000") }}
 
 Example response:
 
@@ -2837,20 +2324,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_set_qos_limit",
-  "params": {
-    "name": "Malloc0",
-    "rw_ios_per_sec": 20000,
-    "rw_mbytes_per_sec": 100,
-    "r_mbytes_per_sec": 50,
-    "w_mbytes_per_sec": 50
-  }
-}
-~~~
+{{ example_request("bdev_set_qos_limit", "Malloc0", "--rw-ios-per-sec", "20000", "--rw-mbytes-per-sec", "100", "--r-mbytes-per-sec", "50", "--w-mbytes-per-sec", "50") }}
 
 Example response:
 
@@ -2874,17 +2348,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_set_qd_sampling_period",
-  "id": 1,
-  "params": {
-    "name": "Malloc0",
-    "period": 20
-  }
-}
-~~~
+{{ example_request("bdev_set_qd_sampling_period", "Malloc0", "20") }}
 
 Example response:
 
@@ -2915,20 +2379,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "base_bdev_name": "Nvme0n1",
-    "name": "my_crypto_bdev",
-    "crypto_pmd": "crypto_aesni_mb",
-    "key": "12345678901234561234567890123456",
-    "cipher": "AES_CBC"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_crypto_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_crypto_create", "Nvme0n1", "my_crypto_bdev", "-p", "crypto_aesni_mb", "-k", "12345678901234561234567890123456", "-c", "AES_CBC") }}
 
 Example response:
 
@@ -2952,16 +2403,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "my_crypto_bdev"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_crypto_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_crypto_delete", "my_crypto_bdev") }}
 
 Example response:
 
@@ -2989,20 +2431,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0",
-    "mode": "wt",
-    "cache_line_size": 64,
-    "cache_bdev_name": "Nvme0n1",
-    "core_bdev_name": "aio0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_create", "ocf0", "wt", "Nvme0n1", "aio0", "--cache-line-size", "64") }}
 
 Example response:
 
@@ -3026,16 +2455,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_delete", "ocf0") }}
 
 Example response:
 
@@ -3063,16 +2483,7 @@ Statistics as json object.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_get_stats", "ocf0") }}
 
 Example response:
 
@@ -3277,16 +2688,7 @@ Completion status of reset statistics operation returned as a boolean.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_reset_stats",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_reset_stats", "ocf0") }}
 
 Example response:
 
@@ -3314,13 +2716,7 @@ Array of OCF devices with their current status, along with core and cache bdevs.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_get_bdevs",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_get_bdevs") }}
 
 Example response:
 
@@ -3361,17 +2757,7 @@ New cache mode name.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0",
-    "mode": "pt"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_set_cache_mode",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_set_cache_mode", "ocf0", "pt") }}
 
 Example response:
 
@@ -3395,19 +2781,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0",
-    "policy": "full",
-    "threshold": 4,
-    "promotion_count": 2
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_set_seqcutoff",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_set_seqcutoff", "ocf0", "-t", "4", "-c", "2", "-p", "full") }}
 
 Example response:
 
@@ -3431,16 +2805,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_flush_start",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_flush_start", "ocf0") }}
 
 Example response:
 
@@ -3468,16 +2833,7 @@ Status of OCF cache device flush.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ocf0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ocf_flush_status",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ocf_flush_status", "ocf0") }}
 
 Example response:
 
@@ -3508,20 +2864,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "block_size": 4096,
-    "num_blocks": 16384,
-    "name": "Malloc0",
-    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90",
-    "optimal_io_boundary": 16
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_malloc_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_malloc_create", "64", "4096", "-b", "Malloc0", "-u", "2b6601ba-eada-44fb-9a83-a20eb9eb9e90", "-o", "16") }}
 
 Example response:
 
@@ -3545,16 +2888,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Malloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_malloc_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_malloc_delete", "Malloc0") }}
 
 Example response:
 
@@ -3582,27 +2916,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "block_size": 4104,
-    "num_blocks": 16384,
-    "name": "Null0",
-    "uuid": "2b6601ba-eada-44fb-9a83-a20eb9eb9e90",
-    "md_size": 8,
-    "dif_type": 1,
-    "dif_is_head_of_md": true,
-    "preferred_write_granularity": 64,
-    "preferred_write_alignment": 64,
-    "optimal_write_size": 4,
-    "preferred_unmap_granularity": 16,
-    "preferred_unmap_alignment": 16
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_null_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_null_create", "Null0", "64", "4096", "-u", "2b6601ba-eada-44fb-9a83-a20eb9eb9e90", "-m", "8", "-t", "1", "-d", "-g", "64", "-a", "64", "-s", "4", "-r", "16", "-c", "16") }}
 
 Example response:
 
@@ -3626,16 +2940,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Null0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_null_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_null_delete", "Null0") }}
 
 Example response:
 
@@ -3659,17 +2964,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Null0",
-    "new_size": 4096
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_null_resize",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_null_resize", "Null0", "4096") }}
 
 Example response:
 
@@ -3697,18 +2992,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "block_size": 4096,
-    "name": "Aio0",
-    "filename": "/tmp/aio_bdev_file"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_aio_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_aio_create", "/tmp/aio_bdev_file", "Aio0", "4096") }}
 
 Example response:
 
@@ -3732,16 +3016,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Aio0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_aio_rescan",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_aio_rescan", "Aio0") }}
 
 Example response:
 
@@ -3765,16 +3040,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Aio0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_aio_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_aio_delete", "Aio0") }}
 
 Example response:
 
@@ -3798,41 +3064,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "transport_retry_count": 5,
-    "arbitration_burst": 3,
-    "low_priority_weight": 8,
-    "medium_priority_weight": 8,
-    "high_priority_weight": 8,
-    "nvme_adminq_poll_period_us": 2000,
-    "timeout_us": 10000000,
-    "timeout_admin_us": 20000000,
-    "keep_alive_timeout_ms": 600000,
-    "action_on_timeout": "reset",
-    "io_queue_requests": 2048,
-    "delay_cmd_submit": true,
-    "dhchap_digests": [
-      "sha384",
-      "sha512"
-    ],
-    "dhchap_dhgroups": [
-      "ffdhe6144",
-      "ffdhe8192"
-    ],
-    "rdma_umr_per_io": false,
-    "multipath_opts": {
-      "policy": "active_active",
-      "selector": "round_robin",
-      "min_io": 10
-    }
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_set_options",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_set_options", "-a", "reset", "-t", "10000000", "--timeout-admin-us", "20000000", "-k", "600000", "--arbitration-burst", "3", "--low-priority-weight", "8", "--medium-priority-weight", "8", "--high-priority-weight", "8", "-p", "2000", "-s", "2048", "-c", "5", "--dhchap-digests", "sha384,sha512", "--dhchap-dhgroups", "ffdhe6144,ffdhe8192", "--no-rdma-umr-per-io", "--policy", "active_active", "--selector", "round_robin", "--min-io", "10") }}
 
 Example response:
 
@@ -3856,17 +3088,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "enable": true,
-    "period_us": 2000
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_set_hotplug",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_set_hotplug", "--hotplug", "-r", "2000") }}
 
 Example response:
 
@@ -3894,18 +3116,7 @@ Array of names of newly created bdevs.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "trtype": "pcie",
-    "name": "Nvme0",
-    "traddr": "0000:0a:00.0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_attach_controller",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_attach_controller", "-b", "Nvme0", "-t", "pcie", "-a", "0000:0a:00.0") }}
 
 Example response:
 
@@ -3938,16 +3149,7 @@ The response is an array of objects containing information about the requested N
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_nvme_get_controllers",
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_get_controllers", "-n", "Nvme0") }}
 
 Example response:
 
@@ -3980,16 +3182,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Nvme0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_detach_controller",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_detach_controller", "Nvme0") }}
 
 Example response:
 
@@ -4013,16 +3206,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_nvme_reset_controller",
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_reset_controller", "Nvme0") }}
 
 Example response:
 
@@ -4046,16 +3230,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_nvme_enable_controller",
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_enable_controller", "Nvme0") }}
 
 Example response:
 
@@ -4079,16 +3254,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_nvme_disable_controller",
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_disable_controller", "Nvme0") }}
 
 Example response:
 
@@ -4112,21 +3278,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_start_discovery",
-  "id": 1,
-  "params": {
-    "name": "nvme_auto",
-    "trtype": "tcp",
-    "traddr": "127.0.0.1",
-    "hostnqn": "nqn.2021-12.io.spdk:host1",
-    "adrfam": "ipv4",
-    "trsvcid": "4420"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_start_discovery", "-b", "nvme_auto", "-t", "tcp", "-a", "127.0.0.1", "-f", "ipv4", "-s", "4420", "-q", "nqn.2021-12.io.spdk:host1") }}
 
 Example response:
 
@@ -4150,16 +3302,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_stop_discovery",
-  "id": 1,
-  "params": {
-    "name": "nvme_auto"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_stop_discovery", "-b", "nvme_auto") }}
 
 Example response:
 
@@ -4183,13 +3326,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_get_discovery_info",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_get_discovery_info") }}
 
 Example response:
 
@@ -4225,16 +3362,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_get_io_paths",
-  "id": 1,
-  "params": {
-    "name": "Nvme0n1"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_get_io_paths", "-n", "Nvme0n1") }}
 
 Example response:
 
@@ -4279,17 +3407,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_set_preferred_path",
-  "id": 1,
-  "params": {
-    "name": "Nvme0n1",
-    "cntlid": 0
-  }
-}
-~~~
+{{ example_request("bdev_nvme_set_preferred_path", "-b", "Nvme0n1", "-c", "0") }}
 
 Example response:
 
@@ -4313,16 +3431,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_get_path_iostat",
-  "id": 1,
-  "params": {
-    "name": "NVMe0n1"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_get_path_iostat", "-b", "NVMe0n1") }}
 
 Example response:
 
@@ -4406,16 +3515,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_cuse_register",
-  "id": 1,
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_cuse_register", "-n", "Nvme0") }}
 
 Example response:
 
@@ -4439,16 +3539,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Nvme0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_cuse_unregister",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_cuse_unregister", "-n", "Nvme0") }}
 
 Example response:
 
@@ -4472,16 +3563,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "method": "bdev_nvme_set_keys",
-  "params": {
-    "name": "nvme0",
-    "dhchap_key": "key0",
-    "dhchap_ctrlr_key": "key1"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_set_keys", "nvme0", "--dhchap-key", "key0", "--dhchap-ctrlr-key", "key1") }}
 
 Example response:
 
@@ -4505,19 +3587,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_zone_block_create",
-  "id": 1,
-  "params": {
-    "name": "zone1",
-    "base_bdev": "NVMe0n1",
-    "zone_capacity": 4096,
-    "optimal_open_zones": 32
-  }
-}
-~~~
+{{ example_request("bdev_zone_block_create", "-b", "zone1", "-n", "NVMe0n1", "-z", "4096", "-o", "32") }}
 
 Example response:
 
@@ -4541,16 +3611,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_zone_block_delete",
-  "id": 1,
-  "params": {
-    "name": "zone1"
-  }
-}
-~~~
+{{ example_request("bdev_zone_block_delete", "zone1") }}
 
 Example response:
 
@@ -4574,17 +3635,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_apply_firmware",
-  "id": 1,
-  "params": {
-    "filename": "firmware_file",
-    "bdev_name": "NVMe0n1"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_apply_firmware", "firmware_file", "NVMe0n1") }}
 
 ### bdev_nvme_get_transport_statistics {#rpc_bdev_nvme_get_transport_statistics}
 
@@ -4602,13 +3653,7 @@ The response is an array of objects containing information about transport stati
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_nvme_get_transport_statistics"
-}
-~~~
+{{ example_request("bdev_nvme_get_transport_statistics") }}
 
 Example response:
 
@@ -4723,16 +3768,7 @@ The response is the object containing information about health log of the NVMe c
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_get_controller_health_info",
-  "id": 1,
-  "params": {
-    "name": "Nvme0"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_get_controller_health_info", "-c", "Nvme0") }}
 
 Example response:
 
@@ -4796,19 +3832,7 @@ Name of newly created Rados cluster object.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "rbd_cluster",
-    "user_id": "cinder",
-    "config_file": "/root/ceph_conf/ceph.conf",
-    "key_file": "/root/ceph_conf/ceph.client.cinder.keyring"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_register_cluster",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_register_cluster", "rbd_cluster", "--user", "cinder", "--config-file", "/root/ceph_conf/ceph.conf", "--key-file", "/root/ceph_conf/ceph.client.cinder.keyring") }}
 
 Example response:
 
@@ -4836,16 +3860,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "rbd_cluster"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_unregister_cluster",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_unregister_cluster", "rbd_cluster") }}
 
 Example response:
 
@@ -4874,16 +3889,7 @@ returns the cluster info of every registered Raods Cluster name.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "rbd_cluster"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_get_clusters_info",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_get_clusters_info", "-b", "rbd_cluster") }}
 
 Example response:
 
@@ -4928,23 +3934,7 @@ Name of newly created bdev.
 
 Example request with `key` from `/etc/ceph/ceph.client.admin.keyring`:
 
-~~~json
-{
-  "params": {
-    "pool_name": "rbd",
-    "rbd_name": "foo",
-    "config": {
-      "mon_host": "192.168.7.1:6789,192.168.7.2:6789",
-      "key": "AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ=="
-    },
-    "block_size": 4096,
-    "uuid": "76210ea4-7920-40a0-a07b-8992a7443c76"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_create", "rbd", "foo", "4096", "--config", "mon_host=192.168.7.1:6789,192.168.7.2:6789", "--config", "key=AQDwf8db7zR1GRAA5k7NKXjS5S5V4mntwUDnGQ==", "-u", "76210ea4-7920-40a0-a07b-8992a7443c76") }}
 
 Example response:
 
@@ -4958,19 +3948,7 @@ Example response:
 
 Example request with `cluster_name`:
 
-~~~json
-{
-  "params": {
-    "pool_name": "rbd",
-    "rbd_name": "foo",
-    "block_size": 4096,
-    "cluster_name": "rbd_cluster"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_create", "rbd", "foo", "4096", "-c", "rbd_cluster") }}
 
 Example response:
 
@@ -4998,16 +3976,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Rbd0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_delete", "Rbd0") }}
 
 Example response:
 
@@ -5035,17 +4004,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Rbd0",
-    "new_size": 4096
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_rbd_resize",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_rbd_resize", "Rbd0", "4096") }}
 
 Example response:
 
@@ -5073,21 +4032,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "base_bdev_name": "Null0",
-    "name": "Delay0",
-    "avg_read_latency": 15,
-    "p99_read_latency": 50,
-    "avg_write_latency": 40,
-    "p99_write_latency": 110
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_delay_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_delay_create", "-b", "Null0", "-d", "Delay0", "-r", "15", "-t", "50", "-w", "40", "-n", "110") }}
 
 Example response:
 
@@ -5111,16 +4056,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Delay0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_delay_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_delay_delete", "Delay0") }}
 
 Example response:
 
@@ -5148,18 +4084,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "delay_bdev_name": "Delay0",
-    "latency_type": "avg_read",
-    "latency_us": 100
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_delay_update_latency",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_delay_update_latency", "Delay0", "avg_read", "100") }}
 
 Example response:
 
@@ -5181,16 +4106,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "base_name": "Malloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_error_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_error_create", "Malloc0") }}
 
 Example response:
 
@@ -5218,16 +4134,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "EE_Malloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_error_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_error_delete", "EE_Malloc0") }}
 
 Example response:
 
@@ -5251,19 +4158,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_error_inject_error",
-  "id": 1,
-  "params": {
-    "name": "EE_Malloc0",
-    "io_type": "write",
-    "error_type": "pending",
-    "num": 1
-  }
-}
-~~~
+{{ example_request("bdev_error_inject_error", "EE_Malloc0", "write", "pending", "-n", "1") }}
 
 Example response:
 
@@ -5287,16 +4182,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_error_resume_pending",
-  "id": 1,
-  "params": {
-    "name": "EE_Malloc0"
-  }
-}
-~~~
+{{ example_request("bdev_error_resume_pending", "EE_Malloc0") }}
 
 Example response:
 
@@ -5320,16 +4206,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "timeout_sec": 30
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_iscsi_set_options",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_iscsi_set_options", "-t", "30") }}
 
 Example response:
 
@@ -5357,18 +4234,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "url": "iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0",
-    "initiator_iqn": "iqn.2016-06.io.spdk:init",
-    "name": "iSCSI0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_iscsi_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_iscsi_create", "-b", "iSCSI0", "-i", "iqn.2016-06.io.spdk:init", "--url", "iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0") }}
 
 Example response:
 
@@ -5392,16 +4258,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "iSCSI0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_iscsi_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_iscsi_delete", "iSCSI0") }}
 
 Example response:
 
@@ -5429,21 +4286,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0",
-    "base_bdev": "nvme0n1",
-    "cache": "nvme1n1",
-    "uuid": "4a7481ce-786f-41a0-9b86-8f7465c8f4d3",
-    "core_mask": "[0]",
-    "overprovisioning": 10
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_create", "-b", "ftl0", "-d", "nvme0n1", "-u", "4a7481ce-786f-41a0-9b86-8f7465c8f4d3", "-c", "nvme1n1", "--overprovisioning", "10", "--core-mask", "[0]") }}
 
 Example response:
 
@@ -5470,16 +4313,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_delete", "-b", "ftl0") }}
 
 Example response:
 
@@ -5503,18 +4337,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0",
-    "lba": 0,
-    "num_blocks": 1024
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_unmap",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_unmap", "-b", "ftl0", "--lba", "0", "--num-blocks", "1024") }}
 
 Example response:
 
@@ -5558,16 +4381,7 @@ Each subobject contains the following information:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_get_stats", "-b", "ftl0") }}
 
 Example response:
 
@@ -5712,16 +4526,7 @@ reported as read only.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_get_properties",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_get_properties", "-b", "ftl0") }}
 
 Example response:
 
@@ -5763,18 +4568,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "ftl0",
-    "ftl_property": "nv_cache.flush",
-    "value": "true"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_ftl_set_property",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_ftl_set_property", "-b", "ftl0", "-p", "nv_cache.flush", "-v", "true") }}
 
 Example response:
 
@@ -5802,17 +4596,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "base_bdev_name": "Malloc0",
-    "name": "Passsthru0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_passthru_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_passthru_create", "-b", "Malloc0", "-p", "Passsthru0") }}
 
 Example response:
 
@@ -5836,16 +4620,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "Passsthru0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_passthru_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_passthru_delete", "Passsthru0") }}
 
 Example response:
 
@@ -5873,19 +4648,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_xnvme_create",
-  "id": 1,
-  "params": {
-    "name": "bdev_ng0n1",
-    "filename": "/dev/ng0n1",
-    "io_mechanism": "io_uring_cmd",
-    "conserve_cpu": false
-  }
-}
-~~~
+{{ example_request("bdev_xnvme_create", "/dev/ng0n1", "bdev_ng0n1", "io_uring_cmd") }}
 
 Example response:
 
@@ -5909,16 +4672,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "bdev_ng0n1"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_xnvme_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_xnvme_delete", "bdev_ng0n1") }}
 
 Example response:
 
@@ -5951,21 +4705,7 @@ Array of names of newly created bdevs.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "VirtioScsi0",
-    "trtype": "user",
-    "vq_size": 128,
-    "dev_type": "scsi",
-    "traddr": "/tmp/VhostScsi0",
-    "vq_count": 4
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_virtio_attach_controller",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_virtio_attach_controller", "VirtioScsi0", "--trtype", "user", "--traddr", "/tmp/VhostScsi0", "--dev-type", "scsi", "--vq-count", "4", "--vq-size", "128") }}
 
 Example response:
 
@@ -5996,13 +4736,7 @@ Array of Virtio SCSI information objects.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_virtio_scsi_get_devices",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_virtio_scsi_get_devices") }}
 
 Example response:
 
@@ -6036,16 +4770,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "VirtioUser0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_virtio_detach_controller",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_virtio_detach_controller", "VirtioUser0") }}
 
 Example response:
 
@@ -6076,17 +4801,7 @@ True the rpc is successful otherwise false
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "enable": true,
-    "period_us": 1000000
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_virtio_blk_set_hotplug",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_virtio_blk_set_hotplug", "--hotplug", "-r", "1000000") }}
 
 Example response:
 
@@ -6118,26 +4833,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive. Parameters 
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "allow_duplicated_isid": true,
-    "default_time2retain": 60,
-    "first_burst_length": 8192,
-    "immediate_data": true,
-    "node_base": "iqn.2016-06.io.spdk",
-    "max_sessions": 128,
-    "nop_timeout": 30,
-    "nop_in_interval": 30,
-    "auth_file": "/usr/local/etc/spdk/auth.conf",
-    "disable_chap": true,
-    "default_time2wait": 2
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_set_options",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_set_options", "-f", "/usr/local/etc/spdk/auth.conf", "-b", "iqn.2016-06.io.spdk", "-o", "30", "-n", "30", "-d", "-a", "128", "-w", "2", "-v", "60", "-s", "8192", "-i", "-p") }}
 
 Example response:
 
@@ -6161,13 +4857,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_options",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_options") }}
 
 Example response:
 
@@ -6214,13 +4904,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "scsi_get_devices",
-  "id": 1
-}
-~~~
+{{ example_request("scsi_get_devices") }}
 
 Example response:
 
@@ -6251,18 +4935,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "chap_group": 1,
-    "require_chap": true,
-    "mutual_chap": true
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_set_discovery_auth",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_set_discovery_auth", "-r", "-m", "-g", "1") }}
 
 Example response:
 
@@ -6290,24 +4963,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "secrets": [
-      {
-        "muser": "mu1",
-        "secret": "s1",
-        "user": "u1",
-        "msecret": "ms1"
-      }
-    ],
-    "tag": 2
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_create_auth_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_create_auth_group", "2", "-c", "user:u1 secret:s1 muser:mu1 msecret:ms1") }}
 
 Example response:
 
@@ -6331,16 +4987,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 2
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_delete_auth_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_delete_auth_group", "2") }}
 
 Example response:
 
@@ -6373,13 +5020,7 @@ Array of objects describing authentication group.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_auth_groups",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_auth_groups") }}
 
 Example response:
 
@@ -6424,20 +5065,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "muser": "mu3",
-    "secret": "s3",
-    "tag": 2,
-    "user": "u3",
-    "msecret": "ms3"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_auth_group_add_secret",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_auth_group_add_secret", "2", "-u", "u3", "-s", "s3", "-m", "mu3", "-r", "ms3") }}
 
 Example response:
 
@@ -6461,17 +5089,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 2,
-    "user": "u3"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_auth_group_remove_secret",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_auth_group_remove_secret", "2", "-u", "u3") }}
 
 Example response:
 
@@ -6505,13 +5123,7 @@ Array of objects describing initiator groups.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_initiator_groups",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_initiator_groups") }}
 
 Example response:
 
@@ -6546,23 +5158,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "initiators": [
-      "iqn.2016-06.io.spdk:host1",
-      "iqn.2016-06.io.spdk:host2"
-    ],
-    "tag": 1,
-    "netmasks": [
-      "192.168.1.0/24"
-    ]
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_create_initiator_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_create_initiator_group", "1", "iqn.2016-06.io.spdk:host1 iqn.2016-06.io.spdk:host2", "192.168.1.0/24") }}
 
 Example response:
 
@@ -6586,16 +5182,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_delete_initiator_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_delete_initiator_group", "1") }}
 
 Example response:
 
@@ -6619,22 +5206,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "initiators": [
-      "iqn.2016-06.io.spdk:host3"
-    ],
-    "tag": 1,
-    "netmasks": [
-      "255.255.255.1"
-    ]
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_initiator_group_add_initiators",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_initiator_group_add_initiators", "1", "-n", "iqn.2016-06.io.spdk:host3", "-m", "255.255.255.1") }}
 
 Example response:
 
@@ -6658,22 +5230,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "initiators": [
-      "iqn.2016-06.io.spdk:host3"
-    ],
-    "tag": 1,
-    "netmasks": [
-      "255.255.255.1"
-    ]
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_initiator_group_remove_initiators",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_initiator_group_remove_initiators", "1", "-n", "iqn.2016-06.io.spdk:host3", "-m", "255.255.255.1") }}
 
 Example response:
 
@@ -6715,13 +5272,7 @@ Array of objects describing target node.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_target_nodes",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_target_nodes") }}
 
 Example response:
 
@@ -6771,38 +5322,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "luns": [
-      {
-        "lun_id": 0,
-        "bdev_name": "Nvme0n1"
-      }
-    ],
-    "mutual_chap": true,
-    "name": "target2",
-    "alias_name": "iscsi-target2-alias",
-    "pg_ig_maps": [
-      {
-        "ig_tag": 1,
-        "pg_tag": 1
-      },
-      {
-        "ig_tag": 2,
-        "pg_tag": 2
-      }
-    ],
-    "data_digest": true,
-    "disable_chap": true,
-    "header_digest": true,
-    "queue_depth": 24
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_create_target_node",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_create_target_node", "target2", "iscsi-target2-alias", "Nvme0n1:0", "1:1 2:2", "24", "-d", "-m", "-H", "-D") }}
 
 Example response:
 
@@ -6828,19 +5348,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "chap_group": 1,
-    "require_chap": true,
-    "name": "iqn.2016-06.io.spdk:target1",
-    "mutual_chap": true
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_set_auth",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_set_auth", "iqn.2016-06.io.spdk:target1", "-g", "1", "-r", "-m") }}
 
 Example response:
 
@@ -6868,30 +5376,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "pg_ig_maps": [
-      {
-        "ig_tag": 1,
-        "pg_tag": 1
-      },
-      {
-        "ig_tag": 2,
-        "pg_tag": 2
-      },
-      {
-        "ig_tag": 3,
-        "pg_tag": 3
-      }
-    ],
-    "name": "iqn.2016-06.io.spdk:target3"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_add_pg_ig_maps",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_add_pg_ig_maps", "iqn.2016-06.io.spdk:target3", "1:1 2:2 3:3") }}
 
 Example response:
 
@@ -6919,30 +5404,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "pg_ig_maps": [
-      {
-        "ig_tag": 1,
-        "pg_tag": 1
-      },
-      {
-        "ig_tag": 2,
-        "pg_tag": 2
-      },
-      {
-        "ig_tag": 3,
-        "pg_tag": 3
-      }
-    ],
-    "name": "iqn.2016-06.io.spdk:target3"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_remove_pg_ig_maps",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_remove_pg_ig_maps", "iqn.2016-06.io.spdk:target3", "1:1 2:2 3:3") }}
 
 Example response:
 
@@ -6966,16 +5428,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "iqn.2016-06.io.spdk:target1"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_delete_target_node",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_delete_target_node", "iqn.2016-06.io.spdk:target1") }}
 
 Example response:
 
@@ -6999,13 +5452,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_portal_groups",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_portal_groups") }}
 
 Example response:
 
@@ -7044,22 +5491,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "portals": [
-      {
-        "host": "127.0.0.1",
-        "port": "3260"
-      }
-    ],
-    "tag": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_create_portal_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_create_portal_group", "1", "127.0.0.1:3260") }}
 
 Example response:
 
@@ -7083,16 +5515,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_start_portal_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_start_portal_group", "1") }}
 
 Example response:
 
@@ -7116,16 +5539,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_delete_portal_group",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_delete_portal_group", "1") }}
 
 Example response:
 
@@ -7151,19 +5565,7 @@ Parameters `disable_chap` and `require_chap` are mutually exclusive.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "tag": 1,
-    "chap_group": 1,
-    "require_chap": true,
-    "mutual_chap": true
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_portal_group_set_auth",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_portal_group_set_auth", "1", "-g", "1", "-r", "-m") }}
 
 Example response:
 
@@ -7201,13 +5603,7 @@ Array of objects describing iSCSI connection.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_connections",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_connections") }}
 
 Example response:
 
@@ -7252,13 +5648,7 @@ Stat information of iSCSI connections.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iscsi_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_get_stats") }}
 
 Example response:
 
@@ -7287,18 +5677,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "lun_id": 2,
-    "name": "iqn.2016-06.io.spdk:target1",
-    "bdev_name": "Malloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_add_lun",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_add_lun", "iqn.2016-06.io.spdk:target1", "Malloc0", "-i", "2") }}
 
 Example response:
 
@@ -7324,19 +5703,7 @@ If both redirect_host and redirect_port are omitted, clear the redirect portal.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "iqn.2016-06.io.spdk:target1",
-    "pg_tag": 1,
-    "redirect_host": "10.0.0.3",
-    "redirect_port": "3260"
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_set_redirect",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_set_redirect", "iqn.2016-06.io.spdk:target1", "1", "-a", "10.0.0.3", "-p", "3260") }}
 
 Example response:
 
@@ -7360,17 +5727,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "iqn.2016-06.io.spdk:target1",
-    "pg_tag": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "iscsi_target_node_request_logout",
-  "id": 1
-}
-~~~
+{{ example_request("iscsi_target_node_request_logout", "iqn.2016-06.io.spdk:target1", "-t", "1") }}
 
 Example response:
 
@@ -7394,17 +5751,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "iscsi_enable_histogram",
-  "params": {
-    "name": "iqn.2016-06.io.spdk:target1",
-    "enable": true
-  }
-}
-~~~
+{{ example_request("iscsi_enable_histogram", "iqn.2016-06.io.spdk:target1", "--histogram") }}
 
 Example response:
 
@@ -7438,16 +5785,7 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "iscsi_get_histogram",
-  "params": {
-    "name": "iqn.2016-06.io.spdk:target1"
-  }
-}
-~~~
+{{ example_request("iscsi_get_histogram", "iqn.2016-06.io.spdk:target1") }}
 
 Example response:
 
@@ -7477,17 +5815,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "nvmf_create_transport",
-  "id": 1,
-  "params": {
-    "trtype": "RDMA",
-    "max_queue_depth": 32
-  }
-}
-~~~
+{{ example_request("nvmf_create_transport", "-t", "RDMA", "-q", "32") }}
 
 Example response:
 
@@ -7509,13 +5837,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_get_subsystems"
-}
-~~~
+{{ example_request("nvmf_get_subsystems") }}
 
 Example response:
 
@@ -7578,19 +5900,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_create_subsystem",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "allow_any_host": false,
-    "serial_number": "abcdef",
-    "model_number": "ghijklmnop"
-  }
-}
-~~~
+{{ example_request("nvmf_create_subsystem", "nqn.2016-06.io.spdk:cnode1", "-s", "abcdef", "-d", "ghijklmnop") }}
 
 Example response:
 
@@ -7614,16 +5924,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_delete_subsystem",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1"
-  }
-}
-~~~
+{{ example_request("nvmf_delete_subsystem", "nqn.2016-06.io.spdk:cnode1") }}
 
 Example response:
 
@@ -7654,22 +5955,7 @@ and for referring to discovery services on other targets.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_add_listener",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "listen_address": {
-      "trtype": "RDMA",
-      "adrfam": "IPv4",
-      "traddr": "192.168.0.123",
-      "trsvcid": "4420"
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_add_listener", "nqn.2016-06.io.spdk:cnode1", "-t", "RDMA", "-a", "192.168.0.123", "-f", "IPv4", "-s", "4420") }}
 
 Example response:
 
@@ -7693,22 +5979,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_remove_listener",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "listen_address": {
-      "trtype": "RDMA",
-      "adrfam": "IPv4",
-      "traddr": "192.168.0.123",
-      "trsvcid": "4420"
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_remove_listener", "nqn.2016-06.io.spdk:cnode1", "-t", "RDMA", "-a", "192.168.0.123", "-f", "IPv4", "-s", "4420") }}
 
 Example response:
 
@@ -7732,23 +6003,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_listener_set_ana_state",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "listen_address": {
-      "trtype": "RDMA",
-      "adrfam": "IPv4",
-      "traddr": "192.168.0.123",
-      "trsvcid": "4420"
-    },
-    "ana_state": "inaccessible"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_listener_set_ana_state", "nqn.2016-06.io.spdk:cnode1", "-n", "inaccessible", "-t", "RDMA", "-a", "192.168.0.123", "-f", "IPv4", "-s", "4420") }}
 
 Example response:
 
@@ -7776,21 +6031,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_add_ns",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "namespace": {
-      "nsid": 3,
-      "bdev_name": "Nvme0n1",
-      "ptpl_file": "/opt/Nvme0n1PR.json"
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_add_ns", "nqn.2016-06.io.spdk:cnode1", "Nvme0n1", "-p", "/opt/Nvme0n1PR.json", "-n", "3") }}
 
 Example response:
 
@@ -7814,17 +6055,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_remove_ns",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "nsid": 1
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_remove_ns", "nqn.2016-06.io.spdk:cnode1", "1") }}
 
 Example response:
 
@@ -7848,18 +6079,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_set_ns_ana_group",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "nsid": 1,
-    "anagrpid": 2
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_set_ns_ana_group", "nqn.2016-06.io.spdk:cnode1", "1", "2") }}
 
 Example response:
 
@@ -7883,18 +6103,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_add_host",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "host": "nqn.2016-06.io.spdk:host1",
-    "dhchap_key": "key0"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_add_host", "nqn.2016-06.io.spdk:cnode1", "nqn.2016-06.io.spdk:host1", "--dhchap-key", "key0") }}
 
 Example response:
 
@@ -7918,17 +6127,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_remove_host",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "host": "nqn.2016-06.io.spdk:host1"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_remove_host", "nqn.2016-06.io.spdk:cnode1", "nqn.2016-06.io.spdk:host1") }}
 
 Example response:
 
@@ -7952,17 +6151,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_allow_any_host",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "allow_any_host": true
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_allow_any_host", "nqn.2016-06.io.spdk:cnode1", "--allow-any-host") }}
 
 Example response:
 
@@ -7986,19 +6175,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_set_keys",
-  "params": {
-    "nqn": "nqn.2024-06.io.spdk:cnode1",
-    "host": "nqn.2024-06.io.spdk:host1",
-    "dhchap_key": "key0",
-    "dhchap_ctrlr_key": "key1"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_set_keys", "nqn.2024-06.io.spdk:cnode1", "nqn.2024-06.io.spdk:host1", "--dhchap-key", "key0", "--dhchap-ctrlr-key", "key1") }}
 
 Example response:
 
@@ -8020,16 +6197,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_get_controllers",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_get_controllers", "nqn.2016-06.io.spdk:cnode1") }}
 
 Example response:
 
@@ -8059,16 +6227,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_get_qpairs",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_get_qpairs", "nqn.2016-06.io.spdk:cnode1") }}
 
 Example response:
 
@@ -8113,16 +6272,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_subsystem_get_listeners",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1"
-  }
-}
-~~~
+{{ example_request("nvmf_subsystem_get_listeners", "nqn.2016-06.io.spdk:cnode1") }}
 
 Example response:
 
@@ -8156,18 +6306,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_ns_add_host",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "nsid": 1,
-    "host": "nqn.2024-01.io.spdk:host0"
-  }
-}
-~~~
+{{ example_request("nvmf_ns_add_host", "nqn.2016-06.io.spdk:cnode1", "1", "nqn.2024-01.io.spdk:host0") }}
 
 Example response:
 
@@ -8191,18 +6330,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_ns_remove_host",
-  "params": {
-    "nqn": "nqn.2016-06.io.spdk:cnode1",
-    "nsid": 1,
-    "host": "nqn.2024-01.io.spdk:host0"
-  }
-}
-~~~
+{{ example_request("nvmf_ns_remove_host", "nqn.2016-06.io.spdk:cnode1", "1", "nqn.2024-01.io.spdk:host0") }}
 
 Example response:
 
@@ -8226,16 +6354,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_set_max_subsystems",
-  "params": {
-    "max_subsystems": 1024
-  }
-}
-~~~
+{{ example_request("nvmf_set_max_subsystems", "-x", "1024") }}
 
 Example response:
 
@@ -8259,21 +6378,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_discovery_add_referral",
-  "params": {
-    "address": {
-      "trtype": "RDMA",
-      "adrfam": "IPv4",
-      "traddr": "192.168.0.123",
-      "trsvcid": "4420"
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_discovery_add_referral", "-t", "RDMA", "-a", "192.168.0.123", "-f", "IPv4", "-s", "4420") }}
 
 Example response:
 
@@ -8297,21 +6402,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_discovery_remove_referral",
-  "params": {
-    "address": {
-      "trtype": "RDMA",
-      "adrfam": "IPv4",
-      "traddr": "192.168.0.123",
-      "trsvcid": "4420"
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_discovery_remove_referral", "-t", "RDMA", "-a", "192.168.0.123", "-f", "IPv4", "-s", "4420") }}
 
 Example response:
 
@@ -8333,13 +6424,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_discovery_get_referrals"
-}
-~~~
+{{ example_request("nvmf_discovery_get_referrals") }}
 
 Example response:
 
@@ -8376,18 +6461,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_set_config",
-  "params": {
-    "admin_cmd_passthru": {
-      "identify_ctrlr": true
-    }
-  }
-}
-~~~
+{{ example_request("nvmf_set_config", "-p", "identify_ctrlr") }}
 
 Example response:
 
@@ -8412,13 +6486,7 @@ specified by type.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "nvmf_get_transports"
-}
-~~~
+{{ example_request("nvmf_get_transports") }}
 
 Example response:
 
@@ -8458,13 +6526,7 @@ In the response, `admin_qpairs` and `io_qpairs` are reflecting cumulative queue 
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "nvmf_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("nvmf_get_stats") }}
 
 Example response:
 
@@ -8546,16 +6608,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "path": "/var/run/vfu_tgt"
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_tgt_set_base_path",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_tgt_set_base_path", "/var/run/vfu_tgt") }}
 
 Example response:
 
@@ -8579,16 +6632,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_delete_endpoint",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_delete_endpoint", "vfu.0") }}
 
 Example response:
 
@@ -8612,20 +6656,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0",
-    "bdev_name": "Malloc0",
-    "cpumask": "0x2",
-    "num_queues": 4,
-    "qsize": 256
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_create_blk_endpoint",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_create_blk_endpoint", "vfu.0", "--bdev-name", "Malloc0", "--cpumask", "0x2", "--num-queues", "4", "--qsize", "256") }}
 
 Example response:
 
@@ -8649,18 +6680,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0",
-    "scsi_target_num": 0,
-    "bdev_name": "Malloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_scsi_add_target",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_scsi_add_target", "vfu.0", "--scsi-target-num", "0", "--bdev-name", "Malloc0") }}
 
 Example response:
 
@@ -8684,17 +6704,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0",
-    "scsi_target_num": 0
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_scsi_remove_target",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_scsi_remove_target", "vfu.0", "--scsi-target-num", "0") }}
 
 Example response:
 
@@ -8718,19 +6728,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0",
-    "cpumask": "0x2",
-    "num_io_queues": 4,
-    "qsize": 256
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_create_scsi_endpoint",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_create_scsi_endpoint", "vfu.0", "--cpumask", "0x2", "--num-io-queues", "4", "--qsize", "256") }}
 
 Example response:
 
@@ -8754,21 +6752,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vfu.0",
-    "fsdev_name": "aio0",
-    "tag": "virtiofs0",
-    "cpumask": "0x2",
-    "num_queues": 4,
-    "qsize": 256
-  },
-  "jsonrpc": "2.0",
-  "method": "vfu_virtio_create_fs_endpoint",
-  "id": 1
-}
-~~~
+{{ example_request("vfu_virtio_create_fs_endpoint", "vfu.0", "--fsdev-name", "aio0", "--tag", "virtiofs0", "--cpumask", "0x2", "--num-queues", "4", "--qsize", "256") }}
 
 Example response:
 
@@ -8802,18 +6786,7 @@ It must be a subset of application CPU mask. Default value is CPU mask of the ap
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "iops_threshold": 100000,
-    "ctrlr": "VhostScsi0",
-    "delay_base_us": 80
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_controller_set_coalescing",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_controller_set_coalescing", "VhostScsi0", "80", "100000") }}
 
 Example response:
 
@@ -8837,18 +6810,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "cpumask": "0x2",
-    "ctrlr": "VhostScsi0",
-    "delay": true
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_create_scsi_controller",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_create_scsi_controller", "VhostScsi0", "--cpumask", "0x2", "--delay") }}
 
 Example response:
 
@@ -8872,16 +6834,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "ctrlr": "VhostScsi0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_start_scsi_controller",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_start_scsi_controller", "VhostScsi0") }}
 
 Example response:
 
@@ -8909,18 +6862,7 @@ SCSI target ID.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "scsi_target_num": 1,
-    "bdev_name": "Malloc0",
-    "ctrlr": "VhostScsi0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_scsi_controller_add_target",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_scsi_controller_add_target", "VhostScsi0", "1", "Malloc0") }}
 
 Example response:
 
@@ -8944,17 +6886,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "scsi_target_num": 1,
-    "ctrlr": "VhostScsi0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_scsi_controller_remove_target",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_scsi_controller_remove_target", "VhostScsi0", "1") }}
 
 Example response:
 
@@ -8978,16 +6910,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "vhost_user_blk"
-  },
-  "jsonrpc": "2.0",
-  "method": "virtio_blk_create_transport",
-  "id": 1
-}
-~~~
+{{ example_request("virtio_blk_create_transport", "vhost_user_blk") }}
 
 Example response:
 
@@ -9012,13 +6935,7 @@ or a transport name may be specified.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "virtio_blk_get_transports",
-  "id": 1
-}
-~~~
+{{ example_request("virtio_blk_get_transports") }}
 
 Example response:
 
@@ -9046,17 +6963,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "dev_name": "Malloc0",
-    "ctrlr": "VhostBlk0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_create_blk_controller",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_create_blk_controller", "VhostBlk0", "Malloc0") }}
 
 Example response:
 
@@ -9113,13 +7020,7 @@ Object of type:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "vhost_get_controllers",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_get_controllers") }}
 
 Example response:
 
@@ -9188,16 +7089,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "ctrlr": "VhostNvme0"
-  },
-  "jsonrpc": "2.0",
-  "method": "vhost_delete_controller",
-  "id": 1
-}
-~~~
+{{ example_request("vhost_delete_controller", "VhostNvme0") }}
 
 Example response:
 
@@ -9256,19 +7148,7 @@ UUID of the created logical volume store is returned.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "bdev_lvol_create_lvstore",
-  "params": {
-    "lvs_name": "LVS0",
-    "bdev_name": "Malloc0",
-    "clear_method": "write_zeroes",
-    "md_page_size": 4096
-  }
-}
-~~~
+{{ example_request("bdev_lvol_create_lvstore", "Malloc0", "LVS0", "--clear-method", "write_zeroes", "-s", "4096") }}
 
 Example response:
 
@@ -9294,16 +7174,7 @@ Either uuid or lvs_name must be specified, but not both.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_delete_lvstore",
-  "id": 1,
-  "params": {
-    "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_delete_lvstore", "-u", "a9959197-b5e2-4f2d-8095-251ffb6985a5") }}
 
 Example response:
 
@@ -9330,16 +7201,7 @@ If both uuid and lvs_name are omitted, information about all logical volume stor
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_get_lvstores",
-  "id": 1,
-  "params": {
-    "lvs_name": "LVS0"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_get_lvstores", "-l", "LVS0") }}
 
 Example response:
 
@@ -9374,17 +7236,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_rename_lvstore",
-  "id": 1,
-  "params": {
-    "old_name": "LVS0",
-    "new_name": "LVS2"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_rename_lvstore", "LVS0", "LVS2") }}
 
 Example response:
 
@@ -9410,16 +7262,7 @@ Either uuid or lvs_name must be specified, but not both.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_grow_lvstore",
-  "id": 1,
-  "params": {
-    "uuid": "a9959197-b5e2-4f2d-8095-251ffb6985a5"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_grow_lvstore", "-u", "a9959197-b5e2-4f2d-8095-251ffb6985a5") }}
 
 Example response:
 
@@ -9450,20 +7293,7 @@ UUID of the created logical volume is returned.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_create",
-  "id": 1,
-  "params": {
-    "lvol_name": "LVOL0",
-    "size_in_mib": 1,
-    "lvs_name": "LVS0",
-    "clear_method": "unmap",
-    "thin_provision": true
-  }
-}
-~~~
+{{ example_request("bdev_lvol_create", "LVOL0", "1", "-l", "LVS0", "-t", "-c", "unmap") }}
 
 Example response:
 
@@ -9491,17 +7321,7 @@ UUID of the created logical volume snapshot is returned.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_snapshot",
-  "id": 1,
-  "params": {
-    "lvol_name": "1b38702c-7f0c-411e-a962-92c6a5a8a602",
-    "snapshot_name": "SNAP1"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_snapshot", "1b38702c-7f0c-411e-a962-92c6a5a8a602", "SNAP1") }}
 
 Example response:
 
@@ -9529,17 +7349,7 @@ UUID of the created logical volume clone is returned.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_clone",
-  "id": 1,
-  "params": {
-    "snapshot_name": "cc8d7fdf-7865-4d1f-9fc6-35da8e368670",
-    "clone_name": "CLONE1"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_clone", "cc8d7fdf-7865-4d1f-9fc6-35da8e368670", "CLONE1") }}
 
 Example response:
 
@@ -9567,18 +7377,7 @@ UUID of the created logical volume clone is returned.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_clone_bdev",
-  "id": 1,
-  "params": {
-    "bdev": "e4b40d8b-f623-416d-8234-baf5a4c83cbd",
-    "lvs_name": "lvs1",
-    "clone_name": "clone2"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_clone_bdev", "e4b40d8b-f623-416d-8234-baf5a4c83cbd", "lvs1", "clone2") }}
 
 Example response:
 
@@ -9602,17 +7401,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_rename",
-  "id": 1,
-  "params": {
-    "old_name": "067df606-6dbc-4143-a499-0d05855cb3b8",
-    "new_name": "LVOL2"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_rename", "067df606-6dbc-4143-a499-0d05855cb3b8", "LVOL2") }}
 
 Example response:
 
@@ -9636,17 +7425,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_resize",
-  "id": 1,
-  "params": {
-    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
-    "size_in_mib": 2
-  }
-}
-~~~
+{{ example_request("bdev_lvol_resize", "51638754-ca16-43a7-9f8f-294a0805ab0a", "2") }}
 
 Example response:
 
@@ -9670,16 +7449,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_set_read_only",
-  "id": 1,
-  "params": {
-    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_set_read_only", "51638754-ca16-43a7-9f8f-294a0805ab0a") }}
 
 Example response:
 
@@ -9703,16 +7473,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_delete",
-  "id": 1,
-  "params": {
-    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_delete", "51638754-ca16-43a7-9f8f-294a0805ab0a") }}
 
 Example response:
 
@@ -9736,16 +7497,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_inflate",
-  "id": 1,
-  "params": {
-    "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_inflate", "8d87fccc-c278-49f0-9d4c-6237951aca09") }}
 
 Example response:
 
@@ -9769,16 +7521,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_decouple_parent",
-  "id": 1,
-  "params": {
-    "name": "8d87fccc-c278-49f0-9d4c-6237951aca09"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_decouple_parent", "8d87fccc-c278-49f0-9d4c-6237951aca09") }}
 
 Example response:
 
@@ -9805,16 +7548,7 @@ If both lvs_uuid and lvs_name are omitted, information about lvols in all logica
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_get_lvols",
-  "id": 1,
-  "params": {
-    "lvs_name": "lvs_test"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_get_lvols", "-l", "lvs_test") }}
 
 Example response:
 
@@ -9849,17 +7583,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_set_parent",
-  "id": 1,
-  "params": {
-    "lvol_name": "LVS1/LVOL0",
-    "parent_name": "LVS1/SNAP0"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_set_parent", "LVS1/LVOL0", "LVS1/SNAP0") }}
 
 Example response:
 
@@ -9883,17 +7607,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_set_parent_bdev",
-  "id": 1,
-  "params": {
-    "lvol_name": "LVS1/LVOL0",
-    "parent_name": "e465527b-f412-4f70-a03e-c4a5d608f65e"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_set_parent_bdev", "LVS1/LVOL0", "e465527b-f412-4f70-a03e-c4a5d608f65e") }}
 
 Example response:
 
@@ -9922,17 +7636,7 @@ with the RPC @ref rpc_bdev_lvol_check_shallow_copy.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_start_shallow_copy",
-  "id": 1,
-  "params": {
-    "src_lvol_name": "8a47421a-20cf-444f-845c-d97ad0b0bd8e",
-    "dst_bdev_name": "Nvme1n1"
-  }
-}
-~~~
+{{ example_request("bdev_lvol_start_shallow_copy", "8a47421a-20cf-444f-845c-d97ad0b0bd8e", "Nvme1n1") }}
 
 Example response:
 
@@ -9968,16 +7672,7 @@ result cannot be accessed anymore.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_lvol_check_shallow_copy",
-  "id": 1,
-  "params": {
-    "operation_id": 7
-  }
-}
-~~~
+{{ example_request("bdev_lvol_check_shallow_copy", "7") }}
 
 Example response:
 
@@ -10007,17 +7702,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_set_options",
-  "id": 1,
-  "params": {
-    "process_window_size_kb": 512,
-    "process_max_bandwidth_mb_sec": 100
-  }
-}
-~~~
+{{ example_request("bdev_raid_set_options", "-w", "512", "-b", "100") }}
 
 Example response:
 
@@ -10041,16 +7726,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_get_bdevs",
-  "id": 1,
-  "params": {
-    "category": "all"
-  }
-}
-~~~
+{{ example_request("bdev_raid_get_bdevs", "all") }}
 
 Example response:
 
@@ -10127,24 +7803,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_create",
-  "id": 1,
-  "params": {
-    "name": "Raid0",
-    "raid_level": "0",
-    "base_bdevs": [
-      "Malloc0",
-      "Malloc1",
-      "Malloc2",
-      "Malloc3"
-    ],
-    "strip_size_kb": 4
-  }
-}
-~~~
+{{ example_request("bdev_raid_create", "-n", "Raid0", "-z", "4", "-r", "0", "-b", "Malloc0 Malloc1 Malloc2 Malloc3") }}
 
 Example response:
 
@@ -10168,17 +7827,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_delete",
-  "id": 1,
-  "params": {
-    "name": "Raid0",
-    "clear_sb": true
-  }
-}
-~~~
+{{ example_request("bdev_raid_delete", "Raid0", "-c") }}
 
 Example response:
 
@@ -10202,17 +7851,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_add_base_bdev",
-  "id": 1,
-  "params": {
-    "raid_bdev": "RaidBdev0",
-    "base_bdev": "Nvme0n1"
-  }
-}
-~~~
+{{ example_request("bdev_raid_add_base_bdev", "RaidBdev0", "Nvme0n1") }}
 
 Example response:
 
@@ -10236,16 +7875,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_raid_remove_base_bdev",
-  "id": 1,
-  "params": {
-    "name": "Raid0"
-  }
-}
-~~~
+{{ example_request("bdev_raid_remove_base_bdev", "Raid0") }}
 
 Example response:
 
@@ -10271,17 +7901,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_split_create",
-  "id": 1,
-  "params": {
-    "base_bdev": "Malloc0",
-    "split_count": 4
-  }
-}
-~~~
+{{ example_request("bdev_split_create", "Malloc0", "4") }}
 
 Example response:
 
@@ -10310,16 +7930,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_split_delete",
-  "id": 1,
-  "params": {
-    "base_bdev": "Malloc0"
-  }
-}
-~~~
+{{ example_request("bdev_split_delete", "Malloc0") }}
 
 Example response:
 
@@ -10345,18 +7956,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_uring_create",
-  "id": 1,
-  "params": {
-    "name": "bdev_u0",
-    "filename": "/dev/nvme0n1",
-    "block_size": 512
-  }
-}
-~~~
+{{ example_request("bdev_uring_create", "/dev/nvme0n1", "bdev_u0", "512") }}
 
 Example response:
 
@@ -10380,16 +7980,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_uring_rescan",
-  "id": 1,
-  "params": {
-    "name": "bdev_u0"
-  }
-}
-~~~
+{{ example_request("bdev_uring_rescan", "bdev_u0") }}
 
 Example response:
 
@@ -10413,16 +8004,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_uring_delete",
-  "id": 1,
-  "params": {
-    "name": "bdev_u0"
-  }
-}
-~~~
+{{ example_request("bdev_uring_delete", "bdev_u0") }}
 
 Example response:
 
@@ -10448,17 +8030,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_opal_init",
-  "id": 1,
-  "params": {
-    "nvme_ctrlr_name": "nvme0",
-    "password": "*****"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_opal_init", "-b", "nvme0", "-p", "*****") }}
 
 Example response:
 
@@ -10482,17 +8054,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_opal_revert",
-  "id": 1,
-  "params": {
-    "nvme_ctrlr_name": "nvme0",
-    "password": "*****"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_opal_revert", "-b", "nvme0", "-p", "*****") }}
 
 Example response:
 
@@ -10520,21 +8082,7 @@ The response is the name of created OPAL virtual bdev.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_opal_create",
-  "id": 1,
-  "params": {
-    "nvme_ctrlr_name": "nvme0",
-    "nsid": 1,
-    "locking_range_id": 1,
-    "range_start": 0,
-    "range_length": 4096,
-    "password": "*****"
-  }
-}
-~~~
+{{ example_request("bdev_opal_create", "-b", "nvme0", "-n", "1", "-i", "1", "-s", "0", "-l", "4096", "-p", "*****") }}
 
 Example response:
 
@@ -10562,17 +8110,7 @@ The response is the locking info of OPAL virtual bdev.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_opal_get_info",
-  "id": 1,
-  "params": {
-    "bdev_name": "nvme0n1r1",
-    "password": "*****"
-  }
-}
-~~~
+{{ example_request("bdev_opal_get_info", "-b", "nvme0n1r1", "-p", "*****") }}
 
 Example response:
 
@@ -10604,17 +8142,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_opal_delete",
-  "id": 1,
-  "params": {
-    "bdev_name": "nvme0n1r1",
-    "password": "*****"
-  }
-}
-~~~
+{{ example_request("bdev_opal_delete", "-b", "nvme0n1r1", "-p", "*****") }}
 
 Example response:
 
@@ -10638,19 +8166,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_opal_new_user",
-  "id": 1,
-  "params": {
-    "bdev_name": "nvme0n1r1",
-    "admin_password": "*****",
-    "user_id": 1,
-    "user_password": "********"
-  }
-}
-~~~
+{{ example_request("bdev_opal_new_user", "-b", "nvme0n1r1", "-p", "*****", "-i", "1", "-u", "********") }}
 
 Example response:
 
@@ -10674,19 +8190,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_opal_set_lock_state",
-  "id": 1,
-  "params": {
-    "bdev_name": "nvme0n1r1",
-    "user_id": 1,
-    "user_password": "********",
-    "lock_state": "rwlock"
-  }
-}
-~~~
+{{ example_request("bdev_opal_set_lock_state", "-b", "nvme0n1r1", "-i", "1", "-p", "********", "-l", "rwlock") }}
 
 Example response:
 
@@ -10716,13 +8220,7 @@ The response is an array of strings - supported RPC notification types.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "notify_get_types",
-  "id": 1
-}
-~~~
+{{ example_request("notify_get_types") }}
 
 Example response:
 
@@ -10759,17 +8257,7 @@ Response is an array of event objects.
 
 Example request:
 
-~~~json
-{
-  "id": 1,
-  "jsonrpc": "2.0",
-  "method": "notify_get_notifications",
-  "params": {
-    "id": 1,
-    "max": 10
-  }
-}
-~~~
+{{ example_request("notify_get_notifications", "-i", "1", "-n", "10") }}
 
 Example response:
 
@@ -10806,17 +8294,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_file_add_key",
-  "id": 1,
-  "params": {
-    "name": "key0",
-    "path": "/path/to/key0"
-  }
-}
-~~~
+{{ example_request("keyring_file_add_key", "key0", "/path/to/key0") }}
 
 Example response:
 
@@ -10840,16 +8318,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_file_remove_key",
-  "id": 1,
-  "params": {
-    "name": "key0"
-  }
-}
-~~~
+{{ example_request("keyring_file_remove_key", "key0") }}
 
 Example response:
 
@@ -10873,13 +8342,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_get_keys",
-  "id": 1
-}
-~~~
+{{ example_request("keyring_get_keys") }}
 
 Example response:
 
@@ -10920,16 +8383,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "keyring_linux_set_options",
-  "id": 1,
-  "params": {
-    "enable": true
-  }
-}
-~~~
+{{ example_request("keyring_linux_set_options", "-e") }}
 
 Example response:
 
@@ -10966,16 +8420,7 @@ To export a device over ublk, first make sure the Linux kernel ublk driver is lo
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "cpumask": "0x2"
-  },
-  "jsonrpc": "2.0",
-  "method": "ublk_create_target",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_create_target", "-m", "0x2") }}
 
 Example response:
 
@@ -11005,13 +8450,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "ublk_destroy_target",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_destroy_target") }}
 
 Example response:
 
@@ -11041,17 +8480,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "ublk_id": 1,
-    "bdev_name": "Malloc1"
-  },
-  "jsonrpc": "2.0",
-  "method": "ublk_start_disk",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_start_disk", "Malloc1", "1") }}
 
 Example response:
 
@@ -11081,17 +8510,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "ublk_id": 1,
-    "bdev_name": "Malloc1"
-  },
-  "jsonrpc": "2.0",
-  "method": "ublk_recover_disk",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_recover_disk", "Malloc1", "1") }}
 
 Example response:
 
@@ -11121,16 +8540,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "ublk_id": 1
-  },
-  "jsonrpc": "2.0",
-  "method": "ublk_stop_disk",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_stop_disk", "1") }}
 
 Example response:
 
@@ -11164,13 +8574,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "ublk_get_disks",
-  "id": 1
-}
-~~~
+{{ example_request("ublk_get_disks") }}
 
 Example response:
 
@@ -11213,17 +8617,7 @@ Path of exported NBD disk
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "nbd_device": "/dev/nbd1",
-    "bdev_name": "Malloc1"
-  },
-  "jsonrpc": "2.0",
-  "method": "nbd_start_disk",
-  "id": 1
-}
-~~~
+{{ example_request("nbd_start_disk", "Malloc1", "/dev/nbd1") }}
 
 Example response:
 
@@ -11247,16 +8641,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "nbd_device": "/dev/nbd1"
-  },
-  "jsonrpc": "2.0",
-  "method": "nbd_stop_disk",
-  "id": 1
-}
-~~~
+{{ example_request("nbd_stop_disk", "/dev/nbd1") }}
 
 Example response:
 
@@ -11284,13 +8669,7 @@ The response is an array of exported NBD devices and their corresponding SPDK bd
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "nbd_get_disks",
-  "id": 1
-}
-~~~
+{{ example_request("nbd_get_disks") }}
 
 Example response:
 
@@ -11329,16 +8708,7 @@ Response is an object with current socket layer options for requested implementa
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "sock_impl_get_options",
-  "id": 1,
-  "params": {
-    "impl_name": "posix"
-  }
-}
-~~~
+{{ example_request("sock_impl_get_options", "-i", "posix") }}
 
 Example response:
 
@@ -11379,26 +8749,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "sock_impl_set_options",
-  "id": 1,
-  "params": {
-    "impl_name": "posix",
-    "recv_buf_size": 2097152,
-    "send_buf_size": 2097152,
-    "enable_recv_pipe": false,
-    "enable_quickack": false,
-    "enable_placement_id": 0,
-    "enable_zerocopy_send_server": true,
-    "enable_zerocopy_send_client": false,
-    "zerocopy_threshold": 10240,
-    "tls_version": 13,
-    "enable_ktls": false
-  }
-}
-~~~
+{{ example_request("sock_impl_set_options", "-i", "posix", "-r", "2097152", "-s", "2097152", "-p", "0", "--no-recv-pipe", "--no-quickack", "--zerocopy-send-server", "--no-zerocopy-send-client", "--zerocopy-threshold", "10240", "--tls-version", "13", "--no-ktls") }}
 
 Example response:
 
@@ -11428,16 +8779,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "sock_set_default_impl",
-  "id": 1,
-  "params": {
-    "impl_name": "posix"
-  }
-}
-~~~
+{{ example_request("sock_set_default_impl", "-i", "posix") }}
 
 Example response:
 
@@ -11467,13 +8809,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "sock_get_default_impl",
-  "id": 1
-}
-~~~
+{{ example_request("sock_get_default_impl") }}
 
 Example response:
 
@@ -11509,20 +8845,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_send_cmd",
-  "id": 1,
-  "params": {
-    "name": "Nvme0",
-    "cmd_type": "admin",
-    "data_direction": "c2h",
-    "cmdbuf": "BgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAsGUs9P5_AAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-    "data_len": 60
-  }
-}
-~~~
+{{ example_request("bdev_nvme_send_cmd", "-n", "Nvme0", "-t", "admin", "-r", "c2h", "-c", "BgAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAsGUs9P5_AAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==", "-D", "60") }}
 
 Example response:
 
@@ -11553,13 +8876,7 @@ Completion status of enumeration is returned as a boolean.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "vmd_enable",
-  "id": 1
-}
-~~~
+{{ example_request("vmd_enable") }}
 
 Example response:
 
@@ -11583,16 +8900,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "vmd_remove_device",
-  "params": {
-    "addr": "5d0505:01:00.0"
-  },
-  "id": 1
-}
-~~~
+{{ example_request("vmd_remove_device", "5d0505:01:00.0") }}
 
 Example response:
 
@@ -11620,13 +8928,7 @@ The response is the number of new devices found.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "vmd_rescan",
-  "id": 1
-}
-~~~
+{{ example_request("vmd_rescan") }}
 
 Example response:
 
@@ -11656,13 +8958,7 @@ The response is the version number including major version number, minor version
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "spdk_get_version"
-}
-~~~
+{{ example_request("spdk_get_version") }}
 
 Example response:
 
@@ -11700,13 +8996,7 @@ Note that the config space buffer was trimmed.
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "framework_get_pci_devices"
-}
-~~~
+{{ example_request("framework_get_pci_devices") }}
 
 Example response:
 
@@ -11743,21 +9033,7 @@ true on success
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_add_error_injection",
-  "id": 1,
-  "params": {
-    "name": "HotInNvme0",
-    "opc": 2,
-    "cmd_type": "io",
-    "err_count": 1111111,
-    "sct": 11,
-    "sc": 33
-  }
-}
-~~~
+{{ example_request("bdev_nvme_add_error_injection", "-n", "HotInNvme0", "-t", "io", "-o", "2", "-e", "1111111", "-u", "11", "-c", "33") }}
 
 Example response:
 
@@ -11785,18 +9061,7 @@ true on success
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_remove_error_injection",
-  "id": 1,
-  "params": {
-    "name": "HotInNvme0",
-    "opc": 2,
-    "cmd_type": "io"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_remove_error_injection", "-n", "HotInNvme0", "-t", "io", "-o", "2") }}
 
 Example response:
 
@@ -11828,21 +9093,7 @@ Name of newly created bdev.
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "block_size": 4096,
-    "num_blocks": 16384,
-    "name": "daosdev0",
-    "pool": "test-pool",
-    "cont": "test-cont",
-    "oclass": "EC_4P2G2"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_daos_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_daos_create", "daosdev0", "test-pool", "test-cont", "64", "4096", "--oclass", "EC_4P2G2") }}
 
 Example response:
 
@@ -11866,16 +9117,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "daosdev0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_daos_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_daos_delete", "daosdev0") }}
 
 Example response:
 
@@ -11899,17 +9141,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "daosdev0",
-    "new_size": 8192
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_daos_resize",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_daos_resize", "daosdev0", "8192") }}
 
 Example response:
 
@@ -11933,17 +9165,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "iobuf_set_options",
-  "params": {
-    "small_pool_count": 16383,
-    "large_pool_count": 2047
-  }
-}
-~~~
+{{ example_request("iobuf_set_options", "--small-pool-count", "16383", "--large-pool-count", "2047") }}
 
 Example response:
 
@@ -11967,13 +9189,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "iobuf_get_stats",
-  "id": 1
-}
-~~~
+{{ example_request("iobuf_get_stats") }}
 
 Example response:
 
@@ -12037,18 +9253,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_start_mdns_discovery",
-  "id": 1,
-  "params": {
-    "name": "cdc_auto",
-    "svcname": "_nvme-disc._tcp",
-    "hostnqn": "nqn.2021-12.io.spdk:host1"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_start_mdns_discovery", "-b", "cdc_auto", "-s", "_nvme-disc._tcp", "-q", "nqn.2021-12.io.spdk:host1") }}
 
 Example response:
 
@@ -12072,16 +9277,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_stop_mdns_discovery",
-  "id": 1,
-  "params": {
-    "name": "cdc_auto"
-  }
-}
-~~~
+{{ example_request("bdev_nvme_stop_mdns_discovery", "-b", "cdc_auto") }}
 
 Example response:
 
@@ -12105,13 +9301,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "bdev_nvme_get_mdns_discovery_info",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_nvme_get_mdns_discovery_info") }}
 
 Example response:
 
@@ -12158,13 +9348,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "nvmf_publish_mdns_prr",
-  "id": 1
-}
-~~~
+{{ example_request("nvmf_publish_mdns_prr") }}
 
 Example response:
 
@@ -12188,13 +9372,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "nvmf_stop_mdns_prr",
-  "id": 1
-}
-~~~
+{{ example_request("nvmf_stop_mdns_prr") }}
 
 Example response:
 
@@ -12220,13 +9398,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "fsdev_get_opts",
-  "id": 1
-}
-~~~
+{{ example_request("fsdev_get_opts") }}
 
 Example response:
 
@@ -12253,17 +9425,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "fsdev_set_opts",
-  "id": 1,
-  "params": {
-    "fsdev_io_pool_size": 65535,
-    "fsdev_io_cache_size": 256
-  }
-}
-~~~
+{{ example_request("fsdev_set_opts", "65535", "256") }}
 
 Example response:
 
@@ -12287,21 +9449,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "fsdev_aio_create",
-  "id": 8,
-  "params": {
-    "name": "aio0",
-    "root_path": "/tmp/vfio-test",
-    "enable_xattr": false,
-    "enable_writeback_cache": true,
-    "max_write": 65535,
-    "skip_rw": true
-  }
-}
-~~~
+{{ example_request("fsdev_aio_create", "aio0", "/tmp/vfio-test", "--no-xattr", "--writeback-cache", "-w", "65535", "--skip-rw") }}
 
 Example response:
 
@@ -12325,16 +9473,7 @@ Example response:
 
 Example request:
 
-~~~json
-{
-  "jsonrpc": "2.0",
-  "method": "fsdev_aio_delete",
-  "id": 1,
-  "params": {
-    "name": "aio0"
-  }
-}
-~~~
+{{ example_request("fsdev_aio_delete", "aio0") }}
 
 Example response:
 
