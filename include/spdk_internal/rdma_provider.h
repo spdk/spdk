@@ -15,6 +15,9 @@
 #define SPDK_RDMA_RXE_VENDOR_ID_OLD 0
 #define SPDK_RDMA_RXE_VENDOR_ID_NEW 0XFFFFFF
 
+/* Broadcom NetXtreme (bnxt_re), IEEE-assigned vendor ID */
+#define SPDK_RDMA_BNXT_RE_VENDOR_ID 0x14E4
+
 struct spdk_rdma_provider_wr_stats {
 	/* Total number of submitted requests */
 	uint64_t num_submitted_wrs;

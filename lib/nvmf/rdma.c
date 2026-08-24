@@ -2336,6 +2336,12 @@ nvmf_rdma_is_rxe_device(struct spdk_nvmf_rdma_device *device)
 	       device->attr.vendor_id == SPDK_RDMA_RXE_VENDOR_ID_NEW;
 }
 
+static inline bool
+nvmf_rdma_is_bnxt_re_device(struct spdk_nvmf_rdma_device *device)
+{
+	return device->attr.vendor_id == SPDK_RDMA_BNXT_RE_VENDOR_ID;
+}
+
 static int nvmf_rdma_accept(void *ctx);
 static bool nvmf_rdma_retry_listen_port(struct spdk_nvmf_rdma_transport *rtransport);
 static void destroy_ib_device(struct spdk_nvmf_rdma_transport *rtransport,
@@ -2378,7 +2384,7 @@ create_ib_device(struct spdk_nvmf_rdma_transport *rtransport, struct ibv_context
 	 *
 	 * TODO: enable this for versions of the kernel rxe driver that support it.
 	 */
-	if (nvmf_rdma_is_rxe_device(device)) {
+	if (nvmf_rdma_is_rxe_device(device) || nvmf_rdma_is_bnxt_re_device(device)) {
 		device->attr.device_cap_flags &= ~(IBV_DEVICE_MEM_MGT_EXTENSIONS);
 	}
 #endif
