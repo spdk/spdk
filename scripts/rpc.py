@@ -23,6 +23,13 @@ from spdk.rpc.cmd_parser import print_null
 from spdk.rpc.helpers import check_called_name, hint_rpc_name
 
 
+def suppress_cli_prints():
+    """Replace CLI print functions with no-ops (used by --dry-run and doc generation)."""
+    for _, obj in vars(cli).items():
+        if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
+            obj.print_dict = obj.print_json = obj.print_array = print_null
+
+
 def create_parser():
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface', usage='%(prog)s [options]')
@@ -186,9 +193,7 @@ def main():
         exit(0)
     elif args.dry_run:
         args.client = JSONRPCDryRunClient(batch_mode=args.batch_mode)
-        for _, obj in vars(cli).items():
-            if isinstance(obj, types.ModuleType) and obj.__name__.startswith("spdk.cli."):
-                obj.print_dict = obj.print_json = obj.print_array = print_null
+        suppress_cli_prints()
     elif args.go_client or use_go_client:
         try:
             args.client = JSONRPCGoClient(args.server_addr,

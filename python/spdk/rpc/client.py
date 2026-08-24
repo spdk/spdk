@@ -44,13 +44,17 @@ class JSONRPCException(Exception):
 class JSONRPCDryRunClient(JSONRPCAbstractClient):
     def __init__(self, batch_mode=False):
         self._batch_mode = batch_mode
+        self._request_id = 0
         self._reqs = []
 
     def __getattr__(self, name):
         return lambda **kwargs: self.call(name, remove_null(kwargs))
 
     def call(self, method, params=None):
-        req = {"method": method, "params": params}
+        self._request_id += 1
+        req = {"jsonrpc": "2.0", "method": method, "id": self._request_id}
+        if params:
+            req["params"] = copy.deepcopy(params)
         if self._batch_mode:
             self._reqs.append(req)
             return None
