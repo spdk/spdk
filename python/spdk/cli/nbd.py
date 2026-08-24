@@ -5,13 +5,13 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-from spdk.rpc.cmd_parser import print_dict
+from spdk.rpc.cmd_parser import print_dict, print_json
 
 
 def add_parser(subparsers):
 
     def nbd_start_disk(args):
-        print(args.client.nbd_start_disk(
+        print_json(args.client.nbd_start_disk(
                                      bdev_name=args.bdev_name,
                                      nbd_device=args.nbd_device))
 

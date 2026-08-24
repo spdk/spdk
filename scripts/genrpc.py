@@ -34,6 +34,27 @@ def _strip_argparse_default_hint(action: argparse.Action) -> Optional[str]:
     return action.help
 
 
+def lint_cli_bare_prints() -> None:
+    """Ensure CLI modules never use bare print() on RPC return values.
+
+    The correct helpers are print_json / print_dict / print_array (from
+    spdk.rpc.cmd_parser).  Bare ``print(args.client.xxx(...))`` bypasses
+    suppress_cli_prints() and leaks 'None' during dry-run / doc generation.
+    """
+    cli_dir = base_dir / "python" / "spdk" / "cli"
+    pattern = re.compile(r"\bprint\(args\.client\.")
+    violations = []
+    for path in sorted(cli_dir.glob("*.py")):
+        for lineno, line in enumerate(path.read_text().splitlines(), 1):
+            if pattern.search(line):
+                violations.append(f"  {path.relative_to(base_dir)}:{lineno}: {line.strip()}")
+    if violations:
+        raise ValueError(
+            "Bare print(args.client.…) found in CLI modules. "
+            "Use print_json / print_dict / print_array instead:\n" + "\n".join(violations),
+        )
+
+
 def lint_json_examples() -> None:
     with open(base_dir / "doc" / "jsonrpc.md.jinja2", "r") as file:
         data = file.read()
@@ -324,6 +345,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
+        lint_cli_bare_prints()
         lint_json_examples()
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)

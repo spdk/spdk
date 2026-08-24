@@ -5,7 +5,7 @@
 #  Copyright (c) 2022-2024 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 #
 
-from spdk.rpc.cmd_parser import print_dict
+from spdk.rpc.cmd_parser import print_dict, print_json
 
 
 def add_parser(subparsers):
@@ -27,7 +27,7 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_destroy_target)
 
     def ublk_start_disk(args):
-        print(args.client.ublk_start_disk(
+        print_json(args.client.ublk_start_disk(
                                        bdev_name=args.bdev_name,
                                        ublk_id=args.ublk_id,
                                        num_queues=args.num_queues,
@@ -50,7 +50,7 @@ def add_parser(subparsers):
     p.set_defaults(func=ublk_stop_disk)
 
     def ublk_recover_disk(args):
-        print(args.client.ublk_recover_disk(
+        print_json(args.client.ublk_recover_disk(
                                          bdev_name=args.bdev_name,
                                          ublk_id=args.ublk_id))
 
