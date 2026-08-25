@@ -467,7 +467,7 @@ objects:
         type: array
         class: scsi_luns
         description: array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
-results:
+return_objects:
   - name: framework_monitor_context_switch_result
     fields:
       - name: enabled
@@ -670,6 +670,31 @@ results:
       - name: data_digest
         type: boolean
         description: Data Digest should be required for this target node
+  - name: env_dpdk_get_mem_stats_result
+    fields:
+      - name: filename
+        type: string
+        description: Pathname to a text file containing the memory stats
+  - name: bdev_ftl_create_result
+    fields:
+      - name: name
+        type: string
+        description: Name of newly created bdev
+      - name: uuid
+        type: string
+        description: UUID of newly created bdev
+  - name: vmd_rescan_result
+    fields:
+      - name: count
+        type: uint32
+        description: Number of new devices found
+return_arrays:
+  - name: rpc_methods
+    item_type: string
+  - name: bdev_names
+    item_type: string
+  - name: notification_types
+    item_type: string
 arrays:
   - name: bdev_histogram_borders
     item_type: uint64
@@ -764,6 +789,10 @@ methods:
     params: []
   - name: rpc_get_methods
     description: Get an array of supported RPC methods.
+    result:
+      type: array
+      class: rpc_methods
+      description: The response is an array of supported RPC methods.
     params:
       - name: current
         type: boolean
@@ -1046,6 +1075,10 @@ methods:
     params: []
   - name: env_dpdk_get_mem_stats
     description: Write the dpdk memory stats to a file.
+    result:
+      type: object
+      class: env_dpdk_get_mem_stats_result
+      description: The response is an object containing the pathname to a text file with the memory stats.
     params: []
   - name: accel_get_module_info
     description: Get a list of valid module names and their supported operations.
@@ -1951,6 +1984,10 @@ methods:
 
       The `multipath_opts` parameter configures the policy when the controller is created. Every path
       attached to the same multipath controller must use identical multipath options.
+    result:
+      type: array
+      class: bdev_names
+      description: Array of names of newly created bdevs.
     params:
       - name: name
         type: string
@@ -2647,6 +2684,10 @@ methods:
       Create FTL bdev.
 
       This RPC is subject to change.
+    result:
+      type: object
+      class: bdev_ftl_create_result
+      description: Object containing the name and UUID of the newly created bdev.
     params:
       - name: name
         type: string
@@ -2809,6 +2850,10 @@ methods:
         description: name of xnvme bdev to delete
   - name: bdev_virtio_attach_controller
     description: 'Create new initiator @ref bdev_config_virtio_scsi or @ref bdev_config_virtio_blk and expose all found bdevs.'
+    result:
+      type: array
+      class: bdev_names
+      description: Array of names of newly created bdevs.
     params:
       - name: name
         type: string
@@ -4964,6 +5009,10 @@ methods:
         description: lock state
   - name: notify_get_types
     description: Return list of all supported notification types.
+    result:
+      type: array
+      class: notification_types
+      description: The response is an array of strings - supported RPC notification types.
     params: []
   - name: notify_get_notifications
     description: |
@@ -5250,6 +5299,10 @@ methods:
         description: PCI address of the device to remove
   - name: vmd_rescan
     description: Force a rescan of the devices behind VMD.
+    result:
+      type: object
+      class: vmd_rescan_result
+      description: Object containing the number of new devices found.
     params: []
   - name: spdk_get_version
     description: Get the version info of the running SPDK application.
