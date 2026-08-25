@@ -467,6 +467,98 @@ objects:
         type: array
         class: scsi_luns
         description: array of objects describing @ref rpc_vhost_get_controllers_scsi_luns
+results:
+  - name: framework_monitor_context_switch_result
+    fields:
+      - name: enabled
+        type: boolean
+        description: The current state of context switch monitoring
+  - name: bdev_get_histogram_borders_result
+    fields:
+      - name: borders_count
+        type: array
+        description: Number of requests whose latency was less than given border
+  - name: sock_get_default_impl_result
+    fields:
+      - name: impl_name
+        type: string
+        description: The name of the current default socket implementation.
+  - name: framework_get_scheduler_result
+    fields:
+      - name: scheduler_name
+        type: string
+        description: Current scheduler name
+      - name: scheduler_period
+        type: uint64
+        description: Currently set scheduler period in microseconds
+      - name: isolated_core_mask
+        type: string
+        description: Current isolated core mask of scheduler
+      - name: scheduling_core
+        type: uint32
+        description: Current scheduling core
+      - name: governor_name
+        type: string
+        description: Governor name
+  - name: bdev_get_histogram_result
+    fields:
+      - name: histogram
+        type: string
+        description: Base64 encoded histogram
+      - name: granularity
+        type: int64
+        description: Granularity of the histogram buckets
+      - name: min_range
+        type: uint32
+        description: Minimal range tracked in histogram
+      - name: max_range
+        type: uint32
+        description: Maximal range tracked in histogram
+      - name: tsc_rate
+        type: int64
+        description: Ticks per second
+  - name: iscsi_get_histogram_result
+    fields:
+      - name: histogram
+        type: string
+        description: Base64 encoded histogram
+      - name: granularity
+        type: int64
+        description: Granularity of the histogram buckets
+      - name: min_range
+        type: uint32
+        description: Minimal range tracked in histogram
+      - name: max_range
+        type: uint32
+        description: Maximal range tracked in histogram
+      - name: tsc_rate
+        type: int64
+        description: Ticks per second
+  - name: iscsi_get_stats_result
+    fields:
+      - name: invalid
+        type: uint32
+        description: The number of invalid connections
+      - name: running
+        type: uint32
+        description: The number of running connections
+      - name: exiting
+        type: uint32
+        description: The number of exiting connections
+      - name: exited
+        type: uint32
+        description: The number of exited connections
+  - name: bdev_nvme_send_cmd_result
+    fields:
+      - name: cpl
+        type: string
+        description: NVMe completion queue entry, encoded by base64 urlsafe
+      - name: data
+        type: string
+        description: Data transferred from controller to host, encoded by base64 urlsafe
+      - name: metadata
+        type: string
+        description: Metadata transferred from controller to host, encoded by base64 urlsafe
 arrays:
   - name: bdev_histogram_borders
     item_type: uint64
@@ -534,6 +626,10 @@ methods:
         description: Signal to send
   - name: framework_monitor_context_switch
     description: 'Query, enable, or disable the context switch monitoring functionality.'
+    result:
+      type: object
+      class: framework_monitor_context_switch_result
+      description: Context switch monitoring state
     params:
       - name: enabled
         type: boolean
@@ -610,6 +706,10 @@ methods:
         description: Comma-separated list of thread:core mappings (static only)
   - name: framework_get_scheduler
     description: 'Retrieve currently set scheduler name and period, along with current governor name.'
+    result:
+      type: object
+      class: framework_get_scheduler_result
+      description: Current scheduler configuration
     params: []
   - name: framework_get_governor
     description: 'Retrieve current governor name, power env, frequencies available and frequency set to the cpu cores.'
@@ -1172,6 +1272,10 @@ methods:
         description: 'Max value in nanoseconds to track. Default: 120000000000 (120 seconds)'
   - name: bdev_get_histogram
     description: Get latency histogram for specified bdev.
+    result:
+      type: object
+      class: bdev_get_histogram_result
+      description: Histogram data for the specified bdev
     params:
       - name: name
         type: string
@@ -1179,6 +1283,10 @@ methods:
         description: Block device name
   - name: bdev_get_histogram_borders
     description: Dump latency histogram for specified bdev into user-provided borders.
+    result:
+      type: object
+      class: bdev_get_histogram_borders_result
+      description: Histogram border counts
     params:
       - name: name
         type: string
@@ -3107,6 +3215,10 @@ methods:
     params: []
   - name: iscsi_get_stats
     description: Show stat information of iSCSI connections.
+    result:
+      type: object
+      class: iscsi_get_stats_result
+      description: Stat information of iSCSI connections.
     params: []
   - name: iscsi_target_node_add_lun
     description: Add an LUN to an existing iSCSI target node.
@@ -3176,6 +3288,10 @@ methods:
         description: Enable or disable histogram for the specified iSCSI target node
   - name: iscsi_get_histogram
     description: Get latency histogram for specified iscsi target node.
+    result:
+      type: object
+      class: iscsi_get_histogram_result
+      description: Histogram data for the specified iSCSI target node
     params:
       - name: name
         type: string
@@ -4932,6 +5048,10 @@ methods:
         description: Socket implementation name (e.g. "posix", "ssl", "uring")
   - name: sock_get_default_impl
     description: Get the name of the default sock implementation.
+    result:
+      type: object
+      class: sock_get_default_impl_result
+      description: Default socket implementation
     params: []
   - name: bdev_nvme_send_cmd
     description: |
@@ -4939,6 +5059,10 @@ methods:
 
       Notice: bdev_nvme_send_cmd requires user to guarantee the correctness of NVMe command itself, and also optional parameters.
       Illegal command contents or mismatching buffer size may result in unpredictable behavior.
+    result:
+      type: object
+      class: bdev_nvme_send_cmd_result
+      description: NVMe command response
     params:
       - name: name
         type: string

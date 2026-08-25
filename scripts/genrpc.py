@@ -296,6 +296,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
     schema_template = env.get_template('jsonrpc.md.jinja2')
     transformation = dict()
     transformation["all_methods"] = [method['name'] for method in schema['methods']]
+    schema_objects = {obj["name"]: obj for obj in schema['results']}
     for method in schema['methods']:
         params = [
             dict(
@@ -315,6 +316,17 @@ def generate_docs(schema: Dict[str, Any]) -> str:
         if 'result' in method:
             result = method['result']
             transformation[f"{method['name']}_response"] = " ".join(result['description'].split())
+            if result['type'] == 'object' and 'class' in result:
+                fields = [
+                    dict(
+                        Name=el["name"],
+                        Type=el["type"],
+                        Description=" ".join(el["description"].split()),
+                    )
+                    for el in schema_objects[result['class']]["fields"]
+                ]
+                table = tabulate(fields, headers="keys", tablefmt="presto").replace("-+-", " | ")
+                transformation[f"{method['name']}_response"] += f"\n\n{table}"
     transformation["example_request"] = example_request
     for obj in schema['objects']:
         fields = [

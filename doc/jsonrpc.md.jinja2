@@ -234,9 +234,7 @@ Example response:
 
 #### Response
 
- Name    | Type    | Description
--------- | ------- | -----------------------------------------------
- enabled | boolean | The current state of context switch monitoring
+{{ framework_monitor_context_switch_response }}
 
 #### Example
 
@@ -581,13 +579,7 @@ Example response:
 
 #### Response
 
- Name               | Type   | Description
-------------------- | ------ | -----------------------------------------------
- scheduler_name     |        | Current scheduler name
- scheduler_period   |        | Currently set scheduler period in microseconds
- governor_name      |        | Governor name
- scheduling_core    |        | Current scheduling core
- isolated_core_mask |        | Current isolated core mask of scheduler
+{{ framework_get_scheduler_response }}
 
 #### Example
 
@@ -2371,13 +2363,7 @@ Example response:
 
 #### Response
 
- Name        | Type   | Description
------------- | ------ | -------------------------------------
- histogram   |        | Base64 encoded histogram
- granularity |        | Granularity of the histogram buckets
- min_range   |        | Minimal range tracked in histogram
- max_range   |        | Maximal range tracked in histogram
- tsc_rate    |        | Ticks per second
+{{ bdev_get_histogram_response }}
 
 #### Example
 
@@ -2413,9 +2399,7 @@ Example response:
 
 #### Response
 
- Name          | Type   | Description
--------------- | ------ | ------------------------------------------------------------
- borders_count | array  | Number of requests whose latency was less than given border
+{{ bdev_get_histogram_borders_response }}
 
 #### Example
 
@@ -5987,14 +5971,7 @@ Example response:
 
 #### Response
 
-Stat information of iSCSI connections.
-
- Name    | Type   | Description
--------- | ------ | ----------------------------------
- invalid | number | The number of invalid connections
- running | number | The number of running connections
- exiting | number | The number of exiting connections
- exited  | number | The number of exited connections
+{{ iscsi_get_stats_response }}
 
 #### Example
 
@@ -6141,11 +6118,7 @@ Example response:
 
 #### Response
 
- Name        | Type   | Description
------------- | ------ | -------------------------------------
- histogram   |        | Base64 encoded histogram
- granularity |        | Granularity of the histogram buckets
- tsc_rate    |        | Ticks per second
+{{ iscsi_get_histogram_response }}
 
 #### Example
 
@@ -9419,9 +9392,7 @@ Example response:
 
 #### Response
 
- Name      | Type   | Description
----------- | ------ | -------------------------------------------------------
- impl_name | string | The name of the current default socket implementation.
+{{ sock_get_default_impl_response }}
 
 #### Example
 
@@ -9453,11 +9424,7 @@ Example response:
 
 #### Response
 
- Name     | Type   | Description
---------- | ------ | ------------------------------------------------------------------------
- cpl      | string | NVMe completion queue entry, encoded by base64 urlsafe
- data     | string | Data transferred from controller to host, encoded by base64 urlsafe
- metadata | string | Metadata transferred from controller to host, encoded by base64 urlsafe
+{{ bdev_nvme_send_cmd_response }}
 
 #### Example
 
