@@ -316,7 +316,7 @@ def generate_docs(schema: Dict[str, Any]) -> str:
         if 'result' in method:
             result = method['result']
             transformation[f"{method['name']}_response"] = " ".join(result['description'].split())
-            if result['type'] == 'object' and 'class' in result:
+            if result['type'] in ('object', 'array') and result.get('class') in schema_objects:
                 fields = [
                     dict(
                         Name=el["name"],

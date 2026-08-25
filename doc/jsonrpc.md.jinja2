@@ -5285,12 +5285,7 @@ Example response:
 
 #### Response
 
-Array of objects describing authentication group.
-
- Name    | Type   | Description
--------- | ------ | ---------------------------------------------------------
- tag     | number | Authentication group tag
- secrets | array  | Array of @ref rpc_iscsi_create_auth_group_secret objects
+{{ iscsi_get_auth_groups_response }}
 
 #### Example
 
@@ -5395,13 +5390,7 @@ Example response:
 
 #### Response
 
-Array of objects describing initiator groups.
-
- Name       | Type   | Description
------------ | ------ | ---------------------------------------------
- tag        | number | Initiator group tag
- initiators | array  | Array of initiator hostnames or IP addresses
- netmasks   | array  | Array of initiator netmasks
+{{ iscsi_get_initiator_groups_response }}
 
 #### Example
 
@@ -5552,21 +5541,7 @@ Example response:
 
 #### Response
 
-Array of objects describing target node.
-
- Name          | Type    | Description
--------------- | ------- | ---------------------------------------------------------------------------------
- name          | string  | Target node name (ASCII)
- alias_name    | string  | Target node alias name (ASCII)
- pg_ig_maps    | array   | Array of Portal_Group_Tag:Initiator_Group_Tag mappings
- luns          | array   | Array of Bdev names to LUN ID mappings
- queue_depth   | number  | Target queue depth
- disable_chap  | boolean | CHAP authentication should be disabled for this target
- require_chap  | boolean | CHAP authentication should be required for this target
- mutual_chap   | boolean | CHAP authentication should be bidirectional (`true`) or unidirectional (`false`)
- chap_group    | number  | Authentication group ID for this target node
- header_digest | boolean | Header Digest should be required for this target node
- data_digest   | boolean | Data Digest should be required for this target node
+{{ iscsi_get_target_nodes_response }}
 
 #### Example
 
@@ -5923,17 +5898,7 @@ Example response:
 
 #### Response
 
-Array of objects describing iSCSI connection.
-
- Name             | Type   | Description
------------------ | ------ | -----------------------------------------------
- id               | number | Index (used for TTT - Target Transfer Tag)
- cid              | number | CID (Connection ID)
- tsih             | number | TSIH (Target Session Identifying Handle)
- lcore_id         | number | Core number on which the iSCSI connection runs
- initiator_addr   | string | Initiator address
- target_addr      | string | Target address
- target_node_name | string | Target node name (ASCII) without prefix
+{{ iscsi_get_connections_response }}
 
 #### Example
 
@@ -8834,13 +8799,7 @@ Example response:
 
 #### Response
 
-Response is an array of event objects.
-
- Name   | Type   | Description
-------- | ------ | -------------------
- id     | number | Event ID.
- type   | number | Type of the event.
- ctx    | string | Event context.
+{{ notify_get_notifications_response }}
 
 #### Example
 
@@ -9153,13 +9112,7 @@ Example response:
 
 #### Response
 
- Name        | Type   | Description
------------- | ------ | --------------
- ublk_device | string | path to the ublk device node
- id          | int    | device id
- queue_depth | int    | queue depth supported for each queue
- num_queues  | int    | number of queues supported by the ublk device
- bdev_name   | string | name of the bdev backing the ublk device
+{{ ublk_get_disks_response }}
 
 #### Example
 

@@ -559,6 +559,117 @@ results:
       - name: metadata
         type: string
         description: Metadata transferred from controller to host, encoded by base64 urlsafe
+  - name: notify_get_notifications_result
+    fields:
+      - name: type
+        type: string
+        description: Type of the event
+      - name: ctx
+        type: string
+        description: Event context
+      - name: id
+        type: uint64
+        description: Event ID
+  - name: ublk_get_disks_result
+    fields:
+      - name: ublk_device
+        type: string
+        description: Path to the ublk device node
+      - name: id
+        type: uint32
+        description: Device id
+      - name: queue_depth
+        type: uint32
+        description: Queue depth supported for each queue
+      - name: num_queues
+        type: uint32
+        description: Number of queues supported by the ublk device
+      - name: bdev_name
+        type: string
+        description: Name of the bdev backing the ublk device
+  - name: iscsi_get_initiator_groups_result
+    fields:
+      - name: tag
+        type: int32
+        description: Initiator group tag
+      - name: initiators
+        type: array
+        description: Array of initiator hostnames or IP addresses
+      - name: netmasks
+        type: array
+        description: Array of initiator netmasks
+  - name: iscsi_get_auth_groups_result
+    fields:
+      - name: tag
+        type: int32
+        description: Authentication group tag
+      - name: secrets
+        type: array
+        description: Array of @ref rpc_iscsi_create_auth_group_secret objects
+  - name: iscsi_get_connections_result
+    fields:
+      - name: id
+        type: int32
+        description: Index (used for TTT - Target Transfer Tag)
+      - name: cid
+        type: int32
+        description: CID (Connection ID)
+      - name: tsih
+        type: int32
+        description: TSIH (Target Session Identifying Handle)
+      - name: state
+        type: string
+        description: Connection state
+      - name: login_phase
+        type: string
+        description: Connection login phase
+      - name: initiator_addr
+        type: string
+        description: Initiator address
+      - name: target_addr
+        type: string
+        description: Target address
+      - name: target_node_name
+        type: string
+        description: Target node name (ASCII) without prefix
+      - name: thread_name
+        type: string
+        description: Thread name on which the iSCSI connection runs
+  - name: iscsi_get_target_nodes_result
+    fields:
+      - name: name
+        type: string
+        description: Target node name (ASCII)
+      - name: alias_name
+        type: string
+        description: Target node alias name (ASCII)
+      - name: pg_ig_maps
+        type: array
+        description: Array of Portal_Group_Tag:Initiator_Group_Tag mappings
+      - name: luns
+        type: array
+        description: Array of Bdev names to LUN ID mappings
+      - name: queue_depth
+        type: int32
+        description: Target queue depth
+      - name: disable_chap
+        type: boolean
+        description: CHAP authentication should be disabled for this target
+      - name: require_chap
+        type: boolean
+        description: CHAP authentication should be required for this target
+      - name: mutual_chap
+        type: boolean
+        description: CHAP authentication should be bidirectional (true) or unidirectional (false)
+      - name: chap_group
+        type: int32
+        description: Authentication group ID for this target node
+      - name: header_digest
+        type: boolean
+        description: Header Digest should be required for this target node
+      - name: data_digest
+        type: boolean
+        description: Data Digest should be required for this target node
 arrays:
   - name: bdev_histogram_borders
     item_type: uint64
@@ -2877,6 +2988,10 @@ methods:
         description: Authentication group tag (unique, integer > 0)
   - name: iscsi_get_auth_groups
     description: Show information about all existing authentication group for CHAP authentication.
+    result:
+      type: array
+      class: iscsi_get_auth_groups_result
+      description: Array of objects describing authentication group.
     params: []
   - name: iscsi_auth_group_add_secret
     description: Add a secret to an existing authentication group for CHAP authentication.
@@ -2918,6 +3033,10 @@ methods:
         description: User name for one-way (unidirectional) CHAP authentication
   - name: iscsi_get_initiator_groups
     description: Show information about all available initiator groups.
+    result:
+      type: array
+      class: iscsi_get_initiator_groups_result
+      description: Array of objects describing initiator groups.
     params: []
   - name: iscsi_create_initiator_group
     description: Add an initiator group.
@@ -3001,6 +3120,10 @@ methods:
           This parameter can be omitted.  Example: '255.255.0.0 255.248.0.0' etc
   - name: iscsi_get_target_nodes
     description: Show information about all available iSCSI target nodes.
+    result:
+      type: array
+      class: iscsi_get_target_nodes_result
+      description: Array of objects describing target node.
     params: []
   - name: iscsi_create_target_node
     description: Add an iSCSI target node.
@@ -3212,6 +3335,10 @@ methods:
         description: CHAP authentication group ID for this portal group (non-zero values must reference a precreated group)
   - name: iscsi_get_connections
     description: Show information about all active connections.
+    result:
+      type: array
+      class: iscsi_get_connections_result
+      description: Array of objects describing iSCSI connection.
     params: []
   - name: iscsi_get_stats
     description: Show stat information of iSCSI connections.
@@ -4844,6 +4971,10 @@ methods:
 
       Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccessible
       due to being overwritten by new ones.
+    result:
+      type: array
+      class: notify_get_notifications_result
+      description: Array of event objects.
     params:
       - name: id
         type: uint64
@@ -4956,6 +5087,10 @@ methods:
         description: ID of the ublk device to stop
   - name: ublk_get_disks
     description: Display full or specified ublk device list
+    result:
+      type: array
+      class: ublk_get_disks_result
+      description: Array of objects describing ublk device.
     params:
       - name: ublk_id
         type: uint32
