@@ -2307,6 +2307,8 @@ static int
 posix_connect_poller(struct spdk_posix_sock *sock)
 {
 	struct posix_connect_ctx *ctx = sock->connect_ctx;
+	struct spdk_sock *base = &sock->base;
+	bool closed;
 	int rc;
 
 	if (sock->ready) {
@@ -2343,8 +2345,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	sock->fd = ctx->fd;
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	posix_sock_init(sock, sock->base.opts.zcopy && !spdk_net_is_loopback(sock->fd) && !ctx->ssl &&
-			sock->base.impl_opts.enable_zerocopy_send_client);
+	posix_sock_init(sock, base->opts.zcopy && !spdk_net_is_loopback(sock->fd) && !ctx->ssl &&
+			base->impl_opts.enable_zerocopy_send_client);
 
 	if (ctx->ssl) {
 		rc = posix_sock_configure_ssl(sock, true);
@@ -2354,7 +2356,7 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	}
 
 	if (ctx->set_recvlowat != -1) {
-		rc = posix_sock_set_recvlowat(&sock->base, ctx->set_recvlowat);
+		rc = posix_sock_set_recvlowat(base, ctx->set_recvlowat);
 		if (rc < 0) {
 			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvlowat() failed, rc %d: %s.\n",
 				    rc, spdk_strerror(-rc));
@@ -2363,7 +2365,7 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	}
 
 	if (ctx->set_recvbuf != -1) {
-		rc = posix_sock_set_recvbuf(&sock->base, ctx->set_recvbuf);
+		rc = posix_sock_set_recvbuf(base, ctx->set_recvbuf);
 		if (rc < 0) {
 			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_recvbuf() failed, rc %d: %s.\n",
 				    rc, spdk_strerror(-rc));
@@ -2372,7 +2374,7 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	}
 
 	if (ctx->set_sendbuf != -1) {
-		rc = posix_sock_set_sendbuf(&sock->base, ctx->set_sendbuf);
+		rc = posix_sock_set_sendbuf(base, ctx->set_sendbuf);
 		if (rc < 0) {
 			SPDK_ERRLOG("Connection was established but delayed posix_sock_set_sendbuf() failed, rc %d: %s.\n",
 				    rc, spdk_strerror(-rc));
@@ -2380,8 +2382,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 		}
 	}
 
-	if (sock->base.group_impl) {
-		rc = posix_sock_group_impl_add_sock(sock->base.group_impl, &sock->base);
+	if (base->group_impl) {
+		rc = posix_sock_group_impl_add_sock(base->group_impl, base);
 		if (rc) {
 			SPDK_ERRLOG("Connection was established but delayed posix_sock_group_impl_add_sock() failed %d (errno=%d).\n",
 				    rc, errno);
@@ -2396,6 +2398,8 @@ err:
 	/* It is safe to pass NULL to SSL free functions. */
 	SSL_free(sock->ssl);
 	SSL_CTX_free(sock->ssl_ctx);
+	sock->ssl = NULL;
+	sock->ssl_ctx = NULL;
 	if (ctx->fd != -1) {
 		close(ctx->fd);
 	}
@@ -2404,7 +2408,17 @@ err:
 	sock->ready = false;
 
 out:
+	closed = base->flags.closed;
+	base->cb_cnt++;
 	sock_posix_connect_ctx_cleanup(&sock->connect_ctx, rc);
+	assert(base->cb_cnt > 0);
+	base->cb_cnt--;
+	if (base->cb_cnt == 0 && !closed && base->flags.closed) {
+		/* The user closed the socket in response to a callback above. */
+		spdk_sock_close(&base);
+		return -EBADF;
+	}
+
 	return rc;
 }
 
