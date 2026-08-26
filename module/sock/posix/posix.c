@@ -1504,7 +1504,7 @@ posix_sock_flush(struct spdk_sock *sock)
 {
 #ifdef SPDK_ZEROCOPY
 	struct spdk_posix_sock *psock = __posix_sock(sock);
-	int rc;
+	int rc, retval;
 
 	rc = _sock_flush(sock);
 	if (rc == -EBADF) {
@@ -1512,7 +1512,10 @@ posix_sock_flush(struct spdk_sock *sock)
 	}
 
 	if (psock->zcopy && !TAILQ_EMPTY(&sock->pending_reqs)) {
-		_sock_check_zcopy(sock);
+		retval = _sock_check_zcopy(sock);
+		if (retval < 0) {
+			return retval;
+		}
 	}
 
 	return rc;
