@@ -971,6 +971,7 @@ sock_request_advance_offset(struct spdk_sock_request *req, ssize_t rc)
 	return rc;
 }
 
+/* On error the socket is closed. The caller must not use sock afterwards. */
 static int
 sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 {
@@ -1004,7 +1005,7 @@ sock_complete_write_reqs(struct spdk_sock *_sock, ssize_t rc, bool is_zcopy)
 		if (!req->internal.pending_zcopy &&
 		    req == TAILQ_FIRST(&_sock->pending_reqs)) {
 			retval = spdk_sock_request_put(_sock, req, 0);
-			if (retval) {
+			if (retval < 0) {
 				return retval;
 			}
 		}
@@ -1336,7 +1337,10 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 				task->iov_cnt = 0;
 				is_zcopy = task->is_zcopy;
 				task->is_zcopy = false;
-				sock_complete_write_reqs(&sock->base, status, is_zcopy);
+				ret = sock_complete_write_reqs(&sock->base, status, is_zcopy);
+				if (ret < 0) {
+					break;
+				}
 			}
 
 			break;
@@ -1349,7 +1353,11 @@ sock_uring_group_reap(struct spdk_uring_sock_group_impl *group, int max, int max
 			} else if (spdk_unlikely(status < 0)) {
 				uring_sock_fail(sock, status);
 			} else {
-				_sock_check_zcopy(&sock->base, status);
+				ret = _sock_check_zcopy(&sock->base, status);
+				if (ret < 0) {
+					break;
+				}
+
 				_sock_prep_errqueue(&sock->base);
 			}
 			break;
@@ -1451,7 +1459,7 @@ uring_sock_writev_async(struct spdk_sock *_sock, struct spdk_sock_request *req)
 	if (!sock->group) {
 		if (_sock->queued_iovcnt >= IOV_BATCH_SIZE) {
 			rc = uring_sock_flush(_sock);
-			if (rc < 0 && rc != -EAGAIN) {
+			if (rc < 0 && rc != -EAGAIN && rc != -EBADF) {
 				spdk_sock_abort_requests(_sock);
 			}
 		}
@@ -1945,8 +1953,7 @@ uring_sock_flush(struct spdk_sock *_sock)
 #endif
 	retval = sock_complete_write_reqs(_sock, rc, is_zcopy);
 	if (retval < 0) {
-		/* if the socket is closed, return to avoid heap-use-after-free error */
-		return -ENOTCONN;
+		return retval;
 	}
 
 #ifdef SPDK_ZEROCOPY
@@ -1958,7 +1965,8 @@ uring_sock_flush(struct spdk_sock *_sock)
 				return 0;
 			}
 		}
-		_sock_check_zcopy(_sock, retval);
+
+		return _sock_check_zcopy(_sock, retval);
 	}
 #endif
 
