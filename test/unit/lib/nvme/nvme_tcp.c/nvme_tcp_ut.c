@@ -1677,9 +1677,6 @@ test_nvme_tcp_ctrlr_disconnect_qpair(void)
 	TAILQ_REMOVE(&tqpair.outstanding_reqs, &treq, link);
 
 	rc = nvme_tcp_qpair_process_completions(qpair, 0);
-	CU_ASSERT_EQUAL(rc, 0);
-	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
-	rc = nvme_tcp_qpair_process_completions(qpair, 0);
 	CU_ASSERT_EQUAL(rc, -ENXIO);
 	CU_ASSERT_EQUAL(qpair->state, NVME_QPAIR_DISCONNECTED);
 	MOCK_CLEAR(spdk_sock_flush);

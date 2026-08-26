@@ -420,7 +420,7 @@ nvme_tcp_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 	nvme_transport_ctrlr_disconnect_qpair_done(qpair);
 }
 
-static inline void
+static inline bool
 nvme_tcp_qpair_try_disconnect_done(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
@@ -429,6 +429,8 @@ nvme_tcp_qpair_try_disconnect_done(struct spdk_nvme_qpair *qpair)
 	    TAILQ_EMPTY(&tqpair->outstanding_reqs)) {
 		nvme_tcp_ctrlr_disconnect_qpair_done(qpair);
 	}
+
+	return nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED;
 }
 
 static void
@@ -2396,8 +2398,8 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		rc = spdk_sock_flush(tqpair->sock);
 		if (rc < 0 && rc != -EAGAIN) {
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
-				nvme_tcp_qpair_try_disconnect_done(qpair);
+			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING &&
+			    !nvme_tcp_qpair_try_disconnect_done(qpair)) {
 				/* Don't return errors until the qpair gets disconnected */
 				return 0;
 			}
@@ -3041,11 +3043,10 @@ nvme_tcp_poll_group_process_completions(struct spdk_nvme_transport_poll_group *t
 	}
 
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->disconnected_qpairs, poll_group_stailq, tmp_qpair) {
-		nvme_tcp_qpair_try_disconnect_done(qpair);
 		/* Wait until the qpair transitions to the DISCONNECTED state, otherwise user might
 		 * want to free it from disconnect_qpair_cb, while it's not fully disconnected (and
 		 * might still have outstanding requests) */
-		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED) {
+		if (nvme_tcp_qpair_try_disconnect_done(qpair)) {
 			disconnected_qpair_cb(qpair, tgroup->group->ctx);
 		}
 	}
