@@ -20,6 +20,8 @@ static void nvme_transport_ctrlr_disconnect_qpair_done_mocked(struct spdk_nvme_q
 #define nvme_transport_ctrlr_disconnect_qpair_done nvme_transport_ctrlr_disconnect_qpair_done_mocked
 static void nvme_ctrlr_destruct_mocked(struct spdk_nvme_ctrlr *ctrlr);
 #define nvme_ctrlr_destruct nvme_ctrlr_destruct_mocked
+static void nvme_ctrlr_disconnect_qpair_mocked(struct spdk_nvme_qpair *qpair);
+#define nvme_ctrlr_disconnect_qpair nvme_ctrlr_disconnect_qpair_mocked
 
 #include "nvme/nvme_tcp.c"
 
@@ -77,6 +79,19 @@ nvme_ctrlr_destruct_mocked(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* Real nvme_ctrlr_destruct() dispatches to the transport destruct; that is what frees the controller. */
 	nvme_tcp_ctrlr_destruct(ctrlr);
+}
+
+static void
+nvme_ctrlr_disconnect_qpair_mocked(struct spdk_nvme_qpair *qpair)
+{
+	/* Mimic nvme_transport_ctrlr_disconnect_qpair() without looking up the transport. */
+	if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING ||
+	    nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED) {
+		return;
+	}
+
+	nvme_qpair_set_state(qpair, NVME_QPAIR_DISCONNECTING);
+	nvme_tcp_ctrlr_disconnect_qpair(qpair->ctrlr, qpair);
 }
 
 static void
@@ -1523,9 +1538,22 @@ test_nvme_tcp_ctrlr_connect_qpair(void)
 	tqpair->qpair.ctrlr->opts.header_digest = true;
 	tqpair->qpair.ctrlr->opts.data_digest = true;
 	TAILQ_INIT(&tqpair->send_queue);
+	TAILQ_INIT(&tqpair->outstanding_reqs);
 
 	rc = nvme_tcp_ctrlr_connect_qpair(&ctrlr, qpair);
 	CU_ASSERT(rc == 0);
+
+	/* sock connection failed */
+	nvme_tcp_sock_connect_cb_fn(tqpair, -ECONNREFUSED);
+	CU_ASSERT(qpair->transport_failure_reason == SPDK_NVME_QPAIR_FAILURE_UNKNOWN);
+	CU_ASSERT(qpair->state == NVME_QPAIR_DISCONNECTED);
+	CU_ASSERT(tqpair->state == NVME_TCP_QPAIR_STATE_SOCK_CONNECTING);
+	CU_ASSERT(tqpair->sock == NULL);
+
+	/* Restore qpair to complete the successful connect path */
+	qpair->state = NVME_QPAIR_CONNECTING;
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+	tqpair->sock = (struct spdk_sock *)0xDEADBEEF;
 
 	/* assume sock connection established */
 	nvme_tcp_sock_connect_cb_fn(tqpair, 0);

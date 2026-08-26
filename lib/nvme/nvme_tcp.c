@@ -2490,6 +2490,8 @@ nvme_tcp_sock_connect_cb_fn(void *cb_arg, int status)
 
 	if (status < 0) {
 		NVME_TQPAIR_ERRLOG(tqpair, "sock connection error %d (%s)\n", status, spdk_strerror(abs(status)));
+		tqpair->qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+		nvme_ctrlr_disconnect_qpair(&tqpair->qpair);
 		return;
 	}
 
