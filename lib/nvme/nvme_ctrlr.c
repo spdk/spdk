@@ -3444,11 +3444,17 @@ nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr_process *proc)
 	}
 }
 
+static void nvme_ctrlr_publish_async_event(struct spdk_nvme_ctrlr_aer_completion *src);
+
 static void
 nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
 				      bool ns_attr_changed)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
+
+	if (!async_event->processed) {
+		nvme_ctrlr_publish_async_event(async_event);
+	}
 
 	active_proc = nvme_ctrlr_get_current_process(async_event->ctrlr);
 	if (active_proc) {
@@ -3464,19 +3470,17 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 	nvme_ctrlr_free_async_event(async_event);
 }
 
-static int
-nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr, uint32_t **changed_ns_list_out)
+static void nvme_ctrlr_aer_handle_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_ctrlr_aer_completion *async_event);
+
+static void
+nvme_ctrlr_aer_get_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
+				  struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
 	struct nvme_completion_poll_status	*status;
 	int		rc = -ENOMEM;
 	uint32_t	*changed_ns_list;
 	size_t		changed_ns_list_length = SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t);
-
-	*changed_ns_list_out = NULL;
-
-	if (ctrlr->opts.disable_read_changed_ns_list_log_page) {
-		return 0;
-	}
 
 	changed_ns_list = spdk_zmalloc(changed_ns_list_length, 0, NULL, SPDK_ENV_NUMA_ID_ANY,
 				       SPDK_MALLOC_SHARE);
@@ -3518,12 +3522,101 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr, uint32_t **change
 		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log is empty despite NS_ATTR_CHANGED AER.\n");
 	}
 
-	*changed_ns_list_out = changed_ns_list;
-	return 0;
-
+	async_event->log_page.changed_ns_list = changed_ns_list;
+	nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
+	return;
 out:
 	spdk_free(changed_ns_list);
-	return rc;
+	if (rc == -ECANCELED || rc == -ENXIO) {
+		/*
+		 * Return early as we either failed to submit or complete the get changed
+		 * ns log page request. This would be because of a transport/device error
+		 * or timer expired.
+		 */
+		nvme_ctrlr_free_async_event(async_event);
+		return;
+	}
+
+	nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
+}
+
+static void
+nvme_ctrlr_aer_identify_changed_ns(struct spdk_nvme_ctrlr *ctrlr,
+				   struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	struct spdk_nvme_ns *ns;
+	uint32_t ns_count;
+	uint32_t nsid;
+
+	for (ns_count = 0; ns_count < SPDK_NVME_MAX_CHANGED_NAMESPACES; ns_count++) {
+		nsid = async_event->log_page.changed_ns_list[ns_count];
+		if (nsid == 0) {
+			break;
+		}
+
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		if (!ns) {
+			assert(false);
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to get namespace %u from changed NS list "
+					  "(NSID out of range or OOM)\n", nsid);
+			continue;
+		}
+
+		nvme_ns_identify(ns);
+	}
+
+	nvme_io_msg_ctrlr_update(ctrlr);
+	async_event->changed_ns_count = ns_count;
+	nvme_ctrlr_process_async_event_finish(async_event, true);
+}
+
+static void
+nvme_ctrlr_aer_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr,
+				  struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	struct spdk_nvme_ns *ns;
+	int rc;
+
+	rc = nvme_ctrlr_identify_active_ns(ctrlr);
+	if (rc) {
+		nvme_ctrlr_free_async_event(async_event);
+		return;
+	}
+
+	RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
+		if (ns->identify_pending) {
+			nvme_ns_identify(ns);
+		}
+	}
+
+	nvme_io_msg_ctrlr_update(ctrlr);
+	nvme_ctrlr_process_async_event_finish(async_event, true);
+}
+
+static void
+nvme_ctrlr_aer_handle_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
+				     struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	if (!async_event->log_page.changed_ns_list) {
+		/* Log page is not used, go over all namespaces pending identification. */
+		nvme_ctrlr_aer_identify_active_ns(ctrlr, async_event);
+		return;
+	}
+
+	/* Log page is used, go over changed namespace list only. */
+	nvme_ctrlr_aer_identify_changed_ns(ctrlr, async_event);
+}
+
+static void
+nvme_ctrlr_process_async_event_ns_attr_changed(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	if (!ctrlr->opts.disable_read_changed_ns_list_log_page) {
+		nvme_ctrlr_aer_get_changed_ns_log(ctrlr, async_event);
+		return;
+	}
+
+	nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
 }
 
 static void
@@ -3567,10 +3660,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
 	struct spdk_nvme_cpl *cpl = &async_event->cpl;
 	union spdk_nvme_async_event_completion event;
-	struct spdk_nvme_ns *ns;
 	bool ns_attr_changed = false;
-	uint32_t ns_count = 0;
-	uint32_t nsid;
 	int rc;
 
 	event.raw = cpl->cdw0;
@@ -3585,59 +3675,13 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	}
 
 	if (event.bits.async_event_type != SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
-		goto publish;
+		goto out;
 	}
 
 	switch (event.bits.async_event_info) {
 	case SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED:
-		rc = nvme_ctrlr_clear_changed_ns_log(ctrlr, &async_event->log_page.changed_ns_list);
-		if (rc == -ECANCELED || rc == -ENXIO) {
-			/*
-			 * Return early as we either failed to submit or complete the get changed
-			 * ns log page request. This would be because of a transport/device error
-			 * or timer expired.
-			 */
-			nvme_ctrlr_free_async_event(async_event);
-			return;
-		}
-
-		if (!async_event->log_page.changed_ns_list) {
-			/* Log page is not used, go over all namespaces pending identification. */
-			rc = nvme_ctrlr_identify_active_ns(ctrlr);
-			if (rc) {
-				nvme_ctrlr_free_async_event(async_event);
-				return;
-			}
-
-			RB_FOREACH(ns, nvme_ns_tree, &ctrlr->ns) {
-				if (ns->identify_pending) {
-					nvme_ns_identify(ns);
-				}
-			}
-		} else {
-			/* Log page is used, go over changed namespace list only. */
-			for (ns_count = 0; ns_count < SPDK_NVME_MAX_CHANGED_NAMESPACES; ns_count++) {
-				nsid = async_event->log_page.changed_ns_list[ns_count];
-				if (nsid == 0) {
-					break;
-				}
-
-				ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-				if (!ns) {
-					assert(false);
-					NVME_CTRLR_ERRLOG(ctrlr, "Failed to get namespace %u from changed NS list "
-							  "(NSID out of range or OOM)\n", nsid);
-					continue;
-				}
-
-				nvme_ns_identify(ns);
-			}
-		}
-
-		nvme_io_msg_ctrlr_update(ctrlr);
-		async_event->changed_ns_count = ns_count;
-		ns_attr_changed = true;
-		break;
+		nvme_ctrlr_process_async_event_ns_attr_changed(ctrlr, async_event);
+		return;
 	case SPDK_NVME_ASYNC_EVENT_ANA_CHANGE:
 		if (ctrlr->opts.disable_read_ana_log_page) {
 			break;
@@ -3654,8 +3698,6 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 		break;
 	}
 
-publish:
-	nvme_ctrlr_publish_async_event(async_event);
 out:
 	nvme_ctrlr_process_async_event_finish(async_event, ns_attr_changed);
 }
