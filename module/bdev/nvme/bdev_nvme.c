@@ -6257,6 +6257,10 @@ bdev_nvme_start_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr, bool hotplug)
 
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "destructing ctrlr\n");
 	nvme_ctrlr->destruct = true;
+
+	spdk_nvme_ctrlr_register_aer_callback(nvme_ctrlr->ctrlr, NULL, NULL);
+	spdk_nvme_ctrlr_register_ns_attr_changed_callback(nvme_ctrlr->ctrlr, NULL, NULL);
+
 	nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
 	nvme_ctrlr_put_ref(nvme_ctrlr);
 	return 0;
