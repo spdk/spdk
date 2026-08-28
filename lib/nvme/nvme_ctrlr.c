@@ -3683,6 +3683,9 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ctrlr_process *active_proc;
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (!active_proc) {
+		return;
+	}
 
 	STAILQ_FOREACH_SAFE(async_event, &active_proc->async_events, link, async_event_tmp) {
 		STAILQ_REMOVE(&active_proc->async_events, async_event,
@@ -4915,7 +4918,6 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int32_t num_completions;
 	int32_t rc;
-	struct spdk_nvme_ctrlr_process	*active_proc;
 
 	nvme_ctrlr_lock(ctrlr);
 
@@ -4936,11 +4938,7 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 
 	rc = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 
-	/* Each process has an async list, complete the ones for this process object */
-	active_proc = nvme_ctrlr_get_current_process(ctrlr);
-	if (active_proc) {
-		nvme_ctrlr_complete_queued_async_events(ctrlr);
-	}
+	nvme_ctrlr_complete_queued_async_events(ctrlr);
 
 	if (rc == -ENXIO && ctrlr->is_disconnecting) {
 		nvme_ctrlr_disconnect_done(ctrlr);
