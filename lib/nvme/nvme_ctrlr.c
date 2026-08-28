@@ -3426,6 +3426,18 @@ nvme_ctrlr_duplicate_changed_ns_list(struct spdk_nvme_ctrlr *ctrlr, const uint32
 }
 
 static void
+nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr_process *proc)
+{
+	struct spdk_nvme_ctrlr_aer_completion *event;
+
+	while (!STAILQ_EMPTY(&proc->async_events)) {
+		event = STAILQ_FIRST(&proc->async_events);
+		STAILQ_REMOVE_HEAD(&proc->async_events, link);
+		nvme_ctrlr_free_async_event(event);
+	}
+}
+
+static void
 nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
 				      bool ns_attr_changed)
 {
@@ -3892,6 +3904,8 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 
 	assert(STAILQ_EMPTY(&proc->active_reqs));
 
+	nvme_ctrlr_free_async_events(proc);
+
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
@@ -3916,7 +3930,6 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct nvme_request	*req, *tmp_req;
 	struct spdk_nvme_qpair	*qpair, *tmp_qpair;
-	struct spdk_nvme_ctrlr_aer_completion *event;
 
 	STAILQ_FOREACH_SAFE(req, &proc->active_reqs, stailq, tmp_req) {
 		STAILQ_REMOVE(&proc->active_reqs, req, nvme_request, stailq);
@@ -3926,12 +3939,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		nvme_free_request(req);
 	}
 
-	/* Remove async event from each process objects event list */
-	while (!STAILQ_EMPTY(&proc->async_events)) {
-		event = STAILQ_FIRST(&proc->async_events);
-		STAILQ_REMOVE_HEAD(&proc->async_events, link);
-		nvme_ctrlr_free_async_event(event);
-	}
+	nvme_ctrlr_free_async_events(proc);
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		TAILQ_REMOVE(&proc->allocated_io_qpairs, qpair, per_process_tailq);
@@ -3964,9 +3972,8 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 	/* Free all the processes' properties and make sure no pending admin IOs */
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
 		TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
-
 		assert(STAILQ_EMPTY(&active_proc->active_reqs));
-
+		nvme_ctrlr_free_async_events(active_proc);
 		spdk_free(active_proc);
 	}
 }
