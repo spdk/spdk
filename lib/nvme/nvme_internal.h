@@ -1176,6 +1176,10 @@ struct spdk_nvme_ctrlr {
 	uint32_t			num_aers;
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
 
+	/** currently processed AER */
+	struct spdk_nvme_ctrlr_aer_completion	*async_event_in_progress;
+	struct spdk_nvme_ctrlr_process		*async_event_in_progress_proc;
+
 	/** guards access to the controller itself, including admin queues */
 	pthread_mutex_t			ctrlr_lock;
 

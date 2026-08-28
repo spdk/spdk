@@ -3389,6 +3389,13 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_free_async_event(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
+	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
+
+	if (ctrlr->async_event_in_progress == async_event) {
+		ctrlr->async_event_in_progress = NULL;
+		ctrlr->async_event_in_progress_proc = NULL;
+	}
+
 	spdk_free(async_event->log_page.changed_ns_list);
 	spdk_free(async_event);
 }
@@ -3679,19 +3686,27 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ctrlr_aer_completion *async_event, *async_event_tmp;
+	struct spdk_nvme_ctrlr_aer_completion *async_event;
 	struct spdk_nvme_ctrlr_process *active_proc;
+
+	if (ctrlr->async_event_in_progress) {
+		return;
+	}
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (!active_proc) {
 		return;
 	}
 
-	STAILQ_FOREACH_SAFE(async_event, &active_proc->async_events, link, async_event_tmp) {
-		STAILQ_REMOVE(&active_proc->async_events, async_event,
-			      spdk_nvme_ctrlr_aer_completion, link);
-		nvme_ctrlr_process_async_event(async_event);
+	async_event = STAILQ_FIRST(&active_proc->async_events);
+	if (!async_event) {
+		return;
 	}
+
+	STAILQ_REMOVE_HEAD(&active_proc->async_events, link);
+	ctrlr->async_event_in_progress = async_event;
+	ctrlr->async_event_in_progress_proc = active_proc;
+	nvme_ctrlr_process_async_event(async_event);
 }
 
 static void
@@ -4697,6 +4712,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 	ctrlr->is_destructed = false;
+	ctrlr->async_event_in_progress = NULL;
+	ctrlr->async_event_in_progress_proc = NULL;
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
