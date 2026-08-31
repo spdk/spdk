@@ -416,6 +416,25 @@ static struct spdk_bdev_module nvme_if = {
 };
 SPDK_BDEV_MODULE_REGISTER(nvme, &nvme_if)
 
+static struct nvme_bdev *
+bdev_nvme_get_nbdev_from_desc(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	if (desc == NULL) {
+		return NULL;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(desc);
+	if (bdev == NULL || bdev->module != &nvme_if) {
+		return NULL;
+	}
+
+	return nbdev_from_bdev(bdev);
+}
+
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 bool g_bdev_nvme_module_finish;
 
@@ -5736,6 +5755,135 @@ err_open:
 	free(ctx);
 err_alloc:
 	cb_fn(cb_arg, rc);
+}
+
+struct bdev_nvme_get_path_stat_ctx {
+	spdk_bdev_nvme_get_path_stat_cb		cb_fn;
+	void					*cb_arg;
+	struct spdk_bdev_nvme_path_stat		*path_stats;
+	struct nvme_ns				**nvme_ns;
+	uint32_t				num_paths;
+};
+
+static void
+bdev_nvme_get_path_stat_ctx_free(struct bdev_nvme_get_path_stat_ctx *ctx)
+{
+	if (ctx == NULL) {
+		return;
+	}
+
+	free(ctx->path_stats);
+	free(ctx->nvme_ns);
+	free(ctx);
+}
+
+static void
+bdev_nvme_get_path_stat_per_channel(struct nvme_bdev_channel_iter *i,
+				    struct nvme_bdev *nbdev,
+				    struct nvme_bdev_channel *nbdev_ch,
+				    void *_ctx)
+{
+	struct bdev_nvme_get_path_stat_ctx *ctx = _ctx;
+	struct nvme_io_path *io_path;
+	uint32_t j;
+
+	STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
+		for (j = 0; j < ctx->num_paths; j++) {
+			if (ctx->nvme_ns[j] == io_path->nvme_ns) {
+				assert(io_path->stat != NULL);
+				spdk_bdev_add_io_stat(&ctx->path_stats[j].stat, io_path->stat);
+				break;
+			}
+		}
+	}
+
+	nvme_bdev_for_each_channel_continue(i, 0);
+}
+
+static void
+bdev_nvme_get_path_stat_done(struct nvme_bdev *nbdev, void *_ctx, int status)
+{
+	struct bdev_nvme_get_path_stat_ctx *ctx = _ctx;
+
+	ctx->cb_fn(ctx->cb_arg, ctx->path_stats, ctx->num_paths, status);
+
+	bdev_nvme_get_path_stat_ctx_free(ctx);
+}
+
+/* Per-path I/O stats C API. This is the C-callable equivalent of the
+ * bdev_nvme_get_path_iostat JSON-RPC.
+ */
+int
+spdk_bdev_nvme_get_path_stat(struct spdk_bdev_desc *desc,
+			     spdk_bdev_nvme_get_path_stat_cb cb_fn,
+			     void *cb_arg)
+{
+	struct nvme_bdev *nbdev;
+	struct nvme_ns *nvme_ns;
+	struct bdev_nvme_get_path_stat_ctx *ctx;
+	struct spdk_bdev_nvme_opts opts;
+	const struct spdk_nvme_transport_id *trid;
+	uint32_t num_paths, i;
+	int rc;
+
+	if (desc == NULL || cb_fn == NULL) {
+		return -EINVAL;
+	}
+
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	if (!opts.io_path_stat) {
+		SPDK_ERRLOG("spdk_bdev_nvme_get_path_stat requires io_path_stat=true\n");
+		return -EPERM;
+	}
+
+	nbdev = bdev_nvme_get_nbdev_from_desc(desc);
+	if (nbdev == NULL) {
+		return -ENODEV;
+	}
+	if (nbdev->ref == 0) {
+		return -ENOENT;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	num_paths = nbdev->ref;
+	ctx->path_stats = calloc(num_paths, sizeof(*ctx->path_stats));
+	ctx->nvme_ns = calloc(num_paths, sizeof(*ctx->nvme_ns));
+	if (ctx->path_stats == NULL || ctx->nvme_ns == NULL) {
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	/* Initialize minimum latency fields to UINT64_MAX before aggregation. */
+	for (i = 0; i < num_paths; i++) {
+		spdk_bdev_reset_io_stat(&ctx->path_stats[i].stat, SPDK_BDEV_RESET_STAT_MAXMIN);
+	}
+
+	i = 0;
+	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
+		assert(i < num_paths);
+		trid = spdk_nvme_ctrlr_get_transport_id(nvme_ns->ctrlr->ctrlr);
+		ctx->path_stats[i].trid = *trid;
+		ctx->nvme_ns[i] = nvme_ns;
+		i++;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	ctx->num_paths = num_paths;
+
+	nvme_bdev_for_each_channel(nbdev,
+				   bdev_nvme_get_path_stat_per_channel,
+				   ctx,
+				   bdev_nvme_get_path_stat_done);
+	return 0;
+
+err:
+	bdev_nvme_get_path_stat_ctx_free(ctx);
+	return rc;
 }
 
 static void

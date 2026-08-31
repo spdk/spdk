@@ -2364,7 +2364,7 @@ methods:
 
   - name: bdev_nvme_get_path_iostat
     description: |
-      Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set enable_io_path_stat
+      Get I/O statistics for IO paths of the block device. Call RPC bdev_nvme_set_options to set io_path_stat
       true before using this RPC.
     params:
       - name: name

@@ -10,6 +10,7 @@
 #ifndef SPDK_MODULE_BDEV_NVME_H_
 #define SPDK_MODULE_BDEV_NVME_H_
 
+#include "spdk/bdev.h"
 #include "spdk/nvme.h"
 
 #ifdef __cplusplus
@@ -18,8 +19,34 @@ extern "C" {
 
 struct spdk_bdev_nvme_ctrlr;
 
+/**
+ * Per-path I/O statistics for an NVMe bdev.
+ *
+ * The transport ID identifies the path. Statistics are aggregated across all
+ * bdev I/O channels. The array is owned by SPDK and valid only during the
+ * spdk_bdev_nvme_get_path_stat_cb callback.
+ */
+struct spdk_bdev_nvme_path_stat {
+	struct spdk_nvme_transport_id	trid;
+	struct spdk_bdev_io_stat	stat;
+};
+
 typedef void (*spdk_bdev_nvme_create_cb)(void *ctx, size_t bdev_count, int rc);
 typedef void (*spdk_bdev_nvme_delete_cb)(void *ctx, int rc);
+
+/**
+ * Completion callback for spdk_bdev_nvme_get_path_stat().
+ *
+ * \param cb_arg User context.
+ * \param stats Array of per-path statistics, valid only during this callback.
+ * \param num_paths Number of entries in stats.
+ * \param status 0 on success, negative errno otherwise.
+ */
+typedef void (*spdk_bdev_nvme_get_path_stat_cb)(
+	void *cb_arg,
+	const struct spdk_bdev_nvme_path_stat *stats,
+	uint32_t num_paths,
+	int status);
 
 enum spdk_bdev_nvme_multipath_policy {
 	SPDK_BDEV_NVME_MULTIPATH_POLICY_ACTIVE_PASSIVE,
@@ -206,6 +233,24 @@ void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
  * \return 0 on success, negative errno on failure.
  */
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
+
+/**
+ * Asynchronously retrieve aggregated I/O statistics for an NVMe bdev's paths.
+ *
+ * The caller must provide an open descriptor and keep it valid until the
+ * completion callback returns. This function does not open or close the
+ * descriptor.
+ *
+ * Requires io_path_stat to be enabled and must be called from the app thread.
+ *
+ * \param desc Open NVMe bdev descriptor.
+ * \param cb_fn Completion callback.
+ * \param cb_arg User context passed to cb_fn.
+ * \return 0 if started, negative errno otherwise.
+ */
+int spdk_bdev_nvme_get_path_stat(struct spdk_bdev_desc *desc,
+				 spdk_bdev_nvme_get_path_stat_cb cb_fn,
+				 void *cb_arg);
 
 /**
  * Get the first bdev_nvme controller group.

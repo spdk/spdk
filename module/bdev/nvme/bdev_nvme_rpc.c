@@ -1942,20 +1942,9 @@ rpc_bdev_nvme_get_mdns_discovery_info(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("bdev_nvme_get_mdns_discovery_info", rpc_bdev_nvme_get_mdns_discovery_info,
 		  SPDK_RPC_RUNTIME)
 
-struct path_stat {
-	struct spdk_bdev_io_stat	stat;
-	struct spdk_nvme_transport_id	trid;
-
-	/* This pointer is cached on the app thread and may be freed while
-	 * iterating over nbdev channels; it must not be dereferenced. */
-	void				*nvme_ns;
-};
-
-struct rpc_bdev_nvme_path_stat_ctx {
-	struct spdk_jsonrpc_request	*request;
-	struct path_stat		*path_stat;
-	uint32_t			num_paths;
-	struct spdk_bdev_desc		*desc;
+struct rpc_bdev_nvme_get_path_iostat_ext {
+	struct rpc_bdev_nvme_get_path_iostat_ctx	req;
+	struct spdk_bdev_desc				*desc;
 };
 
 static void
@@ -1964,57 +1953,53 @@ dummy_bdev_event_cb(enum spdk_bdev_event_type type, struct spdk_bdev *bdev, void
 }
 
 static void
-rpc_bdev_nvme_path_stat_per_channel(struct nvme_bdev_channel_iter *i,
-				    struct nvme_bdev *nbdev,
-				    struct nvme_bdev_channel *nbdev_ch,
-				    void *_ctx)
+free_rpc_bdev_nvme_get_path_iostat_ext(struct rpc_bdev_nvme_get_path_iostat_ext *ctx)
 {
-	struct rpc_bdev_nvme_path_stat_ctx *ctx = _ctx;
-	struct nvme_io_path *io_path;
-	struct path_stat *path_stat;
-	uint32_t j;
-
-	assert(ctx->num_paths != 0);
-
-	for (j = 0; j < ctx->num_paths; j++) {
-		path_stat = &ctx->path_stat[j];
-
-		STAILQ_FOREACH(io_path, &nbdev_ch->io_path_list, stailq) {
-			if (path_stat->nvme_ns == io_path->nvme_ns) {
-				assert(io_path->stat != NULL);
-				spdk_bdev_add_io_stat(&path_stat->stat, io_path->stat);
-			}
-		}
+	if (ctx == NULL) {
+		return;
 	}
 
-	nvme_bdev_for_each_channel_continue(i, 0);
+	if (ctx->desc != NULL) {
+		spdk_bdev_close(ctx->desc);
+	}
+	free_rpc_bdev_nvme_get_path_iostat(&ctx->req);
+	free(ctx);
 }
 
 static void
-rpc_bdev_nvme_path_stat_done(struct nvme_bdev *nbdev, void *_ctx, int status)
+rpc_bdev_nvme_get_path_iostat_done(void *cb_arg,
+				   const struct spdk_bdev_nvme_path_stat *stats,
+				   uint32_t num_paths,
+				   int status)
 {
-	struct rpc_bdev_nvme_path_stat_ctx *ctx = _ctx;
+	struct rpc_bdev_nvme_get_path_iostat_ext *ctx = cb_arg;
 	struct spdk_json_write_ctx *w;
-	struct path_stat *path_stat;
-	uint32_t j;
+	struct spdk_bdev *bdev;
+	const char *name;
+	uint32_t i;
 
-	assert(ctx->num_paths != 0);
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response(ctx->req.request, status, spdk_strerror(-status));
+		goto out;
+	}
 
-	w = spdk_jsonrpc_begin_result(ctx->request);
+	bdev = spdk_bdev_desc_get_bdev(ctx->desc);
+	name = spdk_bdev_get_name(bdev);
+
+	w = spdk_jsonrpc_begin_result(ctx->req.request);
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", nbdev->disk.name);
+	spdk_json_write_named_string(w, "name", name);
 	spdk_json_write_named_array_begin(w, "stats");
 
-	for (j = 0; j < ctx->num_paths; j++) {
-		path_stat = &ctx->path_stat[j];
+	for (i = 0; i < num_paths; i++) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_named_object_begin(w, "trid");
-		nvme_bdev_dump_trid_json(&path_stat->trid, w);
+		nvme_bdev_dump_trid_json(&stats[i].trid, w);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_named_object_begin(w, "stat");
-		spdk_bdev_dump_io_stat_json(&path_stat->stat, w);
+		spdk_bdev_dump_io_stat_json((struct spdk_bdev_io_stat *)&stats[i].stat, w);
 		spdk_json_write_object_end(w);
 
 		spdk_json_write_object_end(w);
@@ -2022,105 +2007,58 @@ rpc_bdev_nvme_path_stat_done(struct nvme_bdev *nbdev, void *_ctx, int status)
 
 	spdk_json_write_array_end(w);
 	spdk_json_write_object_end(w);
-	spdk_jsonrpc_end_result(ctx->request, w);
+	spdk_jsonrpc_end_result(ctx->req.request, w);
 
-	spdk_bdev_close(ctx->desc);
-	free(ctx->path_stat);
-	free(ctx);
+out:
+	free_rpc_bdev_nvme_get_path_iostat_ext(ctx);
 }
 
 static void
 rpc_bdev_nvme_get_path_iostat(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_get_path_iostat_ctx req = {};
-	struct spdk_bdev_desc *desc = NULL;
-	struct spdk_bdev *bdev;
-	struct nvme_bdev *nbdev;
-	struct nvme_ns *nvme_ns;
-	struct path_stat *path_stat;
-	struct rpc_bdev_nvme_path_stat_ctx *ctx;
+	struct rpc_bdev_nvme_get_path_iostat_ext *ctx;
 	struct spdk_bdev_nvme_opts opts;
-	uint32_t num_paths, i = 0;
 	int rc;
 
 	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
 	if (!opts.io_path_stat) {
-		SPDK_ERRLOG("RPC not enabled if enable_io_path_stat is false\n");
 		spdk_jsonrpc_send_error_response(request, -EPERM,
-						 "RPC not enabled if enable_io_path_stat is false");
+						 "RPC not enabled if io_path_stat is false");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
 		return;
 	}
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_get_path_iostat_decoders,
 				    SPDK_COUNTOF(rpc_bdev_nvme_get_path_iostat_decoders),
-				    &req)) {
+				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed");
-		free_rpc_bdev_nvme_get_path_iostat(&req);
+		free_rpc_bdev_nvme_get_path_iostat_ext(ctx);
 		return;
 	}
 
-	rc = spdk_bdev_open_ext(req.name, false, dummy_bdev_event_cb, NULL, &desc);
+	ctx->req.request = request;
+
+	rc = spdk_bdev_open_ext(ctx->req.name, false, dummy_bdev_event_cb, NULL, &ctx->desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("Failed to open bdev '%s': %d\n", req.name, rc);
+		SPDK_ERRLOG("Failed to open bdev '%s': %d\n", ctx->req.name, rc);
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-		free_rpc_bdev_nvme_get_path_iostat(&req);
+		free_rpc_bdev_nvme_get_path_iostat_ext(ctx);
 		return;
 	}
 
-	free_rpc_bdev_nvme_get_path_iostat(&req);
-
-	ctx = calloc(1, sizeof(struct rpc_bdev_nvme_path_stat_ctx));
-	if (ctx == NULL) {
-		spdk_bdev_close(desc);
-		SPDK_ERRLOG("Failed to allocate rpc_bdev_nvme_path_stat_ctx struct\n");
-		spdk_jsonrpc_send_error_response(request, -ENOMEM, spdk_strerror(ENOMEM));
-		return;
+	rc = spdk_bdev_nvme_get_path_stat(ctx->desc, rpc_bdev_nvme_get_path_iostat_done, ctx);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
+		free_rpc_bdev_nvme_get_path_iostat_ext(ctx);
 	}
-
-	bdev = spdk_bdev_desc_get_bdev(desc);
-	nbdev = bdev->ctxt;
-
-	if (nbdev->ref == 0) {
-		rc = -ENOENT;
-		goto err;
-	}
-
-	num_paths = nbdev->ref;
-	path_stat = calloc(num_paths, sizeof(struct path_stat));
-	if (path_stat == NULL) {
-		rc = -ENOMEM;
-		SPDK_ERRLOG("Failed to allocate memory for path_stat.\n");
-		goto err;
-	}
-
-	/* store the history stat */
-	TAILQ_FOREACH(nvme_ns, &nbdev->nvme_ns_list, tailq) {
-		assert(i < num_paths);
-		path_stat[i].nvme_ns = nvme_ns;
-		path_stat[i].trid = nvme_ns->ctrlr->active_path_id->trid;
-		i++;
-	}
-
-	ctx->request = request;
-	ctx->desc = desc;
-	ctx->path_stat = path_stat;
-	ctx->num_paths = num_paths;
-
-	/* Number of paths can change while iterating over nbdev channels; stats for
-	 * these will not be gathered until the next bdev_nvme_get_path_iostat call. */
-	nvme_bdev_for_each_channel(nbdev,
-				   rpc_bdev_nvme_path_stat_per_channel,
-				   ctx,
-				   rpc_bdev_nvme_path_stat_done);
-	return;
-
-err:
-	spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));
-	spdk_bdev_close(desc);
-	free(ctx);
 }
 SPDK_RPC_REGISTER("bdev_nvme_get_path_iostat", rpc_bdev_nvme_get_path_iostat,
 		  SPDK_RPC_RUNTIME)
