@@ -3396,6 +3396,10 @@ nvme_ctrlr_free_async_event(struct spdk_nvme_ctrlr_aer_completion *async_event)
 		ctrlr->async_event_in_progress_proc = NULL;
 	}
 
+	if (async_event->poll_status && !async_event->poll_status->timed_out) {
+		spdk_free(async_event->poll_status);
+	}
+
 	spdk_free(async_event->log_page.changed_ns_list);
 	spdk_free(async_event);
 }
@@ -3470,14 +3474,73 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 	nvme_ctrlr_free_async_event(async_event);
 }
 
+static int
+nvme_ctrlr_prepare_async_event(struct spdk_nvme_ctrlr *ctrlr,
+			       struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	if (async_event->poll_status) {
+		goto out;
+	}
+
+	/* Must be shared memory so other processes can access */
+	async_event->poll_status = spdk_zmalloc(sizeof(*async_event->poll_status), 0, NULL,
+						SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!async_event->poll_status) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate completion status tracker\n");
+		return -ENOMEM;
+	}
+
+out:
+	memset(async_event->poll_status, 0, sizeof(*async_event->poll_status));
+	return 0;
+}
+
 static void nvme_ctrlr_aer_handle_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_ctrlr_aer_completion *async_event);
+
+struct nvme_ctrlr_aer_get_changed_ns_log_ctx {
+	struct nvme_completion_poll_status *status;
+	struct spdk_nvme_ctrlr *ctrlr;
+	uint32_t *changed_ns_list;
+};
+
+static void
+nvme_ctrlr_aer_get_changed_ns_log_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_ctrlr_aer_get_changed_ns_log_ctx *ctx = arg;
+	struct spdk_nvme_ctrlr *ctrlr = ctx->ctrlr;
+
+	if (ctx->status->timed_out) {
+		spdk_free(ctx->status);
+		spdk_free(ctx->changed_ns_list);
+		free(ctx);
+		return;
+	}
+
+	ctx->status->done = true;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to retrieve changed ns log data\n");
+		ctx->status->cpl = *cpl;
+		ctx->changed_ns_list = NULL;
+	} else {
+		if (ctx->changed_ns_list[0] == 0) {
+			NVME_CTRLR_WARNLOG(ctrlr, "changed ns log is empty despite NS_ATTR_CHANGED AER.\n");
+		}
+
+		if (ctx->changed_ns_list[0] == UINT32_MAX) {
+			NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
+			spdk_free(ctx->changed_ns_list);
+			ctx->changed_ns_list = NULL;
+		}
+	}
+}
 
 static void
 nvme_ctrlr_aer_get_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
 				  struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
-	struct nvme_completion_poll_status	*status;
+	struct nvme_ctrlr_aer_get_changed_ns_log_ctx	*ctx = NULL;
 	int		rc = -ENOMEM;
 	uint32_t	*changed_ns_list;
 	size_t		changed_ns_list_length = SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t);
@@ -3489,55 +3552,53 @@ nvme_ctrlr_aer_get_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr,
 		goto out;
 	}
 
-	status = calloc(1, sizeof(*status));
-	if (!status) {
-		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
+	rc = nvme_ctrlr_prepare_async_event(ctrlr, async_event);
+	if (rc) {
 		goto out;
 	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate get log ctx\n");
+		goto out;
+	}
+
+	ctx->ctrlr = ctrlr;
+	ctx->changed_ns_list = changed_ns_list;
+	ctx->status = async_event->poll_status;
 
 	rc = spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
 					      SPDK_NVME_LOG_CHANGED_NS_LIST,
 					      SPDK_NVME_GLOBAL_NS_TAG,
 					      changed_ns_list, changed_ns_list_length, 0,
-					      nvme_completion_poll_cb, status);
+					      nvme_ctrlr_aer_get_changed_ns_log_cb, ctx);
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_cmd_get_log_page() failed: rc=%d\n", rc);
-		free(status);
-		goto out;
+		spdk_free(changed_ns_list);
+		free(ctx);
+		if (rc == -ENXIO) {
+			nvme_ctrlr_free_async_event(async_event);
+			return;
+		}
+
+		nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
+		return;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
-	if (rc) {
-		NVME_CTRLR_ERRLOG(ctrlr, "wait for spdk_nvme_ctrlr_cmd_get_log_page failed: rc=%s\n",
-				  spdk_strerror(abs(rc)));
-		goto out;
-	}
-
-	if (changed_ns_list[0] == UINT32_MAX) {
-		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log overflowed.\n");
-		goto out;
-	}
-
-	if (changed_ns_list[0] == 0) {
-		NVME_CTRLR_WARNLOG(ctrlr, "changed ns log is empty despite NS_ATTR_CHANGED AER.\n");
-	}
-
-	async_event->log_page.changed_ns_list = changed_ns_list;
-	nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
-	return;
-out:
-	spdk_free(changed_ns_list);
-	if (rc == -ECANCELED || rc == -ENXIO) {
-		/*
-		 * Return early as we either failed to submit or complete the get changed
-		 * ns log page request. This would be because of a transport/device error
-		 * or timer expired.
-		 */
+	rc = nvme_wait_for_adminq_completion(ctrlr, ctx->status, false);
+	if (ctx->status->timed_out) {
 		nvme_ctrlr_free_async_event(async_event);
 		return;
 	}
 
+out:
+	if (rc) {
+		spdk_free(changed_ns_list);
+	}
+
+	async_event->log_page.changed_ns_list = ctx ? ctx->changed_ns_list : NULL;
 	nvme_ctrlr_aer_handle_changed_ns_log(ctrlr, async_event);
+	free(ctx);
 }
 
 static void
