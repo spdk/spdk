@@ -3068,7 +3068,8 @@ nvme_ctrlr_identify_namespaces_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 static void
 nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
+	struct nvme_ctrlr_identify_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = ctx->ns;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	uint32_t nsid;
 	int rc;
@@ -3089,10 +3090,12 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
 		nvme_ns_reset_id_desc_data(ns);
+		nvme_ctrlr_delete_identify_ctx(ctx);
 		return;
 	}
+	nvme_ns_set_id_desc_list_data(ns, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
 
-	nvme_ns_set_id_desc_list_data(ns, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN);
+	nvme_ctrlr_delete_identify_ctx(ctx);
 
 	/* move on to the next active NS */
 	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
@@ -3113,14 +3116,23 @@ static int
 nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct nvme_ctrlr_identify_ctx *ctx;
+	int rc;
 
-	nvme_ctrlr_clear_identify_scratch(ctrlr);
+	ctx = nvme_ctrlr_create_identify_ctx(ns);
+	if (!ctx) {
+		return -ENOMEM;
+	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS,
 			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST,
-				       0, ns->id, 0, ctrlr->identify_scratch, SPDK_NVME_IDENTIFY_BUFLEN,
-				       nvme_ctrlr_identify_id_desc_async_done, ns);
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_ID_DESCRIPTOR_LIST,
+				     0, ns->id, 0, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
+				     nvme_ctrlr_identify_id_desc_async_done, ctx);
+	if (rc) {
+		nvme_ctrlr_delete_identify_ctx(ctx);
+	}
+	return rc;
 }
 
 static int
