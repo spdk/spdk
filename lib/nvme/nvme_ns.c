@@ -172,42 +172,46 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	void *nsdata;
 	int rc;
 
 	nvme_ns_free_iocs_specific_data(ns);
 
-	nsdata = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY,
-			      SPDK_MALLOC_SHARE);
-	if (!nsdata) {
-		return -ENOMEM;
-	}
-
 	status = calloc(1, sizeof(*status));
 	if (!status) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate status tracker\n");
-		spdk_free(nsdata);
+		return -ENOMEM;
+	}
+
+	status->dma_data = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
+					SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!status->dma_data) {
+		free(status);
 		return -ENOMEM;
 	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				     nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
+				     status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
 				     nvme_completion_poll_cb, status);
 	if (rc) {
-		spdk_free(nsdata);
+		spdk_free(status->dma_data);
 		free(status);
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
+	if (status->timed_out) {
+		return -ENXIO;
+	}
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
-		spdk_free(nsdata);
+		spdk_free(status->dma_data);
+		free(status);
 		return -ENXIO;
 	}
 
-	ns->nsdata_iocs = nsdata;
+	ns->nsdata_iocs = status->dma_data;
+	free(status);
 	return 0;
 }
 

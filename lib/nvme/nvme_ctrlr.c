@@ -2910,14 +2910,22 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 static void
 nvme_ctrlr_identify_ns_iocs_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ns *ns = arg;
+	struct nvme_ctrlr_identify_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = ctx->ns;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
+			nvme_ctrlr_delete_identify_ctx(ctx);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+			return;
+		}
+	} else {
+		ns->nsdata_iocs = ctx->dma_data;
+		ctx->dma_data = NULL;
 	}
 
+	nvme_ctrlr_delete_identify_ctx(ctx);
 	nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, ns->id);
 }
 
@@ -2925,6 +2933,8 @@ static int
 nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	struct nvme_ctrlr_identify_ctx *ctx;
+	int rc;
 
 	if (!nvme_ns_has_supported_iocs_specific_data(ns)) {
 		assert(0);
@@ -2932,17 +2942,21 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 	}
 
 	assert(!ns->nsdata_iocs);
-	ns->nsdata_iocs = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
-				       SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-	if (!ns->nsdata_iocs) {
+	ctx = nvme_ctrlr_create_identify_ctx(ns);
+	if (!ctx) {
 		return -ENOMEM;
 	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
 			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				       ns->nsdata_iocs, SPDK_NVME_IDENTIFY_BUFLEN,
-				       nvme_ctrlr_identify_ns_iocs_specific_async_done, ns);
+	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
+				     ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
+				     nvme_ctrlr_identify_ns_iocs_specific_async_done, ctx);
+	if (rc) {
+		nvme_ctrlr_delete_identify_ctx(ctx);
+	}
+
+	return rc;
 }
 
 static int

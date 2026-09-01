@@ -498,8 +498,6 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		if (g_cdata) {
 			memcpy(payload, g_cdata, sizeof(*g_cdata));
 		}
-	} else if (cns == SPDK_NVME_IDENTIFY_NS_IOCS) {
-		return 0;
 	}
 
 	fake_cpl_sc(cb_fn, cb_arg);
@@ -3396,8 +3394,9 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ctrlr.state == 0);
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
-	CU_ASSERT(ns_ctrlr[4].state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC);
+	CU_ASSERT(ns_ctrlr[4].state == NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES);
 	CU_ASSERT(ns_ctrlr[4].state_timeout_tsc == NVME_TIMEOUT_INFINITE);
+	CU_ASSERT(ns[4].nsdata_iocs != NULL);
 
 	for (int i = 0; i < 5; i++) {
 		nvme_ns_free_iocs_specific_data(&ns[i]);
