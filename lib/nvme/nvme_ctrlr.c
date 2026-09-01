@@ -2753,21 +2753,59 @@ nvme_ctrlr_find_pending_identify_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_n
 	return NULL;
 }
 
+struct nvme_ctrlr_identify_ctx {
+	struct spdk_nvme_ns *ns;
+	void *dma_data;
+};
+
+static void
+nvme_ctrlr_delete_identify_ctx(struct nvme_ctrlr_identify_ctx *ctx)
+{
+	spdk_free(ctx->dma_data);
+	free(ctx);
+}
+
+static struct nvme_ctrlr_identify_ctx *
+nvme_ctrlr_create_identify_ctx(struct spdk_nvme_ns *ns)
+{
+	struct nvme_ctrlr_identify_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return NULL;
+	}
+
+	ctx->dma_data = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
+				     SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!ctx->dma_data) {
+		free(ctx);
+		return NULL;
+	}
+
+	ctx->ns = ns;
+	return ctx;
+}
+
 static void
 nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
+	struct nvme_ctrlr_identify_ctx *ctx = arg;
+	struct spdk_nvme_ns *ns = ctx->ns;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int rc;
 
-	nvme_ctrlr_finalize_nsdata_buf(ctrlr, ns);
-
-	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
+			nvme_ctrlr_delete_identify_ctx(ctx);
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+			return;
+		}
+	} else {
+		memcpy(ns->nsdata, ctx->dma_data, nvme_ctrlr_get_nsdata_size(ctrlr));
+		nvme_ns_set_identify_data(ns);
 	}
 
-	nvme_ns_set_identify_data(ns);
+	nvme_ctrlr_delete_identify_ctx(ctx);
 
 	/* move on to the next NS pending identify */
 	ns = nvme_ctrlr_find_pending_identify_ns(ctrlr, ns);
@@ -2786,13 +2824,23 @@ static int
 nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	uint8_t *nsdata = nvme_ctrlr_prepare_nsdata_buf(ctrlr, ns);
+	struct nvme_ctrlr_identify_ctx *ctx;
+	int rc;
+
+	ctx = nvme_ctrlr_create_identify_ctx(ns);
+	if (!ctx) {
+		return -ENOMEM;
+	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS,
 			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
-				       nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
-				       nvme_ctrlr_identify_ns_async_done, ns);
+	rc = nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
+				     ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
+				     nvme_ctrlr_identify_ns_async_done, ctx);
+	if (rc) {
+		nvme_ctrlr_delete_identify_ctx(ctx);
+	}
+	return rc;
 }
 
 static int

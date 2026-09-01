@@ -16,6 +16,9 @@ SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 DEFINE_STUB(nvme_ctrlr_multi_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
+DEFINE_STUB(nvme_ctrlr_handle_identify_ns_error, bool,
+	    (struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
+	     const struct spdk_nvme_cpl *cpl), true);
 
 int
 nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,

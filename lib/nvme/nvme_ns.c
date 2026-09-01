@@ -120,7 +120,6 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status	*status;
 	struct spdk_nvme_ctrlr			*ctrlr = ns->ctrlr;
-	uint8_t					*nsdata;
 	int					rc;
 
 	status = calloc(1, sizeof(*status));
@@ -129,25 +128,42 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		return -ENOMEM;
 	}
 
-	nsdata = nvme_ctrlr_prepare_nsdata_buf(ctrlr, ns);
+	status->dma_data = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
+					SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!status->dma_data) {
+		free(status);
+		return -ENOMEM;
+	}
 
 	rc = nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS, 0, ns->id, 0,
-				     nsdata, SPDK_NVME_IDENTIFY_BUFLEN,
+				     status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN,
 				     nvme_completion_poll_cb, status);
 	if (rc != 0) {
+		spdk_free(status->dma_data);
 		free(status);
 		return rc;
 	}
 
-	rc = nvme_wait_for_adminq_completion(ctrlr, status, true);
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
+	if (status->timed_out) {
+		return rc;
+	}
 	if (rc) {
 		/* This can occur if the namespace is not active. */
 		NVME_CTRLR_WARNLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				   spdk_strerror(abs(rc)));
+		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, &status->cpl)) {
+			spdk_free(status->dma_data);
+			free(status);
+			return rc;
+		}
+	} else {
+		memcpy(ns->nsdata, status->dma_data, nvme_ctrlr_get_nsdata_size(ctrlr));
+		nvme_ns_set_identify_data(ns);
 	}
 
-	nvme_ctrlr_finalize_nsdata_buf(ctrlr, ns);
-	nvme_ns_set_identify_data(ns);
+	spdk_free(status->dma_data);
+	free(status);
 	return 0;
 }
 
