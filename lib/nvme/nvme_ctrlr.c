@@ -2485,24 +2485,22 @@ nvme_active_ns_ctx_destroy(struct nvme_active_ns_ctx *ctx)
 }
 
 /* Returns true if the identify flow should be terminated, false otherwise. */
-static bool
-nvme_ctrlr_handle_identify_ns_completion(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
-		const struct spdk_nvme_cpl *cpl)
+bool
+nvme_ctrlr_handle_identify_ns_error(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns,
+				    const struct spdk_nvme_cpl *cpl)
 {
+	assert(spdk_nvme_cpl_is_error(cpl));
+
 	/* A namespace becoming inactive during NVMe controller initialization should not be
 	 * considered a fatal error leading to controller state machine failure. */
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
-		    (cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT ||
-		     cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace inactive due to identify completion error\n");
-			nvme_ns_clear(ns);
-		} else {
-			return true;
-		}
+	if (cpl->status.sct == SPDK_NVME_SCT_GENERIC &&
+	    (cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT ||
+	     cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace inactive due to identify completion error\n");
+		nvme_ns_clear(ns);
+		return false;
 	}
-
-	return false;
+	return true;
 }
 
 static void
@@ -2764,7 +2762,7 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 
 	nvme_ctrlr_finalize_nsdata_buf(ctrlr, ns);
 
-	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
@@ -2867,7 +2865,7 @@ nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
 		nvme_ns_free_zns_specific_data(ns);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2907,7 +2905,7 @@ nvme_ctrlr_identify_ns_nvm_specific_async_done(void *arg, const struct spdk_nvme
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
 		nvme_ns_free_nvm_specific_data(ns);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -2947,7 +2945,7 @@ nvme_ctrlr_identify_ns_kv_specific_async_done(void *arg, const struct spdk_nvme_
 	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
 		nvme_ns_free_kv_specific_data(ns);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
@@ -3027,7 +3025,7 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	uint32_t nsid;
 	int rc;
 
-	if (nvme_ctrlr_handle_identify_ns_completion(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
 		/*
 		 * Many controllers claim to be compatible with NVMe 1.3, however,
 		 * they do not implement NS ID Desc List. Therefore, instead of setting
