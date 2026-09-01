@@ -1187,8 +1187,6 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
 	struct spdk_nvme_kv_ctrlr_data	*cdata_kv;
 
-	uint8_t				*identify_scratch;
-
 	struct spdk_bit_array		*free_io_qids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
@@ -1396,31 +1394,6 @@ nvme_ctrlr_get_nsdata_size(const struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return SPDK_NVME_IDENTIFY_BUFLEN;
-}
-
-static inline uint8_t *
-nvme_ctrlr_clear_identify_scratch(struct spdk_nvme_ctrlr *ctrlr)
-{
-	memset(ctrlr->identify_scratch, 0, SPDK_NVME_IDENTIFY_BUFLEN);
-	return ctrlr->identify_scratch;
-}
-
-static inline uint8_t *
-nvme_ctrlr_prepare_nsdata_buf(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
-{
-	if (nvme_ctrlr_nsdata_subset(ctrlr)) {
-		return nvme_ctrlr_clear_identify_scratch(ctrlr);
-	}
-
-	return ns->nsdata;
-}
-
-static inline void
-nvme_ctrlr_finalize_nsdata_buf(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
-{
-	if (nvme_ctrlr_nsdata_subset(ctrlr)) {
-		memcpy(ns->nsdata, ctrlr->identify_scratch, nvme_ctrlr_get_nsdata_size(ctrlr));
-	}
 }
 
 /* Poll group management functions. */

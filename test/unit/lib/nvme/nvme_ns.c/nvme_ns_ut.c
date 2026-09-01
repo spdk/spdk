@@ -611,13 +611,11 @@ test_nvme_ctrlr_identify_id_desc(void)
 {
 	struct spdk_nvme_ns ns = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
-	uint8_t scratch[SPDK_NVME_IDENTIFY_BUFLEN];
 	int rc;
 
 	ns.ctrlr = &ctrlr;
 	ns.ctrlr->vs.raw = SPDK_NVME_VERSION(1, 3, 0);
 	ns.ctrlr->cap.bits.css |= SPDK_NVME_CAP_CSS_IOCS;
-	ns.ctrlr->identify_scratch = scratch;
 	ns.id = 1;
 
 	rc = nvme_ctrlr_identify_id_desc(&ns);
