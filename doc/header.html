@@ -14,7 +14,7 @@
   <script>
     mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
     document.addEventListener('DOMContentLoaded', function() {
-      var kw = /^(stateDiagram|graph\b|flowchart\b|sequenceDiagram|classDiagram|erDiagram|gantt\b|pie\b|gitgraph\b|mindmap\b|timeline\b|sankey\b|xychart\b|block-beta\b|quadrantChart|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment|journey\b)/;
+      var kw = /^(stateDiagram(-v\d+)?|graph\b|flowchart\b|sequenceDiagram|classDiagram|erDiagram|gantt\b|pie\b|gitgraph\b|mindmap\b|timeline\b|sankey\b|xychart\b|block-beta\b|quadrantChart|requirementDiagram|C4Context|C4Container|C4Component|C4Dynamic|C4Deployment|journey\b)/;
       document.querySelectorAll('div.fragment').forEach(function(fragment) {
         var lines = fragment.querySelectorAll('div.line');
         var text = Array.from(lines).map(function(l) { return l.textContent; }).join('\n');
