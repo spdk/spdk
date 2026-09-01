@@ -2908,9 +2908,9 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static void
-nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
+nvme_ctrlr_identify_ns_iocs_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
+	struct spdk_nvme_ns *ns = arg;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
 	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
@@ -2922,113 +2922,27 @@ nvme_ctrlr_identify_ns_zns_specific_async_done(void *arg, const struct spdk_nvme
 }
 
 static int
-nvme_ctrlr_identify_ns_zns_specific_async(struct spdk_nvme_ns *ns)
+nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 {
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 
-	assert(!ns->nsdata_zns);
-	ns->nsdata_zns = spdk_zmalloc(sizeof(*ns->nsdata_zns), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				      SPDK_MALLOC_SHARE);
-	if (!ns->nsdata_zns) {
-		return -ENOMEM;
+	if (!nvme_ns_has_supported_iocs_specific_data(ns)) {
+		assert(0);
+		return -EINVAL;
 	}
 
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
-			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				       ns->nsdata_zns, sizeof(*ns->nsdata_zns),
-				       nvme_ctrlr_identify_ns_zns_specific_async_done, ns);
-}
-
-static void
-nvme_ctrlr_identify_ns_nvm_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
-{
-	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-
-	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
-	}
-
-	nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, ns->id);
-}
-
-static int
-nvme_ctrlr_identify_ns_nvm_specific_async(struct spdk_nvme_ns *ns)
-{
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-
-	assert(!ns->nsdata_nvm);
-	ns->nsdata_nvm = spdk_zmalloc(sizeof(*ns->nsdata_nvm), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				      SPDK_MALLOC_SHARE);
-	if (!ns->nsdata_nvm) {
-		return -ENOMEM;
-	}
-
-	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
-			     ctrlr->opts.admin_timeout_ms);
-	return nvme_ctrlr_cmd_identify(ns->ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				       ns->nsdata_nvm, sizeof(*ns->nsdata_nvm),
-				       nvme_ctrlr_identify_ns_nvm_specific_async_done, ns);
-}
-
-static void
-nvme_ctrlr_identify_ns_kv_specific_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
-{
-	struct spdk_nvme_ns *ns = (struct spdk_nvme_ns *)arg;
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-
-	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
-		return;
-	}
-
-	nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, ns->id);
-}
-
-static int
-nvme_ctrlr_identify_ns_kv_specific_async(struct spdk_nvme_ns *ns)
-{
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-
-	assert(!ns->nsdata_kv);
-	ns->nsdata_kv = spdk_zmalloc(sizeof(*ns->nsdata_kv), 64, NULL, SPDK_ENV_NUMA_ID_ANY,
-				     SPDK_MALLOC_SHARE);
-	if (!ns->nsdata_kv) {
+	assert(!ns->nsdata_iocs);
+	ns->nsdata_iocs = spdk_zmalloc(SPDK_NVME_IDENTIFY_BUFLEN, SPDK_CACHE_LINE_SIZE, NULL,
+				       SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!ns->nsdata_iocs) {
 		return -ENOMEM;
 	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS_IOCS_SPECIFIC,
 			     ctrlr->opts.admin_timeout_ms);
 	return nvme_ctrlr_cmd_identify(ctrlr, SPDK_NVME_IDENTIFY_NS_IOCS, 0, ns->id, ns->csi,
-				       ns->nsdata_kv, sizeof(*ns->nsdata_kv),
-				       nvme_ctrlr_identify_ns_kv_specific_async_done, ns);
-}
-
-static int
-nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
-{
-	switch (ns->csi) {
-	case SPDK_NVME_CSI_ZNS:
-		return nvme_ctrlr_identify_ns_zns_specific_async(ns);
-	case SPDK_NVME_CSI_KV:
-		return nvme_ctrlr_identify_ns_kv_specific_async(ns);
-	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.elbas) {
-			return nvme_ctrlr_identify_ns_nvm_specific_async(ns);
-		}
-	/* fallthrough */
-	default:
-		/*
-		 * This switch must handle all cases for which
-		 * nvme_ns_has_supported_iocs_specific_data() returns true,
-		 * other cases should never happen.
-		 */
-		assert(0);
-	}
-
-	return -EINVAL;
+				       ns->nsdata_iocs, SPDK_NVME_IDENTIFY_BUFLEN,
+				       nvme_ctrlr_identify_ns_iocs_specific_async_done, ns);
 }
 
 static int
