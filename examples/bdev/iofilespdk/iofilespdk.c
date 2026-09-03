@@ -6,7 +6,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/bdev_zone.h"
-
+#include "gpu_fill.h"
 
 static char *g_bdev_name = "Malloc0";
 static char *g_filename = NULL;
@@ -66,7 +66,7 @@ read_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_app_stop(success ? 0 : -1);
 }
 
-void io_read(void *arg)
+static void io_read(void *arg)
 {
 	struct context_t *context = arg;
 	int rc = 0;
@@ -212,7 +212,14 @@ io_start(void *arg1)
 		spdk_app_stop(-1);
 		return;
 	}
-	memcpy(context->buff, context->file_data, context->file_size);
+	//gpu access from spdk
+	if(gpu_fill_buffer(context->buff, context->buff_size) != 0){
+		SPDK_ERRLOG("Failed to move to gpu space");
+		spdk_put_io_channel(context->bdev_io_channel);
+		spdk_bdev_close(context->bdev_desc);
+		spdk_app_stop(-1);
+		return;
+	}
 
 	io_write(context);
 }
