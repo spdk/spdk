@@ -10,7 +10,7 @@ __global__ void gpu_fill_kernel(char *dest, const char* src, size_t len){
 }
 
 extern "C" int
-gpu_fill_buffer(char *host_dst, char* host_src,size_t len){
+gpu_copy_buffer(char *host_dst, char* host_src,size_t len){
     cudaError_t err;
     unsigned int ok = 0;
 
