@@ -2398,12 +2398,6 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		rc = spdk_sock_flush(tqpair->sock);
 		if (rc < 0 && rc != -EAGAIN) {
 			NVME_TQPAIR_ERRLOG(tqpair, "spdk_sock_flush() failed, rc %d: %s\n", rc, spdk_strerror(-rc));
-			if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING &&
-			    !nvme_tcp_qpair_try_disconnect_done(qpair)) {
-				/* Don't return errors until the qpair gets disconnected */
-				return 0;
-			}
-
 			goto fail;
 		}
 
@@ -2438,8 +2432,16 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 
 	return reaped;
 fail:
-	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+	if (!qpair->transport_failure_reason) {
+		qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_UNKNOWN;
+	}
+
 	nvme_ctrlr_disconnect_qpair(qpair);
+	if (!nvme_tcp_qpair_try_disconnect_done(qpair)) {
+		/* Don't return errors until the qpair gets disconnected */
+		return 0;
+	}
+
 	return -ENXIO;
 }
 
