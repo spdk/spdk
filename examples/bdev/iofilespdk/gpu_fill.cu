@@ -1,67 +1,67 @@
+cat > /tmp/spdk-build-tmp/examples/bdev/iofilespdk/gpu_fill.cu << 'EOF'
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include <string.h>
 #include "gpu_fill.h"
 
-__global__ void gpu_fill_kernel(char *dest, const char* src, size_t len){
+__global__ void gpu_copy_kernel(char *dst, const char *src, size_t len)
+{
     size_t i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < len) {
-        dest[i] = src[i];
+        dst[i] = src[i];
     }
 }
 
 extern "C" int
-gpu_copy_buffer(char *host_dst, char* host_src,size_t len){
+gpu_copy_buffer(char *host_dst, char *host_src, size_t len)
+{
     cudaError_t err;
-    unsigned int ok = 0;
+    int ok = 1;
 
     err = cudaHostRegister(host_dst, len, cudaHostRegisterMapped);
     if (err != cudaSuccess) {
-        fprintf(stderr, "cudaHostRegister failed: %s\n", cudaGetErrorString(err));
+        fprintf(stderr, "cudaHostRegister(dst) failed: %s\n", cudaGetErrorString(err));
         return -1;
     }
 
-    err = cudaHostRegister(host_src, len, cudaHostRegisterMapped);
+    char *cuda_src = NULL;
+    err = cudaHostAlloc((void **)&cuda_src, len, cudaHostAllocMapped);
     if (err != cudaSuccess) {
-        fprintf(stderr, "cudaHostRegister failed: %s\n", cudaGetErrorString(err));
+        fprintf(stderr, "cudaHostAlloc(src) failed: %s\n", cudaGetErrorString(err));
+        cudaHostUnregister(host_dst);
         return -1;
     }
+    memcpy(cuda_src, host_src, len);
 
     char *dev_dst = NULL, *dev_src = NULL;
-    ok = 1;
-    if(ok){
-        err = cudaHostGetDevicePointer((void **)&dev_dst, host_dst, 0);
+    err = cudaHostGetDevicePointer((void **)&dev_dst, host_dst, 0);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "cudaHostGetDevicePointer(dst) failed: %s\n", cudaGetErrorString(err));
+        ok = 0;
+    }
+    if (ok) {
+        err = cudaHostGetDevicePointer((void **)&dev_src, cuda_src, 0);
         if (err != cudaSuccess) {
-            fprintf(stderr, "cudaHostGetDevicePointer failed: %s\n", cudaGetErrorString(err));
-            cudaHostUnregister(host_dst);
-            return -1;
+            fprintf(stderr, "cudaHostGetDevicePointer(src) failed: %s\n", cudaGetErrorString(err));
             ok = 0;
         }
     }
-
-    if(ok){
-        err = cudaHostGetDevicePointer((void **)&dev_src, host_dst, 0);
-        if (err != cudaSuccess) {
-            fprintf(stderr, "cudaHostGetDevicePointer failed: %s\n", cudaGetErrorString(err));
-            cudaHostUnregister(host_src);
-            return -1;
-            ok = 0;
-        }
-    }
-
-    if(ok){
+    if (ok) {
         int threads = 256;
         int blocks = (len + threads - 1) / threads;
-        gpu_fill_kernel<<<blocks, threads>>>(dev_dst, dev_src, len);
+        gpu_copy_kernel<<<blocks, threads>>>(dev_dst, dev_src, len);
         cudaDeviceSynchronize();
 
         err = cudaGetLastError();
         if (err != cudaSuccess) {
             fprintf(stderr, "kernel launch failed: %s\n", cudaGetErrorString(err));
-            cudaHostUnregister(host_dst);
-            return -1;
+            ok = 0;
         }
     }
+
+    cudaFreeHost(cuda_src);
     cudaHostUnregister(host_dst);
-    cudaHostUnregister(host_src);
-    return ok ? 0:-1;
+
+    return ok ? 0 : -1;
 }
+EOF
