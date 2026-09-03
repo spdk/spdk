@@ -7,8 +7,8 @@ on:
     - cron: "0 0 * * *"    # Every 24 hours at midnight UTC
   push:
     paths:
-      - doc
-      - schema
+      - 'doc/**'
+      - 'schema/**'
 
 jobs:
   sync-gh-pages:
