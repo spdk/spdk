@@ -5,7 +5,7 @@
 extern "C" {
 #endif
 
-int gpu_fill_buffer(char *buf, size_t len);
+int gpu_copy_buffer(char *dst, char *src, size_t len);
 
 #ifdef __cplusplus
 }
