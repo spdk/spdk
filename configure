@@ -67,6 +67,7 @@ function usage() {
 	echo " --with-crypto             Build isa-l-crypto and vbdev crypto module. No path required."
 	echo " --without-crypto          Disable isa-l-crypto and vbdev crypto module."
 	echo " --with-isal[=DIR]         Don't build isa-l, use external library instead."
+	echo " --without-isal            Disable isa-l and dependent features."
 	echo " --with-isal-crypto[=DIR]  Don't build isa-l_crypto, use external library instead."
 	echo " --without-isal-crypto     Disable isa-l_crypto and any feature that requires it."
 	echo "                           Implies --without-crypto (SW crypto needs isa-l_crypto)."
@@ -594,6 +595,9 @@ for i in "$@"; do
 			check_dir "--with-isal=${CONFIG[ISAL_PATH]}"
 			CONFIG[ISAL]=y
 			CONFIG[ISAL_INSTALLED]=y
+			;;
+		--without-isal)
+			CONFIG[ISAL]=n
 			;;
 		--with-isal-crypto) ;&
 		--with-isal-crypto=*)
@@ -1266,7 +1270,9 @@ if [[ "${CONFIG[FUZZER]}" = "y" && "$CC_TYPE" != "clang" ]]; then
 	exit 1
 fi
 
-if [[ "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
+if [[ "${CONFIG[ISAL]}" = "n" ]]; then
+	:
+elif [[ "${CONFIG[ISAL_INSTALLED]}" = "y" ]]; then
 	if [[ "${CONFIG[SHARED]}" != "y" ]]; then
 		echo "External isa-l only supported with --with-shared"
 		exit 1
