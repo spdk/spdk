@@ -31,6 +31,50 @@ test_serial_number_arithmetic(void)
 }
 
 static void
+test_gcd_lcm(void)
+{
+	uint32_t lcm;
+
+	CU_ASSERT(spdk_gcd32(0, 0) == 0);
+	CU_ASSERT(spdk_gcd32(0, 7) == 7);
+	CU_ASSERT(spdk_gcd32(7, 0) == 7);
+	CU_ASSERT(spdk_gcd32(12, 18) == 6);
+	CU_ASSERT(spdk_gcd32(18, 12) == 6);
+	CU_ASSERT(spdk_gcd32(17, 5) == 1);
+	CU_ASSERT(spdk_gcd32(4096, 512) == 512);
+	CU_ASSERT(spdk_gcd32(UINT32_MAX, UINT32_MAX) == UINT32_MAX);
+
+	CU_ASSERT(spdk_gcd64(0, 0) == 0);
+	CU_ASSERT(spdk_gcd64(0, 1024 * 1024) == 1024 * 1024);
+	CU_ASSERT(spdk_gcd64(1024 * 1024, 0) == 1024 * 1024);
+	CU_ASSERT(spdk_gcd64(1024 * 1024, 6 * 4096) == 2 * 4096);
+	CU_ASSERT(spdk_gcd64(UINT64_MAX, UINT64_MAX) == UINT64_MAX);
+
+	/* Zero is the identity, so that a set of values can be accumulated
+	 * starting from zero.
+	 */
+	CU_ASSERT(spdk_try_lcm32(0, 0, &lcm) && lcm == 0);
+	CU_ASSERT(spdk_try_lcm32(0, 7, &lcm) && lcm == 7);
+	CU_ASSERT(spdk_try_lcm32(7, 0, &lcm) && lcm == 7);
+
+	CU_ASSERT(spdk_try_lcm32(4, 6, &lcm) && lcm == 12);
+	CU_ASSERT(spdk_try_lcm32(6, 4, &lcm) && lcm == 12);
+	CU_ASSERT(spdk_try_lcm32(8, 8, &lcm) && lcm == 8);
+	CU_ASSERT(spdk_try_lcm32(2, 3, &lcm) && lcm == 6);
+	CU_ASSERT(spdk_try_lcm32(4096, 512, &lcm) && lcm == 4096);
+	CU_ASSERT(spdk_try_lcm32(1, UINT32_MAX, &lcm) && lcm == UINT32_MAX);
+
+	/* UINT32_MAX is 3 x 5 x 17 x 257 x 65537, so it is a real result. */
+	CU_ASSERT(spdk_try_lcm32(3 * 5 * 17, 257 * 65537, &lcm) && lcm == UINT32_MAX);
+
+	/* A result that does not fit is reported, and the output is left untouched. */
+	lcm = 42;
+	CU_ASSERT(!spdk_try_lcm32(UINT32_MAX, UINT32_MAX - 1, &lcm));
+	CU_ASSERT(!spdk_try_lcm32(1u << 31, (1u << 30) + 1, &lcm));
+	CU_ASSERT(lcm == 42);
+}
+
+static void
 test_memset_s(void)
 {
 	char secret[] = "0123456789abcdef";
@@ -58,6 +102,7 @@ main(int argc, char **argv)
 
 	suite_math = CU_add_suite("math", NULL, NULL);
 	CU_ADD_TEST(suite_math, test_serial_number_arithmetic);
+	CU_ADD_TEST(suite_math, test_gcd_lcm);
 
 	suite_erase = CU_add_suite("erase", NULL, NULL);
 	CU_ADD_TEST(suite_erase, test_memset_s);

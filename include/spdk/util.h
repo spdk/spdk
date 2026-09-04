@@ -170,6 +170,74 @@ spdk_u64_is_pow2(uint64_t x)
 	return (x & (x - 1)) == 0;
 }
 
+/**
+ * Calculate the greatest common divisor of two uint32_t values.
+ *
+ * \return The greatest common divisor. Zero if both arguments are zero.
+ */
+static inline uint32_t
+spdk_gcd32(uint32_t a, uint32_t b)
+{
+	while (b != 0) {
+		uint32_t tmp = b;
+
+		b = a % b;
+		a = tmp;
+	}
+
+	return a;
+}
+
+/**
+ * Calculate the greatest common divisor of two uint64_t values.
+ *
+ * \return The greatest common divisor. Zero if both arguments are zero.
+ */
+static inline uint64_t
+spdk_gcd64(uint64_t a, uint64_t b)
+{
+	while (b != 0) {
+		uint64_t tmp = b;
+
+		b = a % b;
+		a = tmp;
+	}
+
+	return a;
+}
+
+/**
+ * Calculate the least common multiple of two uint32_t values.
+ *
+ * Zero is treated as the identity so that the result can be accumulated over a
+ * set of values starting from zero.
+ *
+ * \param a First value.
+ * \param b Second value.
+ * \param lcm Set to the least common multiple on success. Not modified on failure.
+ *
+ * \return true on success, false if the least common multiple does not fit in a
+ * uint32_t.
+ */
+static inline bool
+spdk_try_lcm32(uint32_t a, uint32_t b, uint32_t *lcm)
+{
+	uint64_t result;
+
+	if (a == 0 || b == 0) {
+		*lcm = a | b;
+		return true;
+	}
+
+	result = ((uint64_t)a / spdk_gcd32(a, b)) * b;
+	if (result > UINT32_MAX) {
+		return false;
+	}
+
+	*lcm = (uint32_t)result;
+	return true;
+}
+
 static inline uint64_t
 spdk_divide_round_up(uint64_t num, uint64_t divisor)
 {
