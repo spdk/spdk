@@ -617,14 +617,26 @@ static int
 _nvme_ctrlr_submit_abort_request(struct spdk_nvme_ctrlr *ctrlr,
 				 struct nvme_request *req)
 {
+	int rc;
+
 	/* ACL is a 0's based value. */
 	if (ctrlr->outstanding_aborts >= ctrlr->cdata.acl + 1U) {
 		STAILQ_INSERT_TAIL(&ctrlr->queued_aborts, req, stailq);
 		return 0;
-	} else {
-		ctrlr->outstanding_aborts++;
-		return nvme_ctrlr_submit_admin_request(ctrlr, req);
 	}
+
+	ctrlr->outstanding_aborts++;
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	if (spdk_unlikely(rc != 0)) {
+		/* The submission path already removed the child from its parent and freed
+		 * the request without invoking nvme_complete_abort_request(), so the abort
+		 * completion callback will never run to decrement the counter. Undo the
+		 * increment here to keep outstanding_aborts balanced.
+		 */
+		ctrlr->outstanding_aborts--;
+	}
+
+	return rc;
 }
 
 static void

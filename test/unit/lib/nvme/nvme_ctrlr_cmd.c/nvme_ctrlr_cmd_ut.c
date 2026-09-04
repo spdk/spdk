@@ -43,10 +43,20 @@ uint32_t expected_feature_cdw12 = 1;
 typedef void (*verify_request_fn_t)(struct nvme_request *req);
 verify_request_fn_t verify_fn;
 
-DEFINE_STUB(nvme_transport_qpair_iterate_requests, int,
-	    (struct spdk_nvme_qpair *qpair,
-	     int (*iter_fn)(struct nvme_request *req, void *arg),
-	     void *arg), 0);
+/* If set, nvme_transport_qpair_iterate_requests() runs the iterator on it. */
+struct nvme_request *g_iterate_req;
+
+int
+nvme_transport_qpair_iterate_requests(struct spdk_nvme_qpair *qpair,
+				      int (*iter_fn)(struct nvme_request *req, void *arg),
+				      void *arg)
+{
+	if (g_iterate_req != NULL) {
+		return iter_fn(g_iterate_req, arg);
+	}
+
+	return 0;
+}
 
 DEFINE_STUB(nvme_qpair_abort_queued_reqs_with_cbarg, uint32_t,
 	    (struct spdk_nvme_qpair *qpair, void *cmd_cb_arg), 0);
@@ -961,6 +971,97 @@ test_spdk_nvme_ctrlr_cmd_abort(void)
 }
 
 static void
+test_nvme_ctrlr_cmd_abort_outstanding_count(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair admin_qpair = {};
+	struct nvme_request req = {};
+
+	/* For allocating request */
+	STAILQ_INIT(&admin_qpair.free_req);
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &req, stailq);
+	ctrlr.adminq = &admin_qpair;
+	admin_qpair.id = 0;
+	/* ACL is 0's based; allow 2 concurrent outstanding aborts. */
+	ctrlr.cdata.acl = 1;
+	ctrlr.outstanding_aborts = 0;
+	STAILQ_INIT(&ctrlr.queued_aborts);
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
+	/* On submission failure the request is freed without the completion
+	 * callback running, so _nvme_ctrlr_submit_abort_request() must undo its
+	 * own outstanding_aborts increment to avoid leaking the count.
+	 */
+	MOCK_SET(nvme_ctrlr_submit_admin_request, -ENXIO);
+
+	rc = spdk_nvme_ctrlr_cmd_abort(&ctrlr, NULL, 2, (void *)0xDEADBEEF, (void *)0xDCADBEEF);
+	CU_ASSERT(rc == -ENXIO);
+	CU_ASSERT(ctrlr.outstanding_aborts == 0);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.queued_aborts));
+
+	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
+}
+
+static void
+test_nvme_ctrlr_cmd_abort_ext_outstanding_count(void)
+{
+	int rc;
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair admin_qpair = {};
+	struct nvme_request req_parent = {};
+	struct nvme_request req_child = {};
+	struct nvme_request outstanding = {};
+	void *cmd_cb_arg = (void *)0xDEADBEEF;
+
+	/* nvme_request_clear() only zeroes up to payload_size, so qpair (declared
+	 * after it) survives allocation. Preset it so pool-allocated requests can
+	 * reach the controller.
+	 */
+	admin_qpair.ctrlr = &ctrlr;
+	admin_qpair.id = 0;
+	req_parent.qpair = &admin_qpair;
+	req_child.qpair = &admin_qpair;
+
+	/* For allocating the parent abort request and one child abort request. */
+	STAILQ_INIT(&admin_qpair.free_req);
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &req_child, stailq);
+	STAILQ_INSERT_HEAD(&admin_qpair.free_req, &req_parent, stailq);
+	ctrlr.adminq = &admin_qpair;
+
+	/* ACL is 0's based; allow 2 concurrent outstanding aborts. */
+	ctrlr.cdata.acl = 1;
+	ctrlr.outstanding_aborts = 0;
+	STAILQ_INIT(&ctrlr.queued_aborts);
+	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+
+	/* Yield one outstanding request with a matching cb_arg so abort_ext()
+	 * adds a single child abort request.
+	 */
+	outstanding.cb_arg = cmd_cb_arg;
+	outstanding.parent = NULL;
+	g_iterate_req = &outstanding;
+
+	/* Child abort submission fails: _nvme_ctrlr_submit_abort_request() must
+	 * undo its own outstanding_aborts increment to avoid leaking the count.
+	 */
+	MOCK_SET(nvme_ctrlr_submit_admin_request, -ENXIO);
+
+	rc = spdk_nvme_ctrlr_cmd_abort_ext(&ctrlr, NULL, cmd_cb_arg, NULL, NULL);
+	/* A child was added, so abort_ext() returns success (parent flagged
+	 * failed); what matters here is the counter stays balanced.
+	 */
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr.outstanding_aborts == 0);
+	CU_ASSERT(STAILQ_EMPTY(&ctrlr.queued_aborts));
+
+	g_iterate_req = NULL;
+	MOCK_CLEAR(nvme_ctrlr_submit_admin_request);
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
+}
+
+static void
 test_nvme_ctrlr_cmd_identify(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
@@ -1053,6 +1154,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_directive);
 	CU_ADD_TEST(suite, test_nvme_request_add_abort);
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_cmd_abort);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_cmd_abort_outstanding_count);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_cmd_abort_ext_outstanding_count);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_cmd_identify);
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_cmd_security_receive_send);
 
