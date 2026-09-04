@@ -212,8 +212,9 @@ nvmf_auth_check_command(struct spdk_nvmf_request *req, uint8_t secp,
 static void *
 nvmf_auth_get_message(struct spdk_nvmf_request *req, size_t size)
 {
-	if (req->length > 0 && req->iovcnt == 1 && req->iov[0].iov_len >= size) {
-		return req->iov[0].iov_base;
+	if (req->length > 0 && req->iovcnt == 1 &&
+	    spdk_nvmf_request_get_iov(req)[0].iov_len >= size) {
+		return spdk_nvmf_request_get_iov(req)[0].iov_base;
 	}
 
 	return NULL;
@@ -788,7 +789,7 @@ nvmf_auth_recv_exec(struct spdk_nvmf_request *req)
 		return;
 	}
 
-	spdk_iov_memset(req->iov, req->iovcnt, 0);
+	spdk_iov_memset(spdk_nvmf_request_get_iov(req), req->iovcnt, 0);
 	switch (auth->state) {
 	case NVMF_QPAIR_AUTH_CHALLENGE:
 		rc = nvmf_auth_recv_challenge(req);

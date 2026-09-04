@@ -322,7 +322,8 @@ nvmf_get_discovery_log_page(void *arg)
 
 	/* Copy the valid part of the discovery log page, if any */
 	if (discovery_log_page) {
-		for (tmp = req->iov; tmp < req->iov + req->iovcnt; tmp++) {
+		for (tmp = spdk_nvmf_request_get_iov(req);
+		     tmp < spdk_nvmf_request_get_iov(req) + req->iovcnt; tmp++) {
 			copy_len = spdk_min(tmp->iov_len, length);
 			copy_len = spdk_min(log_page_size - offset, copy_len);
 
@@ -340,7 +341,7 @@ nvmf_get_discovery_log_page(void *arg)
 			memset((char *)tmp->iov_base + copy_len, 0, zero_len);
 		}
 
-		for (++tmp; tmp < req->iov + req->iovcnt; tmp++) {
+		for (++tmp; tmp < spdk_nvmf_request_get_iov(req) + req->iovcnt; tmp++) {
 			memset((char *)tmp->iov_base, 0, tmp->iov_len);
 		}
 

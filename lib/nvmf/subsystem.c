@@ -3677,7 +3677,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 
 	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
 		struct spdk_iov_xfer ix;
-		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
@@ -3832,7 +3832,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 
 	if (req->iovcnt > 0 && req->length >= sizeof(key)) {
 		struct spdk_iov_xfer ix;
-		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 		spdk_iov_xfer_to_buf(&ix, &key, sizeof(key));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
@@ -4023,7 +4023,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 
 	if (req->iovcnt > 0 && req->length >= sizeof(crkey)) {
 		struct spdk_iov_xfer ix;
-		spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+		spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 		spdk_iov_xfer_to_buf(&ix, &crkey, sizeof(crkey));
 	} else {
 		SPDK_ERRLOG("No key provided. Failing request.\n");
@@ -4140,7 +4140,7 @@ nvmf_ns_reservation_report(const struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 
 	status_data.data.gen = ns->gen;
 	status_data.data.rtype = ns->rtype;

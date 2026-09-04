@@ -874,11 +874,12 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 			       struct spdk_nvmf_transport *transport)
 {
 	uint32_t i;
+	struct iovec *iovs = spdk_nvmf_request_get_iov(req);
 
 	for (i = 0; i < req->iovcnt; i++) {
-		spdk_iobuf_put(group->buf_cache, req->iov[i].iov_base, req->iov[i].iov_len);
-		req->iov[i].iov_base = NULL;
-		req->iov[i].iov_len = 0;
+		spdk_iobuf_put(group->buf_cache, iovs[i].iov_base, iovs[i].iov_len);
+		iovs[i].iov_base = NULL;
+		iovs[i].iov_len = 0;
 	}
 	req->iovcnt = 0;
 	req->data_from_pool = false;
@@ -887,8 +888,10 @@ spdk_nvmf_request_free_buffers(struct spdk_nvmf_request *req,
 static inline void
 nvmf_request_set_buffer(struct spdk_nvmf_request *req, void *buf, uint32_t length)
 {
-	req->iov[req->iovcnt].iov_base = buf;
-	req->iov[req->iovcnt].iov_len  = length;
+	struct iovec *iovs = spdk_nvmf_request_get_iov(req);
+
+	iovs[req->iovcnt].iov_base = buf;
+	iovs[req->iovcnt].iov_len  = length;
 	req->iovcnt++;
 	req->data_from_pool = true;
 }

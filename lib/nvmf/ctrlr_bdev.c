@@ -463,7 +463,8 @@ nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	assert(!spdk_nvmf_request_using_zcopy(req));
 
-	rc = spdk_bdev_readv_blocks_ext(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+	rc = spdk_bdev_readv_blocks_ext(desc, ch, spdk_nvmf_request_get_iov(req), req->iovcnt,
+					start_lba, num_blocks,
 					nvmf_bdev_ctrlr_complete_cmd, req, &opts);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -517,7 +518,8 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	assert(!spdk_nvmf_request_using_zcopy(req));
 
-	rc = spdk_bdev_writev_blocks_ext(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+	rc = spdk_bdev_writev_blocks_ext(desc, ch, spdk_nvmf_request_get_iov(req), req->iovcnt,
+					 start_lba, num_blocks,
 					 nvmf_bdev_ctrlr_complete_cmd, req, &opts);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -562,7 +564,8 @@ nvmf_bdev_ctrlr_compare_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	rc = spdk_bdev_comparev_blocks(desc, ch, req->iov, req->iovcnt, start_lba, num_blocks,
+	rc = spdk_bdev_comparev_blocks(desc, ch, spdk_nvmf_request_get_iov(req), req->iovcnt,
+				       start_lba, num_blocks,
 				       nvmf_bdev_ctrlr_complete_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -621,7 +624,8 @@ nvmf_bdev_ctrlr_compare_and_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	rc = spdk_bdev_comparev_and_writev_blocks(desc, ch, cmp_req->iov, cmp_req->iovcnt, write_req->iov,
+	rc = spdk_bdev_comparev_and_writev_blocks(desc, ch, spdk_nvmf_request_get_iov(cmp_req),
+			cmp_req->iovcnt, spdk_nvmf_request_get_iov(write_req),
 			write_req->iovcnt, write_start_lba, write_num_blocks, nvmf_bdev_ctrlr_complete_cmd, write_req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -817,7 +821,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 
 	/* Resume reading DSM ranges from where we left off on resubmission. */
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	ix.cur_iov_idx = unmap_ctx->cur_iov_idx;
 	ix.cur_iov_offset = unmap_ctx->cur_iov_offset;
 
@@ -936,7 +940,7 @@ nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	spdk_iov_xfer_to_buf(&ix, &range, sizeof(range));
 
 	rc = spdk_bdev_copy_blocks(desc, ch, sdlba, range.slba, range.nlb + 1,
@@ -961,7 +965,8 @@ nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *
 {
 	int rc;
 
-	rc = spdk_bdev_nvme_iov_passthru_md(desc, ch, &req->cmd->nvme_cmd, req->iov, req->iovcnt,
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, ch, &req->cmd->nvme_cmd,
+					    spdk_nvmf_request_get_iov(req), req->iovcnt,
 					    req->length, NULL, 0, nvmf_bdev_ctrlr_complete_cmd, req);
 
 	if (spdk_unlikely(rc)) {
@@ -994,7 +999,8 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_admin(struct spdk_bdev *bdev, struct spdk_bde
 
 	req->cmd_cb_fn = cb_fn;
 
-	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd, req->iov[0].iov_base, req->length,
+	rc = spdk_bdev_nvme_admin_passthru(desc, ch, &req->cmd->nvme_cmd,
+					   spdk_nvmf_request_get_iov(req)[0].iov_base, req->length,
 					   nvmf_bdev_ctrlr_complete_admin_cmd, req);
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
@@ -1085,12 +1091,12 @@ nvmf_bdev_ctrlr_zcopy_start_complete(struct spdk_bdev_io *bdev_io, bool success,
 
 	spdk_bdev_io_get_iovec(bdev_io, &iov, &iovcnt);
 
-	assert(iovcnt <= NVMF_REQ_MAX_BUFFERS);
+	assert(iovcnt <= spdk_nvmf_request_get_iov_capacity(req));
 	assert(iovcnt > 0);
 
 	req->iovcnt = iovcnt;
 
-	assert(req->iov == iov);
+	assert(spdk_nvmf_request_get_iov(req) == iov);
 
 	req->zcopy_bdev_io = bdev_io; /* Preserve the bdev_io for the end zcopy */
 
@@ -1132,7 +1138,7 @@ nvmf_bdev_ctrlr_zcopy_start(struct spdk_bdev *bdev,
 
 	bool populate = cmd->opc == SPDK_NVME_OPC_READ;
 
-	rc = spdk_bdev_zcopy_start(desc, ch, req->iov, req->iovcnt, start_lba,
+	rc = spdk_bdev_zcopy_start(desc, ch, spdk_nvmf_request_get_iov(req), req->iovcnt, start_lba,
 				   num_blocks, populate, nvmf_bdev_ctrlr_zcopy_start_complete, req);
 	if (spdk_unlikely(rc != 0)) {
 		if (rc == -ENOMEM) {

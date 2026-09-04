@@ -88,7 +88,8 @@ struct spdk_nvmf_request {
 			uint8_t first_fused		: 1;
 			uint8_t reservation_queued	: 1;
 			uint8_t reservation_waiting	: 1; /* a reservation is waiting on this request */
-			uint8_t rsvd			: 4;
+			uint8_t iov_ext_used		: 1;
+			uint8_t rsvd			: 3;
 		};
 	};
 	uint8_t				zcopy_phase; /* type enum spdk_nvmf_zcopy_phase */
@@ -106,6 +107,9 @@ struct spdk_nvmf_request {
 	struct spdk_accel_sequence	*accel_sequence;
 
 	struct iovec			iov[NVMF_REQ_MAX_BUFFERS];
+	/* Optional transport-owned I/O vector replacing the inline array, not an added tail. */
+	struct iovec			*iov_ext;
+	uint16_t			iov_ext_capacity;
 
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 	spdk_nvmf_nvme_passthru_cmd_cb	cmd_cb_fn;
@@ -126,11 +130,44 @@ struct spdk_nvmf_request {
 	union spdk_nvme_parameter_error_location	error_location;
 	STAILQ_ENTRY(spdk_nvmf_request)	reservation_link;
 };
+
+static inline struct iovec *
+spdk_nvmf_request_get_iov(struct spdk_nvmf_request *req)
+{
+	if (spdk_unlikely(req->iov_ext_used)) {
+		assert(req->iov_ext && req->iov_ext_capacity);
+		return req->iov_ext;
+	}
+
+	return req->iov;
+}
+
+static inline uint16_t
+spdk_nvmf_request_get_iov_capacity(const struct spdk_nvmf_request *req)
+{
+	if (spdk_unlikely(req->iov_ext_used)) {
+		assert(req->iov_ext && req->iov_ext_capacity);
+		return req->iov_ext_capacity;
+	}
+
+	return NVMF_REQ_MAX_BUFFERS;
+}
+
+/* Select a transport-owned I/O vector, or restore the inline vector with NULL/0. */
+static inline void
+spdk_nvmf_request_set_iov(struct spdk_nvmf_request *req, struct iovec *iov, uint16_t capacity)
+{
+	assert((iov != NULL) == (capacity != 0));
+	req->iov_ext = iov;
+	req->iov_ext_capacity = capacity;
+	req->iov_ext_used = iov != NULL;
+}
+
 /* The iov array grows by two iovecs for every additional SGL entry, so the
  * expected size can be derived from the size of the default configuration.
  */
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) ==
-		   752 + (SPDK_NVMF_MAX_SGL_ENTRIES - 16) * 2 * sizeof(struct iovec),
+		   768 + (SPDK_NVMF_MAX_SGL_ENTRIES - 16) * 2 * sizeof(struct iovec),
 		   "Incorrect size");
 
 enum spdk_nvmf_qpair_state {

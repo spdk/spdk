@@ -888,7 +888,7 @@ _nvmf_ctrlr_add_io_qpair(void *ctx)
 
 	assert(req->iovcnt == 1);
 
-	data = req->iov[0].iov_base;
+	data = spdk_nvmf_request_get_iov(req)[0].iov_base;
 
 	SPDK_DEBUGLOG(nvmf, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
@@ -981,7 +981,7 @@ nvmf_qpair_access_allowed(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_subsys
 static int
 _nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_connect_data *data = req->iov[0].iov_base;
+	struct spdk_nvmf_fabric_connect_data *data = spdk_nvmf_request_get_iov(req)[0].iov_base;
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
@@ -1095,7 +1095,7 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 	assert(req->qpair->ctrlr == NULL);
 	assert(req->iovcnt == 1);
 
-	data = req->iov[0].iov_base;
+	data = spdk_nvmf_request_get_iov(req)[0].iov_base;
 	tgt = req->qpair->transport->tgt;
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
@@ -1109,7 +1109,7 @@ nvmf_subsystem_pg_from_connect_cmd(struct spdk_nvmf_request *req)
 static int
 nvmf_ctrlr_cmd_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_fabric_connect_data *data = req->iov[0].iov_base;
+	struct spdk_nvmf_fabric_connect_data *data = spdk_nvmf_request_get_iov(req)[0].iov_base;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_transport *transport = req->qpair->transport;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -2039,7 +2039,7 @@ nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	spdk_iov_xfer_from_buf(&ix, &ctrlr->hostid, sizeof(ctrlr->hostid));
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2184,7 +2184,7 @@ nvmf_ctrlr_get_features_host_behavior_support(struct spdk_nvmf_request *req)
 	host_behavior.acre = ctrlr->acre_enabled;
 	host_behavior.lbafee = ctrlr->lbafee_enabled;
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	spdk_iov_xfer_from_buf(&ix, &host_behavior, sizeof(host_behavior));
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -2204,14 +2204,15 @@ nvmf_ctrlr_set_features_host_behavior_support(struct spdk_nvmf_request *req)
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
-	if (req->iov[0].iov_len != sizeof(struct spdk_nvme_host_behavior)) {
-		SPDK_ERRLOG("Host Behavior Support invalid iov_len: %zd\n", req->iov[0].iov_len);
+	if (spdk_nvmf_request_get_iov(req)[0].iov_len != sizeof(struct spdk_nvme_host_behavior)) {
+		SPDK_ERRLOG("Host Behavior Support invalid iov_len: %zd\n",
+			    spdk_nvmf_request_get_iov(req)[0].iov_len);
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	host_behavior = (struct spdk_nvme_host_behavior *)req->iov[0].iov_base;
+	host_behavior = (struct spdk_nvme_host_behavior *)spdk_nvmf_request_get_iov(req)[0].iov_base;
 	if (host_behavior->acre == 0) {
 		ctrlr->acre_enabled = false;
 	} else if (host_behavior->acre == 1) {
@@ -3111,6 +3112,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint64_t offset, len;
 	uint32_t rae, numdl, numdu;
 	uint8_t lid = cmd->cdw10_bits.get_log_page.lid;
+	struct iovec *iovs = spdk_nvmf_request_get_iov(req);
 	int rc = 0;
 	bool extdlpe;
 
@@ -3151,7 +3153,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		switch (lid) {
 		/* If you are adding support for new log pages, please update g_supported_log_pages_discover[] to reflect it. */
 		case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
-			rc = nvmf_get_supported_log_pages(ctrlr, req->iov, req->iovcnt, offset, len);
+			rc = nvmf_get_supported_log_pages(ctrlr, iovs, req->iovcnt, offset, len);
 			break;
 		case SPDK_NVME_LOG_DISCOVERY:
 			if (spdk_nvmf_qpair_get_listen_trid(req->qpair, &cmd_source_trid)) {
@@ -3166,7 +3168,7 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			nvmf_get_discovery_log_page_async(req, offset, len, &cmd_source_trid, rae, extdlpe);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
-			rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
+			rc = nvmf_get_feature_ids_effects_log_page(ctrlr, iovs, req->iovcnt, offset, len);
 			break;
 		default:
 			SPDK_INFOLOG(nvmf, "Unsupported Get Log Page Identifier for discovery subsystem 0x%02X\n", lid);
@@ -3182,37 +3184,37 @@ nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	switch (lid) {
 	/* If you are adding support for new log pages, please update g_supported_log_pages[] to reflect it. */
 	case SPDK_NVME_LOG_SUPPORTED_LOG_PAGES:
-		rc = nvmf_get_supported_log_pages(ctrlr, req->iov, req->iovcnt, offset, len);
+		rc = nvmf_get_supported_log_pages(ctrlr, iovs, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_ERROR:
-		rc = nvmf_get_error_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		rc = nvmf_get_error_log_page(ctrlr, iovs, req->iovcnt, offset, len, rae);
 		break;
 	case SPDK_NVME_LOG_HEALTH_INFORMATION:
 		/* TODO: actually fill out log page data */
 		break;
 	case SPDK_NVME_LOG_FIRMWARE_SLOT:
-		rc = nvmf_get_firmware_slot_log_page(req->iov, req->iovcnt, offset, len);
+		rc = nvmf_get_firmware_slot_log_page(iovs, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS:
 		if (subsystem->opts.ana_reporting) {
 			uint32_t rgo = cmd->cdw10_bits.get_log_page.lsp & 1;
-			rc = nvmf_get_ana_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae, rgo);
+			rc = nvmf_get_ana_log_page(ctrlr, iovs, req->iovcnt, offset, len, rae, rgo);
 			break;
 		} else {
 			SPDK_INFOLOG(nvmf, "Get Log Page for Asymmetric Namespace Access is not supported\n");
 			goto invalid_log_page;
 		}
 	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
-		rc = nvmf_get_cmds_and_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
+		rc = nvmf_get_cmds_and_effects_log_page(ctrlr, iovs, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_CHANGED_NS_LIST:
-		rc = nvmf_get_changed_ns_list_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		rc = nvmf_get_changed_ns_list_log_page(ctrlr, iovs, req->iovcnt, offset, len, rae);
 		break;
 	case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
-		rc = nvmf_get_reservation_notification_log_page(ctrlr, req->iov, req->iovcnt, offset, len, rae);
+		rc = nvmf_get_reservation_notification_log_page(ctrlr, iovs, req->iovcnt, offset, len, rae);
 		break;
 	case SPDK_NVME_LOG_FEATURE_IDS_EFFECTS:
-		rc = nvmf_get_feature_ids_effects_log_page(ctrlr, req->iov, req->iovcnt, offset, len);
+		rc = nvmf_get_feature_ids_effects_log_page(ctrlr, iovs, req->iovcnt, offset, len);
 		break;
 	case SPDK_NVME_LOG_NVME_MI_COMMANDS_EFFECTS:
 		/* To comply with id-ctrl LPA bit 5, don't fail this log but return zeroed buffer instead. */
@@ -3588,7 +3590,7 @@ nvmf_ns_identify_iocs_kv_passthru(struct spdk_nvmf_request *req)
 	}
 
 	if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN)) {
-		memset(req->iov[0].iov_base, 0, req->length);
+		spdk_iov_memset(spdk_nvmf_request_get_iov(req), req->iovcnt, 0);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -3962,7 +3964,7 @@ nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	 * We must use a temporary buffer: it's entirely possible the out buffer
 	 * is split across more than one IOV.
 	 */
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 
 	SPDK_DEBUGLOG(nvmf, "Received identify command with CNS 0x%02x\n", cns);
 
@@ -4565,7 +4567,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	}
 
 	if (req->iovcnt && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		spdk_iov_memset(req->iov, req->iovcnt, 0);
+		spdk_iov_memset(spdk_nvmf_request_get_iov(req), req->iovcnt, 0);
 	}
 
 	if (spdk_nvmf_subsystem_is_discovery(ctrlr->subsys)) {
@@ -5187,7 +5189,7 @@ spdk_nvmf_request_zcopy_start(struct spdk_nvmf_request *req)
 	assert(req->zcopy_phase == NVMF_ZCOPY_PHASE_INIT);
 
 	/* Set iovcnt to be the maximum number of iovs that the ZCOPY can use */
-	req->iovcnt = NVMF_REQ_MAX_BUFFERS;
+	req->iovcnt = spdk_nvmf_request_get_iov_capacity(req);
 
 	spdk_nvmf_request_exec(req);
 }
@@ -5906,7 +5908,7 @@ spdk_nvmf_request_copy_from_buf(struct spdk_nvmf_request *req,
 {
 	struct spdk_iov_xfer ix;
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	return spdk_iov_xfer_from_buf(&ix, buf, buflen);
 }
 
@@ -5916,7 +5918,7 @@ spdk_nvmf_request_copy_to_buf(struct spdk_nvmf_request *req,
 {
 	struct spdk_iov_xfer ix;
 
-	spdk_iov_xfer_init(&ix, req->iov, req->iovcnt);
+	spdk_iov_xfer_init(&ix, spdk_nvmf_request_get_iov(req), req->iovcnt);
 	return spdk_iov_xfer_to_buf(&ix, buf, buflen);
 }
 

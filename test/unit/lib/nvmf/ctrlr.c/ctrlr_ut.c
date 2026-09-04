@@ -4271,6 +4271,141 @@ test_error_log_page(void)
 	nvmf_ctrlr_error_log_cleanup(&ctrlr);
 }
 
+static void
+test_request_iov_selection(void)
+{
+	struct spdk_nvmf_request req = {};
+	struct iovec iov_ext[64] = {};
+
+	CU_ASSERT(offsetof(struct spdk_nvmf_request, raw) < 64);
+	CU_ASSERT(!req.iov_ext_used);
+	CU_ASSERT(spdk_nvmf_request_get_iov(&req) == req.iov);
+	CU_ASSERT(spdk_nvmf_request_get_iov_capacity(&req) == NVMF_REQ_MAX_BUFFERS);
+
+	/* Disabled storage must not select the cold pointer, even if it is non-NULL. */
+	req.iov_ext = iov_ext;
+	req.iov_ext_capacity = SPDK_COUNTOF(iov_ext);
+	CU_ASSERT(spdk_nvmf_request_get_iov(&req) == req.iov);
+	CU_ASSERT(spdk_nvmf_request_get_iov_capacity(&req) == NVMF_REQ_MAX_BUFFERS);
+
+	req.data_from_pool = true;
+	req.first_fused = true;
+	req.reservation_queued = true;
+	req.reservation_waiting = true;
+	spdk_nvmf_request_set_iov(&req, iov_ext, SPDK_COUNTOF(iov_ext));
+	CU_ASSERT(req.iov_ext_used);
+	CU_ASSERT(spdk_nvmf_request_get_iov(&req) == iov_ext);
+	CU_ASSERT(spdk_nvmf_request_get_iov_capacity(&req) == SPDK_COUNTOF(iov_ext));
+	CU_ASSERT(req.data_from_pool && req.first_fused && req.reservation_queued &&
+		  req.reservation_waiting);
+
+	/* The inline vector is selected again when the transport stops using the extension. */
+	spdk_nvmf_request_set_iov(&req, NULL, 0);
+	CU_ASSERT(!req.iov_ext_used);
+	CU_ASSERT(req.iov_ext == NULL && req.iov_ext_capacity == 0);
+	CU_ASSERT(spdk_nvmf_request_get_iov(&req) == req.iov);
+	CU_ASSERT(spdk_nvmf_request_get_iov_capacity(&req) == NVMF_REQ_MAX_BUFFERS);
+	CU_ASSERT(req.data_from_pool && req.first_fused && req.reservation_queued &&
+		  req.reservation_waiting);
+}
+
+static void
+test_request_copy_extended_iov(void)
+{
+	struct spdk_nvmf_request req = {};
+	struct iovec iov_ext[64] = {};
+	uint8_t source[64], payload[64] = {}, result[64] = {};
+	uint8_t inline_payload = 0xa5;
+	size_t i;
+
+	SPDK_IOV_ONE(req.iov, &req.iovcnt, &inline_payload, sizeof(inline_payload));
+	spdk_nvmf_request_set_iov(&req, iov_ext, SPDK_COUNTOF(iov_ext));
+	req.iovcnt = SPDK_COUNTOF(iov_ext);
+	for (i = 0; i < SPDK_COUNTOF(iov_ext); i++) {
+		source[i] = i + 1;
+		iov_ext[i].iov_base = &payload[i];
+		iov_ext[i].iov_len = sizeof(payload[i]);
+	}
+
+	CU_ASSERT(spdk_nvmf_request_copy_from_buf(&req, source, sizeof(source)) == sizeof(source));
+	CU_ASSERT(memcmp(payload, source, sizeof(payload)) == 0);
+	CU_ASSERT(inline_payload == 0xa5);
+	CU_ASSERT(spdk_nvmf_request_copy_to_buf(&req, result, sizeof(result)) == sizeof(result));
+	CU_ASSERT(memcmp(result, source, sizeof(result)) == 0);
+
+	/* Copying a prefix must not overwrite the remaining segments. */
+	memset(source, 0x5a, sizeof(source));
+	CU_ASSERT(spdk_nvmf_request_copy_from_buf(&req, source, 35) == 35);
+	CU_ASSERT(memcmp(payload, source, 35) == 0);
+	for (i = 35; i < sizeof(payload); i++) {
+		CU_ASSERT(payload[i] == i + 1);
+	}
+	CU_ASSERT(inline_payload == 0xa5);
+}
+
+static void
+test_identify_ns_kv_active_iov(void)
+{
+	struct spdk_bdev bdev = {};
+	struct spdk_nvmf_ns ns = {.bdev = &bdev};
+	struct spdk_nvmf_ns *ns_arr[] = {&ns};
+	struct spdk_nvmf_subsystem subsystem = {.ns = ns_arr, .max_nsid = 1};
+	struct spdk_nvmf_ctrlr ctrlr = {.subsys = &subsystem};
+	struct spdk_nvmf_subsystem_pg_ns_info ns_info = {};
+	struct spdk_nvmf_subsystem_poll_group sgroup = {.ns_info = &ns_info};
+	struct spdk_nvmf_poll_group group = {.sgroups = &sgroup};
+	struct spdk_nvmf_qpair qpair = {.ctrlr = &ctrlr, .group = &group};
+	union nvmf_h2c_msg cmd = {.nvme_cmd.nsid = 1};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = {.qpair = &qpair, .cmd = &cmd, .rsp = &rsp};
+	struct iovec iov_ext[64] = {};
+	struct iovec *iov;
+	uint8_t payload[64][66], stale_inline[4096], expected_inline[4096];
+	const struct {
+		bool extended;
+		uint8_t count;
+	} cases[] = {{false, 1}, {false, 3}, {true, 1}, {true, 3}, {true, 64}};
+	size_t c, i;
+
+	ctrlr.visible_ns = spdk_bit_array_create(1);
+	SPDK_CU_ASSERT_FATAL(ctrlr.visible_ns != NULL);
+	spdk_bit_array_set(ctrlr.visible_ns, 0);
+	memset(expected_inline, 0xa5, sizeof(expected_inline));
+
+	for (c = 0; c < SPDK_COUNTOF(cases); c++) {
+		memset(payload, 0x5a, sizeof(payload));
+		memset(stale_inline, 0xa5, sizeof(stale_inline));
+		memset(req.iov, 0, sizeof(req.iov));
+		spdk_nvmf_request_set_iov(&req, cases[c].extended ? iov_ext : NULL,
+					  cases[c].extended ? SPDK_COUNTOF(iov_ext) : 0);
+		req.iovcnt = cases[c].count;
+		req.length = req.iovcnt * 64;
+		if (cases[c].extended) {
+			/* The inline vector may still reference an earlier request's payload. */
+			req.iov[0].iov_base = stale_inline;
+			req.iov[0].iov_len = sizeof(stale_inline);
+		}
+		iov = spdk_nvmf_request_get_iov(&req);
+		for (i = 0; i < req.iovcnt; i++) {
+			iov[i].iov_base = &payload[i][1];
+			iov[i].iov_len = 64;
+		}
+
+		CU_ASSERT(nvmf_ns_identify_iocs_kv_passthru(&req) ==
+			  SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+		for (i = 0; i < req.iovcnt; i++) {
+			CU_ASSERT(spdk_mem_all_zero(&payload[i][1], 64));
+		}
+		for (i = 0; i < SPDK_COUNTOF(payload); i++) {
+			CU_ASSERT(payload[i][0] == 0x5a);
+			CU_ASSERT(payload[i][65] == 0x5a);
+		}
+		CU_ASSERT(memcmp(stale_inline, expected_inline, sizeof(stale_inline)) == 0);
+	}
+
+	spdk_bit_array_free(&ctrlr.visible_ns);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4321,6 +4456,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_error_log_carrier_pool);
 	CU_ADD_TEST(suite, test_error_log_page);
 	CU_ADD_TEST(suite, test_error_information_entry_compatibility);
+	CU_ADD_TEST(suite, test_request_iov_selection);
+	CU_ADD_TEST(suite, test_request_copy_extended_iov);
+	CU_ADD_TEST(suite, test_identify_ns_kv_active_iov);
 
 	allocate_threads(1);
 	set_thread(0);
