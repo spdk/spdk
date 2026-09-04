@@ -662,6 +662,8 @@ vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t 
 {
 	struct vring_packed_desc *desc;
 	uint16_t desc_head = req_idx;
+	uint16_t max_chain_len = vq->vring.size;
+	bool invalid_chain = false;
 
 	*num_descs = 1;
 
@@ -671,6 +673,21 @@ vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t 
 			req_idx = (req_idx + 1) % vq->vring.size;
 			desc = &vq->vring.desc_packed[req_idx];
 			(*num_descs)++;
+			/* A valid descriptor chain can never be longer than the ring
+			 * size. A malicious or broken guest that sets F_NEXT on every
+			 * descriptor would otherwise make this loop spin forever,
+			 * wedging the poller (CPU DoS). */
+			if (*num_descs > max_chain_len) {
+				SPDK_DEBUGLOG(vhost_ring, "Invalid descriptor chain: too many "
+					      "F_NEXT descriptors (%u > %u)\n",
+					      *num_descs, max_chain_len);
+				/* The walk has wrapped all the way around the ring, so req_idx
+				 * is back at desc_head and last_avail_idx below only advances
+				 * by one. Report a single consumed descriptor to match. */
+				*num_descs = 1;
+				invalid_chain = true;
+				break;
+			}
 		}
 	}
 
@@ -681,6 +698,15 @@ vhost_vring_packed_desc_get_buffer_id(struct spdk_vhost_virtqueue *vq, uint16_t 
 	vq->last_avail_idx = (req_idx + 1) % vq->vring.size;
 	if (vq->last_avail_idx < desc_head) {
 		vq->packed.avail_phase = !vq->packed.avail_phase;
+	}
+
+	/* The queue has been advanced above, so the poller makes forward
+	 * progress instead of re-walking this same chain on every pass.
+	 * Return an out-of-range buffer id so the caller's bounds check
+	 * rejects the malformed request.
+	 */
+	if (spdk_unlikely(invalid_chain)) {
+		return vq->vring.size;
 	}
 
 	return desc->id;
