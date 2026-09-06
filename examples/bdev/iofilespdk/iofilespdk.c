@@ -260,7 +260,13 @@ int main(int argc, char *argv[]){
 	uint64_t bytes  = ftell(file);
 	rewind(file);
 
-	char* file_data = malloc(bytes);
+	char* file_data;
+	if(gpu_alloc_buffer(&file_data, bytes) != 0){
+		fprintf(stderr, "Coulndt allocate buffer");
+		fclose(file);
+		free(file_data);
+		return -1;
+	}
 	if(fread(file_data, 1, bytes, file) != (size_t)bytes){
 		fprintf(stderr, "Short read on %s\n", context.filename);
 		fclose(file);
@@ -278,7 +284,7 @@ int main(int argc, char *argv[]){
 	}
 
 	spdk_dma_free(context.buff);
-	free(context.file_data);
+	gpu_free_buffer(context.file_data);
 	spdk_app_fini();
 	return rc;
 }
