@@ -3354,7 +3354,7 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 		}
 	}
 
-	free(async_event->log_page.changed_ns_list);
+	spdk_free(async_event->log_page.changed_ns_list);
 	spdk_free(async_event);
 }
 
@@ -3372,7 +3372,8 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr, uint32_t **change
 		return 0;
 	}
 
-	changed_ns_list = calloc(1, changed_ns_list_length);
+	changed_ns_list = spdk_zmalloc(changed_ns_list_length, 0, NULL, SPDK_ENV_NUMA_ID_ANY,
+				       SPDK_MALLOC_SHARE);
 	if (!changed_ns_list) {
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate buffer for getting changed ns log.\n");
 		goto out;
@@ -3415,7 +3416,7 @@ nvme_ctrlr_clear_changed_ns_log(struct spdk_nvme_ctrlr *ctrlr, uint32_t **change
 	return 0;
 
 out:
-	free(changed_ns_list);
+	spdk_free(changed_ns_list);
 	return rc;
 }
 
