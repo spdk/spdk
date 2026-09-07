@@ -1041,6 +1041,9 @@ struct spdk_nvme_ctrlr_aer_completion {
 		uint32_t		*changed_ns_list;
 	} log_page;
 
+	/* True when the req owner already completed processing. */
+	bool processed;
+
 	uint32_t changed_ns_count;
 
 	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion) link;

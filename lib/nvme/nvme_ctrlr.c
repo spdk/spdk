@@ -3360,6 +3360,22 @@ nvme_ctrlr_alloc_async_event(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nv
 	return async_event;
 }
 
+static uint32_t *
+nvme_ctrlr_duplicate_changed_ns_list(struct spdk_nvme_ctrlr *ctrlr, const uint32_t *src)
+{
+	size_t size = SPDK_NVME_MAX_CHANGED_NAMESPACES * sizeof(uint32_t);
+	uint32_t *dst;
+
+	dst = spdk_zmalloc(size, 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!dst) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to duplicate changed_ns_list\n");
+		return NULL;
+	}
+
+	memcpy(dst, src, size);
+	return dst;
+}
+
 static void
 nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
 				      bool ns_attr_changed)
@@ -3443,6 +3459,41 @@ out:
 }
 
 static void
+nvme_ctrlr_publish_async_event(struct spdk_nvme_ctrlr_aer_completion *src)
+{
+	struct spdk_nvme_ctrlr *ctrlr = src->ctrlr;
+	struct spdk_nvme_ctrlr_aer_completion *dst;
+	struct spdk_nvme_ctrlr_process *proc, *active_proc;
+	uint32_t *changed_ns_list;
+
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
+		if (proc == active_proc) {
+			continue;
+		}
+
+		dst = nvme_ctrlr_alloc_async_event(ctrlr, &src->cpl);
+		if (!dst) {
+			continue;
+		}
+
+		if (src->log_page.changed_ns_list) {
+			changed_ns_list = nvme_ctrlr_duplicate_changed_ns_list(ctrlr, src->log_page.changed_ns_list);
+			if (!changed_ns_list) {
+				nvme_ctrlr_free_async_event(dst);
+				continue;
+			}
+
+			dst->log_page.changed_ns_list = changed_ns_list;
+			dst->changed_ns_count = src->changed_ns_count;
+		}
+
+		dst->processed = true;
+		STAILQ_INSERT_TAIL(&proc->async_events, dst, link);
+	}
+}
+
+static void
 nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_event)
 {
 	struct spdk_nvme_ctrlr *ctrlr = async_event->ctrlr;
@@ -3456,8 +3507,17 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 	event.raw = cpl->cdw0;
 
-	if (event.bits.async_event_type != SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
+	if (async_event->processed) {
+		if (event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE &&
+		    event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED) {
+			ns_attr_changed = true;
+		}
+
 		goto out;
+	}
+
+	if (event.bits.async_event_type != SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) {
+		goto publish;
 	}
 
 	switch (event.bits.async_event_info) {
@@ -3528,6 +3588,8 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 		break;
 	}
 
+publish:
+	nvme_ctrlr_publish_async_event(async_event);
 out:
 	nvme_ctrlr_process_async_event_finish(async_event, ns_attr_changed);
 }
@@ -3537,18 +3599,20 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 			     const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr_aer_completion *async_event;
-	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_ctrlr_process *active_proc;
 
-	/* Add async event to each process objects event list */
-	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
-		/* Must be shared memory so other processes can access */
-		async_event = nvme_ctrlr_alloc_async_event(ctrlr, cpl);
-		if (!async_event) {
-			return;
-		}
-
-		STAILQ_INSERT_TAIL(&proc->async_events, async_event, link);
+	active_proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (!active_proc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Active process (pid %d) not found\n", getpid());
+		return;
 	}
+
+	async_event = nvme_ctrlr_alloc_async_event(ctrlr, cpl);
+	if (!async_event) {
+		return;
+	}
+
+	STAILQ_INSERT_TAIL(&active_proc->async_events, async_event, link);
 }
 
 static void
