@@ -3338,6 +3338,29 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+nvme_ctrlr_free_async_event(struct spdk_nvme_ctrlr_aer_completion *async_event)
+{
+	spdk_free(async_event->log_page.changed_ns_list);
+	spdk_free(async_event);
+}
+
+static struct spdk_nvme_ctrlr_aer_completion *
+nvme_ctrlr_alloc_async_event(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr_aer_completion *async_event;
+
+	async_event = spdk_zmalloc(sizeof(*async_event), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!async_event) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate AER completion tracker\n");
+		return NULL;
+	}
+
+	async_event->ctrlr = ctrlr;
+	async_event->cpl = *cpl;
+	return async_event;
+}
+
+static void
 nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
 				      bool ns_attr_changed, uint32_t ns_count)
 {
@@ -3354,8 +3377,7 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 		}
 	}
 
-	spdk_free(async_event->log_page.changed_ns_list);
-	spdk_free(async_event);
+	nvme_ctrlr_free_async_event(async_event);
 }
 
 static int
@@ -3447,7 +3469,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 			 * ns log page request. This would be because of a transport/device error
 			 * or timer expired.
 			 */
-			spdk_free(async_event);
+			nvme_ctrlr_free_async_event(async_event);
 			return;
 		}
 
@@ -3455,7 +3477,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 			/* Log page is not used, go over all namespaces pending identification. */
 			rc = nvme_ctrlr_identify_active_ns(ctrlr);
 			if (rc) {
-				spdk_free(async_event);
+				nvme_ctrlr_free_async_event(async_event);
 				return;
 			}
 
@@ -3494,7 +3516,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 
 		rc = nvme_ctrlr_update_ana_log_page(ctrlr);
 		if (rc) {
-			spdk_free(async_event);
+			nvme_ctrlr_free_async_event(async_event);
 			return;
 		}
 
@@ -3519,13 +3541,10 @@ nvme_ctrlr_queue_async_event(struct spdk_nvme_ctrlr *ctrlr,
 	/* Add async event to each process objects event list */
 	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
 		/* Must be shared memory so other processes can access */
-		async_event = spdk_zmalloc(sizeof(*async_event), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		async_event = nvme_ctrlr_alloc_async_event(ctrlr, cpl);
 		if (!async_event) {
-			NVME_CTRLR_ERRLOG(ctrlr, "Alloc nvme event failed, ignore the event\n");
 			return;
 		}
-		async_event->ctrlr = ctrlr;
-		async_event->cpl = *cpl;
 
 		STAILQ_INSERT_TAIL(&proc->async_events, async_event, link);
 	}
@@ -3797,7 +3816,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 	while (!STAILQ_EMPTY(&proc->async_events)) {
 		event = STAILQ_FIRST(&proc->async_events);
 		STAILQ_REMOVE_HEAD(&proc->async_events, link);
-		spdk_free(event);
+		nvme_ctrlr_free_async_event(event);
 	}
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
