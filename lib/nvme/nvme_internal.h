@@ -1041,6 +1041,8 @@ struct spdk_nvme_ctrlr_aer_completion {
 		uint32_t		*changed_ns_list;
 	} log_page;
 
+	uint32_t changed_ns_count;
+
 	STAILQ_ENTRY(spdk_nvme_ctrlr_aer_completion) link;
 };
 

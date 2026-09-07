@@ -3362,7 +3362,7 @@ nvme_ctrlr_alloc_async_event(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nv
 
 static void
 nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *async_event,
-				      bool ns_attr_changed, uint32_t ns_count)
+				      bool ns_attr_changed)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
@@ -3371,7 +3371,7 @@ nvme_ctrlr_process_async_event_finish(struct spdk_nvme_ctrlr_aer_completion *asy
 		if (ns_attr_changed && active_proc->ns_attr_changed_cb_fn) {
 			active_proc->ns_attr_changed_cb_fn(active_proc->ns_attr_changed_cb_arg,
 							   async_event->log_page.changed_ns_list,
-							   ns_count);
+							   async_event->changed_ns_count);
 		} else if (active_proc->aer_cb_fn) {
 			active_proc->aer_cb_fn(active_proc->aer_cb_arg, &async_event->cpl);
 		}
@@ -3507,6 +3507,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 		}
 
 		nvme_io_msg_ctrlr_update(ctrlr);
+		async_event->changed_ns_count = ns_count;
 		ns_attr_changed = true;
 		break;
 	case SPDK_NVME_ASYNC_EVENT_ANA_CHANGE:
@@ -3528,7 +3529,7 @@ nvme_ctrlr_process_async_event(struct spdk_nvme_ctrlr_aer_completion *async_even
 	}
 
 out:
-	nvme_ctrlr_process_async_event_finish(async_event, ns_attr_changed, ns_count);
+	nvme_ctrlr_process_async_event_finish(async_event, ns_attr_changed);
 }
 
 static void
