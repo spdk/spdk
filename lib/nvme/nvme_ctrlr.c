@@ -2801,8 +2801,7 @@ nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 			return;
 		}
 	} else {
-		memcpy(ns->nsdata, ctx->dma_data, nvme_ctrlr_get_nsdata_size(ctrlr));
-		nvme_ns_set_identify_data(ns);
+		nvme_ns_set_identify_data(ns, ctx->dma_data);
 	}
 
 	nvme_ctrlr_delete_identify_ctx(ctx);

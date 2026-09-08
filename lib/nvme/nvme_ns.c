@@ -12,10 +12,9 @@
  * operations such as Attach/Detach.
  */
 void
-nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
+nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
-	struct spdk_nvme_ns_data_head	*nsdata = nvme_ns_get_data_head(ns);
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	struct spdk_nvme_ns_data_lbaf	lbaf;
 	uint32_t			format_index;
@@ -27,6 +26,8 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns)
 				   "retained; only formats 0..%" PRIu8 " are accessible\n",
 				   ns->id, nsdata->nlbaf, inline_count, inline_count - 1);
 	}
+
+	memcpy(ns->nsdata, nsdata, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
 
 	ns->identify_pending = false;
 	ns->active = spdk_nvme_ns_is_active(ns);
@@ -158,8 +159,7 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 			return rc;
 		}
 	} else {
-		memcpy(ns->nsdata, status->dma_data, nvme_ctrlr_get_nsdata_size(ctrlr));
-		nvme_ns_set_identify_data(ns);
+		nvme_ns_set_identify_data(ns, status->dma_data);
 	}
 
 	spdk_free(status->dma_data);
