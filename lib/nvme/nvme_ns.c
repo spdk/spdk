@@ -225,7 +225,6 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	if ((ctrlr->vs.raw < SPDK_NVME_VERSION(1, 3, 0) &&
 	     !(ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_IOCS)) ||
 	    (ctrlr->quirks & NVME_QUIRK_IDENTIFY_CNS)) {
-		nvme_ns_reset_id_desc_data(ns);
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Version < 1.3; not attempting to retrieve NS ID Descriptor List\n");
 		return 0;
 	}
@@ -259,7 +258,6 @@ nvme_ctrlr_identify_id_desc(struct spdk_nvme_ns *ns)
 	}
 	if (rc) {
 		NVME_CTRLR_WARNLOG(ctrlr, "Failed to retrieve NS ID Descriptor List\n");
-		nvme_ns_reset_id_desc_data(ns);
 	} else {
 		nvme_ns_set_id_desc_list_data(ns, status->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
 	}
@@ -674,14 +672,6 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 }
 
 void
-nvme_ns_reset_id_desc_data(struct spdk_nvme_ns *ns)
-{
-	ns->has_uuid = false;
-	memset(&ns->uuid, 0, sizeof(ns->uuid));
-	ns->csi = SPDK_NVME_CSI_NVM;
-}
-
-void
 nvme_ns_clear(struct spdk_nvme_ns *ns)
 {
 	if (!ns->id) {
@@ -689,7 +679,6 @@ nvme_ns_clear(struct spdk_nvme_ns *ns)
 	}
 
 	memset(ns->nsdata, 0, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
-	nvme_ns_reset_id_desc_data(ns);
 	nvme_ns_free_iocs_specific_data(ns);
 	ns->sector_size = 0;
 	ns->extended_lba_size = 0;

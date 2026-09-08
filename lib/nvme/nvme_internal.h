@@ -1519,7 +1519,6 @@ void	nvme_ns_set_id_desc_list_data(struct spdk_nvme_ns *ns, const uint8_t *buf, 
 void	nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns);
 bool	nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns);
 int	nvme_ns_identify(struct spdk_nvme_ns *ns);
-void	nvme_ns_reset_id_desc_data(struct spdk_nvme_ns *ns);
 void	nvme_ns_clear(struct spdk_nvme_ns *ns);
 int	nvme_ns_cmd_zone_append_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 					void *buffer, void *metadata, uint64_t zslba,

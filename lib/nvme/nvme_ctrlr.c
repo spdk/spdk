@@ -2996,7 +2996,6 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 		 */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
-		nvme_ns_reset_id_desc_data(ns);
 		nvme_ctrlr_delete_identify_ctx(ctx);
 		return;
 	}
