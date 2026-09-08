@@ -64,11 +64,29 @@ def lint_json_examples() -> None:
             try:
                 t = Template(example)
                 rendered = t.render(all_methods=["rpc_get_methods"])
-                json.loads(rendered)
+                parsed = json.loads(rendered)
             except json.decoder.JSONDecodeError:
                 for i, x in enumerate(example.splitlines()):
                     print(i+1, x, file=sys.stderr)
                 raise
+            if isinstance(parsed, dict) and "method" in parsed:
+                raise ValueError(
+                    f"Hardcoded JSON-RPC request for method \"{parsed['method']}\". "
+                    "Use {{ example_request(\"method\", ...) }} instead.",
+                )
+
+
+def lint_example_coverage(schema: Dict[str, Any]) -> None:
+    """Ensure every non-private RPC has an example_request() call in the template."""
+    with open(base_dir / "doc" / "jsonrpc.md.jinja2", "r") as file:
+        data = file.read()
+    example_methods = set(re.findall(r'example_request\("(\w+)"', data))
+    schema_methods = {m["name"] for m in schema["methods"] if not m.get("private")}
+    missing = sorted(schema_methods - example_methods)
+    if missing:
+        raise ValueError(
+            f"RPCs missing example_request() in jsonrpc.md.jinja2: {', '.join(missing)}",
+        )
 
 
 def lint_c_code(schema: Dict[str, Any]) -> None:
@@ -372,6 +390,7 @@ if __name__ == "__main__":
     try:
         lint_py_cli(schema)
         lint_c_code(schema)
+        lint_example_coverage(schema)
     except ValueError as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

@@ -6594,6 +6594,22 @@ Example response:
 
 {{ nvmf_set_crdt_params }}
 
+#### Example
+
+Example request:
+
+{{ example_request("nvmf_set_crdt", "-t1", "0", "-t2", "0", "-t3", "0") }}
+
+Example response:
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## Vfio-user Target {#jsonrpc_components_vfu_tgt}
 
 ### vfu_tgt_set_base_path {#rpc_vfu_tgt_set_base_path}
