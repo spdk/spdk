@@ -1865,6 +1865,7 @@ static void
 nvme_ctrlr_free_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	RB_REMOVE(nvme_ns_tree, &ctrlr->ns, ns);
+	nvme_ns_free_iocs_specific_data(ns);
 	spdk_free(ns);
 }
 
@@ -4672,7 +4673,6 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	RB_FOREACH_SAFE(ns, nvme_ns_tree, &ctrlr->ns, tmp_ns) {
-		nvme_ns_clear(ns);
 		nvme_ctrlr_free_ns(ctrlr, ns);
 	}
 
