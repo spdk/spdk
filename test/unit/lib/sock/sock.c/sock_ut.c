@@ -1398,6 +1398,97 @@ posix_get_interface_name(void)
 	CU_ASSERT(rc == 0);
 }
 
+struct ut_async_write_ctx {
+	int legacy_calls;
+	int ext_calls;
+	int callback_calls;
+	int status;
+	const struct spdk_sock_request_opts *opts;
+};
+
+static void
+ut_async_write_cb(void *arg, int status)
+{
+	struct ut_async_write_ctx *ctx = arg;
+
+	ctx->callback_calls++;
+	ctx->status = status;
+}
+
+static void
+ut_async_write(struct spdk_sock *sock, struct spdk_sock_request *req)
+{
+	struct ut_async_write_ctx *ctx = req->cb_arg;
+
+	ctx->legacy_calls++;
+}
+
+static void
+ut_async_write_ext(struct spdk_sock *sock, struct spdk_sock_request *req,
+		   const struct spdk_sock_request_opts *opts)
+{
+	struct ut_async_write_ctx *ctx = req->cb_arg;
+
+	ctx->ext_calls++;
+	ctx->opts = opts;
+}
+
+static void
+sock_writev_async_dispatch(void)
+{
+	struct ut_async_write_ctx ctx = {};
+	struct spdk_net_impl impl = {
+		.writev_async = ut_async_write,
+		.writev_async_ext = ut_async_write_ext,
+	};
+	struct spdk_sock sock = {.net_impl = &impl};
+	struct spdk_sock_request req = {.cb_fn = ut_async_write_cb, .cb_arg = &ctx};
+	struct spdk_sock_request_opts opts = {.size = sizeof(opts)};
+
+	spdk_sock_writev_async(&sock, &req);
+	CU_ASSERT_EQUAL(ctx.legacy_calls, 1);
+	CU_ASSERT_EQUAL(ctx.ext_calls, 0);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 0);
+
+	spdk_sock_writev_async_ext(&sock, &req, &opts);
+	CU_ASSERT_EQUAL(ctx.ext_calls, 1);
+	CU_ASSERT(ctx.opts == &opts);
+	spdk_sock_writev_async_ext(&sock, &req, NULL);
+	CU_ASSERT_EQUAL(ctx.ext_calls, 2);
+	CU_ASSERT(ctx.opts == NULL);
+
+	opts.size = SPDK_SIZEOF(&opts, memory_domain_ctx) - 1;
+	spdk_sock_writev_async_ext(&sock, &req, &opts);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 1);
+	CU_ASSERT_EQUAL(ctx.status, -EINVAL);
+	CU_ASSERT_EQUAL(ctx.ext_calls, 2);
+	opts.size = sizeof(opts);
+
+	impl.writev_async_ext = NULL;
+	spdk_sock_writev_async(&sock, &req);
+	CU_ASSERT_EQUAL(ctx.legacy_calls, 2);
+	spdk_sock_writev_async_ext(&sock, &req, NULL);
+	CU_ASSERT_EQUAL(ctx.legacy_calls, 3);
+	spdk_sock_writev_async_ext(&sock, &req, &opts);
+	CU_ASSERT_EQUAL(ctx.legacy_calls, 4);
+
+	spdk_sock_writev_async(NULL, &req);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 2);
+	CU_ASSERT_EQUAL(ctx.status, -EBADF);
+	spdk_sock_writev_async_ext(NULL, &req, NULL);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 3);
+	CU_ASSERT_EQUAL(ctx.status, -EBADF);
+	sock.flags.closed = true;
+	spdk_sock_writev_async(&sock, &req);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 4);
+	CU_ASSERT_EQUAL(ctx.status, -EBADF);
+	spdk_sock_writev_async_ext(&sock, &req, NULL);
+	CU_ASSERT_EQUAL(ctx.callback_calls, 5);
+	CU_ASSERT_EQUAL(ctx.status, -EBADF);
+	CU_ASSERT_EQUAL(ctx.legacy_calls, 4);
+	CU_ASSERT_EQUAL(ctx.ext_calls, 2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1421,6 +1512,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, override_impl_opts);
 	CU_ADD_TEST(suite, ut_sock_group_get_ctx);
 	CU_ADD_TEST(suite, posix_get_interface_name);
+	CU_ADD_TEST(suite, sock_writev_async_dispatch);
 
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);

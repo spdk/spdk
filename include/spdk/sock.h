@@ -72,6 +72,19 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_request) == 64, "Incorrect size.");
 
 #define SPDK_SOCK_REQUEST_IOV(req, i) ((struct iovec *)(((uint8_t *)req + sizeof(struct spdk_sock_request)) + (sizeof(struct iovec) * i)))
 
+struct spdk_sock_request_opts {
+	/** Size of this structure in bytes. Use SPDK_SIZEOF(opts, last_member) to obtain it. */
+	size_t				size;
+
+	/** Optional memory domain describing the request payload buffers. */
+	struct spdk_memory_domain	*memory_domain;
+
+	/** Context associated with the memory domain. */
+	void				*memory_domain_ctx;
+};
+
+SPDK_STATIC_ASSERT(sizeof(struct spdk_sock_request_opts) == 24, "Incorrect size.");
+
 enum spdk_placement_mode {
 	PLACEMENT_NONE,
 	PLACEMENT_NAPI,
@@ -501,6 +514,19 @@ ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
  * \param req The write request to submit.
  */
 void spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req);
+
+/**
+ * Write data to the given socket asynchronously with optional request metadata.
+ *
+ * \param sock Socket to write to.
+ * \param req The write request to submit.
+ * \param opts Optional request metadata. The socket layer consumes this structure before
+ * returning and does not retain the pointer. opts->memory_domain may be set only if
+ * spdk_sock_get_memory_domain() returns a memory domain for this socket, and that domain must
+ * be able to translate the payload. Otherwise the payload must be in host memory.
+ */
+void spdk_sock_writev_async_ext(struct spdk_sock *sock, struct spdk_sock_request *req,
+				const struct spdk_sock_request_opts *opts);
 
 /**
  * Read message from the given socket to the I/O vector array.

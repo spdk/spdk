@@ -87,6 +87,9 @@ struct spdk_net_impl {
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 	void (*writev_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
+	/* Required if get_memory_domain is implemented. */
+	void (*writev_async_ext)(struct spdk_sock *sock, struct spdk_sock_request *req,
+				 const struct spdk_sock_request_opts *opts);
 	void (*readv_async)(struct spdk_sock *sock, struct spdk_sock_request *req);
 	int (*flush)(struct spdk_sock *sock);
 

@@ -877,6 +877,32 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	sock->net_impl->writev_async(sock, req);
 }
 
+void
+spdk_sock_writev_async_ext(struct spdk_sock *sock, struct spdk_sock_request *req,
+			   const struct spdk_sock_request_opts *opts)
+{
+	assert(req->cb_fn != NULL);
+
+	if (sock == NULL || sock->flags.closed) {
+		req->cb_fn(req->cb_arg, -EBADF);
+		return;
+	}
+
+	if (opts != NULL && opts->size < SPDK_SIZEOF(opts, memory_domain_ctx)) {
+		req->cb_fn(req->cb_arg, -EINVAL);
+		return;
+	}
+
+	if (sock->net_impl->writev_async_ext != NULL) {
+		sock->net_impl->writev_async_ext(sock, req, opts);
+		return;
+	}
+
+	/* Only sockets with a memory domain accept one, and their modules implement the hook. */
+	assert(opts == NULL || opts->memory_domain == NULL);
+	sock->net_impl->writev_async(sock, req);
+}
+
 int
 spdk_sock_flush(struct spdk_sock *sock)
 {
@@ -1273,6 +1299,7 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 void
 spdk_net_impl_register(struct spdk_net_impl *impl)
 {
+	assert(impl->get_memory_domain == NULL || impl->writev_async_ext != NULL);
 	STAILQ_INSERT_HEAD(&g_net_impls, impl, link);
 }
 
