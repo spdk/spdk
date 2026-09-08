@@ -2498,7 +2498,7 @@ nvme_ctrlr_handle_identify_ns_error(struct spdk_nvme_ctrlr *ctrlr, struct spdk_n
 	    (cpl->status.sc == SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT ||
 	     cpl->status.sc == SPDK_NVME_SC_INVALID_FIELD)) {
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace inactive due to identify completion error\n");
-		nvme_ns_clear(ns);
+		nvme_ns_mark_inactive(ns);
 		return false;
 	}
 	return true;
@@ -2525,7 +2525,7 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 
 		/* Did not find this namespace id in the new list. */
 		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was removed\n", ns->id);
-		nvme_ns_clear(ns);
+		nvme_ns_mark_inactive(ns);
 	}
 
 	/* Next, add new namespaces */

@@ -723,11 +723,10 @@ nvme_ns_free_iocs_specific_data(struct spdk_nvme_ns *ns)
 }
 
 void
-nvme_ns_clear(struct spdk_nvme_ns *ns)
+nvme_ns_mark_inactive(struct spdk_nvme_ns *ns)
 {
 	ns->active = false;
 	ns->identify_pending = false;
-	nvme_ns_free_iocs_specific_data(ns);
 }
 
 uint32_t g_nvme_ns_constructed;
@@ -750,7 +749,7 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 	ns->identify_pending = false;
 
 	if (!is_active) {
-		nvme_ns_clear(ns);
+		nvme_ns_mark_inactive(ns);
 	}
 
 	return 0;

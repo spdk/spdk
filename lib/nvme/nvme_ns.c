@@ -5,6 +5,13 @@
 
 #include "nvme_internal.h"
 
+void
+nvme_ns_mark_inactive(struct spdk_nvme_ns *ns)
+{
+	ns->active = false;
+	ns->identify_pending = false;
+}
+
 /**
  * Update Namespace flags based on Identify Controller
  * and Identify Namespace.  This can be also used for
@@ -27,14 +34,14 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 				   ns->id, nsdata->nlbaf, inline_count, inline_count - 1);
 	}
 
-	memcpy(ns->nsdata, nsdata, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
-
-	ns->identify_pending = false;
-	ns->active = spdk_nvme_ns_is_active(ns);
-	if (!ns->active) {
-		nvme_ns_clear(ns);
+	/* Identify Namespace returns a zero-filled structure for inactive namespace IDs. */
+	if (nsdata->ncap == 0) {
+		assert(spdk_mem_all_zero(nsdata, SPDK_NVME_IDENTIFY_BUFLEN));
+		nvme_ns_mark_inactive(ns);
 		return;
 	}
+
+	memcpy(ns->nsdata, nsdata, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
 
 	nsdata_nvm = ns->nsdata_nvm;
 
@@ -45,7 +52,7 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 				  "ns %u active format %" PRIu32 " is beyond inline lbaf "
 				  "cap %" PRIu8 "; marking namespace inactive\n",
 				  ns->id, format_index, inline_count);
-		nvme_ns_clear(ns);
+		nvme_ns_mark_inactive(ns);
 		return;
 	}
 	spdk_nvme_ns_get_format(ns, format_index, &lbaf);
@@ -114,6 +121,9 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 			ns->pi_format = SPDK_NVME_16B_GUARD_PI;
 		}
 	}
+
+	ns->identify_pending = false;
+	ns->active = true;
 }
 
 static int
@@ -276,21 +286,8 @@ spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns)
 bool
 spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 {
-	const struct spdk_nvme_ns_data_head *nsdata = nvme_ns_get_data_head(ns);
-
-	/*
-	 * According to the spec, valid NS has non-zero id.
-	 */
-	if (ns->id == 0) {
-		return false;
-	}
-
-	/*
-	 * According to the spec, Identify Namespace will return a zero-filled structure for
-	 *  inactive namespace IDs.
-	 * Check NCAP since it must be nonzero for an active namespace.
-	 */
-	return nsdata->ncap != 0;
+	/* Valid NS has non-zero id. */
+	return ns->id != 0 && ns->active;
 }
 
 struct spdk_nvme_ctrlr *
@@ -669,25 +666,4 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 	}
 
 	return 0;
-}
-
-void
-nvme_ns_clear(struct spdk_nvme_ns *ns)
-{
-	if (!ns->id) {
-		return;
-	}
-
-	memset(ns->nsdata, 0, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
-	nvme_ns_free_iocs_specific_data(ns);
-	ns->sector_size = 0;
-	ns->extended_lba_size = 0;
-	ns->md_size = 0;
-	ns->pi_type = 0;
-	ns->sectors_per_max_io = 0;
-	ns->sectors_per_max_io_no_md = 0;
-	ns->sectors_per_stripe = 0;
-	ns->flags = 0;
-	ns->active = false;
-	ns->identify_pending = false;
 }

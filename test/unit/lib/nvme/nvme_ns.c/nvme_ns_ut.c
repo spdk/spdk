@@ -262,17 +262,15 @@ test_nvme_ns_data(void)
 	CU_ASSERT(memcmp(spdk_nvme_ns_get_nguid(ns), expected_nsdata.nguid,
 			 sizeof(expected_nsdata.nguid)) == 0);
 
-	nvme_ns_clear(ns);
+	nvme_ns_mark_inactive(ns);
 
-	/* Cached NS data is still accessible after destruction. But is cleared. */
+	/* Cached NS data is still accessible after namespace marked inactive. */
 	CU_ASSERT(!spdk_nvme_ns_is_active(ns));
 	CU_ASSERT(spdk_nvme_ns_get_id(ns) == 1);
-	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 0);
-	CU_ASSERT(nsdata->ncap == 0);
+	CU_ASSERT(spdk_nvme_ns_get_num_sectors(ns) == 1000);
+	CU_ASSERT(nsdata->ncap == 1000);
 	CU_ASSERT(nsdata == spdk_nvme_ns_get_data_head(ns));
-
-	/* After clear, NGUID is all-zero again so the deprecated getter returns NULL. */
-	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) == NULL);
+	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) != NULL);
 
 	ut_ns_free(ns);
 }
@@ -487,8 +485,6 @@ test_nvme_ns_data_alloc_mode_lbaf_4(void)
 
 	CU_ASSERT(ns->active == false);
 	CU_ASSERT(spdk_nvme_ns_is_active(ns) == false);
-	CU_ASSERT(ns->sector_size == 0);
-	CU_ASSERT(ns->md_size == 0);
 
 	ut_ns_free(ns);
 }
@@ -498,19 +494,18 @@ test_spdk_nvme_ns_is_active(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns *ns = ut_ns_alloc(0, &ctrlr);
-	struct spdk_nvme_ns_data *nsdata = nvme_ns_get_data(ns);
 
 	/* case1: nsdata->id == 0 return false */
 	ns->id = 0;
 	CU_ASSERT(spdk_nvme_ns_is_active(ns) == false);
 
-	/* case2: nsdata->ncap == 0 return false */
+	/* case2: ns->active == false return false */
 	ns->id = 1;
-	nsdata->ncap = 0;
+	ns->active = false;
 	CU_ASSERT(spdk_nvme_ns_is_active(ns) == false);
 
-	/* case3: ns->ncap != 0 return true */
-	nsdata->ncap = 1;
+	/* case3: ns->active == true return true */
+	ns->active = true;
 	CU_ASSERT(spdk_nvme_ns_is_active(ns) == true);
 
 	ut_ns_free(ns);
