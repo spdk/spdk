@@ -182,9 +182,8 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 {
 	struct nvme_completion_poll_status *status;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
+	void *prev_nsdata_iocs;
 	int rc;
-
-	nvme_ns_free_iocs_specific_data(ns);
 
 	status = calloc(1, sizeof(*status));
 	if (!status) {
@@ -220,7 +219,9 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 		return -ENXIO;
 	}
 
+	prev_nsdata_iocs = ns->nsdata_iocs;
 	ns->nsdata_iocs = status->dma_data;
+	spdk_free(prev_nsdata_iocs);
 	free(status);
 	return 0;
 }
