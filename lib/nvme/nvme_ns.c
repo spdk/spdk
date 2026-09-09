@@ -163,11 +163,13 @@ nvme_ctrlr_identify_ns(struct spdk_nvme_ns *ns)
 		/* This can occur if the namespace is not active. */
 		NVME_CTRLR_WARNLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				   spdk_strerror(abs(rc)));
-		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, &status->cpl)) {
+		if (nvme_ctrlr_identify_ns_error_is_fatal(ctrlr, &status->cpl)) {
 			spdk_free(status->dma_data);
 			free(status);
 			return rc;
 		}
+
+		nvme_ns_mark_inactive(ns);
 	} else {
 		nvme_ns_set_identify_data(ns, status->dma_data);
 	}
@@ -215,7 +217,7 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
-		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, &status->cpl)) {
+		if (nvme_ctrlr_identify_ns_error_is_fatal(ctrlr, &status->cpl)) {
 			spdk_free(status->dma_data);
 			free(status);
 			return -ENXIO;
