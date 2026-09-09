@@ -2981,7 +2981,7 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	uint32_t nsid;
 	int rc;
 
-	if (spdk_nvme_cpl_is_error(cpl) && nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		/*
 		 * Many controllers claim to be compatible with NVMe 1.3, however,
 		 * they do not implement NS ID Desc List. Therefore, instead of setting
@@ -2994,12 +2994,15 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 		 * it is too generic and was added in order to handle controllers that
 		 * violate the NVMe 1.1 spec by not supporting ACTIVE LIST).
 		 */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
-				     ctrlr->opts.admin_timeout_ms);
-		nvme_ctrlr_delete_identify_ctx(ctx);
-		return;
+		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, cpl)) {
+			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
+					     ctrlr->opts.admin_timeout_ms);
+			nvme_ctrlr_delete_identify_ctx(ctx);
+			return;
+		}
+	} else {
+		nvme_ns_set_id_desc_list_data(ns, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
 	}
-	nvme_ns_set_id_desc_list_data(ns, ctx->dma_data, SPDK_NVME_IDENTIFY_BUFLEN);
 
 	nvme_ctrlr_delete_identify_ctx(ctx);
 
