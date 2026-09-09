@@ -211,17 +211,23 @@ nvme_ns_identify_iocs_specific(struct spdk_nvme_ns *ns)
 	if (status->timed_out) {
 		return -ENXIO;
 	}
+
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "wait for nvme_ctrlr_cmd_identify failed: rc=%s\n",
 				  spdk_strerror(abs(rc)));
-		spdk_free(status->dma_data);
-		free(status);
-		return -ENXIO;
+		if (nvme_ctrlr_handle_identify_ns_error(ctrlr, ns, &status->cpl)) {
+			spdk_free(status->dma_data);
+			free(status);
+			return -ENXIO;
+		}
+	} else {
+		prev_nsdata_iocs = ns->nsdata_iocs;
+		ns->nsdata_iocs = status->dma_data;
+		spdk_free(prev_nsdata_iocs);
+		status->dma_data = NULL;
 	}
 
-	prev_nsdata_iocs = ns->nsdata_iocs;
-	ns->nsdata_iocs = status->dma_data;
-	spdk_free(prev_nsdata_iocs);
+	spdk_free(status->dma_data);
 	free(status);
 	return 0;
 }
