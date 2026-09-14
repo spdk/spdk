@@ -32,17 +32,31 @@ function nbd_start_disks_without_nbd_idx() {
 }
 
 function waitfornbd_exit() {
-	local nbd_name=$1
+	local rpc_server=$1
+	local nbd_device=$2
+	local nbd_name=${nbd_device##*/}
+	local nbd_disks
+	local nbd_present
+	local attempt
 
-	for ((i = 1; i <= 20; i++)); do
-		if grep -q -w $nbd_name /proc/partitions; then
-			sleep 0.1
-		else
-			break
+	# The stop RPC can return before SPDK closes the bdev descriptor.
+	for ((attempt = 1; attempt <= 200; attempt++)); do
+		if ! nbd_disks=$("$rootdir/scripts/rpc.py" -s "$rpc_server" nbd_get_disks); then
+			echo "Failed to query NBD devices while stopping $nbd_device" >&2
+			return 1
 		fi
+
+		nbd_present=$(jq --arg nbd_device "$nbd_device" \
+			'any(.[]; .nbd_device == $nbd_device)' <<< "$nbd_disks")
+		if [[ $nbd_present == false ]] && ! grep -q -w -- "$nbd_name" /proc/partitions; then
+			return 0
+		fi
+
+		sleep 0.1
 	done
 
-	return 0
+	echo "Timed out waiting for NBD device $nbd_device to stop" >&2
+	return 1
 }
 
 function nbd_stop_disks() {
@@ -51,8 +65,8 @@ function nbd_stop_disks() {
 	local i
 
 	for i in "${nbd_list[@]}"; do
-		$rootdir/scripts/rpc.py -s $rpc_server nbd_stop_disk $i
-		waitfornbd_exit $(basename $i)
+		"$rootdir/scripts/rpc.py" -s "$rpc_server" nbd_stop_disk "$i"
+		waitfornbd_exit "$rpc_server" "$i"
 	done
 }
 
