@@ -2844,43 +2844,41 @@ nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ns *ns;
 
+	nvme_ctrlr_lock(ctrlr);
 	ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
-	if (ns == NULL) {
-		return NULL;
-	}
-
-	while (ns != NULL) {
+	while (ns) {
 		if (ns->active) {
-			return ns;
+			break;
 		}
 
 		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
 	}
 
-	return NULL;
+	nvme_ctrlr_unlock(ctrlr);
+	return ns;
 }
 
 static struct spdk_nvme_ns *
 nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	struct spdk_nvme_ns tmp, *ns;
+	struct spdk_nvme_ns tmp = {.id = prev_nsid};
+	struct spdk_nvme_ns *ns;
 
-	tmp.id = prev_nsid;
+	nvme_ctrlr_lock(ctrlr);
 	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-	if (ns == NULL) {
-		return NULL;
-	}
-
-	ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
-	while (ns != NULL) {
-		if (ns->active) {
-			return ns;
-		}
-
+	if (ns) {
 		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+		while (ns) {
+			if (ns->active) {
+				break;
+			}
+
+			ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+		}
 	}
 
-	return NULL;
+	nvme_ctrlr_unlock(ctrlr);
+	return ns;
 }
 
 struct spdk_nvme_ns *
