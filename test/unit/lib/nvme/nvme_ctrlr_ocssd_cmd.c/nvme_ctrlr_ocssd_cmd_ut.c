@@ -43,7 +43,7 @@ RB_GENERATE_STATIC(nvme_ns_tree, spdk_nvme_ns, node, nvme_ns_cmp);
 static struct spdk_nvme_ns g_inactive_ns = {};
 
 struct spdk_nvme_ns *
-spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;

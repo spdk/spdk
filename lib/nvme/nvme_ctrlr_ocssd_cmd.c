@@ -27,7 +27,7 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 				return false;
 			}
 
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 			if (!ns) {
 				return false;
 			}

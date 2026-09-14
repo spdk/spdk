@@ -1826,7 +1826,7 @@ test_spdk_nvme_ctrlr_reconnect_io_qpair(void)
 	struct spdk_nvme_qpair	qpair = {};
 	int rc;
 
-	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
 
 	/* Various states of controller disconnect. */
 	qpair.id = 1;
@@ -2115,7 +2115,7 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	struct spdk_nvme_status status;
 	enum spdk_nvme_fw_commit_action commit_action = SPDK_NVME_FW_COMMIT_REPLACE_IMG;
 
-	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
 
 	/* Set invalid size check function return value */
 	set_size = 5;
@@ -2408,7 +2408,7 @@ test_spdk_nvme_ctrlr_set_trid(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_transport_id new_trid = {};
 
-	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
 
 	ctrlr.is_failed = false;
 	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
@@ -3347,7 +3347,7 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 		ns[i].active = true;
 	}
 
-	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
 
 	ctrlr.cdata.nn = 5;
 	/* case 1: No first/next active NS, move on to the next state, expect: pass */
@@ -3488,7 +3488,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 		RB_INSERT(nvme_ns_tree, &ctrlr.ns, &ns[i]);
 	}
 
-	CU_ASSERT(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
 
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;

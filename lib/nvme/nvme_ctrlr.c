@@ -855,8 +855,11 @@ nvme_ctrlr_update_ns_ana_states(const struct spdk_nvme_ana_group_descriptor *des
 			continue;
 		}
 
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-		assert(ns != NULL);
+		ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+		if (!ns) {
+			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to find a namespace %u.\n", nsid);
+			continue;
+		}
 
 		ns->ana_group_id = desc->ana_group_id;
 		ns->ana_state = desc->ana_state;
@@ -2878,6 +2881,18 @@ nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 	}
 
 	return NULL;
+}
+
+struct spdk_nvme_ns *
+nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ns tmp = {.id = nsid};
+	struct spdk_nvme_ns *ns;
+
+	nvme_ctrlr_lock(ctrlr);
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+	nvme_ctrlr_unlock(ctrlr);
+	return ns;
 }
 
 static void
@@ -5231,7 +5246,6 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
 
 	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
@@ -5239,9 +5253,7 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	}
 
 	nvme_ctrlr_lock(ctrlr);
-
-	tmp.id = nsid;
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 	if (ns == NULL) {
 		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns) + nvme_ctrlr_get_nsdata_size(ctrlr),
 				  SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
@@ -5437,9 +5449,9 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	}
 
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-	if (ns == NULL) {
-		NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_ctrlr_get_ns failed!\n");
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	if (!ns) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to find a namespace %u\n", nsid);
 		return -ENXIO;
 	}
 

@@ -393,7 +393,7 @@ nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_reque
 static struct spdk_nvme_ns g_inactive_ns = {};
 
 struct spdk_nvme_ns *
-spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns tmp;
 	struct spdk_nvme_ns *ns;
