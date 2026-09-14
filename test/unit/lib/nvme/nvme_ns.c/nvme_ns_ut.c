@@ -19,6 +19,14 @@ DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state)
 DEFINE_STUB(nvme_ctrlr_identify_ns_error_is_fatal, bool,
 	    (struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_cpl *cpl), true);
 
+struct spdk_nvme_ns *g_ut_ns;
+
+struct spdk_nvme_ns *
+nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	return g_ut_ns;
+}
+
 int
 nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
 				struct nvme_completion_poll_status *status, bool release)
@@ -122,10 +130,12 @@ test_nvme_ns_identify(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
 
+	g_ut_ns = ns;
 	nvme_ns_identify(ns);
 	CU_ASSERT(ns->id == 1);
 
 	ut_ns_free(ns);
+	g_ut_ns = NULL;
 }
 
 static void
@@ -238,6 +248,7 @@ test_nvme_ns_data(void)
 	};
 	const struct spdk_nvme_ns_data_head *nsdata;
 
+	g_ut_ns = ns;
 	fake_nsdata = &expected_nsdata;
 	SPDK_CU_ASSERT_FATAL(nvme_ns_identify(ns) == 0);
 	fake_nsdata = NULL;
@@ -274,6 +285,7 @@ test_nvme_ns_data(void)
 	CU_ASSERT(spdk_nvme_ns_get_nguid(ns) != NULL);
 
 	ut_ns_free(ns);
+	g_ut_ns = NULL;
 }
 
 static void
@@ -561,6 +573,7 @@ test_nvme_ns_identify_iocs_specific(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	int rc = 0;
 
+	g_ut_ns = &ns;
 	ns.ctrlr = &ctrlr;
 
 	ns.csi = SPDK_NVME_CSI_ZNS;
@@ -594,6 +607,7 @@ test_nvme_ns_identify_iocs_specific(void)
 	/* case 4: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
 	nvme_ns_free_iocs_specific_data(&ns);
 	CU_ASSERT(ns.nsdata_nvm == NULL);
+	g_ut_ns = NULL;
 }
 
 static void
