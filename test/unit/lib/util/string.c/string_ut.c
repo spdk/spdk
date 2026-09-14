@@ -143,6 +143,14 @@ test_parse_capacity(void)
 	CU_ASSERT(cap == 12 * 1024);
 	CU_ASSERT(has_prefix == true);
 
+	rc = spdk_parse_capacity("12kb", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 12 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("12KBB", &cap, &has_prefix);
+	CU_ASSERT(rc != 0);
+
 	rc = spdk_parse_capacity("100M", &cap, &has_prefix);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(cap == 100 * 1024 * 1024);
@@ -159,13 +167,10 @@ test_parse_capacity(void)
 	CU_ASSERT(has_prefix == true);
 
 	rc = spdk_parse_capacity("100M 512k", &cap, &has_prefix);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(cap == 100ULL * 1024 * 1024);
+	CU_ASSERT(rc != 0);
 
 	rc = spdk_parse_capacity("12k8K", &cap, &has_prefix);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(cap == 12 * 1024);
-	CU_ASSERT(has_prefix == true);
+	CU_ASSERT(rc != 0);
 
 	/* Non-number */
 	rc = spdk_parse_capacity("G", &cap, &has_prefix);

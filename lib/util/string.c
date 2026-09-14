@@ -334,11 +334,14 @@ spdk_strerror_r(int errnum, char *buf, size_t buflen)
 int
 spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
 {
-	int rc;
+	int rc, value_len, parsed_len = 0;
 	char bin_prefix;
 
-	rc = sscanf(cap_str, "%"SCNu64"%c", cap, &bin_prefix);
+	rc = sscanf(cap_str, "%"SCNu64"%n%c%n", cap, &value_len, &bin_prefix, &parsed_len);
 	if (rc == 1) {
+		if (cap_str[value_len] != '\0') {
+			return -EINVAL;
+		}
 		if (has_prefix != NULL) {
 			*has_prefix = false;
 		}
@@ -351,6 +354,17 @@ spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
 			/* Parsing error */
 			return -errno;
 		}
+	}
+
+	/* Accept an optional trailing "B" after the prefix, e.g. "12KB" == "12K",
+	 * as documented for this function.
+	 */
+	if (cap_str[parsed_len] == 'B' || cap_str[parsed_len] == 'b') {
+		parsed_len++;
+	}
+
+	if (cap_str[parsed_len] != '\0') {
+		return -EINVAL;
 	}
 
 	if (has_prefix != NULL) {
