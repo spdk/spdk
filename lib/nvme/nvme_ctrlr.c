@@ -5215,16 +5215,9 @@ spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 bool
 spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	struct spdk_nvme_ns tmp, *ns;
+	struct spdk_nvme_ns *ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 
-	tmp.id = nsid;
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-
-	if (ns != NULL) {
-		return ns->active;
-	}
-
-	return false;
+	return ns && ns->active;
 }
 
 uint32_t
