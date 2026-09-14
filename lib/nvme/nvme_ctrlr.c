@@ -2836,6 +2836,50 @@ nvme_ctrlr_create_identify_ctx(struct spdk_nvme_ns *ns)
 	return ctx;
 }
 
+static struct spdk_nvme_ns *
+nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ns *ns;
+
+	ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
+	if (ns == NULL) {
+		return NULL;
+	}
+
+	while (ns != NULL) {
+		if (ns->active) {
+			return ns;
+		}
+
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	}
+
+	return NULL;
+}
+
+static struct spdk_nvme_ns *
+nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
+{
+	struct spdk_nvme_ns tmp, *ns;
+
+	tmp.id = prev_nsid;
+	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+	if (ns == NULL) {
+		return NULL;
+	}
+
+	ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	while (ns != NULL) {
+		if (ns->active) {
+			return ns;
+		}
+
+		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
+	}
+
+	return NULL;
+}
+
 static void
 nvme_ctrlr_identify_ns_async_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -2919,18 +2963,16 @@ nvme_ctrlr_identify_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 static int
 nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 	int rc;
 
 	if (!prev_nsid) {
-		nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+		ns = nvme_ctrlr_get_first_active_ns(ctrlr);
 	} else {
 		/* move on to the next active NS */
-		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
+		ns = nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
 	}
 
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
 	if (ns == NULL) {
 		/* No first/next active NS, move on to the next state */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
@@ -2940,8 +2982,7 @@ nvme_ctrlr_identify_namespaces_iocs_specific_next(struct spdk_nvme_ctrlr *ctrlr,
 
 	/* loop until we find a ns which has (supported) iocs specific data */
 	while (!nvme_ns_has_supported_iocs_specific_data(ns)) {
-		nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		ns = nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
 		if (ns == NULL) {
 			/* no namespace with (supported) iocs specific data found */
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
@@ -3029,7 +3070,6 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	struct nvme_ctrlr_identify_ctx *ctx = arg;
 	struct spdk_nvme_ns *ns = ctx->ns;
 	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
-	uint32_t nsid;
 	int rc;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
@@ -3058,8 +3098,7 @@ nvme_ctrlr_identify_id_desc_async_done(void *arg, const struct spdk_nvme_cpl *cp
 	nvme_ctrlr_delete_identify_ctx(ctx);
 
 	/* move on to the next active NS */
-	nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	ns = nvme_ctrlr_get_next_active_ns(ctrlr, ns->id);
 	if (ns == NULL) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
 				     ctrlr->opts.admin_timeout_ms);
@@ -3098,7 +3137,6 @@ nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
-	uint32_t nsid;
 	struct spdk_nvme_ns *ns;
 	int rc;
 
@@ -3112,8 +3150,7 @@ nvme_ctrlr_identify_id_desc_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
-	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	ns = nvme_ctrlr_get_first_active_ns(ctrlr);
 	if (ns == NULL) {
 		/* No active NS, move on to the next state */
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_IDENTIFY_NS_IOCS_SPECIFIC,
@@ -5178,45 +5215,17 @@ spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 uint32_t
 spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_ns *ns = nvme_ctrlr_get_first_active_ns(ctrlr);
 
-	ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
-	if (ns == NULL) {
-		return 0;
-	}
-
-	while (ns != NULL) {
-		if (ns->active) {
-			return ns->id;
-		}
-
-		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
-	}
-
-	return 0;
+	return ns ? ns->id : 0;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	struct spdk_nvme_ns tmp, *ns;
+	struct spdk_nvme_ns *ns = nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
 
-	tmp.id = prev_nsid;
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-	if (ns == NULL) {
-		return 0;
-	}
-
-	ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
-	while (ns != NULL) {
-		if (ns->active) {
-			return ns->id;
-		}
-
-		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
-	}
-
-	return 0;
+	return ns ? ns->id : 0;
 }
 
 struct spdk_nvme_ns *
