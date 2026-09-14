@@ -318,7 +318,8 @@ virtio_pci_scsi_dev_create(const char *name, struct virtio_pci_ctx *pci_ctx)
 		goto fail;
 	}
 
-	rc = virtio_scsi_dev_init(svdev, num_queues, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	rc = virtio_scsi_dev_init(svdev, num_queues + SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED,
+				  VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
 		goto fail;
 	}
