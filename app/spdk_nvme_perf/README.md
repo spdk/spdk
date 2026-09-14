@@ -53,14 +53,14 @@ and NVMe-oF RDMA initiators.
 
 ## Essential Options Reference
 
-| Option            | Description            | Example           |
-|-------------------|------------------------|-------------------|
-| `-q, --io-depth`  | Queue depth            | `-q 64`           |
-| `-o, --io-size`   | I/O size in bytes      | `-o 4k`           |
-| `-w, --io-pattern`| Workload type          | `-w randread`     |
-| `-t, --time`      | Test duration (seconds)| `-t 300`          |
-| `-r, --transport` | Target specification   | See examples above|
-| `-c, --core-mask` | CPU cores to use       | `-c 0xFF`         |
+| Option              | Description                        | Example                              |
+|---------------------|------------------------------------|--------------------------------------|
+| `-q, --io-depth`    | Queue depth                        | `-q 64`                              |
+| `-o, --io-size`     | I/O size in bytes                  | `-o 4k`                              |
+| `-w, --io-pattern`  | Workload type                      | `-w randread`                        |
+| `-t, --time`        | Test duration (seconds)            | `-t 300`                             |
+| `-r, --transport`   | Target specification               | See examples above                   |
+| `-c, --core-mask`   | CPU cores to use                   | `-c 0xFF`                            |
 
 For complete options list, use: `./spdk_nvme_perf --help`
 
