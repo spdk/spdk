@@ -820,12 +820,19 @@ uring_sock_readv_no_pipe(struct spdk_sock *_sock, struct iovec *iovs, int iovcnt
 	return total;
 }
 
+static int uring_sock_complete_connect(struct spdk_uring_sock *sock);
+
 static ssize_t
 uring_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_uring_sock *sock = __uring_sock(_sock);
 	int rc, i;
 	size_t len;
+
+	rc = uring_sock_complete_connect(sock);
+	if (spdk_unlikely(rc < 0)) {
+		return rc;
+	}
 
 	if (sock->connection_status < 0) {
 		return sock->connection_status;
@@ -1090,6 +1097,37 @@ _sock_prep_errqueue(struct spdk_sock *_sock)
 
 #endif
 
+/* The connection is already established by the time uring_sock_connect_async() returns, so the
+ * deferred callback can fire from any operation that drives the socket. A caller might poll with
+ * spdk_sock_is_connected(), receive data, or flush writes before adding the socket to a group.
+ *
+ * Returns -EBADF if the callback closed the socket, in which case the caller must not touch the
+ * socket again. */
+static int
+uring_sock_complete_connect(struct spdk_uring_sock *sock)
+{
+	struct spdk_sock *base = &sock->base;
+	spdk_sock_connect_cb_fn cb_fn = sock->connect_cb_fn;
+	bool closed;
+
+	if (spdk_likely(cb_fn == NULL)) {
+		return 0;
+	}
+
+	sock->connect_cb_fn = NULL;
+	closed = base->flags.closed;
+	base->cb_cnt++;
+	cb_fn(sock->connect_cb_arg, 0);
+	assert(base->cb_cnt > 0);
+	base->cb_cnt--;
+	if (base->cb_cnt == 0 && !closed && base->flags.closed) {
+		spdk_sock_close(&base);
+		return -EBADF;
+	}
+
+	return 0;
+}
+
 static void
 _sock_flush(struct spdk_sock *_sock)
 {
@@ -1099,10 +1137,8 @@ _sock_flush(struct spdk_sock *_sock)
 	struct io_uring_sqe *sqe;
 	int flags;
 
-	if (sock->connect_cb_fn) {
-		spdk_sock_connect_cb_fn cb_fn = sock->connect_cb_fn;
-		sock->connect_cb_fn = NULL;
-		cb_fn(sock->connect_cb_arg, 0);
+	if (spdk_unlikely(uring_sock_complete_connect(sock) < 0)) {
+		return;
 	}
 
 	if (task->status == SPDK_URING_SOCK_TASK_IN_PROCESS) {
@@ -1489,6 +1525,10 @@ uring_sock_is_connected(struct spdk_sock *_sock)
 	uint8_t byte;
 	int rc;
 	struct pollfd pfd;
+
+	if (spdk_unlikely(uring_sock_complete_connect(sock) < 0)) {
+		return false;
+	}
 
 	pfd.fd = sock->fd;
 	pfd.events = 0;
@@ -1896,10 +1936,9 @@ uring_sock_flush(struct spdk_sock *_sock)
 		return -EAGAIN;
 	}
 
-	if (sock->connect_cb_fn) {
-		spdk_sock_connect_cb_fn cb_fn = sock->connect_cb_fn;
-		sock->connect_cb_fn = NULL;
-		cb_fn(sock->connect_cb_arg, 0);
+	retval = uring_sock_complete_connect(sock);
+	if (spdk_unlikely(retval < 0)) {
+		return retval;
 	}
 
 	/* Can't flush while a write is already outstanding */

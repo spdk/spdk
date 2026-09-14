@@ -23,7 +23,6 @@ DEFINE_STUB_V(spdk_sock_map_cleanup, (struct spdk_sock_map *map));
 
 DEFINE_STUB_V(spdk_net_impl_register, (struct spdk_net_impl *impl));
 DEFINE_STUB(spdk_sock_set_default_impl, int, (const char *impl_name), 0);
-DEFINE_STUB(spdk_sock_close, int, (struct spdk_sock **s), 0);
 DEFINE_STUB(io_uring_submit, int, (struct io_uring *ring), 0);
 DEFINE_STUB(io_uring_queue_init, int, (unsigned entries, struct io_uring *ring, unsigned flags), 0);
 DEFINE_STUB_V(io_uring_queue_exit, (struct io_uring *ring));
@@ -36,6 +35,27 @@ DEFINE_STUB(spdk_sock_posix_fd_create, int, (struct addrinfo *res, struct spdk_s
 DEFINE_STUB(spdk_sock_posix_fd_connect, int, (int fd, struct addrinfo *res,
 		struct spdk_sock_opts *opts), 0);
 DEFINE_STUB(spdk_sock_posix_getaddrinfo, struct addrinfo *, (const char *ip, int port), 0);
+
+static int g_ut_sock_destroy_cnt;
+
+int
+spdk_sock_close(struct spdk_sock **_sock)
+{
+	struct spdk_sock *sock = *_sock;
+
+	if (sock == NULL) {
+		return -EBADF;
+	}
+
+	*_sock = NULL;
+	sock->flags.closed = true;
+	if (sock->cb_cnt > 0) {
+		return 0;
+	}
+
+	g_ut_sock_destroy_cnt++;
+	return 0;
+}
 
 static void
 _req_cb(void *cb_arg, int len)
@@ -298,6 +318,89 @@ test_uring_sock_is_connected(void)
 	CU_ASSERT(uring_sock_is_connected(&usock.base) == false);
 }
 
+static bool g_ut_connect_close;
+static int g_ut_destroy_cnt_in_cb;
+static int g_ut_connect_cb_cnt;
+
+static void
+_connect_cb(void *cb_arg, int status)
+{
+	struct spdk_sock *sock = cb_arg;
+
+	g_ut_connect_cb_cnt++;
+	CU_ASSERT(status == 0);
+	if (g_ut_connect_close) {
+		spdk_sock_close(&sock);
+		g_ut_destroy_cnt_in_cb = g_ut_sock_destroy_cnt;
+	}
+}
+
+static void
+test_uring_sock_connect_cb(void)
+{
+	struct spdk_uring_sock usock = {};
+	struct spdk_sock *sock = &usock.base;
+	int rc;
+
+	TAILQ_INIT(&sock->queued_reqs);
+	TAILQ_INIT(&sock->pending_reqs);
+	STAILQ_INIT(&usock.recv_stream);
+	usock.connect_cb_fn = _connect_cb;
+	usock.connect_cb_arg = sock;
+	usock.connection_status = -ECONNREFUSED;
+	g_ut_connect_close = true;
+	g_ut_sock_destroy_cnt = 0;
+	g_ut_destroy_cnt_in_cb = -1;
+	g_ut_connect_cb_cnt = 0;
+
+	rc = uring_sock_flush(sock);
+	CU_ASSERT(rc == -EBADF);
+	CU_ASSERT(g_ut_connect_cb_cnt == 1);
+	CU_ASSERT(g_ut_destroy_cnt_in_cb == 0);
+	CU_ASSERT(g_ut_sock_destroy_cnt == 1);
+}
+
+static void
+test_uring_sock_connect_cb_is_connected(void)
+{
+	struct spdk_uring_sock usock = {};
+	struct spdk_sock *sock = &usock.base;
+
+	usock.connect_cb_fn = _connect_cb;
+	usock.connect_cb_arg = sock;
+	g_ut_connect_close = true;
+	g_ut_sock_destroy_cnt = 0;
+	g_ut_destroy_cnt_in_cb = -1;
+	g_ut_connect_cb_cnt = 0;
+
+	CU_ASSERT(uring_sock_is_connected(sock) == false);
+	CU_ASSERT(g_ut_connect_cb_cnt == 1);
+	CU_ASSERT(g_ut_destroy_cnt_in_cb == 0);
+	CU_ASSERT(g_ut_sock_destroy_cnt == 1);
+}
+
+static void
+test_uring_sock_connect_cb_readv(void)
+{
+	struct spdk_uring_sock usock = {};
+	struct spdk_sock *sock = &usock.base;
+	struct iovec iov = {};
+	ssize_t rc;
+
+	usock.connect_cb_fn = _connect_cb;
+	usock.connect_cb_arg = sock;
+	g_ut_connect_close = true;
+	g_ut_sock_destroy_cnt = 0;
+	g_ut_destroy_cnt_in_cb = -1;
+	g_ut_connect_cb_cnt = 0;
+
+	rc = uring_sock_readv(sock, &iov, 1);
+	CU_ASSERT(rc == -EBADF);
+	CU_ASSERT(g_ut_connect_cb_cnt == 1);
+	CU_ASSERT(g_ut_destroy_cnt_in_cb == 0);
+	CU_ASSERT(g_ut_sock_destroy_cnt == 1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -311,6 +414,9 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, flush_client);
 	CU_ADD_TEST(suite, flush_server);
 	CU_ADD_TEST(suite, test_uring_sock_is_connected);
+	CU_ADD_TEST(suite, test_uring_sock_connect_cb);
+	CU_ADD_TEST(suite, test_uring_sock_connect_cb_is_connected);
+	CU_ADD_TEST(suite, test_uring_sock_connect_cb_readv);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
