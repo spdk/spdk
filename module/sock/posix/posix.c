@@ -1080,13 +1080,11 @@ _posix_sock_connect(const char *ip, int port, struct spdk_sock_opts *opts, bool 
 
 	res0 = spdk_sock_posix_getaddrinfo(ip, port);
 	if (!res0) {
-		rc = -EIO;
 		goto err;
 	}
 
 	sock = posix_sock_alloc(-1, &impl_opts);
 	if (!sock) {
-		rc = -ENOMEM;
 		goto err;
 	}
 
@@ -1116,10 +1114,6 @@ err:
 	free(sock);
 	if (res0) {
 		freeaddrinfo(res0);
-	}
-
-	if (cb_fn) {
-		cb_fn(cb_arg, rc);
 	}
 
 	return NULL;

@@ -379,6 +379,27 @@ test_posix_sock_is_connected(void)
 	CU_ASSERT(posix_sock_is_connected(&psock.base) == false);
 }
 
+static void
+connect_cb(void *cb_arg, int status)
+{
+	bool *called = cb_arg;
+
+	(void)status;
+	*called = true;
+}
+
+static void
+test_posix_sock_connect_failure(void)
+{
+	struct spdk_sock_opts opts = { .opts_size = sizeof(opts) };
+	struct spdk_sock *sock;
+	bool called = false;
+
+	sock = posix_sock_connect_async("invalid", 1, &opts, connect_cb, &called);
+	CU_ASSERT(sock == NULL);
+	CU_ASSERT(called == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -393,6 +414,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, flush_req_chunks_with_zero_copy_threshold);
 	CU_ADD_TEST(suite, flush_two_reqs_chunks_with_zero_copy_threshold);
 	CU_ADD_TEST(suite, test_posix_sock_is_connected);
+	CU_ADD_TEST(suite, test_posix_sock_connect_failure);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 
