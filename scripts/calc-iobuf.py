@@ -224,6 +224,8 @@ class UblkSubsystem(Subsystem):
 
 
 def parse_config(config, mask):
+    if mask <= 0:
+        raise ValueError('Core mask must select at least one core')
     pool = PoolConfig()
     for subsystem in Subsystem.foreach(lambda s: s.is_target):
         subcfg = Subsystem.get_subsystem_config(config, subsystem.name)
@@ -294,6 +296,9 @@ def main():
         sys.exit(1)
     except json.decoder.JSONDecodeError:
         print(f'{appname}: {args.config}: {os.strerror(errno.EINVAL)}')
+        sys.exit(1)
+    except ValueError as error:
+        print(f'{appname}: {error}', file=sys.stderr)
         sys.exit(1)
     except KeyboardInterrupt:
         sys.exit(1)
