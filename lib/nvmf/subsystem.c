@@ -2598,6 +2598,15 @@ spdk_nvmf_subsystem_add_ns_ext(struct spdk_nvmf_subsystem *subsystem, const char
 
 	ns->bdev = spdk_bdev_desc_get_bdev(ns->desc);
 
+	if (transport != NULL && spdk_bdev_get_md_size(ns->bdev) != 0 &&
+	    spdk_bdev_desc_hide_metadata(ns->desc) != transport->opts.dif_insert_or_strip) {
+		SPDK_ERRLOG("Subsystem %s: bdev %s metadata visibility conflicts with transport policy\n",
+			    subsystem->subnqn, bdev_name);
+		spdk_bdev_close(ns->desc);
+		free(ns);
+		return 0;
+	}
+
 	if (spdk_bdev_desc_get_md_size(ns->desc) != 0) {
 		if (!spdk_bdev_desc_is_md_interleaved(ns->desc)) {
 			SPDK_ERRLOG("Can't attach bdev with separate metadata.\n");

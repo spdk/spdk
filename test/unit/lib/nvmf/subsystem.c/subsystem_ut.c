@@ -251,7 +251,16 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 
 struct spdk_bdev_desc {
 	struct spdk_bdev	*bdev;
+	bool hide_metadata;
 };
+
+static uint32_t g_open_desc_count;
+
+bool
+spdk_bdev_desc_hide_metadata(struct spdk_bdev_desc *desc)
+{
+	return desc->hide_metadata;
+}
 
 int
 spdk_bdev_open_ext_v2(const char *bdev_name, bool write, spdk_bdev_event_cb_t event_cb,
@@ -268,6 +277,8 @@ spdk_bdev_open_ext_v2(const char *bdev_name, bool write, spdk_bdev_event_cb_t ev
 			SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 			desc->bdev = &g_bdevs[i];
+			desc->hide_metadata = opts->hide_metadata;
+			g_open_desc_count++;
 			*_desc = desc;
 			return 0;
 		}
@@ -285,6 +296,7 @@ spdk_bdev_open_opts_init(struct spdk_bdev_open_opts *opts, size_t opts_size)
 void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
+	g_open_desc_count--;
 	free(desc);
 }
 
@@ -309,6 +321,54 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 union spdk_bdev_nvme_ctratt spdk_bdev_get_nvme_ctratt(struct spdk_bdev *bdev)
 {
 	return bdev->ctratt;
+}
+
+static void
+test_nvmf_add_ns_metadata_policy(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_transport transport = {};
+	struct spdk_nvmf_ns *ns = NULL;
+	uint32_t ana_group = 0, nsid, i, opened = g_open_desc_count;
+	struct spdk_nvmf_subsystem subsystem = {
+		.max_nsid = 1, .ns = &ns, .ana_group = &ana_group, .tgt = &tgt,
+	};
+	struct spdk_nvmf_ns_opts opts;
+	const struct spdk_nvmf_transport_ops ops = {};
+	static const struct {
+		bool dif, hide;
+		uint32_t md_size;
+		bool success;
+	} cases[] = {
+		{ false, true, 8, false },
+		{ false, false, 8, true },
+		{ true, false, 8, true },
+		{ true, true, 8, true },
+		{ false, true, 0, true },
+	};
+
+	TAILQ_INIT(&tgt.transports);
+	TAILQ_INIT(&subsystem.ctrlrs);
+	transport.ops = &ops;
+	TAILQ_INSERT_TAIL(&tgt.transports, &transport, link);
+	MOCK_SET(spdk_bdev_get_by_name, &g_bdevs[1]);
+	for (i = 0; i < SPDK_COUNTOF(cases); i++) {
+		spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
+		opts.hide_metadata = cases[i].hide;
+		transport.opts.dif_insert_or_strip = cases[i].dif;
+		MOCK_SET(spdk_bdev_get_md_size, cases[i].md_size);
+		nsid = spdk_nvmf_subsystem_add_ns_ext(&subsystem, "bdev2", &opts, sizeof(opts), NULL);
+		CU_ASSERT(nsid == (cases[i].success ? 1 : 0));
+		if (nsid != 0) {
+			CU_ASSERT(spdk_bdev_desc_hide_metadata(ns->desc) ==
+				  (cases[i].hide || (cases[i].dif && cases[i].md_size != 0)));
+			CU_ASSERT(spdk_nvmf_subsystem_remove_ns(&subsystem, nsid) == 0);
+		}
+		CU_ASSERT(ns == NULL);
+		CU_ASSERT(g_open_desc_count == opened);
+	}
+	MOCK_CLEAR(spdk_bdev_get_md_size);
+	MOCK_CLEAR(spdk_bdev_get_by_name);
 }
 
 static void
@@ -4304,6 +4364,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, nvmf_test_create_subsystem);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_ns);
+	CU_ADD_TEST(suite, test_nvmf_add_ns_metadata_policy);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_add_fdp_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_no_ctrlrs);
 	CU_ADD_TEST(suite, test_spdk_nvmf_subsystem_vwc_present_with_ctrlrs);

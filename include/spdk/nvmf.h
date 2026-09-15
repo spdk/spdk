@@ -1282,6 +1282,8 @@ struct spdk_nvmf_ns_opts {
 
 	/**
 	 * Enable hide_metadata option to the bdev.
+	 * For bdevs with metadata, a DIF-enabled transport forces this option on.
+	 * A DIF-disabled transport rejects namespaces requesting this option.
 	 */
 	bool hide_metadata;
 } __attribute__((packed));
