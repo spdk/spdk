@@ -232,6 +232,10 @@ def parse_config(config, mask):
         if subcfg is None:
             continue
         pool.add(subsystem.calc(config, mask))
+    # Keep the recommendation valid for spdk_iobuf_set_opts(), even with
+    # zero caches. These are the minimum pool sizes in lib/thread/iobuf.c.
+    pool.small = max(pool.small, 64)
+    pool.large = max(pool.large, 8)
     return pool
 
 
