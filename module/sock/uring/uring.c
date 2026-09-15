@@ -595,7 +595,7 @@ static struct spdk_sock *
 uring_sock_connect_async(const char *ip, int port, struct spdk_sock_opts *opts,
 			 spdk_sock_connect_cb_fn cb_fn, void *cb_arg)
 {
-	static struct spdk_sock *_sock;
+	struct spdk_sock *_sock;
 	struct spdk_uring_sock *sock;
 
 	_sock = uring_sock_connect(ip, port, opts);
