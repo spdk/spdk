@@ -534,12 +534,6 @@ int spdk_nvmf_request_get_buffers(struct spdk_nvmf_request *req,
 				  struct spdk_nvmf_transport *transport,
 				  uint32_t length);
 
-/**
- * \deprecated This function is no longer used by built-in transports.
- * DIF handling has moved to the bdev layer via hide_metadata.
- */
-bool spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx);
-
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);

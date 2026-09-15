@@ -100,6 +100,9 @@ Use `spdk_nvmf_subsystem_create_ext()` and `spdk_nvmf_subsystem_get_opts()` inst
 Removed the deprecated `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` aliases. Use
 `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` instead.
 
+Removed `spdk_nvmf_request_get_dif_ctx()` and the deprecated DIF fields and structures in
+`nvmf_transport.h`. DIF handling now uses the bdev layer through the namespace metadata policy.
+
 ### sock
 
 Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.

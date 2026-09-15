@@ -202,25 +202,6 @@ spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc)
 	return spdk_bdev_get_dif_pi_format(desc->bdev);
 }
 
-/* Stub to avoid linking conflict with lib/util/dif.o.
- * The unit test has a stub for spdk_dif_ctx_init to test with 520-byte blocks
- * (real implementation requires 512-byte multiples). This would conflict with
- * the real dif.o, so we stub spdk_dif_pi_format_get_size to avoid pulling it in.
- */
-uint32_t
-spdk_dif_pi_format_get_size(enum spdk_dif_pi_format dif_pi_format)
-{
-	switch (dif_pi_format) {
-	case SPDK_DIF_PI_FORMAT_16:
-		return 8;
-	case SPDK_DIF_PI_FORMAT_32:
-	case SPDK_DIF_PI_FORMAT_64:
-		return 16;
-	default:
-		return 0;
-	}
-}
-
 DEFINE_STUB(spdk_bdev_comparev_and_writev_blocks, int,
 	    (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct iovec *compare_iov, int compare_iovcnt,
@@ -234,8 +215,6 @@ DEFINE_STUB(nvmf_ctrlr_process_io_cmd, int, (struct spdk_nvmf_request *req), 0);
 DEFINE_STUB_V(spdk_bdev_io_get_nvme_fused_status, (const struct spdk_bdev_io *bdev_io,
 		uint32_t *cdw0, int *cmp_sct, int *cmp_sc, int *wr_sct, int *wr_sc));
 
-DEFINE_STUB(spdk_bdev_desc_is_dif_check_enabled, bool,
-	    (struct spdk_bdev_desc *desc, enum spdk_dif_check_type check_type), false);
 DEFINE_STUB(spdk_bdev_desc_hide_metadata, bool, (struct spdk_bdev_desc *desc), false);
 
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
@@ -399,20 +378,6 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 	return NULL;
 }
 
-int
-spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
-		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
-		  uint32_t data_offset, uint64_t guard_seed, struct spdk_dif_ctx_init_ext_opts *opts)
-{
-	ctx->dif_pi_format = opts->dif_pi_format;
-	ctx->block_size = block_size;
-	ctx->md_size = md_size;
-	ctx->init_ref_tag = init_ref_tag;
-
-	return 0;
-}
-
 static uint32_t g_bdev_nvme_status_cdw0;
 static uint32_t g_bdev_nvme_status_sct = SPDK_NVME_SCT_GENERIC;
 static uint32_t g_bdev_nvme_status_sc = SPDK_NVME_SC_SUCCESS;
@@ -506,31 +471,6 @@ test_lba_in_range(void)
 	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, 1, UINT64_MAX) == false);
 	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, UINT64_MAX - 1, 1) == true);
 	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, UINT64_MAX, 1) == false);
-}
-
-static void
-test_get_dif_ctx(void)
-{
-	struct spdk_bdev bdev = {};
-	struct spdk_bdev_desc desc = { .bdev = &bdev, };
-	struct spdk_nvme_cmd cmd = {};
-	struct spdk_dif_ctx dif_ctx = {};
-	bool ret;
-
-	bdev.md_len = 0;
-
-	ret = nvmf_bdev_ctrlr_get_dif_ctx(&desc, &cmd, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	to_le64(&cmd.cdw10, 0x1234567890ABCDEF);
-	bdev.blocklen = 520;
-	bdev.md_len = 8;
-
-	ret = nvmf_bdev_ctrlr_get_dif_ctx(&desc, &cmd, &dif_ctx);
-	CU_ASSERT(ret == true);
-	CU_ASSERT(dif_ctx.block_size == 520);
-	CU_ASSERT(dif_ctx.md_size == 8);
-	CU_ASSERT(dif_ctx.init_ref_tag == 0x90ABCDEF);
 }
 
 static void
@@ -1352,7 +1292,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_rw_params);
 	CU_ADD_TEST(suite, test_get_rw_ext_params);
 	CU_ADD_TEST(suite, test_lba_in_range);
-	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_identify_ns);
 	CU_ADD_TEST(suite, test_spdk_nvmf_bdev_ctrlr_compare_and_write_cmd);
 	CU_ADD_TEST(suite, test_nvmf_bdev_ctrlr_zcopy_start);

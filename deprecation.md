@@ -120,15 +120,6 @@ namespaces.
 The `discovery_filter` parameter of the `nvmf_set_config` RPC is deprecated and will be
 removed in v27.01. Use `discovery_filters` instead.
 
-#### `nvmf_transport.h`
-
-`struct spdk_nvmf_dif_info`, `struct spdk_nvmf_stripped_data`, `spdk_nvmf_request_get_dif_ctx`,
-and the `dif`, `dif_enabled`, and `stripped_data` fields of `struct spdk_nvmf_request` are
-deprecated and will be removed in v26.09. DIF handling has moved to the bdev layer via the
-namespace's `hide_metadata` open flag, so transports no longer touch DIF context directly. As a
-side effect, the POSIX sock impl without a DIF-capable accelerator now incurs one extra data copy
-per I/O on the DIF path (the old in-place transport-side path is gone).
-
 ### sock
 
 #### Zero Copy Receive API Removals

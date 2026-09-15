@@ -168,11 +168,6 @@ DEFINE_STUB_V(nvmf_transport_req_complete, (struct spdk_nvmf_request *req));
 
 DEFINE_STUB_V(nvmf_ns_reservation_request, (void *ctx));
 
-DEFINE_STUB(nvmf_bdev_ctrlr_get_dif_ctx, bool,
-	    (struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd,
-	     struct spdk_dif_ctx *dif_ctx),
-	    true);
-
 DEFINE_STUB_V(nvmf_transport_qpair_abort_request,
 	      (struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_request *req));
 
@@ -1944,78 +1939,6 @@ test_reservation_notification_log_page(void)
 }
 
 static void
-test_get_dif_ctx(void)
-{
-	struct spdk_nvmf_subsystem subsystem = {};
-	struct spdk_nvmf_request req = {};
-	struct spdk_nvmf_qpair qpair = {};
-	struct spdk_nvmf_ctrlr ctrlr = {};
-	struct spdk_nvmf_ns ns = {};
-	struct spdk_nvmf_ns *_ns = NULL;
-	struct spdk_bdev bdev = {};
-	union nvmf_h2c_msg cmd = {};
-	struct spdk_dif_ctx dif_ctx = {};
-	bool ret;
-
-	ctrlr.subsys = &subsystem;
-	ctrlr.visible_ns = spdk_bit_array_create(1);
-	spdk_bit_array_set(ctrlr.visible_ns, 0);
-
-	qpair.ctrlr = &ctrlr;
-
-	req.qpair = &qpair;
-	req.cmd = &cmd;
-
-	ns.bdev = &bdev;
-
-	ctrlr.dif_insert_or_strip = false;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	ctrlr.dif_insert_or_strip = true;
-	qpair.state = SPDK_NVMF_QPAIR_UNINITIALIZED;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	qpair.state = SPDK_NVMF_QPAIR_ENABLED;
-	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FABRIC;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_FLUSH;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	qpair.qid = 1;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	cmd.nvme_cmd.nsid = 1;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	subsystem.max_nsid = 1;
-	subsystem.ns = &_ns;
-	subsystem.ns[0] = &ns;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == false);
-
-	cmd.nvmf_cmd.opcode = SPDK_NVME_OPC_WRITE;
-
-	ret = spdk_nvmf_request_get_dif_ctx(&req, &dif_ctx);
-	CU_ASSERT(ret == true);
-
-	spdk_bit_array_free(&ctrlr.visible_ns);
-}
-
-static void
 test_identify_ctrlr(void)
 {
 	struct spdk_nvmf_tgt tgt = {};
@@ -2052,7 +1975,7 @@ test_identify_ctrlr(void)
 
 	/* Check ioccsz, TCP transport with dif_insert_or_strip */
 	tops.type = SPDK_NVME_TRANSPORT_TCP;
-	ctrlr.dif_insert_or_strip = true;
+	transport.opts.dif_insert_or_strip = true;
 	expected_ioccsz = sizeof(struct spdk_nvme_cmd) / 16 + transport.opts.in_capsule_data_size / 16;
 	CU_ASSERT(spdk_nvmf_ctrlr_identify_ctrlr(&ctrlr, &cdata) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 	CU_ASSERT(cdata.nvmf_specific.ioccsz == expected_ioccsz);
@@ -3004,7 +2927,6 @@ test_nvmf_ctrlr_create_destruct(void)
 	CU_ASSERT(ctrlr->vcprop.cc.bits.en == 0);
 	CU_ASSERT(ctrlr->vcprop.csts.raw == 0);
 	CU_ASSERT(ctrlr->vcprop.csts.bits.rdy == 0);
-	CU_ASSERT(ctrlr->dif_insert_or_strip == true);
 
 	ctrlr->in_destruct = true;
 	nvmf_ctrlr_destruct(ctrlr);
@@ -4369,7 +4291,6 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_reservation_exclusive_access_regs_only_and_all_regs);
 	CU_ADD_TEST(suite, test_get_supported_log_pages);
 	CU_ADD_TEST(suite, test_reservation_notification_log_page);
-	CU_ADD_TEST(suite, test_get_dif_ctx);
 	CU_ADD_TEST(suite, test_set_get_features);
 	CU_ADD_TEST(suite, test_identify_ctrlr);
 	CU_ADD_TEST(suite, test_identify_ctrlr_iocs_specific);

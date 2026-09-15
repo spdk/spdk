@@ -699,7 +699,6 @@ nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(nvmf, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(nvmf, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
-	ctrlr->dif_insert_or_strip = transport->opts.dif_insert_or_strip;
 	ctrlr->sq_flow_control_disabled = connect_cmd->cattr.bits.dissqfc;
 
 	if (nvmf_ctrlr_error_log_init(ctrlr) != 0) {
@@ -5706,61 +5705,6 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 		_nvmf_request_complete(req);
 	}
-}
-
-static bool
-nvmf_ctrlr_get_dif_ctx(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_cmd *cmd,
-		       struct spdk_dif_ctx *dif_ctx)
-{
-	struct spdk_nvmf_ns *ns;
-	struct spdk_bdev_desc *desc;
-
-	if (ctrlr == NULL || cmd == NULL) {
-		return false;
-	}
-
-	ns = nvmf_ctrlr_get_ns(ctrlr, cmd->nsid);
-	if (ns == NULL || ns->bdev == NULL) {
-		return false;
-	}
-
-	desc = ns->desc;
-
-	switch (cmd->opc) {
-	case SPDK_NVME_OPC_READ:
-	case SPDK_NVME_OPC_WRITE:
-	case SPDK_NVME_OPC_COMPARE:
-		return nvmf_bdev_ctrlr_get_dif_ctx(desc, cmd, dif_ctx);
-	default:
-		break;
-	}
-
-	return false;
-}
-
-bool
-spdk_nvmf_request_get_dif_ctx(struct spdk_nvmf_request *req, struct spdk_dif_ctx *dif_ctx)
-{
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-
-	if (spdk_likely(ctrlr == NULL || !ctrlr->dif_insert_or_strip)) {
-		return false;
-	}
-
-	if (spdk_unlikely(!spdk_nvmf_qpair_is_active(qpair))) {
-		return false;
-	}
-
-	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
-		return false;
-	}
-
-	if (spdk_unlikely(nvmf_qpair_is_admin_queue(qpair))) {
-		return false;
-	}
-
-	return nvmf_ctrlr_get_dif_ctx(ctrlr, &req->cmd->nvme_cmd, dif_ctx);
 }
 
 void

@@ -172,11 +172,6 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_abort_cmd,
 	     struct spdk_nvmf_request *req, struct spdk_nvmf_request *req_to_abort),
 	    0);
 
-DEFINE_STUB(nvmf_bdev_ctrlr_get_dif_ctx,
-	    bool,
-	    (struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd, struct spdk_dif_ctx *dif_ctx),
-	    false);
-
 DEFINE_STUB_V(nvmf_bdev_ctrlr_identify_iocs_nvm,
 	      (struct spdk_nvmf_ns *ns, struct spdk_nvme_nvm_ns_data *nsdata_nvm));
 

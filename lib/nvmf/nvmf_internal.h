@@ -336,7 +336,6 @@ struct spdk_nvmf_ctrlr {
 	uint64_t			cc_timeout_tsc;
 	struct spdk_poller		*cc_timeout_timer;
 
-	bool				dif_insert_or_strip;
 	bool				in_destruct;
 	bool				disconnect_in_progress;
 	/* valid only when disconnect_in_progress is true */
@@ -519,8 +518,6 @@ int nvmf_bdev_ctrlr_copy_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc
 			     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 int nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				     struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
-bool nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd,
-				 struct spdk_dif_ctx *dif_ctx);
 bool nvmf_bdev_zcopy_enabled(struct spdk_bdev *bdev);
 
 int nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,

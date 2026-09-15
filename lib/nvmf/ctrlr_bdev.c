@@ -1066,43 +1066,6 @@ spdk_nvmf_bdev_ctrlr_abort_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 	}
 }
 
-bool
-nvmf_bdev_ctrlr_get_dif_ctx(struct spdk_bdev_desc *desc, struct spdk_nvme_cmd *cmd,
-			    struct spdk_dif_ctx *dif_ctx)
-{
-	uint32_t init_ref_tag, dif_check_flags = 0;
-	int rc;
-	struct spdk_dif_ctx_init_ext_opts dif_opts;
-
-	if (spdk_bdev_desc_get_md_size(desc) == 0) {
-		return false;
-	}
-
-	/* Initial Reference Tag is the lower 32 bits of the start LBA. */
-	init_ref_tag = (uint32_t)from_le64(&cmd->cdw10);
-
-	if (spdk_bdev_desc_is_dif_check_enabled(desc, SPDK_DIF_CHECK_TYPE_REFTAG)) {
-		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
-	}
-
-	if (spdk_bdev_desc_is_dif_check_enabled(desc, SPDK_DIF_CHECK_TYPE_GUARD)) {
-		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
-	}
-
-	dif_opts.size = SPDK_SIZEOF(&dif_opts, dif_pi_format);
-	dif_opts.dif_pi_format = SPDK_DIF_PI_FORMAT_16;
-	rc = spdk_dif_ctx_init(dif_ctx,
-			       spdk_bdev_desc_get_block_size(desc),
-			       spdk_bdev_desc_get_md_size(desc),
-			       spdk_bdev_desc_is_md_interleaved(desc),
-			       spdk_bdev_desc_is_dif_head_of_md(desc),
-			       spdk_bdev_desc_get_dif_type(desc),
-			       dif_check_flags,
-			       init_ref_tag, 0, 0, 0, 0, &dif_opts);
-
-	return (rc == 0) ? true : false;
-}
-
 static void
 nvmf_bdev_ctrlr_zcopy_start_complete(struct spdk_bdev_io *bdev_io, bool success,
 				     void *cb_arg)
