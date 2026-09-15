@@ -10,6 +10,9 @@
 #include "nvmf/nvmf.c"
 #include "spdk/bdev_module.h"
 
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_desc_hide_metadata, bool, (struct spdk_bdev_desc *desc), false);
+
 DEFINE_STUB_V(nvmf_transport_poll_group_destroy, (struct spdk_nvmf_transport_poll_group *group));
 DEFINE_STUB_V(nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB_V(nvmf_transport_qpair_fini, (struct spdk_nvmf_qpair *qpair,
@@ -129,6 +132,39 @@ const struct spdk_uuid *
 spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 {
 	return &bdev->uuid;
+}
+
+static void
+test_nvmf_tgt_ns_metadata(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_ns ns = {};
+	struct spdk_bdev bdev = {};
+	const struct spdk_nvmf_transport_ops ops = { .name = "TCP" };
+	struct spdk_nvmf_transport transport = { .ops = &ops };
+	uint32_t hidden, dif;
+
+	RB_INIT(&tgt.subsystems);
+	subsystem.max_nsid = 1;
+	subsystem.ns = (struct spdk_nvmf_ns * []) { &ns };
+	ns.bdev = &bdev;
+	ns.desc = (void *)&bdev;
+	MOCK_SET(spdk_nvmf_subsystem_get_first, &subsystem);
+	for (hidden = 0; hidden < 2; hidden++) {
+		MOCK_SET(spdk_bdev_desc_hide_metadata, hidden);
+		for (dif = 0; dif < 2; dif++) {
+			transport.opts.dif_insert_or_strip = dif;
+			MOCK_SET(spdk_bdev_get_md_size, 8);
+			CU_ASSERT(nvmf_tgt_check_ns_metadata(&tgt, &transport) ==
+				  (hidden == dif ? 0 : -EINVAL));
+			MOCK_SET(spdk_bdev_get_md_size, 0);
+			CU_ASSERT(nvmf_tgt_check_ns_metadata(&tgt, &transport) == 0);
+		}
+	}
+	MOCK_SET(spdk_bdev_get_md_size, 0);
+	MOCK_SET(spdk_bdev_desc_hide_metadata, false);
+	MOCK_SET(spdk_nvmf_subsystem_get_first, NULL);
 }
 
 static void
@@ -374,6 +410,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
 	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
 	CU_ADD_TEST(suite, test_nvmf_tgt_options);
+	CU_ADD_TEST(suite, test_nvmf_tgt_ns_metadata);
 	CU_ADD_TEST(suite, test_nvmf_pause_drains_targeted_ns);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);

@@ -1179,21 +1179,18 @@ nvmf_tgt_check_ns_metadata(struct spdk_nvmf_tgt *tgt, struct spdk_nvmf_transport
 	struct spdk_nvmf_ns *ns;
 	uint32_t i;
 
-	if (!transport->opts.dif_insert_or_strip) {
-		return 0;
-	}
-
 	NVMF_SUBSYSTEM_FOREACH(tgt, subsystem) {
 		for (i = 0; i < subsystem->max_nsid; i++) {
 			ns = subsystem->ns[i];
-			if (ns == NULL || ns->desc == NULL) {
+			if (ns == NULL || ns->desc == NULL || spdk_bdev_get_md_size(ns->bdev) == 0) {
 				continue;
 			}
 
-			if (spdk_bdev_desc_get_md_size(ns->desc) != 0) {
-				SPDK_ERRLOG("Transport %s dif_insert_or_strip=1 conflicts with existing namespace "
-					    "%u on subsystem %s opened with metadata visible\n",
-					    transport->ops->name, ns->nsid, subsystem->subnqn);
+			if (spdk_bdev_desc_hide_metadata(ns->desc) != transport->opts.dif_insert_or_strip) {
+				SPDK_ERRLOG("Transport %s dif_insert_or_strip=%d conflicts with existing namespace "
+					    "%u on subsystem %s metadata visibility\n",
+					    transport->ops->name, transport->opts.dif_insert_or_strip,
+					    ns->nsid, subsystem->subnqn);
 				return -EINVAL;
 			}
 		}
