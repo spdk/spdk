@@ -1170,7 +1170,6 @@ class SPDKTarget(Target):
         config_fields = [
             ConfigField(name='dif_insert_strip', default=False),
             ConfigField(name='null_block_dif_type', default=0),
-            ConfigField(name='num_shared_buffers', default=4096),
             ConfigField(name='max_queue_depth', default=128),
             ConfigField(name='bpf_scripts', default=[]),
             ConfigField(name='scheduler_core_limit', default=None),
@@ -1235,7 +1234,6 @@ class SPDKTarget(Target):
         # Create transport layer
         nvmf_transport_params = {
             "trtype": self.transport,
-            "num_shared_buffers": self.num_shared_buffers,
             "max_queue_depth": self.max_queue_depth,
             "dif_insert_or_strip": self.dif_insert_strip,
             "sock_priority": self.adq_priority,

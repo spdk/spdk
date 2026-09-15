@@ -98,7 +98,6 @@ Optional:
   "pcm_settings": false,
   "enable_bandwidth": [true, 60],
   "enable_dpdk_memory": true
-  "num_shared_buffers": 4096,
   "scheduler_settings": "static",
   "zcopy_settings": false,
   "dif_insert_strip": true,
@@ -171,8 +170,8 @@ Optional, SPDK Target only:
   Default: false.
 - scheduler_settings - str. Select SPDK Target thread scheduler (static/dynamic).
   Default: static.
-- num_shared_buffers - int, number of shared buffers to allocate when
-  creating transport layer. Default: 4096.
+- iobuf_small_pool_count / iobuf_large_pool_count - int, global iobuf pool sizes.
+  Defaults: 32767 / 16383.
 - max_queue_depth - int, max number of outstanding I/O per queue. Default: 128.
 - dif_insert_strip - bool. Only for TCP transport. Enable DIF option when
   creating transport layer. Default: false.
