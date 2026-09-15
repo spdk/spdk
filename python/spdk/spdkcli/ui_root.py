@@ -396,7 +396,7 @@ class UIRoot(UINode):
         params = strip_globals(kwargs)
         params = apply_defaults(params, tgt_name=None)
         params = group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid',
-                          'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible', 'hide_metadata'])
+                          'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible'])
         params = remove_null(params)
         self.client.nvmf_subsystem_add_ns(**params)
 

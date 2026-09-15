@@ -316,7 +316,7 @@ Deprecated, use iobuf-small-cache-size instead""",
         params = strip_globals(vars(args))
         params = apply_defaults(params, tgt_name=None)
         params = group_as(params, 'namespace', ['bdev_name', 'ptpl_file', 'nsid',
-                          'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible', 'hide_metadata'])
+                          'nguid', 'eui64', 'uuid', 'anagrpid', 'no_auto_visible'])
         args.client.nvmf_subsystem_add_ns(**params)
 
     p = subparsers.add_parser('nvmf_subsystem_add_ns', help='Add a namespace to an NVMe-oF subsystem')
@@ -331,8 +331,6 @@ Deprecated, use iobuf-small-cache-size instead""",
     p.add_argument('-a', '--anagrpid', help='ANA group ID', type=int)
     p.add_argument('-i', '--no-auto-visible', action='store_true',
                    help='Do not auto make namespace visible to controllers')
-    p.add_argument('-N', '--hide-metadata', action='store_true',
-                   help='[Deprecated] Enable hide_metadata option to the bdev')
     p.set_defaults(func=nvmf_subsystem_add_ns)
 
     def nvmf_subsystem_set_ns_ana_group(args):

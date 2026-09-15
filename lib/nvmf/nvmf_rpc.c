@@ -1142,10 +1142,6 @@ rpc_nvmf_subsystem_listener_set_ana_state(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_subsystem_listener_set_ana_state",
 		  rpc_nvmf_subsystem_listener_set_ana_state, SPDK_RPC_RUNTIME);
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_namespace_hide_metadata,
-			      "use transport dif_insert_or_strip option instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
 struct rpc_nvmf_subsystem_add_ns_ext {
 	struct rpc_nvmf_subsystem_add_ns_ctx req;
 	const struct spdk_json_val *params;
@@ -1250,7 +1246,6 @@ rpc_nvmf_subsystem_add_ns_paused(struct spdk_nvmf_subsystem *subsystem,
 
 	ns_opts.anagrpid = ctx->namespace.anagrpid;
 	ns_opts.no_auto_visible = ctx->namespace.no_auto_visible;
-	ns_opts.hide_metadata = ctx->namespace.hide_metadata;
 
 	ctx->namespace.nsid = spdk_nvmf_subsystem_add_ns_ext(subsystem, ctx->namespace.bdev_name,
 			      &ns_opts, sizeof(ns_opts),

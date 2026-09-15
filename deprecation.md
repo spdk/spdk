@@ -99,13 +99,6 @@ count aggressively and can guarantee attached controllers advertise `NLBAF` < 4 
 
 ### nvmf
 
-#### `nvmf_namespace_hide_metadata`
-
-The `hide_metadata` parameter of `nvmf_subsystem_add_ns` RPC is deprecated and will be removed in
-v26.09. Metadata visibility on a namespace is determined by the transport's `dif_insert_or_strip`
-option: when any transport on the target has `dif_insert_or_strip` enabled, namespaces are opened
-with metadata hidden so the bdev layer can own DIF generate/verify.
-
 #### `nvmf_tgt_mixed_dif_insert_or_strip`
 
 Adding multiple transports to the same target with disagreeing `dif_insert_or_strip` values is

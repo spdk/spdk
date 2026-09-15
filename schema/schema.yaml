@@ -411,10 +411,6 @@ objects:
       - name: no_auto_visible
         type: boolean
         description: Do not auto make namespace visible to controllers
-      - name: hide_metadata
-        type: boolean
-        deprecated: true
-        description: '[Deprecated] Enable hide_metadata option to the bdev'
   - name: nvmf_admin_cmd_passthru
     fields:
       - name: identify_ctrlr
