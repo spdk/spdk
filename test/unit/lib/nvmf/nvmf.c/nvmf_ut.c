@@ -13,16 +13,40 @@
 DEFINE_STUB(spdk_bdev_get_md_size, uint32_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_desc_hide_metadata, bool, (struct spdk_bdev_desc *desc), false);
 
-DEFINE_STUB_V(nvmf_transport_poll_group_destroy, (struct spdk_nvmf_transport_poll_group *group));
+static bool g_add_transport_test;
+static unsigned g_tgroup_live, g_tgroup_attempts, g_tgroup_fail_at;
+
+void
+nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
+{
+	if (g_add_transport_test) {
+		g_tgroup_live--;
+		free(group);
+	}
+}
 DEFINE_STUB_V(nvmf_ctrlr_destruct, (struct spdk_nvmf_ctrlr *ctrlr));
 DEFINE_STUB_V(nvmf_transport_qpair_fini, (struct spdk_nvmf_qpair *qpair,
 		spdk_nvmf_transport_qpair_fini_cb cb_fn,
 		void *cb_arg));
 DEFINE_STUB_V(nvmf_qpair_free_aer, (struct spdk_nvmf_qpair *qpair));
 DEFINE_STUB_V(nvmf_qpair_abort_pending_zcopy_reqs, (struct spdk_nvmf_qpair *qpair));
-DEFINE_STUB(nvmf_transport_poll_group_create, struct spdk_nvmf_transport_poll_group *,
-	    (struct spdk_nvmf_transport *transport,
-	     struct spdk_nvmf_poll_group *group), NULL);
+DEFINE_RETURN_MOCK(nvmf_transport_poll_group_create, struct spdk_nvmf_transport_poll_group *);
+struct spdk_nvmf_transport_poll_group *
+nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
+				 struct spdk_nvmf_poll_group *group)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	HANDLE_RETURN_MOCK(nvmf_transport_poll_group_create);
+	if (!g_add_transport_test || ++g_tgroup_attempts == g_tgroup_fail_at) {
+		return NULL;
+	}
+	tgroup = calloc(1, sizeof(*tgroup));
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
+	tgroup->transport = transport;
+	g_tgroup_live++;
+	return tgroup;
+}
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
 	    NULL);
 DEFINE_STUB(nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
@@ -165,6 +189,156 @@ test_nvmf_tgt_ns_metadata(void)
 	MOCK_SET(spdk_bdev_get_md_size, 0);
 	MOCK_SET(spdk_bdev_desc_hide_metadata, false);
 	MOCK_SET(spdk_nvmf_subsystem_get_first, NULL);
+}
+
+static int
+ut_add_transport_pg_create(void *io_device, void *ctx)
+{
+	struct spdk_nvmf_poll_group *group = ctx;
+
+	TAILQ_INIT(&group->tgroups);
+	return 0;
+}
+
+static void
+ut_add_transport_pg_destroy(void *io_device, void *ctx)
+{
+	struct spdk_nvmf_poll_group *group = ctx;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	while ((tgroup = TAILQ_FIRST(&group->tgroups)) != NULL) {
+		TAILQ_REMOVE(&group->tgroups, tgroup, link);
+		nvmf_transport_poll_group_destroy(tgroup);
+	}
+}
+
+struct ut_add_transport_ctx {
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_poll_group *groups[2];
+	struct spdk_thread *thread;
+	unsigned calls;
+	int status;
+};
+
+static void
+ut_add_transport_done(void *arg, int status)
+{
+	struct ut_add_transport_ctx *ctx = arg;
+	unsigned i;
+
+	CU_ASSERT(spdk_get_thread() == ctx->thread);
+	CU_ASSERT(++ctx->calls == 1);
+	ctx->status = status;
+	if (status != 0) {
+		for (i = 0; i < SPDK_COUNTOF(ctx->groups); i++) {
+			CU_ASSERT(nvmf_get_transport_poll_group(ctx->groups[i], ctx->transport) == NULL);
+		}
+		/* Error completion returns ownership only after every channel unwinds. */
+		free(ctx->transport);
+		ctx->transport = NULL;
+	}
+}
+
+static void
+test_nvmf_tgt_add_transport_overlap(void)
+{
+	const struct spdk_nvmf_transport_ops tcp = { .name = "TCP" };
+	const struct spdk_nvmf_transport_ops vfio = { .name = "VFIOUSER" };
+	struct spdk_io_channel *channels[2];
+	struct spdk_nvmf_tgt tgt;
+	struct spdk_nvmf_subsystem subsystem = { .max_nsid = 1 };
+	struct spdk_bdev bdev = {};
+	struct spdk_nvmf_ns ns = { .bdev = &bdev, .desc = (void *) &bdev };
+	struct ut_add_transport_ctx first, second, retry;
+	struct spdk_nvmf_ns *namespaces[] = { &ns };
+	unsigned scenario, i;
+
+	/* Conflicting policies, duplicate type, intervening namespace, partial setup. */
+	for (scenario = 0; scenario < 4; scenario++) {
+		allocate_threads(2);
+		set_thread(0);
+		memset(&tgt, 0, sizeof(tgt));
+		memset(&first, 0, sizeof(first));
+		memset(&second, 0, sizeof(second));
+		memset(&retry, 0, sizeof(retry));
+		TAILQ_INIT(&tgt.transports);
+		RB_INIT(&tgt.subsystems);
+		spdk_io_device_register(&tgt, ut_add_transport_pg_create, ut_add_transport_pg_destroy,
+					sizeof(struct spdk_nvmf_poll_group), "add_transport");
+		for (i = 0; i < SPDK_COUNTOF(channels); i++) {
+			set_thread(i);
+			channels[i] = spdk_get_io_channel(&tgt);
+			SPDK_CU_ASSERT_FATAL(channels[i] != NULL);
+			first.groups[i] = second.groups[i] = retry.groups[i] =
+					spdk_io_channel_get_ctx(channels[i]);
+		}
+		set_thread(0);
+		first.thread = second.thread = retry.thread = spdk_get_thread();
+		MOCK_CLEAR(nvmf_transport_poll_group_create);
+		MOCK_SET(spdk_nvmf_subsystem_get_first, NULL);
+		g_add_transport_test = true;
+		g_tgroup_attempts = 0;
+		g_tgroup_fail_at = scenario == 3 ? 2 : 0;
+		first.transport = calloc(1, sizeof(*first.transport));
+		SPDK_CU_ASSERT_FATAL(first.transport != NULL);
+		first.transport->ops = &tcp;
+		spdk_nvmf_tgt_add_transport(&tgt, first.transport, ut_add_transport_done, &first);
+		CU_ASSERT(first.calls == 0);
+		if (scenario < 2) {
+			second.transport = calloc(1, sizeof(*second.transport));
+			SPDK_CU_ASSERT_FATAL(second.transport != NULL);
+			second.transport->ops = scenario == 0 ? &vfio : &tcp;
+			second.transport->opts.dif_insert_or_strip = scenario == 0;
+			spdk_nvmf_tgt_add_transport(&tgt, second.transport, ut_add_transport_done, &second);
+			CU_ASSERT(second.calls == 0);
+		} else if (scenario == 2) {
+			subsystem.ns = namespaces;
+			MOCK_SET(spdk_nvmf_subsystem_get_first, &subsystem);
+			MOCK_SET(spdk_bdev_get_md_size, 8);
+			MOCK_SET(spdk_bdev_desc_hide_metadata, true);
+		}
+		poll_threads();
+		CU_ASSERT(first.calls == 1);
+		if (scenario < 2) {
+			CU_ASSERT(first.status == 0);
+			CU_ASSERT(second.calls == 1);
+			CU_ASSERT(second.status == (scenario == 0 ? -EINVAL : -EEXIST));
+			CU_ASSERT(TAILQ_FIRST(&tgt.transports) == first.transport);
+			CU_ASSERT(TAILQ_NEXT(first.transport, link) == NULL);
+			CU_ASSERT(g_tgroup_live == 2);
+		} else {
+			CU_ASSERT(first.status == (scenario == 2 ? -EINVAL : -1));
+			CU_ASSERT(TAILQ_EMPTY(&tgt.transports));
+			CU_ASSERT(g_tgroup_live == 0);
+		}
+		if (scenario == 2) {
+			MOCK_SET(spdk_nvmf_subsystem_get_first, NULL);
+			MOCK_SET(spdk_bdev_get_md_size, 0);
+			MOCK_SET(spdk_bdev_desc_hide_metadata, false);
+		}
+		/* A compatible retry must succeed after the failed operation's callback. */
+		set_thread(0);
+		g_tgroup_fail_at = 0;
+		retry.transport = calloc(1, sizeof(*retry.transport));
+		SPDK_CU_ASSERT_FATAL(retry.transport != NULL);
+		retry.transport->ops = &vfio;
+		spdk_nvmf_tgt_add_transport(&tgt, retry.transport, ut_add_transport_done, &retry);
+		poll_threads();
+		CU_ASSERT(retry.calls == 1 && retry.status == 0);
+		for (i = 0; i < SPDK_COUNTOF(channels); i++) {
+			set_thread(i);
+			spdk_put_io_channel(channels[i]);
+		}
+		poll_threads();
+		CU_ASSERT(g_tgroup_live == 0);
+		set_thread(0);
+		spdk_io_device_unregister(&tgt, NULL);
+		poll_threads();
+		free(first.transport);
+		free(retry.transport);
+		g_add_transport_test = false;
+		free_threads();
+	}
 }
 
 static void
@@ -409,6 +583,7 @@ main(int argc, char **argv)
 
 	CU_ADD_TEST(suite, test_nvmf_tgt_create_poll_group);
 	CU_ADD_TEST(suite, test_nvmf_target_opts_copy_bounds_size);
+	CU_ADD_TEST(suite, test_nvmf_tgt_add_transport_overlap);
 	CU_ADD_TEST(suite, test_nvmf_tgt_options);
 	CU_ADD_TEST(suite, test_nvmf_tgt_ns_metadata);
 	CU_ADD_TEST(suite, test_nvmf_pause_drains_targeted_ns);
