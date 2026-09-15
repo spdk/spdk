@@ -73,7 +73,7 @@ class Subsystem:
 
     @staticmethod
     def get_method(config, name):
-        return filter(lambda m: m['method'] == name, config)
+        return filter(lambda m: m['method'] == name, config or [])
 
 
 class IobufSubsystem(Subsystem):
@@ -100,7 +100,7 @@ class AccelSubsystem(Subsystem):
         small, large = 128, 16
         opts = next(self.get_method(accel_conf, 'accel_set_options'), {}).get('params')
         if opts is not None:
-            small, large = opts['small_cache_size'], opts['large_cache_size']
+            small, large = opts.get('small_cache_size', small), opts.get('large_cache_size', large)
         cpucnt = mask.bit_count()
         return PoolConfig(small=small * cpucnt, large=large * cpucnt)
 
@@ -125,7 +125,8 @@ class BdevSubsystem(Subsystem):
         small, large = 128, 16
         opts = next(self.get_method(bdev_conf, 'bdev_set_options'), {}).get('params')
         if opts is not None:
-            small, large = opts['iobuf_small_cache_size'], opts['iobuf_large_cache_size']
+            small = opts.get('iobuf_small_cache_size', small)
+            large = opts.get('iobuf_large_cache_size', large)
         pool = PoolConfig(small=small * cpucnt, large=large * cpucnt)
         pool.add(self.get('accel').calc(config, mask))
         return pool
