@@ -80,7 +80,7 @@ spdk_nvmf_subsystem_stop(), from either the active or the paused state.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Inactive : spdk_nvmf_subsystem_create()
+    [*] --> Inactive : spdk_nvmf_subsystem_create_ext()
     Inactive --> Active : spdk_nvmf_subsystem_start()
     Active --> Inactive : spdk_nvmf_subsystem_stop()
     Active --> Paused : spdk_nvmf_subsystem_pause()

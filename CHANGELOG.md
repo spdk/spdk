@@ -15,6 +15,9 @@ number of requests, allowed devices, crypto split blocks, and driver mode for UM
 Removed `spdk_bdev_nvme_set_multipath_policy()` and the matching `bdev_nvme_set_multipath_policy`
 RPC. Use `spdk_bdev_nvme_create()` / `bdev_nvme_attach_controller` with multipath options instead.
 
+Removed the deprecated `BDEV_NVME_MP_POLICY_*` and `BDEV_NVME_MP_SELECTOR_*` aliases. Use
+`SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*` instead.
+
 NVMe namespaces are now rescanned after a successful controller reconnect. This allows namespace
 attribute changes made while the controller was disconnected to be reflected in the corresponding
 bdev after reconnection. Inactive namespaces are retained during this rescan and are not
@@ -93,6 +96,13 @@ Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` pa
 
 Removed the deprecated NVMf subsystem creation, option setter, and individual option getter APIs.
 Use `spdk_nvmf_subsystem_create_ext()` and `spdk_nvmf_subsystem_get_opts()` instead.
+
+Removed the deprecated `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` aliases. Use
+`SPDK_NVMF_TGT_DISCOVERY_FILTER_*` instead.
+
+### sock
+
+Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.
 
 ## v26.05
 
