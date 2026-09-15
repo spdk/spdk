@@ -20,7 +20,7 @@
 
 SPDK_LOG_DEPRECATION_REGISTER(fsdev,
 			      "fsdev is being replaced by a new implementation",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 static struct spdk_fsdev_opts g_fsdev_opts = {
 	.fsdev_io_pool_size = SPDK_FSDEV_IO_POOL_SIZE,

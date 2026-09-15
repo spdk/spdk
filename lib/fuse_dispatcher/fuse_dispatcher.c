@@ -29,7 +29,7 @@
 
 SPDK_LOG_DEPRECATION_REGISTER(fuse_dispatcher,
 			      "the fuse_dispatcher library is being removed",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 /*
  * NOTE: It appeared that the open flags have different values on the different HW architechtures.

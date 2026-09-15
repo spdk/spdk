@@ -194,7 +194,7 @@ SPDK_RPC_REGISTER("vfu_virtio_create_scsi_endpoint", rpc_vfu_virtio_create_scsi_
 
 SPDK_LOG_DEPRECATION_REGISTER(vfu_virtio_create_fs_endpoint,
 			      "virtio-fs vfu_device support is being removed",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 static void
 rpc_vfu_virtio_create_fs_endpoint_cpl(void *cb_arg, int status)

@@ -30,25 +30,25 @@ Will be removed in the v26.09 release.
 ### fsdev
 
 The current `fsdev` layer and its consumers are deprecated in preparation for
-replacing with a new implementation in the v26.09 release.
+replacing with a new implementation in the v27.01 release.
 
 #### `fsdev`
 
 The `fsdev` library, including the public APIs in `include/spdk/fsdev.h` and
 `include/spdk/fsdev_module.h`, the `fsdev` event subsystem, and the `aio` fsdev module
 (the `fsdev_aio_create`/`fsdev_aio_delete` RPCs and the `--with-aio-fsdev` configure
-option) are deprecated and will be replaced in the v26.09 release.
+option) are deprecated and will be replaced in the v27.01 release.
 
 #### `fuse_dispatcher`
 
-The `fuse_dispatcher` library and its public API (`include/spdk/fuse_dispatcher.h`) are
-deprecated and will be removed in the v26.09 release. There will be no replacement;
+The `fuse_dispatcher` library and its internal API (`include/spdk_internal/fuse_dispatcher.h`) are
+deprecated and will be removed in the v27.01 release. There will be no replacement;
 the new fsdev implementation will not require a fuse_dispatcher.
 
 #### `vfu_virtio_create_fs_endpoint`
 
 The `virtio-fs` vfu_device support, exposed via the `vfu_virtio_create_fs_endpoint` RPC,
-is deprecated and will be removed in the v26.09 release.
+is deprecated and will be removed in the v27.01 release.
 
 ### gpt
 
