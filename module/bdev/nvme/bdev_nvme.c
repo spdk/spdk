@@ -2005,17 +2005,55 @@ bdev_nvme_poll(void *arg)
 
 static int bdev_nvme_poll_adminq(void *arg);
 
+/* spdk_nvme_ctrlr_process_admin_completions() must run periodically, not only when
+ * the admin queue fd signals a completion. It sends keep-alive commands, serves
+ * external I/O messages (e.g. CUSE ioctls), completes queued asynchronous events
+ * and checks admin command timeouts, which also catches lost completions.
+ *
+ * In poll mode, use the configured adminq poll period. In interrupt mode, avoid
+ * waking every controller that often and derive the period from the keep-alive
+ * timeout instead. lib/nvme sends a keep-alive once KATO/2 has elapsed since the
+ * previous one, so fire at KATO/4. A timer at exactly KATO/2 may fire just before
+ * the next keep-alive is due and delay it to almost a full KATO. Without
+ * keep-alive, rely on the admin queue fd only.
+ */
+static uint64_t
+bdev_nvme_adminq_poll_period_us(struct nvme_ctrlr *nvme_ctrlr)
+{
+	const struct spdk_nvme_ctrlr_opts *ctrlr_opts;
+
+	if (!spdk_interrupt_mode_is_enabled()) {
+		return g_opts.nvme_adminq_poll_period_us;
+	}
+
+	ctrlr_opts = spdk_nvme_ctrlr_get_opts(nvme_ctrlr->ctrlr);
+
+	return ctrlr_opts->keep_alive_timeout_ms * SPDK_MSEC_TO_USEC / 4;
+}
+
+/* In interrupt mode, a period of 0 registers a busy poller that keeps running until
+ * the period is changed again. It is used only while a disconnect is in progress.
+ */
 static void
 bdev_nvme_change_adminq_poll_period(struct nvme_ctrlr *nvme_ctrlr, uint64_t new_period_us)
 {
-	if (spdk_interrupt_mode_is_enabled()) {
-		return;
-	}
-
 	spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
 
 	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq,
 					  nvme_ctrlr, new_period_us);
+}
+
+static void
+bdev_nvme_set_default_adminq_poll_period(struct nvme_ctrlr *nvme_ctrlr)
+{
+	uint64_t period_us = bdev_nvme_adminq_poll_period_us(nvme_ctrlr);
+
+	bdev_nvme_change_adminq_poll_period(nvme_ctrlr, period_us);
+
+	if (spdk_interrupt_mode_is_enabled() && period_us == 0) {
+		/* Disable the always busy interrupt so that the reactor can sleep. */
+		spdk_poller_register_interrupt(nvme_ctrlr->adminq_timer_poller, NULL, NULL);
+	}
 }
 
 static int
@@ -2033,8 +2071,7 @@ bdev_nvme_poll_adminq(void *arg)
 		nvme_ctrlr->disconnected_cb = NULL;
 
 		if (disconnected_cb != NULL) {
-			bdev_nvme_change_adminq_poll_period(nvme_ctrlr,
-							    g_opts.nvme_adminq_poll_period_us);
+			bdev_nvme_set_default_adminq_poll_period(nvme_ctrlr);
 			disconnected_cb(nvme_ctrlr);
 		} else {
 			bdev_nvme_failover_ctrlr(nvme_ctrlr);
@@ -2305,7 +2342,9 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 	assert(nvme_ctrlr->disconnected_cb == NULL);
 	nvme_ctrlr->disconnected_cb = cb_fn;
 
-	/* During disconnection, reduce the period to poll adminq more often. */
+	/* During disconnection, reduce the period to poll adminq more often. In interrupt
+	 * mode, this also keeps the adminq polled after the transport closed its fd.
+	 */
 	bdev_nvme_change_adminq_poll_period(nvme_ctrlr, 0);
 }
 
@@ -6166,7 +6205,6 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		.opts_size = SPDK_SIZEOF(&opts, fd_type),
 	};
 	struct spdk_memory_domain *domains[SPDK_COUNTOF(nvme_ctrlr->memory_domain_types)];
-	uint64_t period;
 	int fd, rc, i, domains_count;
 
 	assert(spdk_thread_is_app_thread(NULL));
@@ -6276,14 +6314,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_bdev_nvme_get_default_ctrlr_opts(&nvme_ctrlr->opts);
 	}
 
-	period = spdk_interrupt_mode_is_enabled() ? 0 : g_opts.nvme_adminq_poll_period_us;
-
-	nvme_ctrlr->adminq_timer_poller = SPDK_POLLER_REGISTER(bdev_nvme_poll_adminq, nvme_ctrlr,
-					  period);
+	bdev_nvme_set_default_adminq_poll_period(nvme_ctrlr);
 
 	if (spdk_interrupt_mode_is_enabled()) {
-		spdk_poller_register_interrupt(nvme_ctrlr->adminq_timer_poller, NULL, NULL);
-
 		fd = spdk_nvme_ctrlr_get_admin_qp_fd(nvme_ctrlr->ctrlr, &opts);
 		if (fd < 0) {
 			rc = fd;
