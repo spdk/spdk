@@ -149,9 +149,6 @@ class NvmfSubsystem(Subsystem):
     def calc(self, config, mask):
         transports = [*self.get_method(self.get_subsystem_config(config, 'nvmf'),
                                        'nvmf_create_transport')]
-        small_bufsize = next(self.get_method(self.get_subsystem_config(config, 'iobuf'),
-                                             'iobuf_set_options'),
-                             {'params': {'small_bufsize': 8192}})['params']['small_bufsize']
         cpucnt = mask.bit_count()
         max_u32 = (1 << 32) - 1
 
@@ -163,19 +160,21 @@ class NvmfSubsystem(Subsystem):
         pool.add(self.get('bdev').calc(config, mask))
         for transport in transports:
             params = transport['params']
-            buf_cache_size = params['buf_cache_size']
-            io_unit_size = params['io_unit_size']
-            num_shared_buffers = params['num_shared_buffers']
-            if buf_cache_size == 0:
-                continue
-
-            if buf_cache_size == max_u32:
-                buf_cache_size = (num_shared_buffers * 3 // 4) // cpucnt
-            if io_unit_size <= small_bufsize:
-                large = 0
-            else:
-                large = buf_cache_size
-            pool.add(PoolConfig(small=buf_cache_size * cpucnt, large=large * cpucnt))
+            # TCP and RDMA derive caches from the pool being sized. FC and
+            # VFIOUSER have no transport cache by default on current master.
+            defaults = {'TCP': max_u32, 'RDMA': max_u32, 'FC': 0, 'VFIOUSER': 0}
+            default = defaults.get(params['trtype'].upper())
+            caches = []
+            for field in ('iobuf_small_cache_size', 'iobuf_large_cache_size'):
+                value = params.get(field, default)
+                if value is None or value == max_u32:
+                    raise ValueError(f"{params['trtype']}: set an explicit {field} in "
+                                     "nvmf_create_transport to calculate the minimum pool size; "
+                                     "the default cannot be sized from this configuration")
+                if type(value) is not int or not 0 <= value < max_u32:
+                    raise ValueError(f"{params['trtype']}: invalid {field}: {value}")
+                caches.append(value * cpucnt)
+            pool.add(PoolConfig(small=caches[0], large=caches[1]))
         return pool
 
     def ask_config(self):
@@ -188,13 +187,12 @@ class NvmfSubsystem(Subsystem):
                            '[trtype]: ').strip()
             if len(trtype) == 0:
                 break
-            print('nvmf_create_transport:')
+            print('nvmf_create_transport (explicit cache sizes required):')
             transports.append({'method': 'nvmf_create_transport', 'params':
                                {'trtype': trtype,
                                 **self._get_input([
-                                    UserInput('buf_cache_size', '\t', lambda x: int(x, 0)),
-                                    UserInput('io_unit_size', '\t', lambda x: int(x, 0)),
-                                    UserInput('num_shared_buffers', '\t', lambda x: int(x, 0))])}})
+                                    UserInput('iobuf_small_cache_size', '\t', lambda x: int(x, 0)),
+                                    UserInput('iobuf_large_cache_size', '\t', lambda x: int(x, 0))])}})
         return transports
 
 
