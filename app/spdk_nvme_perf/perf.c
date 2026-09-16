@@ -3627,16 +3627,13 @@ main(int argc, char **argv)
 	/* check controllers; no controllers is ok when running with AIO/URING devices only */
 	if ((g_num_async_devs == 0) && (TAILQ_EMPTY(&g_controllers))) {
 		fprintf(stderr, "No valid NVMe controllers found\n");
+		rc = -ENODEV;
 		goto cleanup;
 	}
 
 	if (g_num_namespaces == 0) {
-		if (g_num_async_devs == 0) {
-			fprintf(stderr, "No valid AIO or URING devices found\n");
-		} else {
-			fprintf(stderr, "No active namespaces found\n");
-		}
-
+		fprintf(stderr, "No active namespaces found\n");
+		rc = -ENODEV;
 		goto cleanup;
 	}
 
