@@ -97,13 +97,6 @@ setting the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD`. Applications that scal
 count aggressively and can guarantee attached controllers advertise `NLBAF` < 4 can opt in to
 `SPDK_NVME_NS_DATA_ALLOC_MODE_HEAD_LBAF_4` for a further 240 B per-namespace saving over HEAD.
 
-### nvmf
-
-#### `nvmf_set_config_discovery_filter`
-
-The `discovery_filter` parameter of the `nvmf_set_config` RPC is deprecated and will be
-removed in v27.01. Use `discovery_filters` instead.
-
 ### sock
 
 #### `spdk_sock_group_add_sock_callbacks`

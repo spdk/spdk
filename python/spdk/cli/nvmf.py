@@ -38,7 +38,6 @@ def add_parser(subparsers):
             admin_cmd_passthru = {cmd: True for cmd in args.admin_cmd_passthru}
         args.client.nvmf_set_config(admin_cmd_passthru=admin_cmd_passthru,
                                     poll_groups_mask=args.poll_groups_mask,
-                                    discovery_filter=args.discovery_filter,
                                     discovery_filters=args.discovery_filters,
                                     dhchap_digests=args.dhchap_digests,
                                     dhchap_dhgroups=args.dhchap_dhgroups,
@@ -51,9 +50,7 @@ def add_parser(subparsers):
                         ' sanitize, security_send_recv, fw_update, nvme_mi, vendor_specific',
                    type=partial(str.split, sep=','), default=[])
     p.add_argument('-m', '--poll-groups-mask', help='CPU mask for NVMe-oF poll groups', type=str)
-    group = p.add_mutually_exclusive_group()
-    group.add_argument('-d', '--discovery-filter', help='Deprecated, use --discovery-filters instead', type=str)
-    group.add_argument('--discovery-filters', help='Comma-separated list of discovery filters', type=partial(str.split, sep=','))
+    p.add_argument('--discovery-filters', help='Comma-separated list of discovery filters', type=partial(str.split, sep=','))
     p.add_argument('--dhchap-digests', help='Comma-separated list of allowed DH-HMAC-CHAP digests',
                    type=partial(str.split, sep=','))
     p.add_argument('--dhchap-dhgroups', help='Comma-separated list of allowed DH-HMAC-CHAP DH groups',

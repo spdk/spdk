@@ -42,63 +42,6 @@ rpc_nvmf_set_max_subsystems(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("nvmf_set_max_subsystems", rpc_nvmf_set_max_subsystems,
 		  SPDK_RPC_STARTUP)
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_set_config_discovery_filter,
-			      "use discovery_filters instead of discovery_filter", "v27.01",
-			      SPDK_LOG_DEPRECATION_EVERY_24H);
-
-static int
-decode_discovery_filter(const struct spdk_json_val *val, void *out)
-{
-	uint32_t *_filter = out;
-	uint32_t filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
-	char *tokens = spdk_json_strdup(val);
-	char *tok;
-	char *sp = NULL;
-	int rc = -EINVAL;
-	bool all_specified = false;
-
-	SPDK_LOG_DEPRECATED(nvmf_set_config_discovery_filter);
-
-	if (!tokens) {
-		return -ENOMEM;
-	}
-
-	tok = strtok_r(tokens, ",", &sp);
-	while (tok) {
-		if (strncmp(tok, "match_any", 9) == 0) {
-			if (filter != SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY) {
-				goto out;
-			}
-			filter = SPDK_NVMF_TGT_DISCOVERY_FILTER_ANY;
-			all_specified = true;
-		} else {
-			if (all_specified) {
-				goto out;
-			}
-			if (strncmp(tok, "transport", 9) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_TYPE);
-			} else if (strncmp(tok, "address", 7) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_ADDRESS);
-			} else if (strncmp(tok, "svcid", 5) == 0) {
-				filter |= SPDK_BIT(SPDK_NVMF_TGT_DISCOVERY_FILTER_SVCID);
-			} else {
-				SPDK_ERRLOG("Invalid value %s\n", tok);
-				goto out;
-			}
-		}
-
-		tok = strtok_r(NULL, ",", &sp);
-	}
-
-	rc = 0;
-	*_filter = filter;
-
-out:
-	free(tokens);
-
-	return rc;
-}
-
 static int
 nvmf_is_subset_of_env_core_mask(const struct spdk_cpuset *set)
 {
@@ -148,7 +91,6 @@ nvmf_decode_poll_groups_mask(const struct spdk_json_val *val, void *out)
 static const struct spdk_json_object_decoder rpc_nvmf_set_config_decoders_manual[] = {
 	{"admin_cmd_passthru", offsetof(struct spdk_nvmf_tgt_conf, admin_passthru), rpc_decode_nvmf_admin_cmd_passthru, true},
 	{"poll_groups_mask", 0, nvmf_decode_poll_groups_mask, true},
-	{"discovery_filter", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), decode_discovery_filter, true},
 	{"discovery_filters", offsetof(struct spdk_nvmf_tgt_conf, opts.discovery_filter), rpc_decode_nvmf_discovery_filters, true},
 	{"dhchap_digests", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_digests), rpc_decode_dhchap_digests, true},
 	{"dhchap_dhgroups", offsetof(struct spdk_nvmf_tgt_conf, opts.dhchap_dhgroups), rpc_decode_dhchap_dhgroups, true},

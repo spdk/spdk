@@ -4090,10 +4090,6 @@ methods:
       - name: poll_groups_mask
         type: string
         description: CPU mask for NVMe-oF poll groups
-      - name: discovery_filter
-        type: string
-        deprecated: true
-        description: Deprecated, use discovery_filters instead
       - name: discovery_filters
         type: bitmask
         class: nvmf_discovery_filters

@@ -2,6 +2,11 @@
 
 ## v27.01: (Upcoming Release)
 
+### nvmf
+
+Removed the deprecated `discovery_filter` parameter from the `nvmf_set_config` RPC.
+Use `discovery_filters` instead.
+
 ## v26.09
 
 ### accel
