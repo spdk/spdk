@@ -61,7 +61,7 @@ if ! [[ "$SPDK_TEST_NVMF_NICS" == "e810" && "$TEST_TRANSPORT" == "rdma" ]]; then
 fi
 # this perf run aims to test handling of multi SGL payload in RDMA transport. Here we send 9 sge elements while
 # standard read_depth is 16. That triggers split of Write IO into several parts
-run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 36964 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4
+run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 36864 -O 4096 -w randrw -M 50 -t 5 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" -c 0xf -P 4
 run_app "$SPDK_BIN_DIR/spdk_nvme_perf" -q 128 -o 262144 -w randrw -M 50 -t 2 -r "trtype:$TEST_TRANSPORT adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" --transport-stat
 sync
 $rpc_py nvmf_delete_subsystem nqn.2016-06.io.spdk:cnode1
