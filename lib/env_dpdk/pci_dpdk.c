@@ -10,6 +10,7 @@
 
 extern struct dpdk_fn_table fn_table_2207;
 extern struct dpdk_fn_table fn_table_2211;
+extern struct dpdk_fn_table fn_table_2607;
 
 static struct dpdk_fn_table *g_dpdk_fn_table;
 
@@ -32,8 +33,8 @@ dpdk_pci_init(void)
 	 * Only DPDK in development has additional suffix past minor version.
 	 */
 	if (strlen(release) != 0) {
-		if (year == 26 && month == 7 && minor == 0) {
-			g_dpdk_fn_table = &fn_table_2211;
+		if (year == 26 && month == 11 && minor == 0) {
+			g_dpdk_fn_table = &fn_table_2607;
 			SPDK_NOTICELOG("In-development %s is used. There is no support for it in SPDK. "
 				       "Enabled only for validation.\n", rte_version());
 			return 0;
@@ -84,12 +85,14 @@ dpdk_pci_init(void)
 		/* There were no changes between 22.11 and 25.*, so use the 22.11 implementation. */
 		g_dpdk_fn_table = &fn_table_2211;
 	} else if (year == 26) {
-		/* Only 26.03.0 is supported. */
-		if (month != 3 || minor != 0) {
+		if (month == 7 && minor == 0) {
+			/* DPDK 26.07 changed PCI internal structs, need new compat layer. */
+			g_dpdk_fn_table = &fn_table_2607;
+		} else if (month == 3 && minor == 0) {
+			g_dpdk_fn_table = &fn_table_2211;
+		} else {
 			goto not_supported;
 		}
-		/* There were no changes between 22.11 and 26.*, so use the 22.11 implementation. */
-		g_dpdk_fn_table = &fn_table_2211;
 	} else if (year < 21 || (year == 21 && month < 11)) {
 		goto not_supported;
 	} else {
