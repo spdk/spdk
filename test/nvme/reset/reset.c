@@ -55,6 +55,7 @@ static TAILQ_HEAD(, ns_entry) g_namespaces = TAILQ_HEAD_INITIALIZER(g_namespaces
 static int g_num_namespaces = 0;
 static struct worker_thread *g_worker = NULL;
 static bool g_qemu_ssd_found = false;
+static bool g_detach_failed = false;
 
 static uint64_t g_tsc_rate;
 
@@ -502,6 +503,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		     spdk_pci_device_get_device_id(dev) == 0x0010)) {
 			g_qemu_ssd_found = true;
 			printf("Skipping QEMU NVMe SSD at %s\n", trid->traddr);
+			if (spdk_nvme_detach(ctrlr) != 0) {
+				fprintf(stderr, "Failed to detach skipped QEMU NVMe SSD at %s\n",
+					trid->traddr);
+				g_detach_failed = true;
+			}
 			return;
 		}
 	}
@@ -651,7 +657,7 @@ main(int argc, char **argv)
 
 	if (TAILQ_EMPTY(&g_controllers)) {
 		printf("No NVMe controller found, %s exiting\n", argv[0]);
-		return g_qemu_ssd_found ? 0 : 1;
+		return g_qemu_ssd_found && !g_detach_failed ? 0 : 1;
 	}
 
 	task_pool = spdk_mempool_create("task_pool", TASK_POOL_NUM,
@@ -686,6 +692,10 @@ cleanup:
 	unregister_controllers();
 	unregister_worker();
 	free_tasks();
+
+	if (g_detach_failed) {
+		rc = 1;
+	}
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occurred\n", argv[0]);
