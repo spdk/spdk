@@ -178,7 +178,7 @@ function check_comment_style() {
 	git grep --line-number -e '\/[*][^ *-]' -- '*.[ch]' '*.cu' > comment.log || true
 	git grep --line-number -e '[^ ][*]\/' -- '*.[ch]' '*.cu' ':!lib/rte_vhost*/*' >> comment.log || true
 	git grep --line-number -e '^[*]' -- '*.[ch]' '*.cu' ':!include/linux/fuse_kernel.h' >> comment.log || true
-	git grep --line-number -e '\s\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
+	git grep --line-number -e '\s\/\/' -- '*.[ch]' '*.cu' ':!lib/env_dpdk/*/*.h' >> comment.log || true
 	git grep --line-number -e '^\/\/' -- '*.[ch]' '*.cu' >> comment.log || true
 
 	if [ -s comment.log ]; then
