@@ -91,6 +91,9 @@ current behavior.
 
 ### nvmf
 
+Removed the deprecated `buf_cache_size` parameter of `nvmf_create_transport` and the
+transport-options alias. Use `iobuf_small_cache_size` instead.
+
 Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
 `nvmf_create_subsystem` RPC. Use `dmrsl` and `wzsl` instead.
 

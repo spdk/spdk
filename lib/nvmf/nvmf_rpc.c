@@ -1933,9 +1933,6 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
 			      "Use iobuf_large_cache_size and iobuf_small_cache_size instead", "v26.09",
 			      SPDK_LOG_DEPRECATION_ALWAYS);
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_buf_cache_size,
-			      "buf_cache_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
-
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
 
@@ -2089,11 +2086,6 @@ rpc_nvmf_create_transport(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		free_rpc_nvmf_create_transport_ext(ereq);
 		return;
-	}
-
-	/* buf_cache_size is a deprecated alias for iobuf_small_cache_size */
-	if (req->buf_cache_size != 0) {
-		req->iobuf_small_cache_size = req->buf_cache_size;
 	}
 
 #define X(f) opts.f = req->f;
