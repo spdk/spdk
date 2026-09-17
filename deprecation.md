@@ -99,10 +99,7 @@ count aggressively and can guarantee attached controllers advertise `NLBAF` < 4 
 
 ### sock
 
-#### `spdk_sock_group_add_sock_callbacks`
+#### uring `enable_recv_pipe`
 
-The remaining `cb_arg` parameter of `spdk_sock_group_add_sock` is deprecated and will be
-removed in v27.01. `spdk_sock_set_user_ctx()` updates a socket's callback context. In v26.09,
-`spdk_sock_group_add_sock()` overwrites that context with its `cb_arg` argument, so applications
-must still pass the intended context when adding a socket. Setting the context before adding
-the socket does not replace that argument.
+`enable_recv_pipe` is no longer used by the uring sock implementation. The option remains
+accepted by `spdk_sock_impl_set_opts`, but it is a no-op for uring and only applies to posix/ssl.
