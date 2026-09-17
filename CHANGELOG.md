@@ -91,6 +91,10 @@ current behavior.
 
 ### nvmf
 
+Removed the deprecated `num_shared_buffers` parameter of `nvmf_create_transport` and the
+unused transport-options field. Configure global pool counts with `iobuf_set_options` and
+per-transport caches with `iobuf_small_cache_size` and `iobuf_large_cache_size`.
+
 Removed the deprecated `buf_cache_size` parameter of `nvmf_create_transport` and the
 transport-options alias. Use `iobuf_small_cache_size` instead.
 

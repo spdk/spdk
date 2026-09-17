@@ -98,7 +98,8 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	max_io_size;
 	uint32_t	io_unit_size;
 	uint32_t	max_aq_depth;
-	uint32_t	num_shared_buffers;
+	/* Reserved bytes 20-23. */
+	uint8_t		reserved20[4];
 	uint32_t	iobuf_small_cache_size;
 	bool		dif_insert_or_strip;
 	bool		disable_command_passthru;

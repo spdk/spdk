@@ -1929,10 +1929,6 @@ struct rpc_nvmf_create_transport_ext {
 	int					status;
 };
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_num_shared_buffers,
-			      "Use iobuf_large_cache_size and iobuf_small_cache_size instead", "v26.09",
-			      SPDK_LOG_DEPRECATION_ALWAYS);
-
 SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
 
@@ -1951,7 +1947,6 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 	X(max_io_size)                  \
 	X(io_unit_size)                 \
 	X(max_aq_depth)                 \
-	X(num_shared_buffers)           \
 	X(iobuf_small_cache_size)       \
 	X(iobuf_large_cache_size)       \
 	X(dif_insert_or_strip)          \

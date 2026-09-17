@@ -3559,10 +3559,6 @@ methods:
       - name: max_aq_depth
         type: uint32
         description: Max number of admin cmds per AQ
-      - name: num_shared_buffers
-        type: uint32
-        deprecated: true
-        description: Number of pooled data buffers available to the transport. Deprecated, use iobuf_set_options instead
       - name: iobuf_small_cache_size
         type: uint32
         description: The number of shared buffers from a small iobuf pool to reserve for each poll group
