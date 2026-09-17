@@ -14,11 +14,14 @@
 
 #define RDMA_UT_UNITS_IN_MAX_IO 16
 
+/* Number of SGL entries the target supports unless configured otherwise. */
+#define NVMF_RDMA_DEFAULT_SGL_ENTRIES	16
+
 struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_queue_depth = SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH,
 	.max_qpairs_per_ctrlr = SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR,
 	.in_capsule_data_size = SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE,
-	.max_io_size = (SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
+	.max_io_size = (RDMA_UT_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
 	.iobuf_small_cache_size = SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE,
 	.kas = NVMF_DEFAULT_KAS,
@@ -184,7 +187,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rdma_req.req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
-	rtransport.transport.small_bufsize = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
+	rtransport.transport.small_bufsize = RDMA_UT_MIN_IO_BUFFER_SIZE;
 	rtransport.transport.large_bufsize = SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
 	rtransport.data_wr_pool = NULL;
 	rtransport.transport.ops = &ops;
@@ -277,8 +280,8 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 
 	/* Restore config defaults */
 	rtransport.transport.large_bufsize = SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
-	rtransport.transport.small_bufsize = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
-	rtransport.transport.opts.max_io_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
+	rtransport.transport.small_bufsize = RDMA_UT_MIN_IO_BUFFER_SIZE;
+	rtransport.transport.opts.max_io_size = RDMA_UT_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
 
 	rdma_req.recv->buf = (void *)0xDDDD;
 	/* Test 2: sgl type: keyed data block subtype: offset (in capsule data) */
@@ -411,7 +414,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
 
 	/* Restore config defaults */
-	rtransport.transport.opts.max_io_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
+	rtransport.transport.opts.max_io_size = RDMA_UT_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
 
 	/* part 4: 2 segments, one very large, one very small, length of both equals large_iobuf_size
 	 One large iobuf is allocated */
@@ -496,7 +499,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
 
 	/* Restore config defaults */
-	rtransport.transport.opts.max_io_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
+	rtransport.transport.opts.max_io_size = RDMA_UT_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO;
 
 	/* part 4: 2 SGL descriptors, each length is transport buffer / 2
 	 * 1 transport buffers should be allocated */
@@ -654,7 +657,7 @@ test_spdk_nvmf_rdma_request_process(void)
 	qpair_reset(&rqpair, &poller, &device, &resources, &rtransport.transport);
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
-	rtransport.transport.small_bufsize = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE;
+	rtransport.transport.small_bufsize = RDMA_UT_MIN_IO_BUFFER_SIZE;
 	rtransport.transport.large_bufsize = SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
 	rtransport.data_wr_pool = spdk_mempool_create("test_wr_pool", 128,
 				  sizeof(struct spdk_nvmf_rdma_request_data),

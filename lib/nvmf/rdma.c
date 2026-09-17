@@ -32,15 +32,12 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma;
 /*
  RDMA Connection Resource Defaults
  */
-#define NVMF_DEFAULT_MSDBD		16
+#define NVMF_DEFAULT_MSDBD		SPDK_NVMF_MAX_SGL_ENTRIES
 #define NVMF_DEFAULT_TX_SGE		SPDK_NVMF_MAX_SGL_ENTRIES
 #define NVMF_DEFAULT_RSP_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
 #define NVMF_RDMA_MAX_EVENTS_PER_POLL	32
-
-SPDK_STATIC_ASSERT(NVMF_DEFAULT_MSDBD <= SPDK_NVMF_MAX_SGL_ENTRIES,
-		   "MSDBD must not exceed SPDK_NVMF_MAX_SGL_ENTRIES");
 
 /* The RDMA completion queue size */
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
@@ -2294,7 +2291,6 @@ nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR 128
 #define SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
-#define SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 #define SPDK_NVMF_RDMA_DEFAULT_SMALL_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_RDMA_DEFAULT_LARGE_BUFFER_CACHE_SIZE UINT32_MAX
 #define SPDK_NVMF_RDMA_DEFAULT_NO_SRQ false
@@ -2552,8 +2548,8 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) * SPDK_NVMF_MAX_SGL_ENTRIES;
 	if (opts->in_capsule_data_size < min_in_capsule_data_size) {
-		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=16\n",
-			     min_in_capsule_data_size);
+		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=%u\n",
+			     min_in_capsule_data_size, SPDK_NVMF_MAX_SGL_ENTRIES);
 		opts->in_capsule_data_size = min_in_capsule_data_size;
 	}
 
@@ -3761,11 +3757,13 @@ static void
 nvmf_rdma_cdata_init(struct spdk_nvmf_transport *transport, struct spdk_nvmf_subsystem *subsystem,
 		     struct spdk_nvmf_ctrlr_data *cdata)
 {
+	struct spdk_nvmf_transport_opts *opts = &transport->opts;
+
 	cdata->nvmf_specific.msdbd = NVMF_DEFAULT_MSDBD;
 
-	if (cdata->nvmf_specific.ioccsz > ((sizeof(struct spdk_nvme_cmd) + 0x1000) / 16)) {
-		SPDK_WARNLOG("RDMA is configured to support up to 16 SGL entries while in capsule"
-			     " data is greater than 4KiB.\n");
+	if (opts->in_capsule_data_size > 0x1000) {
+		SPDK_WARNLOG("In-capsule data is greater than 4KiB (MSDBD %u).\n",
+			     cdata->nvmf_specific.msdbd);
 		SPDK_WARNLOG("When used in conjunction with the NVMe-oF initiator from the Linux "
 			     "kernel between versions 5.4 and 5.12 data corruption may occur for "
 			     "writes that are not a multiple of 4KiB in size.\n");

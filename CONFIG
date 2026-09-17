@@ -238,6 +238,9 @@ CONFIG_MAX_LCORES=128
 # Maximum number of iobuf NUMA nodes supported
 CONFIG_MAX_NUMA_NODES=1
 
+# Maximum number of SGL entries per NVMe-oF target request
+CONFIG_NVMF_MAX_SGL_ENTRIES=16
+
 # Build all Go components
 CONFIG_GOLANG=n
 

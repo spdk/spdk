@@ -113,6 +113,11 @@ Removed `spdk_nvmf_request_get_dif_ctx()` and the deprecated DIF fields and stru
 Removed the deprecated `hide_metadata` parameter of `nvmf_subsystem_add_ns`. Configure metadata
 visibility with the transport's `dif_insert_or_strip` option instead.
 
+`SPDK_NVMF_MAX_SGL_ENTRIES` is no longer hardcoded to 16 and can be changed at build time with the
+new `--max-nvmf-sgl-entries` configure option. Raising it allows the RDMA transport to advertise a
+larger MSDBD on HCAs that support more SGL entries, at the cost of a larger
+`struct spdk_nvmf_request`.
+
 ### sock
 
 Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.

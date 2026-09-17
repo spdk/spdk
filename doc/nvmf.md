@@ -45,6 +45,15 @@ make
 
 Once built, the binary will be in `build/bin`.
 
+By default, the NVMe-oF target supports up to 16 Scatter/Gather List (SGL)
+entries per command, which is the value advertised as MSDBD to initiators.
+HCAs that support more entries can be exploited by raising this compile time
+limit, at the cost of a larger `struct spdk_nvmf_request`:
+
+~~~{.sh}
+./configure --with-rdma --max-nvmf-sgl-entries=52 <other config parameters>
+~~~
+
 ### Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
 
 Before starting our NVMe-oF target with the RDMA transport we must load the InfiniBand and RDMA modules

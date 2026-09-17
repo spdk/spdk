@@ -12,6 +12,7 @@
 #define SPDK_NVMF_TRANSPORT_H_
 
 #include "spdk/bdev.h"
+#include "spdk/config.h"
 #include "spdk/thread.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/nvmf.h"
@@ -24,7 +25,14 @@
 extern "C" {
 #endif
 
-#define SPDK_NVMF_MAX_SGL_ENTRIES	16
+#ifndef SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES
+/* Set this default temporarily, for users that may pull latest code without
+ * re-running configure.
+ */
+#define SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES 16
+#endif
+
+#define SPDK_NVMF_MAX_SGL_ENTRIES	SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES
 
 /* The maximum number of buffers per request */
 #define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2 + 1)
@@ -118,7 +126,12 @@ struct spdk_nvmf_request {
 	union spdk_nvme_parameter_error_location	error_location;
 	STAILQ_ENTRY(spdk_nvmf_request)	reservation_link;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) == 752, "Incorrect size");
+/* The iov array grows by two iovecs for every additional SGL entry, so the
+ * expected size can be derived from the size of the default configuration.
+ */
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_request) ==
+		   752 + (SPDK_NVMF_MAX_SGL_ENTRIES - 16) * 2 * sizeof(struct iovec),
+		   "Incorrect size");
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,

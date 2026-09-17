@@ -14,6 +14,12 @@
 #define RDMA_UT_LKEY 123
 #define RDMA_UT_RKEY 312
 
+/* Minimum IO buffer size that guarantees msdbd=NVMF_RDMA_DEFAULT_SGL_ENTRIES can be
+ * satisfied without depending on the build-time SPDK_NVMF_MAX_SGL_ENTRIES value.
+ * Callers must define NVMF_RDMA_DEFAULT_SGL_ENTRIES before using this macro.
+ */
+#define RDMA_UT_MIN_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / NVMF_RDMA_DEFAULT_SGL_ENTRIES)
+
 struct spdk_nvme_transport_opts g_spdk_nvme_transport_opts = {};
 struct spdk_nvme_accel_fn_table g_spdk_nvme_transport_accel_fn_table = {};
 void *g_spdk_nvme_transport_accel_ctx = NULL;

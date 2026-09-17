@@ -34,6 +34,8 @@ function usage() {
 	echo "                           compilation, and will set maximum number of lcores to this value"
 	echo " --max-numa-nodes=VAL      VAL defines maximum number of NUMA nodes supported for iobuf"
 	echo "                           buffer pools."
+	echo " --max-nvmf-sgl-entries=VAL VAL defines maximum number of SGL entries per NVMe-oF"
+	echo "                           target request (default: 16, max: 52)"
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
@@ -740,6 +742,14 @@ for i in "$@"; do
 			CONFIG[MAX_NUMA_NODES]="${i#*=}"
 			CONFIG["MAX_NUMA_NODES"]=${CONFIG["MAX_NUMA_NODES"],,}
 			;;
+		--max-nvmf-sgl-entries='')
+			echo "Must specify max number of SGL entries for --max-nvmf-sgl-entries"
+			usage
+			exit 1
+			;;
+		--max-nvmf-sgl-entries=*)
+			CONFIG[NVMF_MAX_SGL_ENTRIES]="${i#*=}"
+			;;
 		--with-aio-fsdev)
 			CONFIG[AIO_FSDEV]=y
 			AIO_FSDEV_REQUIRED=y
@@ -1414,6 +1424,20 @@ fi
 if [[ -n ${CONFIG[MAX_NUMA_NODES]} ]]; then
 	if [[ ! ${CONFIG[MAX_NUMA_NODES]} =~ ^([1-9][0-9]*)$ ]] || ((CONFIG[MAX_NUMA_NODES] > 16)); then
 		echo "ERROR: Max number of lcores must be a decimal number in range [1..16] (given: ${CONFIG[MAX_LCORES]})"
+		exit 1
+	fi
+fi
+
+if [[ -n ${CONFIG[NVMF_MAX_SGL_ENTRIES]} ]]; then
+	# The upper bound of 52 matches the maximum max_sge reported by the
+	# latest generation of NVIDIA ConnectX HCAs (e.g. ConnectX-7 /
+	# BlueField-3), which is the highest value validated for this option.
+	# Each extra SGL entry beyond the default of 16 adds two iovecs to
+	# every struct spdk_nvmf_request, so the cap also limits struct bloat.
+	if [[ ! ${CONFIG[NVMF_MAX_SGL_ENTRIES]} =~ ^([1-9][0-9]*)$ ]] || ((CONFIG[NVMF_MAX_SGL_ENTRIES] > 52)); then
+		echo "ERROR: Max number of NVMe-oF SGL entries must be a decimal number in range [1..52]" \
+			"(given: ${CONFIG[NVMF_MAX_SGL_ENTRIES]}). 52 matches the max_sge of" \
+			"the latest NVIDIA ConnectX HCAs; raise the bound only with explicit HCA validation."
 		exit 1
 	fi
 fi
