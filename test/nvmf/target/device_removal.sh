@@ -45,7 +45,7 @@ function create_subsystem_and_connect() {
 	local -gA netdev_nvme_dict
 	netdev_nvme_dict=()
 
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 "$@"
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS "$@"
 	for net_dev in $(get_rdma_if_list); do
 		netdev_nvme_dict[$net_dev]="$(create_subsystem_and_connect_on_netdev $net_dev)"
 	done
@@ -256,7 +256,7 @@ function test_bonding_slaves_on_nics() {
 	sleep 5
 
 	nvmfappstart -m "$tgt_core_mask"
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 	create_subsystem_and_connect_on_netdev $BOND_NAME
 

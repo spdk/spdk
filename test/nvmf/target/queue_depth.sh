@@ -20,7 +20,7 @@ nvmftestinit
 
 nvmfappstart -m 0x2
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc0

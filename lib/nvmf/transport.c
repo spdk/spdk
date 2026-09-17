@@ -633,7 +633,7 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 	/* iobuf_small_cache_size of UINT32_MAX means the value should be calculated dynamically
 	 * based on the number of buffers in the shared pool and the number of poll groups
 	 * that are sharing them.  We allocate 50% of the pool for the cache, and then
-	 * divide that by number of poll groups to determine the buf_cache_size for this
+	 * divide that by number of poll groups to determine the small cache size for this
 	 * poll group.
 	 */
 	if (small_cache_size == UINT32_MAX) {

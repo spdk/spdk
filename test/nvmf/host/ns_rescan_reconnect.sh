@@ -47,7 +47,7 @@ bdevperf_pid=$!
 
 trap 'cleanup; exit 1' SIGINT SIGTERM EXIT
 
-$tgt_rpc nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$tgt_rpc nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $tgt_rpc bdev_null_create null0 "$NULL_BDEV_SIZE" 512
 $tgt_rpc bdev_null_create null1 "$NULL_BDEV_SIZE" 512
 $tgt_rpc nvmf_create_subsystem "$SUBNQN" --allow-any-host

@@ -64,7 +64,7 @@ function migration_tc2_configure_vhost() {
 	# Override the trap set in place via nvmfappstart()
 	trap 'migration_tc2_error_cleanup; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR EXIT
 	rpc_cmd framework_start_init
-	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS
 	mapfile -t json < <("$rootdir/scripts/gen_nvme.sh")
 	rpc_cmd load_subsystem_config -j "'${json[*]}'"
 	timing_exit start_nvmf_tgt

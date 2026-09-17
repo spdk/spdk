@@ -224,7 +224,7 @@ test_nvmf_transport_poll_group_create(void)
 	ops.poll_group_create = ut_poll_group_create;
 	ops.poll_group_destroy = ut_poll_group_destroy;
 	transport.ops = &ops;
-	transport.opts.buf_cache_size = SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE;
+	transport.opts.iobuf_small_cache_size = SPDK_NVMF_DEFAULT_BUFFER_CACHE_SIZE;
 
 	poll_group = nvmf_transport_poll_group_create(&transport, NULL);
 	SPDK_CU_ASSERT_FATAL(poll_group != NULL);

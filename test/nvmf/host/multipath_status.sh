@@ -31,7 +31,7 @@ nvmftestinit
 nvmfappstart -m 0x3
 nvmfapp_pid=$!
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 # Set -r to enable ANA reporting feature
 $rpc_py nvmf_create_subsystem $NQN -a -s SPDK00000000000001 -r -m 2

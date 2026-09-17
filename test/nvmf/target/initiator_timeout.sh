@@ -22,7 +22,7 @@ $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 # We cannot configure the bdev with an incredibly high latency up front because connect will not work properly.
 $rpc_py bdev_delay_create -b Malloc0 -d Delay0 -r 30 -t 30 -w 30 -n 30
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 $rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL
 $rpc_py nvmf_subsystem_add_ns $subnqn Delay0
 $rpc_py nvmf_subsystem_add_listener $subnqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT

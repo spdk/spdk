@@ -18,7 +18,7 @@ rpc_py="$rootdir/scripts/rpc.py"
 nvmftestinit
 nvmfappstart -m 0x3
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 # Construct a RAID volume for the logical volume store
 base_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "

@@ -42,7 +42,7 @@ nvmfappstart -m 0x2
 # Start target with single null bdev
 $rpc_py << CFG
 	log_set_flag bdev_null
-	nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+	nvmf_create_transport $NVMF_TRANSPORT_OPTS
 	nvmf_subsystem_add_listener $discovery_nqn -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP \
 		-s $discovery_port
 	bdev_null_create null0 1000 512

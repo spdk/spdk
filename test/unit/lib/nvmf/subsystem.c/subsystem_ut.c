@@ -3499,7 +3499,6 @@ test_spdk_nvmf_subsystem_add_host(void)
 	const char subsystemnqn[] = "nqn.2016-06.io.spdk:subsystem1";
 	struct spdk_nvmf_transport_opts opts = {
 		.opts_size = sizeof(struct spdk_nvmf_transport_opts),
-		.io_unit_size = 8192,
 		.kas = NVMF_DEFAULT_KAS,
 		.min_kato = NVMF_DEFAULT_MIN_KATO,
 	};

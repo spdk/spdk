@@ -20,7 +20,7 @@ fi
 nvmftestinit
 nvmfappstart -m 0xF
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 # Use at least 4 subsystems so they spill over to a second discovery log page
 for i in $(seq 1 4); do

@@ -35,7 +35,7 @@ $rpc_py bdev_set_options --iobuf-small-cache-size 0 --iobuf-large-cache-size 0
 $rpc_py iobuf_set_options --large-pool-count 8 --large-bufsize=131072 --small-pool-count 64
 $rpc_py framework_start_init
 $rpc_py bdev_malloc_create -b Malloc0 32 512
-$rpc_py nvmf_create_transport "$NVMF_TRANSPORT_OPTS" -u 8192 --iobuf-large-cache-size 1 --iobuf-small-cache-size 0
+$rpc_py nvmf_create_transport "$NVMF_TRANSPORT_OPTS" --iobuf-large-cache-size 1 --iobuf-small-cache-size 0
 $rpc_py nvmf_create_subsystem "$subnqn" -a -s SPDK00000000000001
 $rpc_py nvmf_subsystem_add_ns "$subnqn" Malloc0
 $rpc_py nvmf_subsystem_add_listener "$subnqn" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"

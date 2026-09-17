@@ -97,7 +97,7 @@ lvs_grow() {
 
 nvmftestinit
 nvmfappstart -m 0x1
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 run_test "lvs_grow_clean" lvs_grow
 run_test "lvs_grow_dirty" lvs_grow dirty

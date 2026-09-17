@@ -40,7 +40,7 @@ function adq_configure_nvmf_target() {
 	socket_impl=$("$rpc_py" sock_get_default_impl | jq -r '.impl_name')
 	$rpc_py sock_impl_set_options --enable-placement-id $1 --zerocopy-send-server -i $socket_impl
 	$rpc_py framework_start_init
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --io-unit-size 8192 --sock-priority $1
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS --sock-priority $1
 	$rpc_py bdev_malloc_create 64 512 -b Malloc1
 	$rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 Malloc1

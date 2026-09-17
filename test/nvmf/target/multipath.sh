@@ -56,7 +56,7 @@ fi
 
 nvmfappstart -m 0xF
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_create_subsystem "$nqn" -a -s "$NVMF_SERIAL" -r

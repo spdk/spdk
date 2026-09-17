@@ -50,7 +50,7 @@ hostrpc() { "$rpc_py" -s "$hostsock" "$@"; }
 nvmftestinit
 nvmfappstart
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512

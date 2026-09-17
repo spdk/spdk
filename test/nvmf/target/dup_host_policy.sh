@@ -30,7 +30,7 @@ nvmfappstart -m 0xF --wait-for-rpc
 
 $rpc_py nvmf_set_config --dup-host-policy restrict_per_listener
 $rpc_py framework_start_init
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 $rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b Malloc0
 $rpc_py nvmf_create_subsystem "$subnqn" -a -s "$NVMF_SERIAL"

@@ -18,7 +18,7 @@ function starttarget() {
 	# Start the target
 	nvmfappstart -m 0xE
 
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 	num_subsystems=({1..10})
 

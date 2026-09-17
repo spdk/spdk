@@ -17,7 +17,7 @@ aer_rpc_py="$rpc_py -s $aer_socket --plugin aer_plugin"
 nvmftestinit
 nvmfappstart -m 0xF
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 $rpc_py bdev_malloc_create 64 512 --name Malloc0
 $rpc_py nvmf_create_subsystem nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -m 2

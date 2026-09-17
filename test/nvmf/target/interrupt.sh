@@ -15,7 +15,7 @@ nvmftestinit
 nvmfappstart -m 0x3
 setup_bdev_aio
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -q 256
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -q 256
 $rpc_py nvmf_create_subsystem $NQN -a -s $NVMF_SERIAL
 $rpc_py nvmf_subsystem_add_ns $NQN AIO0
 $rpc_py nvmf_subsystem_add_listener $NQN -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT

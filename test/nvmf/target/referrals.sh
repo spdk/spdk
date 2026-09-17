@@ -37,7 +37,7 @@ get_discovery_entries() {
 nvmftestinit
 nvmfappstart -m 0xF
 
-rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS
 rpc_cmd nvmf_subsystem_add_listener -t $TEST_TRANSPORT -a $NVMF_FIRST_TARGET_IP -s 8009 discovery
 
 # Add a referral to another discovery service

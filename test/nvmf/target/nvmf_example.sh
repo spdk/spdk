@@ -42,7 +42,7 @@ nvmftestinit
 nvmfexamplestart "-m 0xF"
 
 #create transport
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 #create malloc bdev
 malloc_bdevs="$($rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE) "
 #create subsystem

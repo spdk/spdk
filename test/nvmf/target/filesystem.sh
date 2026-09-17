@@ -50,7 +50,7 @@ function nvmf_filesystem_part() {
 	nvmfappstart -m 0xF
 	malloc_name=Malloc1
 
-	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192 -c $in_capsule
+	$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -c $in_capsule
 	$rpc_py bdev_malloc_create $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE -b $malloc_name
 	$rpc_py nvmf_create_subsystem $subnqn -a -s $NVMF_SERIAL
 	$rpc_py nvmf_subsystem_add_ns $subnqn $malloc_name

@@ -50,7 +50,7 @@ spdk_target() {
 		bdev_name="${bdev_name}n1"
 	fi
 
-	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+	rpc_cmd nvmf_create_transport $NVMF_TRANSPORT_OPTS
 	rpc_cmd nvmf_create_subsystem "$NVME_SUBNQN" -a -s "$NVMF_SERIAL"
 	rpc_cmd nvmf_subsystem_add_ns "$NVME_SUBNQN" "${bdev_name}"
 	rpc_cmd nvmf_subsystem_add_listener "$NVME_SUBNQN" -t "$TEST_TRANSPORT" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"

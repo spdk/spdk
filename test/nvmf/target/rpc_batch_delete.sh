@@ -61,7 +61,7 @@ test_batch_delete_duplicate() {
 nvmftestinit
 nvmfappstart -m 0x1
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 run_test "batch_delete_all" test_batch_delete_all
 run_test "batch_delete_duplicate" test_batch_delete_duplicate

@@ -29,7 +29,7 @@ stats=$($rpc_py nvmf_get_stats)
 (($(jcount '.poll_groups[].name' <<< "$stats") == 4))
 [[ $(jq '.poll_groups[0].transports[0]' <<< "$stats") == null ]]
 
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 stats=$($rpc_py nvmf_get_stats)
 # Expect no QPs
