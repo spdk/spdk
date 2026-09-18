@@ -15,6 +15,7 @@
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
 DEFINE_STUB(nvme_ctrlr_multi_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
+DEFINE_STUB(nvme_ctrlr_nvm_iocs_enabled, bool, (struct spdk_nvme_ctrlr *ctrlr), false);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
 DEFINE_STUB(nvme_ctrlr_identify_ns_error_is_fatal, bool,
 	    (struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_cpl *cpl), true);
@@ -659,6 +660,8 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns ns = { .ctrlr = &ctrlr, };
 
+	MOCK_SET(nvme_ctrlr_nvm_iocs_enabled, true);
+
 	/* case 1: ns.csi == SPDK_NVME_CSI_NVM && !ctrlr.cdata.ctratt.elbas.
 	 * Expect: false */
 	ns.csi = SPDK_NVME_CSI_NVM;
@@ -675,6 +678,8 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 	/* case 4: ns.csi == SPDK_NVME_CSI_KV. Expect: true */
 	ns.csi = SPDK_NVME_CSI_KV;
 	CU_ASSERT(nvme_ns_has_supported_iocs_specific_data(&ns) == true);
+
+	MOCK_SET(nvme_ctrlr_nvm_iocs_enabled, false);
 }
 
 static void

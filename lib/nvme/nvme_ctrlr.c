@@ -139,7 +139,7 @@ nvme_ctrlr_multi_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr)
 	       ctrlr->opts.command_set == SPDK_NVME_CC_CSS_IOCS;
 }
 
-static bool
+bool
 nvme_ctrlr_nvm_iocs_enabled(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->cap.bits.css & SPDK_NVME_CAP_CSS_NVM &&
@@ -3073,13 +3073,6 @@ nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns)
 static int
 nvme_ctrlr_identify_namespaces_iocs_specific(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (!nvme_ctrlr_multi_iocs_enabled(ctrlr)) {
-		/* Multi IOCS not supported/enabled, move on to the next state */
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES,
-				     ctrlr->opts.admin_timeout_ms);
-		return 0;
-	}
-
 	return nvme_ctrlr_identify_namespaces_iocs_specific_next(ctrlr, 0);
 }
 

@@ -806,15 +806,11 @@ nvme_ns_has_supported_iocs_specific_data(struct spdk_nvme_ns *ns)
 {
 	switch (ns->csi) {
 	case SPDK_NVME_CSI_NVM:
-		if (ns->ctrlr->cdata.ctratt.elbas) {
-			return true;
-		}
-
-		return false;
+		return ns->ctrlr->cdata.ctratt.elbas &&
+		       nvme_ctrlr_nvm_iocs_enabled(ns->ctrlr);
 	case SPDK_NVME_CSI_ZNS:
-		return true;
 	case SPDK_NVME_CSI_KV:
-		return true;
+		return nvme_ctrlr_multi_iocs_enabled(ns->ctrlr);
 	default:
 		NVME_CTRLR_WARNLOG(ns->ctrlr, "Unsupported CSI: %u for NSID: %u\n", ns->csi, ns->id);
 		return false;
@@ -835,7 +831,6 @@ spdk_nvme_ns_get_ana_state(const struct spdk_nvme_ns *ns) {
 int
 nvme_ns_identify(struct spdk_nvme_ns *ns)
 {
-	struct spdk_nvme_ctrlr *ctrlr = ns->ctrlr;
 	int	rc;
 
 	assert(ns->id > 0);
@@ -854,8 +849,7 @@ nvme_ns_identify(struct spdk_nvme_ns *ns)
 		return rc;
 	}
 
-	if (nvme_ctrlr_multi_iocs_enabled(ctrlr) &&
-	    nvme_ns_has_supported_iocs_specific_data(ns)) {
+	if (nvme_ns_has_supported_iocs_specific_data(ns)) {
 		rc = nvme_ns_identify_iocs_specific(ns);
 		if (rc != 0) {
 			return rc;
