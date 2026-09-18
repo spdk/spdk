@@ -525,6 +525,23 @@ nvmf_subsystem_has_zns_iocs(struct spdk_nvmf_subsystem *subsystem)
 }
 
 static bool
+nvmf_subsystem_has_nvm_iocs(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	uint32_t i;
+
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		ns = subsystem->ns[i];
+		if (ns && ns->bdev && ns->csi == SPDK_NVME_CSI_NVM &&
+		    spdk_bdev_get_dif_type(ns->bdev) != SPDK_DIF_DISABLE &&
+		    spdk_bdev_get_dif_pi_format(ns->bdev) != SPDK_DIF_PI_FORMAT_16) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static bool
 nvmf_subsystem_has_kv_iocs(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_ns *ns;
@@ -3470,6 +3487,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->oaes.ns_attribute_notices = 1;
 		cdata->ctratt.hids = 1;
 		cdata->ctratt.fdps = ctrlr->subsys->fdp_supported;
+		cdata->ctratt.elbas = nvmf_subsystem_has_nvm_iocs(subsystem);
 		cdata->cntrltype = SPDK_NVME_CTRLR_IO;
 		/* We do not have any actual limitation to the number of abort commands.
 		 * We follow the recommendation by the NVMe specification.

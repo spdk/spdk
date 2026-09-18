@@ -244,6 +244,10 @@ DEFINE_STUB(spdk_bdev_get_max_open_zones, uint32_t,
 	    (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_is_zoned, bool, (const struct spdk_bdev *bdev), false);
 DEFINE_STUB(spdk_bdev_get_zone_size, uint64_t, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type, (const struct spdk_bdev *bdev),
+	    SPDK_DIF_DISABLE);
+DEFINE_STUB(spdk_bdev_get_dif_pi_format, enum spdk_dif_pi_format, (const struct spdk_bdev *bdev),
+	    SPDK_DIF_PI_FORMAT_16);
 DEFINE_STUB(spdk_bdev_get_nvme_csi, enum spdk_nvme_csi, (const struct spdk_bdev *bdev),
 	    SPDK_NVME_CSI_NVM);
 
