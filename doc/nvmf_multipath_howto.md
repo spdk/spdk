@@ -36,7 +36,7 @@ Start the target in the background and configure it:
 ~~~{.sh}
 cd spdk/
 ./build/bin/nvmf_tgt -m 0x3 &
-./scripts/rpc.py nvmf_create_transport -t tcp -o -u 8192
+./scripts/rpc.py nvmf_create_transport -t tcp -o
 ~~~
 
 Create a subsystem, with `-r` to enable ANA reporting feature:

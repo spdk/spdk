@@ -3558,10 +3558,6 @@ methods:
       - name: max_io_size
         type: uint32
         description: Max I/O size (bytes)
-      - name: io_unit_size
-        type: uint32
-        deprecated: true
-        description: I/O unit size (bytes). Deprecated, use iobuf_set_options instead.
       - name: max_aq_depth
         type: uint32
         description: Max number of admin cmds per AQ

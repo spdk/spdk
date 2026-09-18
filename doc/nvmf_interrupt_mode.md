@@ -36,8 +36,8 @@ application.
    interrupt-mode-specific transport options. vfio-user requires the `-M` flag:
 
    ```sh
-   scripts/rpc.py nvmf_create_transport -t TCP -u 16384 -c 8192
-   scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -i 131072 -c 8192
+   scripts/rpc.py nvmf_create_transport -t TCP -c 8192
+   scripts/rpc.py nvmf_create_transport -t RDMA -i 131072 -c 8192
    scripts/rpc.py nvmf_create_transport -t VFIOUSER -M
    ```
 

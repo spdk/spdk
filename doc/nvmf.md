@@ -159,14 +159,14 @@ working with NVMe over Fabrics specific RPCs can be found on the @ref jsonrpc_co
 Start the nvmf_tgt application with elevated privileges. Once the target is started,
 the nvmf_create_transport rpc can be used to initialize a given transport. Below is an
 example where the target is started and configured with two different transports.
-The RDMA transport is configured with an I/O unit size of 8192 bytes, max I/O size 131072 and an
-in capsule data size of 8192 bytes. The TCP transport is configured with an I/O unit size of
-16384 bytes, 8 max qpairs per controller, and an in capsule data size of 8192 bytes.
+The RDMA transport is configured with a max I/O size of 131072 bytes and an in capsule data size
+of 8192 bytes. The TCP transport is configured with 8 max qpairs per controller and an in capsule
+data size of 8192 bytes.
 
 ~~~{.sh}
 build/bin/nvmf_tgt
-scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -i 131072 -c 8192
-scripts/rpc.py nvmf_create_transport -t TCP -u 16384 -m 8 -c 8192
+scripts/rpc.py nvmf_create_transport -t RDMA -i 131072 -c 8192
+scripts/rpc.py nvmf_create_transport -t TCP -m 8 -c 8192
 ~~~
 
 Below is an example of creating a malloc bdev and assigning it to a subsystem. Adjust the bdevs,

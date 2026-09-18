@@ -92,7 +92,6 @@ def add_parser(subparsers):
     p.add_argument('-m', '--max-io-qpairs-per-ctrlr', help='Max number of IO qpairs per controller', type=int)
     p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
     p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes). Deprecated, use iobuf_set_options instead.', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('--iobuf-small-cache-size',
                    help="The number of shared buffers from a small iobuf pool to reserve for each poll group",

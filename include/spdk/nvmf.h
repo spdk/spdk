@@ -96,7 +96,8 @@ struct spdk_nvmf_transport_opts {
 	uint32_t	in_capsule_data_size;
 	/* used to calculate mdts */
 	uint32_t	max_io_size;
-	uint32_t	io_unit_size;
+	/* Reserved bytes 12-15. */
+	uint8_t         reserved12[4];
 	uint32_t	max_aq_depth;
 	/* Reserved bytes 20-23. */
 	uint8_t		reserved20[4];

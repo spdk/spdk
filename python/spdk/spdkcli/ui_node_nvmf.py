@@ -31,7 +31,7 @@ class UINVMfTransports(UINode):
             UINVMfTransport(transport, self)
 
     def ui_command_create(self, trtype, max_queue_depth=None, max_io_qpairs_per_ctrlr=None,
-                          in_capsule_data_size=None, max_io_size=None, io_unit_size=None, max_aq_depth=None):
+                          in_capsule_data_size=None, max_io_size=None, max_aq_depth=None):
         """Create a transport with given parameters
 
         Arguments:
@@ -40,14 +40,12 @@ class UINVMfTransports(UINode):
             max_io_qpairs_per_ctrlr - Optional parameter. 16 bit Integer, max value 65535.
             in_capsule_data_size - Optional parameter. 32 bit Integer, max value 4294967295
             max_io_size - Optional parameter. 32 bit integer, max value 4294967295
-            io_unit_size - Optional parameter. 32 bit integer, max value 4294967295
             max_aq_depth - Optional parameter. 32 bit integer, max value 4294967295
         """
         max_queue_depth = self.ui_eval_param(max_queue_depth, "number", None)
         max_io_qpairs_per_ctrlr = self.ui_eval_param(max_io_qpairs_per_ctrlr, "number", None)
         in_capsule_data_size = self.ui_eval_param(in_capsule_data_size, "number", None)
         max_io_size = self.ui_eval_param(max_io_size, "number", None)
-        io_unit_size = self.ui_eval_param(io_unit_size, "number", None)
         max_aq_depth = self.ui_eval_param(max_aq_depth, "number", None)
 
         self.get_root().create_nvmf_transport(trtype=trtype,
@@ -55,7 +53,6 @@ class UINVMfTransports(UINode):
                                               max_io_qpairs_per_ctrlr=max_io_qpairs_per_ctrlr,
                                               in_capsule_data_size=in_capsule_data_size,
                                               max_io_size=max_io_size,
-                                              io_unit_size=io_unit_size,
                                               max_aq_depth=max_aq_depth)
 
     def summary(self):

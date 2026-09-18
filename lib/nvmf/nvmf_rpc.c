@@ -1929,9 +1929,6 @@ struct rpc_nvmf_create_transport_ext {
 	int					status;
 };
 
-SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
-			      "io_unit_size is deprecated", "v26.09", SPDK_LOG_DEPRECATION_ALWAYS);
-
 /*
  * X-macro list of fields shared between rpc_nvmf_create_transport_ctx
  * and spdk_nvmf_transport_opts.  Each entry is X(field).
@@ -1945,7 +1942,6 @@ SPDK_LOG_DEPRECATION_REGISTER(nvmf_create_transport_io_unit_size,
 	X(max_queue_depth)              \
 	X(in_capsule_data_size)         \
 	X(max_io_size)                  \
-	X(io_unit_size)                 \
 	X(max_aq_depth)                 \
 	X(iobuf_small_cache_size)       \
 	X(iobuf_large_cache_size)       \

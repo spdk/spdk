@@ -128,7 +128,3 @@ These 3 APIs will be collapsed into a single replacement starting in v26.09.
 #### `spdk_sock_listen`, `spdk_sock_listen_ext`
 
 These two APIs will be collapsed into a single replacement starting in v26.09.
-
-#### `nvmf_create_transport`
-
-io-unit-size is NOP, it is deprecated and will be removed in v26.09 release.

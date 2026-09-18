@@ -91,6 +91,10 @@ current behavior.
 
 ### nvmf
 
+Removed the deprecated no-op `io_unit_size` parameter of `nvmf_create_transport` and the
+corresponding `spdk_nvmf_transport_opts` field. Transport buffer sizes are configured with
+`iobuf_set_options`.
+
 Removed the deprecated `num_shared_buffers` parameter of `nvmf_create_transport` and the
 unused transport-options field. Configure global pool counts with `iobuf_set_options` and
 per-transport caches with `iobuf_small_cache_size` and `iobuf_large_cache_size`.
