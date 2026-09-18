@@ -57,7 +57,7 @@ nvmfappstart -m 0xF
 trap cleanup SIGINT SIGTERM EXIT
 
 # Create transport
-$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS -u 8192
+$rpc_py nvmf_create_transport $NVMF_TRANSPORT_OPTS
 
 # Create a KV malloc bdev
 $rpc_py bdev_kvmalloc_create -b KVMalloc0
