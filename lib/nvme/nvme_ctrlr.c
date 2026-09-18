@@ -917,6 +917,10 @@ nvme_ctrlr_set_supported_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->log_page_supported[SPDK_NVME_LOG_COMMAND_EFFECTS_LOG] = true;
 	}
 
+	if (ctrlr->cdata.lpa.ts) {
+		ctrlr->log_page_supported[SPDK_NVME_LOG_TELEMETRY_HOST_INITIATED] = true;
+	}
+
 	if (ctrlr->cdata.cmic.anars) {
 		ctrlr->log_page_supported[SPDK_NVME_LOG_ASYMMETRIC_NAMESPACE_ACCESS] = true;
 		if (!ctrlr->opts.disable_read_ana_log_page) {
