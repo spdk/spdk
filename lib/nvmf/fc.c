@@ -1944,12 +1944,10 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_INFOLOG(nvmf_fc, "*** FC Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
-		     "  max_io_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
-		     "  max_aq_depth=%d\n",
+		     "  max_io_qpairs_per_ctrlr=%d, max_aq_depth=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr - 1,
-		     opts->io_unit_size,
 		     opts->max_aq_depth);
 
 	if (g_nvmf_ftransport) {
@@ -1963,9 +1961,9 @@ nvmf_fc_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	sge_count = opts->max_io_size / opts->io_unit_size;
+	sge_count = opts->max_io_size / SPDK_NVMF_FC_DEFAULT_IO_UNIT_SIZE;
 	if (sge_count > SPDK_NVMF_FC_DEFAULT_MAX_SGE) {
-		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
+		SPDK_ERRLOG("Unsupported max IO size specified, %d bytes\n", opts->max_io_size);
 		return NULL;
 	}
 

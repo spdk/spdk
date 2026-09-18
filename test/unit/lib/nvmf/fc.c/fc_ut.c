@@ -250,7 +250,6 @@ create_transport_test(void)
 	CU_ASSERT(opts.max_qpairs_per_ctrlr == g_nvmf_tprt->opts.max_qpairs_per_ctrlr);
 	CU_ASSERT(opts.in_capsule_data_size == g_nvmf_tprt->opts.in_capsule_data_size);
 	CU_ASSERT(opts.max_io_size == g_nvmf_tprt->opts.max_io_size);
-	CU_ASSERT(opts.io_unit_size == g_nvmf_tprt->opts.io_unit_size);
 	CU_ASSERT(opts.max_aq_depth == g_nvmf_tprt->opts.max_aq_depth);
 
 	set_thread(0);
@@ -268,7 +267,6 @@ create_transport_test(void)
 	opts.max_io_size = 1024 ^ 3;
 	CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 	opts.max_io_size = 999;
-	opts.io_unit_size = 1024;
 	CU_ASSERT(spdk_nvmf_transport_create("FC", &opts) == NULL);
 }
 
