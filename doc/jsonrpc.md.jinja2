@@ -2994,25 +2994,13 @@ Example response:
 
 #### Response
 
-Name of newly created bdev.
+{{ bdev_kvmalloc_create_response }}
 
 #### Example
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "KVMalloc0",
-    "max_key_size": 16,
-    "max_value_size": 131072,
-    "optimal_value_granularity": 4096
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_kvmalloc_create",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_kvmalloc_create", "-b", "KVMalloc0", "-k", "16", "-v", "131072", "-o", "4096") }}
 
 Example response:
 
@@ -3032,20 +3020,15 @@ Example response:
 
 {{ bdev_kvmalloc_delete_params }}
 
+#### Response
+
+{{ bdev_kvmalloc_delete_response }}
+
 #### Example
 
 Example request:
 
-~~~json
-{
-  "params": {
-    "name": "KVMalloc0"
-  },
-  "jsonrpc": "2.0",
-  "method": "bdev_kvmalloc_delete",
-  "id": 1
-}
-~~~
+{{ example_request("bdev_kvmalloc_delete", "KVMalloc0") }}
 
 Example response:
 

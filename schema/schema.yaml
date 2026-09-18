@@ -1650,6 +1650,9 @@ methods:
       Construct a Key-Value bdev backed by malloc memory. The bdev reports support for the NVMe KV
       command set and serves Store, Retrieve, Delete, Exist, and List from an in-memory RB tree.
       It is intended for testing and development purposes.
+    result:
+      type: string
+      description: Name of newly created bdev.
     params:
       - name: name
         type: string
@@ -1671,6 +1674,9 @@ methods:
         description: NUMA node ID where memory is allocated, if -1 then any NUMA node ID can be used. Default is -1.
   - name: bdev_kvmalloc_delete
     description: Delete a Key-Value malloc bdev.
+    result:
+      type: boolean
+      description: true on success
     params:
       - name: name
         type: string
