@@ -769,9 +769,14 @@ static int
 bdev_malloc_get_memory_domain_types(void *ctx, enum spdk_dma_device_type *types,
 				    uint32_t array_size)
 {
+	struct malloc_disk *malloc_disk = ctx;
 	struct spdk_memory_domain *domains[16];
 	uint32_t i;
 	int rc;
+
+	if (malloc_disk->disk.dif_type != SPDK_DIF_DISABLE) {
+		return 0;
+	}
 
 	rc = spdk_accel_get_opc_memory_domains(SPDK_ACCEL_OPC_COPY, domains,
 					       SPDK_COUNTOF(domains));
