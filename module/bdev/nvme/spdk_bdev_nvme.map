@@ -8,6 +8,10 @@
 	spdk_bdev_nvme_set_opts;
 	spdk_bdev_nvme_delete;
 	spdk_bdev_nvme_get_path_stat;
+	spdk_bdev_nvme_path_first;
+	spdk_bdev_nvme_path_next;
+	spdk_bdev_nvme_path_get_ctrlr;
+	spdk_bdev_nvme_path_get_ana_state;
 
 	spdk_bdev_nvme_first_bdev_ctrlr;
 	spdk_bdev_nvme_next_bdev_ctrlr;

@@ -8571,6 +8571,87 @@ test_set_opts_rdma_umr_per_io(void)
 	CU_ASSERT(rc == 0);
 }
 
+static void
+test_bdev_nvme_path_iterators(void)
+{
+	struct spdk_bdev_nvme_path_id path1 = {}, path2 = {}, path3 = {};
+	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {};
+	struct spdk_nvme_ctrlr_opts drv_opts = {.hostnqn = UT_HOSTNQN};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_bdev_nvme_path *path;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_uuid uuid1 = {.u.raw = {0x1}};
+	const char *attached_names[UT_ATTACHED_NAMES_MAX] = {};
+	int path_count = 0;
+	int rc;
+
+	set_thread(0);
+	ut_init_trid(&path1.trid);
+	ut_init_trid2(&path2.trid);
+	ut_init_trid3(&path3.trid);
+	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
+	bdev_opts.multipath = true;
+
+	/* Attach 3 multipath controllers sharing namespace 1 */
+	ctrlr = ut_attach_ctrlr(&path1.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	ctrlr->ns[0].uuid = &uuid1;
+	ctrlr->ns[0].ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+
+	g_ut_attach_ctrlr_status = 0;
+	g_ut_attach_bdev_count = 1;
+	rc = spdk_bdev_nvme_create(&path1.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	rc = spdk_bdev_open_ext("nvme0n1", false, dummy_bdev_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+	ctrlr = ut_attach_ctrlr(&path2.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	ctrlr->ns[0].uuid = &uuid1;
+	ctrlr->ns[0].ana_state = SPDK_NVME_ANA_NON_OPTIMIZED_STATE;
+
+	rc = spdk_bdev_nvme_create(&path2.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	ctrlr = ut_attach_ctrlr(&path3.trid, 1, true, true);
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	ctrlr->ns[0].uuid = &uuid1;
+	ctrlr->ns[0].ana_state = SPDK_NVME_ANA_INACCESSIBLE_STATE;
+
+	rc = spdk_bdev_nvme_create(&path3.trid, "nvme0", attached_names, UT_ATTACHED_NAMES_MAX,
+				   attach_ctrlr_done, NULL, &drv_opts, &bdev_opts);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_attach();
+
+	/* Iterate through paths, count them, and verify getters work */
+	for (path = spdk_bdev_nvme_path_first(desc);
+	     path != NULL;
+	     path = spdk_bdev_nvme_path_next(desc, path)) {
+		path_count++;
+
+		CU_ASSERT(spdk_bdev_nvme_path_get_ctrlr(path) != NULL);
+		/* Ensure ANA state is one of the valid states we set */
+		CU_ASSERT(spdk_bdev_nvme_path_get_ana_state(path) == SPDK_NVME_ANA_OPTIMIZED_STATE ||
+			  spdk_bdev_nvme_path_get_ana_state(path) == SPDK_NVME_ANA_NON_OPTIMIZED_STATE ||
+			  spdk_bdev_nvme_path_get_ana_state(path) == SPDK_NVME_ANA_INACCESSIBLE_STATE);
+	}
+
+	CU_ASSERT(path_count == 3);
+
+	/* Cleanup */
+	spdk_bdev_close(desc);
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_delete();
+	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8641,6 +8722,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_multipath_opts_validation);
 	CU_ADD_TEST(suite, test_bdev_nvme_ctrlr_iterators);
 	CU_ADD_TEST(suite, test_set_opts_rdma_umr_per_io);
+	CU_ADD_TEST(suite, test_bdev_nvme_path_iterators);
 
 	allocate_threads(3);
 	set_thread(0);

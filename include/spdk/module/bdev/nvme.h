@@ -18,6 +18,7 @@ extern "C" {
 #endif
 
 struct spdk_bdev_nvme_ctrlr;
+struct spdk_bdev_nvme_path;
 
 /**
  * Per-path I/O statistics for an NVMe bdev.
@@ -251,6 +252,56 @@ int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_get_path_stat(struct spdk_bdev_desc *desc,
 				 spdk_bdev_nvme_get_path_stat_cb cb_fn,
 				 void *cb_arg);
+
+/**
+ * Get the first path for an NVMe bdev.
+ *
+ * Must be called from the app thread. The returned handle is valid only while
+ * the path remains attached to the bdev.
+ *
+ * \param desc Open descriptor for the NVMe bdev.
+ * \return The first path, or NULL if the bdev has no paths.
+ */
+struct spdk_bdev_nvme_path *spdk_bdev_nvme_path_first(struct spdk_bdev_desc *desc);
+
+/**
+ * Get the path after a given path.
+ *
+ * Must be called from the app thread. The returned handle is valid only while
+ * the path remains attached to the bdev.
+ *
+ * \param desc Open descriptor for the NVMe bdev.
+ * \param prev Previous path returned by spdk_bdev_nvme_path_first() or
+ *              spdk_bdev_nvme_path_next().
+ * \return The next path, or NULL if there are no more paths.
+ */
+struct spdk_bdev_nvme_path *spdk_bdev_nvme_path_next(
+	struct spdk_bdev_desc *desc, struct spdk_bdev_nvme_path *prev);
+
+/**
+ * Get the NVMe controller associated with a path.
+ *
+ * Must be called from the app thread. The returned pointer is valid only while
+ * the path's controller remains attached.
+ *
+ * \param path Path handle returned by spdk_bdev_nvme_path_first() or
+ *              spdk_bdev_nvme_path_next().
+ * \return The controller associated with the path.
+ */
+struct spdk_nvme_ctrlr *spdk_bdev_nvme_path_get_ctrlr(
+	const struct spdk_bdev_nvme_path *path);
+
+/**
+ * Get the current ANA state of a path.
+ *
+ * Must be called from the app thread.
+ *
+ * \param path Path handle returned by spdk_bdev_nvme_path_first() or
+ *              spdk_bdev_nvme_path_next().
+ * \return The current ANA state of the path.
+ */
+enum spdk_nvme_ana_state spdk_bdev_nvme_path_get_ana_state(
+	const struct spdk_bdev_nvme_path *path);
 
 /**
  * Get the first bdev_nvme controller group.

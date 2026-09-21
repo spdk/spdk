@@ -7113,6 +7113,60 @@ spdk_bdev_nvme_ctrlr_get_opts(struct spdk_bdev_nvme_ctrlr *_nbdev_ctrlr,
 	return &nvme_ctrlr->opts;
 }
 
+struct spdk_bdev_nvme_path *
+spdk_bdev_nvme_path_first(struct spdk_bdev_desc *desc)
+{
+	struct nvme_bdev *nbdev;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	nbdev = bdev_nvme_get_nbdev_from_desc(desc);
+	if (nbdev == NULL) {
+		return NULL;
+	}
+
+	return (struct spdk_bdev_nvme_path *)TAILQ_FIRST(&nbdev->nvme_ns_list);
+}
+
+struct spdk_bdev_nvme_path *
+spdk_bdev_nvme_path_next(struct spdk_bdev_desc *desc,
+			 struct spdk_bdev_nvme_path *prev)
+{
+	struct nvme_bdev *nbdev;
+	struct nvme_ns *nvme_ns;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	nbdev = bdev_nvme_get_nbdev_from_desc(desc);
+	if (nbdev == NULL || prev == NULL) {
+		return NULL;
+	}
+
+	nvme_ns = (struct nvme_ns *)prev;
+	return (struct spdk_bdev_nvme_path *)TAILQ_NEXT(nvme_ns, tailq);
+}
+
+struct spdk_nvme_ctrlr *
+spdk_bdev_nvme_path_get_ctrlr(const struct spdk_bdev_nvme_path *path)
+{
+	const struct nvme_ns *nvme_ns = (const struct nvme_ns *)path;
+
+	assert(spdk_thread_is_app_thread(NULL));
+	assert(nvme_ns != NULL);
+
+	return nvme_ns->ctrlr->ctrlr;
+}
+
+enum spdk_nvme_ana_state
+spdk_bdev_nvme_path_get_ana_state(const struct spdk_bdev_nvme_path *path) {
+	const struct nvme_ns *nvme_ns = (const struct nvme_ns *)path;
+
+	assert(spdk_thread_is_app_thread(NULL));
+	assert(nvme_ns != NULL);
+
+	return nvme_ns->ana_state;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
