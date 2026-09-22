@@ -12,6 +12,13 @@ structure to the public header `include/spdk/module/accel/mlx5.h`. This allows a
 configure and enable the MLX5 accelerator module with specific parameters such as queue size,
 number of requests, allowed devices, crypto split blocks, and driver mode for UMR operations.
 
+Added interrupt mode support to the software accel module.
+
+### bdev_kvmalloc
+
+Added the `kvmalloc` bdev module for in-memory NVMe Key Value namespaces, with
+`bdev_kvmalloc_create` and `bdev_kvmalloc_delete` RPCs.
+
 ### bdev_nvme
 
 Removed `spdk_bdev_nvme_set_multipath_policy()` and the matching `bdev_nvme_set_multipath_policy`
@@ -20,10 +27,24 @@ RPC. Use `spdk_bdev_nvme_create()` / `bdev_nvme_attach_controller` with multipat
 Removed the deprecated `BDEV_NVME_MP_POLICY_*` and `BDEV_NVME_MP_SELECTOR_*` aliases. Use
 `SPDK_BDEV_NVME_MULTIPATH_POLICY_*` and `SPDK_BDEV_NVME_MULTIPATH_SELECTOR_*` instead.
 
+Added `struct spdk_bdev_nvme_path_id` and updated `spdk_bdev_nvme_delete()` to use it.
+
+NVMe bdevs now propagate the namespace Command Set Identifier (CSI) for Key Value support.
+
 NVMe namespaces are now rescanned after a successful controller reconnect. This allows namespace
 attribute changes made while the controller was disconnected to be reflected in the corresponding
 bdev after reconnection. Inactive namespaces are retained during this rescan and are not
 depopulated, to avoid unexpected changes in upper layers.
+
+### build
+
+Added RISC-V cross-compilation and ISA-L support. Added `--without-isal-crypto` for builds
+without ISA-L Crypto.
+
+Added `--with-vmd` and `--without-vmd` configure options. VMD remains enabled by default on
+x86_64 and disabled on other architectures.
+
+Updated the ISA-L submodule to v2.32.1 and ISA-L Crypto to v2.26.1.
 
 ### nvme
 
@@ -32,6 +53,9 @@ Removed the deprecated `spdk_nvme_cpl_get_status_string()`, `spdk_nvme_print_com
 
 Removed the deprecated named `bits` alias from `spdk_nvme_cdata_ctratt`. Use the anonymous NVMe 2.3
 bitfields directly.
+
+The `error_location` field in `struct spdk_nvme_error_information_entry` is deprecated and will
+be removed in v27.01. Use the `pel` field instead.
 
 Added `spdk_nvme_ctrlr_opts.ns_data_alloc_mode` and the matching
 `enum spdk_nvme_ns_data_alloc_mode` with four values:
@@ -87,6 +111,12 @@ Added initiator-side interrupt mode support for the RDMA transport. Applications
 interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
 a completion channel instead of continuously polling.
 
+Added `spdk_nvme_ctrlr_opts.disable_sq_flow_control` to request disabled submission queue
+flow control for NVMe-oF connections.
+
+Added `--fua`, `--disable-sq-flow-control`, `--umr` and `--no-umr` to `spdk_nvme_perf`.
+UMR is not supported in interrupt mode.
+
 ### nvmf
 
 Removed the deprecated no-op `io_unit_size` parameter of `nvmf_create_transport` and the
@@ -114,6 +144,12 @@ Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` pa
 Removed the deprecated `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` aliases. Use
 `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` instead.
 
+Added the `discovery_filters` array to `nvmf_set_config`. It replaces `discovery_filter`, which
+is deprecated for removal in v27.01. Saved configurations use the array.
+
+Added NVMe 2.1 Extended Discovery Log Page support, including subsystem `admin_label`,
+`spdk_nvme_ctrlr_get_discovery_log_page_ext()` and `spdk_nvme_discover --extended`.
+
 Removed `spdk_nvmf_request_get_dif_ctx()` and the deprecated DIF fields and structures in
 `nvmf_transport.h`. DIF handling now uses the bdev layer through the namespace metadata policy.
 
@@ -125,9 +161,30 @@ is enabled on the TCP transport and the POSIX sock implementation is in use, eac
 DIF-protected namespace now incurs one additional data copy. The accel framework can offload the
 combined copy and DIF generate/verify to hardware when available.
 
+Targets now reject transports with conflicting `dif_insert_or_strip` settings and reject
+metadata-bearing namespaces whose metadata visibility conflicts with the transport policy.
+
+Added NVMe Key Value namespace support through NVMe passthru to backing bdevs.
+
+Added per-subsystem Volatile Write Cache reporting based on backing bdevs. The reported
+capability remains fixed while controllers are attached, and the cache cannot be disabled.
+
+Added NVMe-oF Error Information Log Page support. The initial implementation records only
+instrumented failures with known command-field error locations.
+
+### rdma_cm
+
+Added `lib/rdma_cm` for RDMA connection establishment. The `--with-rdma-cm` configure option
+selects `cma` (default) or `mock`.
+
 ### schema
 
 The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).
+
+### scripts
+
+Removed the deprecated `autorun_post.py` symlink from the repository root.
+Use `scripts/autorun_post.py` instead.
 
 ### sock
 
