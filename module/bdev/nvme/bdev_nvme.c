@@ -4808,6 +4808,7 @@ nbdev_create(struct spdk_bdev *disk, const char *base_name,
 			disk->dif_is_head_of_md = nsdata->dps.md_start;
 			disk->dif_check_flags = bdev_opts->prchk_flags;
 			disk->dif_pi_format = (enum spdk_dif_pi_format)spdk_nvme_ns_get_pi_format(ns);
+			disk->dif_storage_tag_size = spdk_nvme_ns_get_pi_storage_tag_size(ns);
 		}
 	}
 

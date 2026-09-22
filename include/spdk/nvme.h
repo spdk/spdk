@@ -3449,6 +3449,24 @@ enum spdk_nvme_pi_type spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns);
 enum spdk_nvme_pi_format spdk_nvme_ns_get_pi_format(struct spdk_nvme_ns *ns);
 
 /**
+ * Get the protection information storage tag size, in bits, of the given namespace.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
+ * \param ns Namespace to query.
+ *
+ * \return the storage tag size reported for the active LBA format, in bits.
+ * Returns zero if protection information is disabled, Extended LBA Formats are
+ * not supported, or NVM-specific Identify data is unavailable.
+ *
+ * \note With protection information enabled, 32-bit Guard PI requires a storage
+ * tag size of at least 16 bits. A zero returned because Identify data is unavailable
+ * does not describe the namespace's actual storage tag size.
+ */
+uint8_t spdk_nvme_ns_get_pi_storage_tag_size(struct spdk_nvme_ns *ns);
+
+/**
  * Get the metadata size, in bytes, of the given namespace.
  *
  * This function is thread safe and can be called at any point while the controller

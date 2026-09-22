@@ -257,6 +257,7 @@ part_test(void)
 	bdev_base.blocklen = 512;
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = &bdev_ut_if;
+	bdev_base.dif_storage_tag_size = 32;
 	rc = spdk_bdev_register(&bdev_base);
 	CU_ASSERT(rc == 0);
 	rc = spdk_bdev_part_base_construct_ext("base", NULL, &vbdev_ut_if,
@@ -268,10 +269,12 @@ part_test(void)
 
 	rc = spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(spdk_bdev_get_dif_storage_tag_size(&part1.internal.bdev) == 32);
 	SPDK_CU_ASSERT_FATAL(base->ref == 1);
 	SPDK_CU_ASSERT_FATAL(base->claimed == true);
 	rc = spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
+	CU_ASSERT(spdk_bdev_get_dif_storage_tag_size(&part2.internal.bdev) == 32);
 	SPDK_CU_ASSERT_FATAL(base->ref == 2);
 	SPDK_CU_ASSERT_FATAL(base->claimed == true);
 	rc = spdk_bdev_part_construct(&part3, base, "test1", 0, 100, "test");

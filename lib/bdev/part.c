@@ -592,6 +592,7 @@ spdk_bdev_part_construct_ext(struct spdk_bdev_part *part, struct spdk_bdev_part_
 	part->internal.bdev.dif_type = base->bdev->dif_type;
 	part->internal.bdev.dif_is_head_of_md = base->bdev->dif_is_head_of_md;
 	part->internal.bdev.dif_check_flags = base->bdev->dif_check_flags;
+	part->internal.bdev.dif_storage_tag_size = base->bdev->dif_storage_tag_size;
 
 	part->internal.bdev.name = strdup(name);
 	if (part->internal.bdev.name == NULL) {

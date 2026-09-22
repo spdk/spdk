@@ -19,6 +19,7 @@ nvme_ns_set_pi_format(struct spdk_nvme_ns *ns)
 	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 
 	ns->pi_format = SPDK_NVME_16B_GUARD_PI;
+	ns->pi_storage_tag_size = 0;
 
 	if (!(ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED)) {
 		return;
@@ -38,6 +39,7 @@ nvme_ns_set_pi_format(struct spdk_nvme_ns *ns)
 	}
 
 	ns->pi_format = nsdata_nvm->elbaf[spdk_nvme_ns_get_active_format_index(ns)].pif;
+	ns->pi_storage_tag_size = nsdata_nvm->elbaf[spdk_nvme_ns_get_active_format_index(ns)].sts;
 }
 
 /**
@@ -529,6 +531,12 @@ spdk_nvme_ns_get_pi_type(struct spdk_nvme_ns *ns) {
 enum spdk_nvme_pi_format
 spdk_nvme_ns_get_pi_format(struct spdk_nvme_ns *ns) {
 	return ns->pi_format;
+}
+
+uint8_t
+spdk_nvme_ns_get_pi_storage_tag_size(struct spdk_nvme_ns *ns)
+{
+	return ns->pi_storage_tag_size;
 }
 
 bool

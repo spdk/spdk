@@ -199,6 +199,18 @@ function confirm_abi_deps() {
 			soname_regexp = ^libspdk_nvme\\.so\\.18\\.*$|^libspdk_bdev_nvme\\.so\\.9\\.*$
 			has_data_member_regexp = ^(reserved610|ns_data_alloc_mode)$
 			has_size_change = no
+		[suppress_type]
+			label = Added dif_storage_tag_size using reserved space
+			name = spdk_bdev
+			soname_regexp = ^libspdk_bdev\\.so\\.20\\.*$
+			has_data_member_regexp = ^(reserved3|dif_storage_tag_size)$
+			has_size_change = no
+		[suppress_type]
+			label = Added dif_storage_tag_size in embedded bdev
+			name = spdk_bdev_part
+			soname_regexp = ^libspdk_bdev\\.so\\.20\\.*$
+			has_data_member = internal
+			has_size_change = no
 	EOF
 
 	for object in "$libdir"/libspdk_*.so; do

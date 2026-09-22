@@ -294,6 +294,7 @@ test_nvme_ns_set_identify_data(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
 	struct spdk_nvme_ns_data nsdata = {};
+	struct spdk_nvme_nvm_ns_data nvm_nsdata = {};
 
 	ns->ctrlr->cdata.oncs.nvmdsmsv = 1;
 	ns->ctrlr->cdata.oncs.nvmcmps = 1;
@@ -325,6 +326,7 @@ test_nvme_ns_set_identify_data(void)
 	CU_ASSERT(ns->sectors_per_max_io_no_md == 256);
 	CU_ASSERT(spdk_nvme_ns_get_pi_type(ns) == SPDK_NVME_FMT_NVM_PROTECTION_TYPE1);
 	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 0);
 
 	CU_ASSERT(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_EXTENDED_LBA_SUPPORTED);
 	CU_ASSERT(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_RESERVATION_SUPPORTED);
@@ -340,6 +342,52 @@ test_nvme_ns_set_identify_data(void)
 	nvme_ns_set_identify_data(ns, &nsdata);
 	CU_ASSERT(ns->sectors_per_max_io == 256);
 	CU_ASSERT(ns->sectors_per_max_io_no_md == 256);
+
+	nsdata.nlbaf = 1;
+	nsdata.flbas.format = 1;
+	nsdata.lbaf[1].lbads = 9;
+	nsdata.lbaf[1].ms = 16;
+	nvm_nsdata.elbaf[0].sts = 16;
+	nvm_nsdata.elbaf[1].sts = 32;
+	nvm_nsdata.elbaf[1].pif = SPDK_NVME_32B_GUARD_PI;
+	ns->nsdata_nvm = &nvm_nsdata;
+	ctrlr.cdata.ctratt.elbas = 1;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_32B_GUARD_PI);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+
+	ns->nsdata_nvm = NULL;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 0);
+	ns->nsdata_nvm = &nvm_nsdata;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+
+	ctrlr.cdata.ctratt.elbas = 0;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 0);
+	ctrlr.cdata.ctratt.elbas = 1;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+
+	nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 0);
+	nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+
+	nsdata.lbaf[1].ms = 0;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 0);
+	nsdata.lbaf[1].ms = 16;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+
+	memset(&nsdata, 0, sizeof(nsdata));
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_storage_tag_size(ns) == 32);
+	ns->nsdata_nvm = NULL;
 
 	ut_ns_free(ns);
 }

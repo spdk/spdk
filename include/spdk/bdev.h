@@ -711,6 +711,17 @@ enum spdk_dif_type spdk_bdev_desc_get_dif_type(struct spdk_bdev_desc *desc);
 enum spdk_dif_pi_format spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc);
 
 /**
+ * Get DIF Storage Tag Size (in bits) of the block device, specific to
+ * a bdev descriptor.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
+ * \param desc Open block device descriptor.
+ * \return DIF Storage Tag Size in bits of the block device.
+ */
+uint8_t spdk_bdev_desc_get_dif_storage_tag_size(struct spdk_bdev_desc *desc);
+
+/**
  * Check whether DIF is set in the first 8/16 bytes or the last 8/16 bytes of metadata,
  * specific to a bdev descriptor.
  *
@@ -1064,6 +1075,16 @@ enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev);
  * \return DIF protection information format of the block device.
  */
 enum spdk_dif_pi_format spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev);
+
+/**
+ * Get DIF Storage Tag Size (in bits) of the block device.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ *
+ * \param bdev Block device to query.
+ * \return DIF Storage Tag Size in bits of the block device.
+ */
+uint8_t spdk_bdev_get_dif_storage_tag_size(const struct spdk_bdev *bdev);
 
 /**
  * Check whether DIF is set in the first 8/16 bytes or the last 8/16 bytes of metadata.

@@ -916,15 +916,23 @@ test_create_raid(void)
 {
 	struct rpc_bdev_raid_create_ctx req;
 	struct rpc_bdev_raid_delete_ctx delete_req;
+	struct spdk_bdev *base_bdev;
+	struct raid_bdev *raid_bdev;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
 
 	verify_raid_bdev_present("raid1", false);
 	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
+	TAILQ_FOREACH(base_bdev, &g_bdev_list, internal.link) {
+		base_bdev->dif_storage_tag_size = 32;
+	}
 	rpc_bdev_raid_create(NULL, NULL);
 	CU_ASSERT(g_rpc_err == 0);
 	verify_raid_bdev(&req, true, SPDK_BDEV_RAID_STATE_ONLINE);
+	raid_bdev = raid_bdev_find_by_name("raid1");
+	SPDK_CU_ASSERT_FATAL(raid_bdev != NULL);
+	CU_ASSERT(raid_bdev->bdev.dif_storage_tag_size == 32);
 	free_test_req(&req);
 
 	create_raid_bdev_delete_req(&delete_req, "raid1", 0);
@@ -967,6 +975,7 @@ test_create_raid_invalid_args(void)
 	struct rpc_bdev_raid_create_ctx req;
 	struct rpc_bdev_raid_delete_ctx destroy_req;
 	struct raid_bdev *raid_bdev;
+	struct spdk_bdev *base_bdev;
 
 	set_globals();
 	CU_ASSERT(raid_bdev_init() == 0);
@@ -991,6 +1000,16 @@ test_create_raid_invalid_args(void)
 	CU_ASSERT(g_rpc_err == 1);
 	free_test_req(&req);
 	verify_raid_bdev_present("raid1", false);
+
+	base_bdev = TAILQ_LAST(&g_bdev_list, bdev);
+	SPDK_CU_ASSERT_FATAL(base_bdev != NULL);
+	base_bdev->dif_storage_tag_size = 32;
+	create_raid_bdev_create_req(&req, "raid1", 0, false, 0, false);
+	rpc_bdev_raid_create(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 1);
+	free_test_req(&req);
+	verify_raid_bdev_present("raid1", false);
+	base_bdev->dif_storage_tag_size = 0;
 
 	create_raid_bdev_create_req(&req, "raid1", 0, false, 0, false);
 	rpc_bdev_raid_create(NULL, NULL);

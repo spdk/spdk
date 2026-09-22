@@ -196,6 +196,8 @@ DEFINE_STUB(spdk_nvme_ns_get_pi_type, enum spdk_nvme_pi_type, (struct spdk_nvme_
 DEFINE_STUB(spdk_nvme_ns_get_pi_format, enum spdk_nvme_pi_format, (struct spdk_nvme_ns *ns),
 	    SPDK_NVME_16B_GUARD_PI);
 
+DEFINE_STUB(spdk_nvme_ns_get_pi_storage_tag_size, uint8_t, (struct spdk_nvme_ns *ns), 0);
+
 DEFINE_STUB(spdk_nvme_ns_supports_write_uncorrectable, bool, (struct spdk_nvme_ns *ns), true);
 
 DEFINE_STUB(spdk_nvme_ns_supports_compare, bool, (struct spdk_nvme_ns *ns), false);
@@ -3717,6 +3719,11 @@ test_add_multi_ns_to_bdev(void)
 	int rc;
 	struct spdk_bdev_nvme_ctrlr_opts bdev_opts = {0};
 
+	MOCK_SET(spdk_nvme_ns_get_md_size, 16);
+	MOCK_SET(spdk_nvme_ns_get_pi_type, SPDK_NVME_FMT_NVM_PROTECTION_TYPE3);
+	MOCK_SET(spdk_nvme_ns_get_pi_format, SPDK_NVME_32B_GUARD_PI);
+	MOCK_SET(spdk_nvme_ns_get_pi_storage_tag_size, 32);
+
 	spdk_bdev_nvme_get_default_ctrlr_opts(&bdev_opts);
 	bdev_opts.multipath = true;
 
@@ -3802,6 +3809,10 @@ test_add_multi_ns_to_bdev(void)
 	CU_ASSERT(nbdev2->ref == 1);
 	CU_ASSERT(nbdev3->ref == 1);
 	CU_ASSERT(nbdev4->ref == 1);
+	CU_ASSERT(nbdev1->disk.dif_storage_tag_size == 32);
+	CU_ASSERT(nbdev2->disk.dif_storage_tag_size == 32);
+	CU_ASSERT(nbdev3->disk.dif_storage_tag_size == 32);
+	CU_ASSERT(nbdev4->disk.dif_storage_tag_size == 32);
 
 	/* Test if nvme_bdevs can be deleted by deleting ctrlr one by one. */
 	rc = spdk_bdev_nvme_delete("nvme0", &path1, NULL, NULL);
@@ -3823,6 +3834,10 @@ test_add_multi_ns_to_bdev(void)
 	/* Test if a nvme_bdev which has a shared namespace between two ctrlrs
 	 * can be deleted when the bdev subsystem shutdown.
 	 */
+	MOCK_SET(spdk_nvme_ns_get_md_size, 0);
+	MOCK_SET(spdk_nvme_ns_get_pi_type, SPDK_NVME_FMT_NVM_PROTECTION_DISABLE);
+	MOCK_SET(spdk_nvme_ns_get_pi_format, SPDK_NVME_16B_GUARD_PI);
+	MOCK_SET(spdk_nvme_ns_get_pi_storage_tag_size, 0);
 	g_ut_attach_bdev_count = 1;
 
 	ctrlr1 = ut_attach_ctrlr(&path1.trid, 1, true, true);
@@ -3860,6 +3875,7 @@ test_add_multi_ns_to_bdev(void)
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr2 != NULL);
 
 	/* Check if a nvme_bdev has two nvme_ns. */
+	CU_ASSERT(nbdev1->disk.dif_storage_tag_size == 0);
 	nvme_ns1 = _nvme_bdev_get_ns(nbdev1, nvme_ctrlr1);
 	SPDK_CU_ASSERT_FATAL(nvme_ns1 != NULL);
 	CU_ASSERT(nvme_ns1->bdev == nbdev1);

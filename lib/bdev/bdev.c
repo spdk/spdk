@@ -5437,6 +5437,12 @@ spdk_bdev_get_dif_pi_format(const struct spdk_bdev *bdev)
 	return bdev->dif_pi_format;
 }
 
+uint8_t
+spdk_bdev_get_dif_storage_tag_size(const struct spdk_bdev *bdev)
+{
+	return bdev->dif_storage_tag_size;
+}
+
 bool
 spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev)
 {
@@ -5575,6 +5581,14 @@ spdk_bdev_desc_get_dif_pi_format(struct spdk_bdev_desc *desc)
 	struct spdk_bdev *bdev = desc->bdev;
 
 	return desc->opts.hide_metadata ? SPDK_DIF_PI_FORMAT_16 : spdk_bdev_get_dif_pi_format(bdev);
+}
+
+uint8_t
+spdk_bdev_desc_get_dif_storage_tag_size(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+
+	return desc->opts.hide_metadata ? 0 : spdk_bdev_get_dif_storage_tag_size(bdev);
 }
 
 bool

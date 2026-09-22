@@ -683,6 +683,7 @@ vbdev_passthru_register(const char *bdev_name)
 		pt_node->pt_bdev.dif_is_head_of_md = bdev->dif_is_head_of_md;
 		pt_node->pt_bdev.dif_check_flags = bdev->dif_check_flags;
 		pt_node->pt_bdev.dif_pi_format = bdev->dif_pi_format;
+		pt_node->pt_bdev.dif_storage_tag_size = bdev->dif_storage_tag_size;
 
 		pt_node->pt_bdev.numa = bdev->numa;
 

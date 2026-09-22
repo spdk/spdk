@@ -574,6 +574,8 @@ verify_zone_bdev(bool presence)
 			CU_ASSERT(bdev->bdev.zone_size == spdk_align64pow2(r->zone_capacity));
 			CU_ASSERT(bdev->bdev.optimal_open_zones == expected_optimal_open_zones);
 			CU_ASSERT(bdev->bdev.max_open_zones == 0);
+			CU_ASSERT(bdev->bdev.dif_storage_tag_size ==
+				  spdk_bdev_desc_get_bdev(bdev->base_desc)->dif_storage_tag_size);
 
 			for (i = 0; i < bdev->num_zones; i++) {
 				zone = &bdev->zones[i];
@@ -643,6 +645,7 @@ test_zone_block_create(void)
 	verify_zone_config(true);
 	verify_zone_bdev(false);
 	bdev = create_nvme_bdev();
+	bdev->dif_storage_tag_size = 32;
 	zone_block_examine(bdev);
 	verify_zone_bdev(true);
 	free_create_req();

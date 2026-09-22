@@ -3569,6 +3569,7 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		raid_bdev->bdev.dif_check_flags = bdev->dif_check_flags;
 		raid_bdev->bdev.dif_is_head_of_md = spdk_bdev_is_dif_head_of_md(bdev);
 		raid_bdev->bdev.dif_pi_format = bdev->dif_pi_format;
+		raid_bdev->bdev.dif_storage_tag_size = bdev->dif_storage_tag_size;
 	} else {
 		if (raid_bdev->bdev.blocklen != bdev->blocklen) {
 			SPDK_ERRLOG("Raid bdev '%s' blocklen %u differs from base bdev '%s' blocklen %u\n",
@@ -3582,7 +3583,8 @@ raid_bdev_configure_base_bdev(struct raid_base_bdev_info *base_info, bool existi
 		    raid_bdev->bdev.dif_type != spdk_bdev_get_dif_type(bdev) ||
 		    raid_bdev->bdev.dif_check_flags != bdev->dif_check_flags ||
 		    raid_bdev->bdev.dif_is_head_of_md != spdk_bdev_is_dif_head_of_md(bdev) ||
-		    raid_bdev->bdev.dif_pi_format != bdev->dif_pi_format) {
+		    raid_bdev->bdev.dif_pi_format != bdev->dif_pi_format ||
+		    raid_bdev->bdev.dif_storage_tag_size != bdev->dif_storage_tag_size) {
 			SPDK_ERRLOG("Raid bdev '%s' has different metadata format than base bdev '%s'\n",
 				    raid_bdev->bdev.name, bdev->name);
 			rc = -EINVAL;

@@ -607,7 +607,15 @@ struct spdk_bdev {
 	 */
 	enum spdk_dif_pi_format dif_pi_format;
 
-	uint8_t reserved3[4];
+	/**
+	 * DIF Storage Tag Size in bits for this bdev.
+	 *
+	 * Note that this field is valid only if there is metadata and dif_type is
+	 * not SPDK_DIF_DISABLE.
+	 */
+	uint8_t dif_storage_tag_size;
+
+	uint8_t reserved3[3];
 
 	/**
 	 * Specify whether each DIF check type is enabled.
