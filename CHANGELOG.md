@@ -128,6 +128,16 @@ larger MSDBD on HCAs that support more SGL entries, at the cost of a larger
 
 Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.
 
+`spdk_sock_connect()`, `spdk_sock_connect_ext()` and `spdk_sock_connect_async()` were consolidated
+into asynchronous `spdk_sock_connect()`. Completion is reported through its callback. Callers
+requiring synchronous behavior can poll `spdk_sock_is_connected()`.
+
+Removed `spdk_sock_listen_ext()`. `spdk_sock_listen()` now accepts `struct spdk_sock_opts`.
+The implementation name for connect and listen is selected through `spdk_sock_opts.impl_name`.
+
+Removed the legacy zero-copy receive APIs `spdk_sock_recv_next()`,
+`spdk_sock_group_provide_buf()`, and `spdk_sock_group_get_buf()`.
+
 ## v26.05
 
 ### accel
