@@ -25,29 +25,7 @@ attribute changes made while the controller was disconnected to be reflected in 
 bdev after reconnection. Inactive namespaces are retained during this rescan and are not
 depopulated, to avoid unexpected changes in upper layers.
 
-### schema
-
-The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).
-
 ### nvme
-
-Added `spdk_nvme_transport_set_accel_fn_table()` API to register a process-global accelerator
-function table at the NVMe transport level.  The RDMA transport can use this table to offload
-memory registration to the SPDK accel framework for plain queue pairs not bound to a poll group.
-Applications must provide the `append_copy`, `finish_sequence`, `reverse_sequence`, and
-`abort_sequence` callbacks and poll their `spdk_thread` to drive completion processing.
-
-Added an optional `poll` callback to `struct spdk_nvme_accel_fn_table`, consulted only for the
-process-global table (not for `spdk_nvme_poll_group_create()`'s table, since poll group
-queue pairs are already driven by the application). The RDMA transport calls it while waiting for
-a plain queue pair's accel requests to drain during teardown (e.g. inside
-`spdk_nvme_ctrlr_free_io_qpair()`), where nothing else would otherwise drive the accel engine.
-Applications should implement it (typically via `spdk_thread_poll()`) to avoid stalling
-indefinitely on teardown with in-flight UMR requests.
-
-Added initiator-side interrupt mode support for the RDMA transport. Applications can now enable
-interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
-a completion channel instead of continuously polling.
 
 Removed the deprecated `spdk_nvme_cpl_get_status_string()`, `spdk_nvme_print_completion()`, and
 `spdk_nvme_qpair_print_completion()` APIs. Use their opcode-aware `_ext` variants instead.
@@ -91,6 +69,24 @@ The default value of `spdk_nvme_ctrlr_opts.ns_data_alloc_mode` will flip from
 set the field to `SPDK_NVME_NS_DATA_ALLOC_MODE_FULL` explicitly to retain
 current behavior.
 
+Added `spdk_nvme_transport_set_accel_fn_table()` API to register a process-global accelerator
+function table at the NVMe transport level. The RDMA transport can use this table to offload
+memory registration to the SPDK accel framework for plain queue pairs not bound to a poll group.
+Applications must provide the `append_copy`, `finish_sequence`, `reverse_sequence`, and
+`abort_sequence` callbacks and poll their `spdk_thread` to drive completion processing.
+
+Added an optional `poll` callback to `struct spdk_nvme_accel_fn_table`, consulted only for the
+process-global table (not for `spdk_nvme_poll_group_create()`'s table, since poll group
+queue pairs are already driven by the application). The RDMA transport calls it while waiting for
+a plain queue pair's accel requests to drain during teardown (e.g. inside
+`spdk_nvme_ctrlr_free_io_qpair()`), where nothing else would otherwise drive the accel engine.
+Applications should implement it (typically via `spdk_thread_poll()`) to avoid stalling
+indefinitely on teardown with in-flight UMR requests.
+
+Added initiator-side interrupt mode support for the RDMA transport. Applications can now enable
+interrupts on RDMA queue pairs using `spdk_nvme_qpair_get_fd()` to wait for completion events via
+a completion channel instead of continuously polling.
+
 ### nvmf
 
 Removed the deprecated no-op `io_unit_size` parameter of `nvmf_create_transport` and the
@@ -104,11 +100,16 @@ per-transport caches with `iobuf_small_cache_size` and `iobuf_large_cache_size`.
 Removed the deprecated `buf_cache_size` parameter of `nvmf_create_transport` and the
 transport-options alias. Use `iobuf_small_cache_size` instead.
 
-Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
-`nvmf_create_subsystem` RPC. Use `dmrsl` and `wzsl` instead.
+`SPDK_NVMF_MAX_SGL_ENTRIES` is no longer hardcoded to 16 and can be changed at build time with the
+new `--max-nvmf-sgl-entries` configure option. Raising it allows the RDMA transport to advertise a
+larger MSDBD on HCAs that support more SGL entries, at the cost of a larger
+`struct spdk_nvmf_request`.
 
 Removed the deprecated NVMf subsystem creation, option setter, and individual option getter APIs.
 Use `spdk_nvmf_subsystem_create_ext()` and `spdk_nvmf_subsystem_get_opts()` instead.
+
+Removed the deprecated `max_discard_size_kib` and `max_write_zeroes_size_kib` parameters from the
+`nvmf_create_subsystem` RPC. Use `dmrsl` and `wzsl` instead.
 
 Removed the deprecated `SPDK_NVMF_TGT_DISCOVERY_MATCH_*` aliases. Use
 `SPDK_NVMF_TGT_DISCOVERY_FILTER_*` instead.
@@ -119,14 +120,16 @@ Removed `spdk_nvmf_request_get_dif_ctx()` and the deprecated DIF fields and stru
 Removed the deprecated `hide_metadata` parameter of `nvmf_subsystem_add_ns`. Configure metadata
 visibility with the transport's `dif_insert_or_strip` option instead.
 
-`SPDK_NVMF_MAX_SGL_ENTRIES` is no longer hardcoded to 16 and can be changed at build time with the
-new `--max-nvmf-sgl-entries` configure option. Raising it allows the RDMA transport to advertise a
-larger MSDBD on HCAs that support more SGL entries, at the cost of a larger
-`struct spdk_nvmf_request`.
+DIF handling for the RDMA and TCP transports moved into the bdev layer. When `dif_insert_or_strip`
+is enabled on the TCP transport and the POSIX sock implementation is in use, each I/O on a
+DIF-protected namespace now incurs one additional data copy. The accel framework can offload the
+combined copy and DIF generate/verify to hardware when available.
+
+### schema
+
+The JSON-RPC schema has been migrated from JSON (`schema/schema.json`) to YAML (`schema/schema.yaml`).
 
 ### sock
-
-Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.
 
 `spdk_sock_connect()`, `spdk_sock_connect_ext()` and `spdk_sock_connect_async()` were consolidated
 into asynchronous `spdk_sock_connect()`. Completion is reported through its callback. Callers
@@ -135,15 +138,17 @@ requiring synchronous behavior can poll `spdk_sock_is_connected()`.
 Removed `spdk_sock_listen_ext()`. `spdk_sock_listen()` now accepts `struct spdk_sock_opts`.
 The implementation name for connect and listen is selected through `spdk_sock_opts.impl_name`.
 
-Removed the legacy zero-copy receive APIs `spdk_sock_recv_next()`,
-`spdk_sock_group_provide_buf()`, and `spdk_sock_group_get_buf()`.
-
 `spdk_sock_group_create()` now takes `struct spdk_sock_group_opts` with receive callback `rx_cb`.
 The callback parameter was removed from `spdk_sock_group_add_sock()`.
 
 Added `spdk_sock_set_user_ctx()` to update callback context. Removal of the `cb_arg` parameter
 from `spdk_sock_group_add_sock()` was deferred to v27.01. Applications must still pass the
 intended `cb_arg` when adding a socket, which overwrites any previously set context.
+
+Removed the deprecated `spdk_sock_group_poll_count()` API. Use `spdk_sock_group_poll()` instead.
+
+Removed the legacy zero-copy receive APIs `spdk_sock_recv_next()`,
+`spdk_sock_group_provide_buf()`, and `spdk_sock_group_get_buf()`.
 
 ## v26.05
 
@@ -259,11 +264,6 @@ Added a JSON-RPC client batch request API. `spdk_jsonrpc_begin_batch()` and
 `spdk_jsonrpc_end_batch()` build a single batch and `spdk_jsonrpc_begin_request()` /
 `spdk_jsonrpc_end_request()` may be called multiple times in batch mode to issue several
 requests in a single send.
-
-DIF handling for the RDMA and TCP transports moved into the bdev layer. When `dif_insert_or_strip`
-is enabled on the TCP transport and the POSIX sock implementation is in use, each I/O on a
-DIF-protected namespace now incurs one additional data copy. The accel framework can offload the
-combined copy and DIF generate/verify to hardware when available.
 
 ### nvme
 
