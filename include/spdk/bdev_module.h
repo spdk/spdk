@@ -348,7 +348,7 @@ struct spdk_bdev_fn_table {
 	void *(*get_module_ctx)(void *ctx);
 
 	/** Get memory domains used by bdev. Optional - may be NULL.
-	 * Deprecated: use get_memory_domain_types instead. Will be removed in v26.09.
+	 * Deprecated: use get_memory_domain_types instead. Will be removed in v27.01.
 	 * Vbdev module implementation should call \ref spdk_bdev_get_memory_domains for underlying bdev.
 	 * Vbdev module must inspect types of memory domains returned by base bdev and report only those
 	 * memory domains that it can work with. */

@@ -25,7 +25,7 @@ The tags can be matched with the level 4 headers below.
 
 `spdk_bdev_get_memory_domains` and the `get_memory_domains` fn_table entry are deprecated.
 Use `spdk_bdev_get_memory_domain_types` and `get_memory_domain_types` instead.
-Will be removed in the v26.09 release.
+Will be removed in the v27.01 release.
 
 ### fsdev
 

@@ -37,7 +37,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 SPDK_LOG_DEPRECATION_REGISTER(bdev_get_memory_domains,
 			      "use spdk_bdev_get_memory_domain_types instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024 - 1)
 #define SPDK_BDEV_IO_CACHE_SIZE			256

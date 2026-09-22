@@ -2489,7 +2489,7 @@ size_t spdk_bdev_get_media_events(struct spdk_bdev_desc *bdev_desc,
  * Get SPDK memory domains used by the given bdev. If bdev reports that it uses memory domains
  * that means that it can work with data buffers located in those memory domains.
  *
- * Deprecated: use \ref spdk_bdev_get_memory_domain_types instead. Will be removed in v26.09.
+ * Deprecated: use \ref spdk_bdev_get_memory_domain_types instead. Will be removed in v27.01.
  *
  * The user can call this function with \b domains set to NULL and \b array_size set to 0 to get the
  * number of memory domains used by bdev
