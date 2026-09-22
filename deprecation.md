@@ -99,15 +99,6 @@ count aggressively and can guarantee attached controllers advertise `NLBAF` < 4 
 
 ### nvmf
 
-#### `nvmf_tgt_mixed_dif_insert_or_strip`
-
-Adding multiple transports to the same target with disagreeing `dif_insert_or_strip` values is
-deprecated and will be rejected starting in v26.09. All transports on a target must share the
-same `dif_insert_or_strip` setting. Because `dif_insert_or_strip` is applied when a namespace is
-added, a transport that disagrees with an already-attached namespace's setting will also be
-rejected; create the transport (or set the desired value on an existing one) before adding
-namespaces.
-
 #### `nvmf_set_config_discovery_filter`
 
 The `discovery_filter` parameter of the `nvmf_set_config` RPC is deprecated and will be
