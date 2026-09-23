@@ -9,24 +9,12 @@
 extern "C" {
 #endif
 
-/* Contains hooks definition */
-#include "spdk/nvme.h"
+#include "spdk/stdinc.h"
 
 #include <infiniband/verbs.h>
 
-union spdk_rdma_utils_mr {
-	struct ibv_mr	*mr;
-	uint64_t	key;
-};
-
-enum SPDK_RDMA_UTILS_TRANSLATION_TYPE {
-	SPDK_RDMA_UTILS_TRANSLATION_MR = 0,
-	SPDK_RDMA_UTILS_TRANSLATION_KEY
-};
-
 struct spdk_rdma_utils_memory_translation {
-	union spdk_rdma_utils_mr mr_or_key;
-	uint8_t translation_type;
+	struct ibv_mr *mr;
 };
 
 struct spdk_rdma_utils_mem_map;
@@ -36,13 +24,11 @@ struct spdk_rdma_utils_mem_map;
  * key translations
  *
  * \param pd Protection Domain which will be used to create Memory Regions
- * \param hooks Optional hooks which are used to create Protection Domain or ger RKey
  * \param access_flags Memory access permissions, bitwise combination of values from \b enum ibv_access_flags
  * \return Pointer to memory map or NULL on failure
  */
 struct spdk_rdma_utils_mem_map *
-spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks,
-			       uint32_t access_flags);
+spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, uint32_t access_flags);
 
 /**
  * Free previously allocated memory map
@@ -77,8 +63,7 @@ static inline uint32_t
 spdk_rdma_utils_memory_translation_get_lkey(
 	struct spdk_rdma_utils_memory_translation *translation)
 {
-	return translation->translation_type == SPDK_RDMA_UTILS_TRANSLATION_MR ?
-	       translation->mr_or_key.mr->lkey : (uint32_t)translation->mr_or_key.key;
+	return translation->mr->lkey;
 }
 
 /**
@@ -92,8 +77,7 @@ static inline uint32_t
 spdk_rdma_utils_memory_translation_get_rkey(
 	struct spdk_rdma_utils_memory_translation *translation)
 {
-	return translation->translation_type == SPDK_RDMA_UTILS_TRANSLATION_MR ?
-	       translation->mr_or_key.mr->rkey : (uint32_t)translation->mr_or_key.key;
+	return translation->mr->rkey;
 }
 
 /**

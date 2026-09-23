@@ -5,6 +5,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/nvme.h"
 
 #include "spdk_internal/rdma_cm.h"
 #include "spdk_internal/rdma_provider.h"
@@ -50,7 +51,7 @@ DEFINE_STUB(spdk_rdma_provider_qp_queue_recv_wrs, bool, (struct spdk_rdma_provid
 DEFINE_STUB(spdk_rdma_provider_qp_flush_recv_wrs, int, (struct spdk_rdma_provider_qp *spdk_rdma_qp,
 		struct ibv_recv_wr **bad_wr), 0);
 DEFINE_STUB(spdk_rdma_utils_create_mem_map, struct spdk_rdma_utils_mem_map *, (struct ibv_pd *pd,
-		struct spdk_nvme_rdma_hooks *hooks, uint32_t access_flags), NULL)
+		uint32_t access_flags), NULL)
 DEFINE_STUB_V(spdk_rdma_utils_free_mem_map, (struct spdk_rdma_utils_mem_map **map));
 DEFINE_STUB(spdk_rdma_utils_get_memory_domain, struct spdk_memory_domain *, (struct ibv_pd *pd),
 	    NULL);
@@ -70,8 +71,7 @@ int
 spdk_rdma_utils_get_translation(struct spdk_rdma_utils_mem_map *map, void *address,
 				size_t length, struct spdk_rdma_utils_memory_translation *translation)
 {
-	translation->mr_or_key.mr = &g_rdma_mr;
-	translation->translation_type = SPDK_RDMA_UTILS_TRANSLATION_MR;
+	translation->mr = &g_rdma_mr;
 	HANDLE_RETURN_MOCK(spdk_rdma_utils_get_translation);
 
 	if (g_mr_size && length > g_mr_size) {

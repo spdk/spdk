@@ -2617,7 +2617,7 @@ accel_mlx5_create_cb(void *io_device, void *ctx_buf)
 			goto err_out;
 		}
 
-		dev->mmap = spdk_rdma_utils_create_mem_map(dev_ctx->pd, NULL,
+		dev->mmap = spdk_rdma_utils_create_mem_map(dev_ctx->pd,
 				IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 		if (!dev->mmap) {
 			SPDK_ERRLOG("Failed to create memory map\n");
@@ -2950,7 +2950,7 @@ accel_mlx5_psvs_create(struct accel_mlx5_dev_ctx *dev_ctx)
 		return -EINVAL;
 	}
 	cache_size = num_psvs * 3 / 4 / spdk_env_get_core_count();
-	args.map = spdk_rdma_utils_create_mem_map(dev_ctx->pd, NULL,
+	args.map = spdk_rdma_utils_create_mem_map(dev_ctx->pd,
 			IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 	if (!args.map) {
 		return -ENOMEM;

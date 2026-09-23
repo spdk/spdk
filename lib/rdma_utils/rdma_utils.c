@@ -6,6 +6,8 @@
 #include "spdk_internal/rdma_utils.h"
 
 #include "spdk/config.h"
+#include "spdk/dma.h"
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
@@ -28,7 +30,6 @@ struct rdma_utils_device {
 struct spdk_rdma_utils_mem_map {
 	struct spdk_mem_map			*map;
 	struct ibv_pd				*pd;
-	struct spdk_nvme_rdma_hooks		*hooks;
 	uint32_t				ref_count;
 	uint32_t				access_flags;
 	LIST_ENTRY(spdk_rdma_utils_mem_map)	link;
@@ -73,29 +74,22 @@ rdma_utils_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		if (rmap->hooks && rmap->hooks->get_rkey) {
-			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
-							  rmap->hooks->get_rkey(pd, vaddr, size));
-		} else {
-			access_flags = rmap->access_flags;
+		access_flags = rmap->access_flags;
 #ifdef IBV_ACCESS_OPTIONAL_FIRST
-			access_flags |= IBV_ACCESS_RELAXED_ORDERING;
+		access_flags |= IBV_ACCESS_RELAXED_ORDERING;
 #endif
-			mr = ibv_reg_mr(pd, vaddr, size, access_flags);
-			if (mr == NULL) {
-				SPDK_ERRLOG("ibv_reg_mr() failed\n");
-				return -1;
-			} else {
-				rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
-			}
+		mr = ibv_reg_mr(pd, vaddr, size, access_flags);
+		if (mr == NULL) {
+			SPDK_ERRLOG("ibv_reg_mr() failed\n");
+			return -1;
+		} else {
+			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		if (rmap->hooks == NULL || rmap->hooks->get_rkey == NULL) {
-			mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
-			if (mr) {
-				ibv_dereg_mr(mr);
-			}
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
+		if (mr) {
+			ibv_dereg_mr(mr);
 		}
 		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		break;
@@ -118,21 +112,8 @@ const struct spdk_mem_map_ops g_rdma_map_ops = {
 	.are_contiguous = rdma_check_contiguous_entries
 };
 
-static void
-_rdma_free_mem_map(struct spdk_rdma_utils_mem_map *map)
-{
-	assert(map);
-
-	if (map->hooks) {
-		spdk_free(map);
-	} else {
-		free(map);
-	}
-}
-
 struct spdk_rdma_utils_mem_map *
-spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *hooks,
-			       uint32_t access_flags)
+spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, uint32_t access_flags)
 {
 	struct spdk_rdma_utils_mem_map *map;
 
@@ -151,11 +132,7 @@ spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *h
 		}
 	}
 
-	if (hooks) {
-		map = spdk_zmalloc(sizeof(*map), 0, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_DMA);
-	} else {
-		map = calloc(1, sizeof(*map));
-	}
+	map = calloc(1, sizeof(*map));
 	if (!map) {
 		pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 		SPDK_ERRLOG("Memory allocation failed\n");
@@ -163,12 +140,11 @@ spdk_rdma_utils_create_mem_map(struct ibv_pd *pd, struct spdk_nvme_rdma_hooks *h
 	}
 	map->pd = pd;
 	map->ref_count = 1;
-	map->hooks = hooks;
 	map->access_flags = access_flags;
 	map->map = spdk_mem_map_alloc(0, &g_rdma_map_ops, map);
 	if (!map->map) {
 		SPDK_ERRLOG("Unable to create memory map\n");
-		_rdma_free_mem_map(map);
+		free(map);
 		pthread_mutex_unlock(&g_rdma_mr_maps_mutex);
 		return NULL;
 	}
@@ -207,7 +183,7 @@ spdk_rdma_utils_free_mem_map(struct spdk_rdma_utils_mem_map **_map)
 	if (map->map) {
 		spdk_mem_map_free(&map->map);
 	}
-	_rdma_free_mem_map(map);
+	free(map);
 }
 
 int
@@ -220,17 +196,11 @@ spdk_rdma_utils_get_translation(struct spdk_rdma_utils_mem_map *map, void *addre
 	assert(address);
 	assert(translation);
 
-	if (map->hooks && map->hooks->get_rkey) {
-		translation->translation_type = SPDK_RDMA_UTILS_TRANSLATION_KEY;
-		translation->mr_or_key.key = spdk_mem_map_translate(map->map, (uint64_t)address, &real_length);
-	} else {
-		translation->translation_type = SPDK_RDMA_UTILS_TRANSLATION_MR;
-		translation->mr_or_key.mr = (struct ibv_mr *)spdk_mem_map_translate(map->map, (uint64_t)address,
-					    &real_length);
-		if (spdk_unlikely(!translation->mr_or_key.mr)) {
-			SPDK_ERRLOG("No translation for ptr %p, size %zu\n", address, length);
-			return -EINVAL;
-		}
+	translation->mr = (struct ibv_mr *)spdk_mem_map_translate(map->map, (uint64_t)address,
+			  &real_length);
+	if (spdk_unlikely(!translation->mr)) {
+		SPDK_ERRLOG("No translation for ptr %p, size %zu\n", address, length);
+		return -EINVAL;
 	}
 
 	assert(real_length >= length);

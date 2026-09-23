@@ -4752,59 +4752,6 @@ const char *spdk_nvme_dhchap_get_dhgroup_name(int id);
  */
 int spdk_nvme_dhchap_get_dhgroup_id(const char *name);
 
-struct ibv_context;
-struct ibv_pd;
-struct ibv_mr;
-
-/**
- * RDMA Transport Hooks
- */
-struct spdk_nvme_rdma_hooks {
-	/**
-	 * \brief Get an InfiniBand Verbs protection domain.
-	 *
-	 * \param trid the transport id
-	 * \param verbs Infiniband verbs context
-	 *
-	 * \return pd of the nvme ctrlr
-	 */
-	struct ibv_pd *(*get_ibv_pd)(const struct spdk_nvme_transport_id *trid,
-				     struct ibv_context *verbs);
-
-	/**
-	 * \brief Get an InfiniBand Verbs memory region for a buffer.
-	 *
-	 * \param pd The protection domain returned from get_ibv_pd
-	 * \param buf Memory buffer for which an rkey should be returned.
-	 * \param size size of buf
-	 *
-	 * \return Infiniband remote key (rkey) for this buf
-	 */
-	uint64_t (*get_rkey)(struct ibv_pd *pd, void *buf, size_t size);
-
-	/**
-	 * \brief Put back keys got from get_rkey.
-	 *
-	 * \param key The Infiniband remote key (rkey) got from get_rkey
-	 *
-	 */
-	void (*put_rkey)(uint64_t key);
-};
-
-/**
- * \brief Set the global hooks for the RDMA transport, if necessary.
- *
- * This call is optional and must be performed prior to probing for
- * any devices. By default, the RDMA transport will use the ibverbs
- * library to create protection domains and register memory. This
- * is a mechanism to subvert that and use an existing registration.
- *
- * This function may only be called one time per process.
- *
- * \param hooks for initializing global hooks
- */
-void spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
-
 /**
  * Get name of cuse device associated with NVMe controller.
  *

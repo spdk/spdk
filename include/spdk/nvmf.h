@@ -1669,20 +1669,6 @@ int spdk_nvmf_transport_stop_listen_async(struct spdk_nvmf_transport *transport,
 void spdk_nvmf_poll_group_dump_stat(struct spdk_nvmf_poll_group *group,
 				    struct spdk_json_write_ctx *w);
 
-/**
- * \brief Set the global hooks for the RDMA transport, if necessary.
- *
- * This call is optional and must be performed prior to probing for
- * any devices. By default, the RDMA transport will use the ibverbs
- * library to create protection domains and register memory. This
- * is a mechanism to subvert that and use an existing registration.
- *
- * This function may only be called one time per process.
- *
- * \param hooks for initializing global hooks
- */
-void spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks);
-
 /* Maximum number of registrants supported per namespace */
 #define SPDK_NVMF_MAX_NUM_REGISTRANTS		16
 

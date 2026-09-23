@@ -44,15 +44,6 @@ spdk_nvme_cuse_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 }
 #endif /* !SPDK_CONFIG_NVME_CUSE */
 
-#ifndef SPDK_CONFIG_RDMA
-void
-spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
-{
-	SPDK_ERRLOG("spdk_nvme_rdma_init_hooks() is unsupported: RDMA transport is not available\n");
-	abort();
-}
-#endif /* !SPDK_CONFIG_RDMA */
-
 #ifndef SPDK_CONFIG_HAVE_EVP_MAC
 int
 nvme_fabric_qpair_authenticate_async(struct spdk_nvme_qpair *qpair)

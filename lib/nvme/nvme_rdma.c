@@ -106,8 +106,6 @@ struct spdk_nvmf_cmd {
 	struct spdk_nvme_sgl_descriptor sgl[NVME_RDMA_MAX_SGL_DESCRIPTORS];
 };
 
-struct spdk_nvme_rdma_hooks g_nvme_hooks = {};
-
 /* STAILQ wrapper for cm events. */
 struct nvme_rdma_cm_event_entry {
 	struct rdma_cm_event			*evt;
@@ -824,7 +822,6 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	int			rc;
 	struct spdk_rdma_provider_qp_init_attr	attr = {};
 	struct ibv_device_attr	dev_attr;
-	struct nvme_rdma_ctrlr	*rctrlr;
 	uint32_t num_cqe, max_num_cqe;
 
 	rc = ibv_query_device(rqpair->cm_id->verbs, &dev_attr);
@@ -878,12 +875,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 		}
 	}
 
-	rctrlr = nvme_rdma_ctrlr(rqpair->qpair.ctrlr);
-	if (g_nvme_hooks.get_ibv_pd) {
-		attr.pd = g_nvme_hooks.get_ibv_pd(&rctrlr->ctrlr.trid, rqpair->cm_id->verbs);
-	} else {
-		attr.pd = spdk_rdma_utils_get_pd(rqpair->cm_id->verbs);
-	}
+	attr.pd = spdk_rdma_utils_get_pd(rqpair->cm_id->verbs);
 
 	attr.stats		= rqpair->poller ? &rqpair->poller->stats.rdma_stats : NULL;
 	attr.send_cq		= rqpair->cq;
@@ -1277,7 +1269,7 @@ nvme_rdma_connect_established(struct nvme_rdma_qpair *rqpair, int ret)
 	}
 
 	assert(!rqpair->mr_map);
-	rqpair->mr_map = spdk_rdma_utils_create_mem_map(rqpair->rdma_qp->qp->pd, &g_nvme_hooks,
+	rqpair->mr_map = spdk_rdma_utils_create_mem_map(rqpair->rdma_qp->qp->pd,
 			 IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 	if (!rqpair->mr_map) {
 		NVME_RQPAIR_ERRLOG(rqpair, "Unable to register RDMA memory translation map\n");
@@ -1602,12 +1594,8 @@ nvme_rdma_get_memory_translation(struct nvme_request *req, struct nvme_rdma_qpai
 			NVME_RQPAIR_ERRLOG(rqpair, "RDMA memory translation failed, rc %d\n", rc);
 			return rc;
 		}
-		if (rdma_translation.translation_type == SPDK_RDMA_UTILS_TRANSLATION_MR) {
-			_ctx->lkey = rdma_translation.mr_or_key.mr->lkey;
-			_ctx->rkey = rdma_translation.mr_or_key.mr->rkey;
-		} else {
-			_ctx->lkey = _ctx->rkey = (uint32_t)rdma_translation.mr_or_key.key;
-		}
+		_ctx->lkey = spdk_rdma_utils_memory_translation_get_lkey(&rdma_translation);
+		_ctx->rkey = spdk_rdma_utils_memory_translation_get_rkey(&rdma_translation);
 	}
 
 	return 0;
@@ -3670,7 +3658,7 @@ nvme_rdma_poller_create(struct nvme_rdma_poll_group *group, struct ibv_context *
 			goto fail;
 		}
 
-		poller->mr_map = spdk_rdma_utils_create_mem_map(poller->pd, &g_nvme_hooks,
+		poller->mr_map = spdk_rdma_utils_create_mem_map(poller->pd,
 				 IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE);
 		if (poller->mr_map == NULL) {
 			SPDK_ERRLOG("Unable to create memory map.\n");
@@ -4230,12 +4218,6 @@ static int
 nvme_rdma_ctrlr_process_transport_events(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return nvme_rdma_poll_events(nvme_rdma_ctrlr(ctrlr));
-}
-
-void
-spdk_nvme_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
-{
-	g_nvme_hooks = *hooks;
 }
 
 const struct spdk_nvme_transport_ops rdma_ops = {

@@ -650,8 +650,6 @@ test_nvme_rdma_create_reqs(void)
 	struct nvme_rdma_qpair rqpair = {.qpair = {.ctrlr = &rctrlr.ctrlr}};
 	int rc;
 
-	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
-
 	/* Test case 1: zero entry. Expect: FAIL */
 	rqpair.num_entries = 0;
 
@@ -710,8 +708,6 @@ test_nvme_rdma_create_rsps(void)
 	struct nvme_rdma_rsps *rsps;
 	struct spdk_rdma_provider_qp *rdma_qp = (struct spdk_rdma_provider_qp *)0xfeedf00d;
 	struct nvme_rdma_qpair rqpair = { .rdma_qp = rdma_qp, };
-
-	memset(&g_nvme_hooks, 0, sizeof(g_nvme_hooks));
 
 	opts.rqpair = &rqpair;
 
@@ -1214,7 +1210,6 @@ test_nvme_rdma_qpair_init(void)
 
 	rctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	rqpair.cm_id = &cm_id;
-	g_nvme_hooks.get_ibv_pd = NULL;
 	rqpair.qpair.poll_group = NULL;
 	rqpair.qpair.ctrlr = &rctrlr.ctrlr;
 	g_spdk_rdma_qp.qp = &qp;
