@@ -106,8 +106,10 @@ removed in v27.01. Use `discovery_filters` instead.
 
 ### sock
 
-#### `spdk_sock_group_add_sock`, `spdk_sock_group_create`
+#### `spdk_sock_group_add_sock_callbacks`
 
-The `cb_fn` and `cb_arg` parameters of `spdk_sock_group_add_sock` are deprecated and will be
-removed in v26.09. Instead, pass `cb_fn` and `cb_arg` via the new `spdk_sock_group_opts` struct
-passed to `spdk_sock_group_create`.
+The remaining `cb_arg` parameter of `spdk_sock_group_add_sock` is deprecated and will be
+removed in v27.01. `spdk_sock_set_user_ctx()` updates a socket's callback context. In v26.09,
+`spdk_sock_group_add_sock()` overwrites that context with its `cb_arg` argument, so applications
+must still pass the intended context when adding a socket. Setting the context before adding
+the socket does not replace that argument.

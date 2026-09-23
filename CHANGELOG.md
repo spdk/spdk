@@ -136,6 +136,13 @@ The implementation name for connect and listen is selected through `spdk_sock_op
 Removed the legacy zero-copy receive APIs `spdk_sock_recv_next()`,
 `spdk_sock_group_provide_buf()`, and `spdk_sock_group_get_buf()`.
 
+`spdk_sock_group_create()` now takes `struct spdk_sock_group_opts` with receive callback `rx_cb`.
+The callback parameter was removed from `spdk_sock_group_add_sock()`.
+
+Added `spdk_sock_set_user_ctx()` to update callback context. Removal of the `cb_arg` parameter
+from `spdk_sock_group_add_sock()` was deferred to v27.01. Applications must still pass the
+intended `cb_arg` when adding a socket, which overwrites any previously set context.
+
 ## v26.05
 
 ### accel

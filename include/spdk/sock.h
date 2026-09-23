@@ -401,8 +401,9 @@ struct spdk_sock *spdk_sock_accept(struct spdk_sock *sock);
 /**
  * Change the user context callback argument passed to spdk_sock_cb for this socket.
  *
- * This is intended for attaching per-connection state to a newly accepted socket. If the
- * socket will be added to a socket group, set the user context before adding it.
+ * In v26.09, spdk_sock_group_add_sock() overwrites this context with its cb_arg argument.
+ * Pass the intended context when adding a socket, even if it was already set here.
+ * This function can update the context after the socket has been added to a group.
  *
  * \param sock The socket to change the callback argument for.
  * \param user_ctx The new callback argument to set.
@@ -596,6 +597,10 @@ void *spdk_sock_group_get_ctx(struct spdk_sock_group *sock_group);
 
 /**
  * Add a socket to the group.
+ *
+ * The cb_arg parameter is deprecated and will be removed in v27.01. In v26.09, adding a
+ * socket overwrites any context previously set with spdk_sock_set_user_ctx(), so cb_arg
+ * must still contain the intended callback context.
  *
  * \param group Socket group.
  * \param sock Socket to add.

@@ -952,8 +952,8 @@ spdk_sock_group_get_ctx(struct spdk_sock_group *group)
 }
 
 SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_group_add_sock_callbacks,
-			      "upcoming group-level receive callback should be used instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
+			      "cb_arg will be removed. Still pass context when adding sockets",
+			      "v27.01", SPDK_LOG_DEPRECATION_EVERY_24H);
 
 int
 spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
