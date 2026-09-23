@@ -823,10 +823,6 @@ spdk_sock_writev_async(struct spdk_sock *sock, struct spdk_sock_request *req)
 	sock->net_impl->writev_async(sock, req);
 }
 
-SPDK_LOG_DEPRECATION_REGISTER(spdk_sock_recv_next,
-			      "upcoming zero-copy receive API should be used instead",
-			      "v26.09", SPDK_LOG_DEPRECATION_EVERY_24H);
-
 int
 spdk_sock_flush(struct spdk_sock *sock)
 {

@@ -111,11 +111,3 @@ removed in v27.01. Use `discovery_filters` instead.
 The `cb_fn` and `cb_arg` parameters of `spdk_sock_group_add_sock` are deprecated and will be
 removed in v26.09. Instead, pass `cb_fn` and `cb_arg` via the new `spdk_sock_group_opts` struct
 passed to `spdk_sock_group_create`.
-
-#### `spdk_sock_connect`, `spdk_sock_connect_ext`, `spdk_sock_connect_async`
-
-These 3 APIs will be collapsed into a single replacement starting in v26.09.
-
-#### `spdk_sock_listen`, `spdk_sock_listen_ext`
-
-These two APIs will be collapsed into a single replacement starting in v26.09.
