@@ -1889,6 +1889,27 @@ void spdk_bdev_get_current_qd(struct spdk_bdev *bdev,
 void spdk_bdev_add_io_stat(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat *add);
 
 /**
+ * Account a completed I/O against the standard channel statistics using an
+ * explicit byte count.
+ *
+ * Intended for bdev modules whose I/O is not described by u.bdev.num_blocks
+ * (for example NVMe passthru command sets such as NVMe KV), where the generic
+ * accounting in the bdev layer cannot derive a direction or a transfer size.
+ *
+ * Latency statistics are updated based on the I/O's submission timestamp.
+ *
+ * Must be called on the thread that owns the bdev_io's channel, exactly once
+ * per I/O, before the I/O is completed, and only for I/O that succeeded.
+ *
+ * \param bdev_io I/O to account for.
+ * \param stat_type One of SPDK_BDEV_IO_TYPE_READ, SPDK_BDEV_IO_TYPE_WRITE or
+ *                  SPDK_BDEV_IO_TYPE_UNMAP. Other values are ignored.
+ * \param num_bytes Number of payload bytes transferred or discarded.
+ */
+void spdk_bdev_io_account_stat(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_type stat_type,
+			       uint64_t num_bytes);
+
+/**
  * Output bdev I/O statistics information to a JSON stream.
  *
  * \param stat The bdev I/O statistics to output.

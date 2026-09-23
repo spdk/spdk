@@ -8341,6 +8341,124 @@ get_device_stat_with_reset(void)
 }
 
 static void
+bdev_io_account_stat(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct spdk_bdev_io_stat *stat;
+	struct ut_expected_io *expected_io;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_nvme_cmd cmd = {};
+	struct iovec iov = {};
+	int rc;
+
+	ut_init_bdev(NULL);
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open_ext("bdev0", true, bdev_ut_event_cb, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	SPDK_CU_ASSERT_FATAL(io_ch != NULL);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	stat = bdev_ch->stat;
+
+	/* Submit an NVMe passthru I/O. The generic accounting cannot describe it:
+	 * it carries no block count, so it must contribute nothing on completion.
+	 * Completing the passthru I/O must not add anything on top: the generic
+	 * path has no case for NVMe passthru types, so there is no double count.
+	 */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_NVME_IOV_MD, 0, 0, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, io_ch, &cmd, &iov, 1, 0, NULL, 0, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_ut_channel->outstanding_io));
+	bdev_io = spdk_bdev_io_from_ctx(TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io));
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_READ, 1234);
+	CU_ASSERT(stub_complete_io(1) == 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(stat->num_read_ops == 1);
+	CU_ASSERT(stat->bytes_read == 1234);
+	CU_ASSERT(stat->num_write_ops == 0);
+	CU_ASSERT(stat->bytes_written == 0);
+	CU_ASSERT(stat->num_unmap_ops == 0);
+	CU_ASSERT(stat->bytes_unmapped == 0);
+	CU_ASSERT(stat->min_read_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->max_read_latency_ticks == stat->min_read_latency_ticks);
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_NVME_IOV_MD, 0, 0, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, io_ch, &cmd, &iov, 1, 0, NULL, 0, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_ut_channel->outstanding_io));
+	bdev_io = spdk_bdev_io_from_ctx(TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io));
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_WRITE, 4096);
+	CU_ASSERT(stub_complete_io(1) == 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(stat->num_read_ops == 1);
+	CU_ASSERT(stat->bytes_read == 1234);
+	CU_ASSERT(stat->num_write_ops == 1);
+	CU_ASSERT(stat->bytes_written == 4096);
+	CU_ASSERT(stat->num_unmap_ops == 0);
+	CU_ASSERT(stat->bytes_unmapped == 0);
+	CU_ASSERT(stat->min_write_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->max_write_latency_ticks == stat->min_write_latency_ticks);
+
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_NVME_IOV_MD, 0, 0, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, io_ch, &cmd, &iov, 1, 0, NULL, 0, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_ut_channel->outstanding_io));
+	bdev_io = spdk_bdev_io_from_ctx(TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io));
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_UNMAP, 512);
+	CU_ASSERT(stub_complete_io(1) == 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(stat->num_read_ops == 1);
+	CU_ASSERT(stat->bytes_read == 1234);
+	CU_ASSERT(stat->num_write_ops == 1);
+	CU_ASSERT(stat->bytes_written == 4096);
+	CU_ASSERT(stat->num_unmap_ops == 1);
+	CU_ASSERT(stat->bytes_unmapped == 512);
+	CU_ASSERT(stat->min_unmap_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->max_unmap_latency_ticks == stat->min_unmap_latency_ticks);
+
+	/* Types other than read, write and unmap are ignored. */
+	g_io_done = false;
+	expected_io = ut_alloc_expected_io(SPDK_BDEV_IO_TYPE_NVME_IOV_MD, 0, 0, 0);
+	TAILQ_INSERT_TAIL(&g_bdev_ut_channel->expected_io, expected_io, link);
+	rc = spdk_bdev_nvme_iov_passthru_md(desc, io_ch, &cmd, &iov, 1, 0, NULL, 0, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_bdev_ut_channel->outstanding_io));
+	bdev_io = spdk_bdev_io_from_ctx(TAILQ_FIRST(&g_bdev_ut_channel->outstanding_io));
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_FLUSH, 8192);
+	CU_ASSERT(stub_complete_io(1) == 1);
+	CU_ASSERT(g_io_done == true);
+	CU_ASSERT(stat->num_read_ops == 1);
+	CU_ASSERT(stat->bytes_read == 1234);
+	CU_ASSERT(stat->num_write_ops == 1);
+	CU_ASSERT(stat->bytes_written == 4096);
+	CU_ASSERT(stat->num_unmap_ops == 1);
+	CU_ASSERT(stat->bytes_unmapped == 512);
+	CU_ASSERT(stat->min_read_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->min_write_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->min_unmap_latency_ticks != UINT64_MAX);
+	CU_ASSERT(stat->max_read_latency_ticks == stat->min_read_latency_ticks);
+	CU_ASSERT(stat->max_write_latency_ticks == stat->min_write_latency_ticks);
+	CU_ASSERT(stat->max_unmap_latency_ticks == stat->min_unmap_latency_ticks);
+
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	ut_fini_bdev();
+}
+
+static void
 open_ext_v2_test(void)
 {
 	struct spdk_bdev_open_opts opts;
@@ -8972,6 +9090,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, examine_claimed_manual);
 	CU_ADD_TEST(suite, get_numa_id);
 	CU_ADD_TEST(suite, get_device_stat_with_reset);
+	CU_ADD_TEST(suite, bdev_io_account_stat);
 	CU_ADD_TEST(suite, open_ext_v2_test);
 	CU_ADD_TEST(suite, bdev_io_init_dif_ctx_test);
 	CU_ADD_TEST(suite, bdev_io_dif_error_status_test);
