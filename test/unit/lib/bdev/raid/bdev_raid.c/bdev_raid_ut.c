@@ -60,6 +60,7 @@ bool g_bdev_io_defer_completion;
 TAILQ_HEAD(, spdk_bdev_io) g_deferred_ios = TAILQ_HEAD_INITIALIZER(g_deferred_ios);
 struct spdk_thread *g_app_thread;
 struct spdk_thread *g_latest_thread;
+static int g_bdev_quiesce_status;
 
 static int
 ut_raid_start(struct raid_bdev *raid_bdev)
@@ -286,6 +287,7 @@ set_globals(void)
 	g_json_decode_obj_err = 0;
 	g_json_decode_obj_create = 0;
 	g_bdev_io_defer_completion = false;
+	g_bdev_quiesce_status = 0;
 }
 
 static void
@@ -592,7 +594,7 @@ spdk_bdev_quiesce(struct spdk_bdev *bdev, struct spdk_bdev_module *module,
 		  spdk_bdev_quiesce_cb cb_fn, void *cb_arg)
 {
 	if (cb_fn) {
-		cb_fn(cb_arg, 0);
+		cb_fn(cb_arg, g_bdev_quiesce_status);
 	}
 
 	return 0;
@@ -1512,6 +1514,58 @@ test_raid_process_with_qos(void)
 }
 
 static void
+test_raid_fail_base_bdev(void)
+{
+	struct rpc_bdev_raid_create_ctx req;
+	struct rpc_bdev_raid_delete_ctx destroy_req;
+	struct raid_bdev *pbdev;
+	struct raid_base_bdev_info *base_info;
+
+	set_globals();
+	CU_ASSERT(raid_bdev_init() == 0);
+
+	create_raid_bdev_create_req(&req, "raid1", 0, true, 0, false);
+	rpc_bdev_raid_create(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+	free_test_req(&req);
+
+	TAILQ_FOREACH(pbdev, &g_raid_bdev_list, global_link) {
+		if (strcmp(pbdev->bdev.name, "raid1") == 0) {
+			break;
+		}
+	}
+	SPDK_CU_ASSERT_FATAL(pbdev != NULL);
+	pbdev->min_base_bdevs_operational = 0;
+	base_info = &pbdev->base_bdev_info[0];
+
+	/* the base bdev stays failed when its removal fails */
+	g_bdev_quiesce_status = -ENOMEM;
+	raid_bdev_fail_base_bdev(base_info);
+	poll_app_thread();
+	CU_ASSERT(base_info->is_configured == true);
+	CU_ASSERT(base_info->is_failed == true);
+
+	/* the removal is retried on the next failure */
+	g_bdev_quiesce_status = 0;
+	raid_bdev_fail_base_bdev(base_info);
+	poll_app_thread();
+	CU_ASSERT(base_info->is_configured == false);
+
+	/* a failure reported after the base bdev was removed is ignored */
+	raid_bdev_fail_base_bdev(base_info);
+	poll_app_thread();
+	CU_ASSERT(base_info->is_failed == false);
+
+	create_raid_bdev_delete_req(&destroy_req, "raid1", 0);
+	rpc_bdev_raid_delete(NULL, NULL);
+	CU_ASSERT(g_rpc_err == 0);
+
+	raid_bdev_exit();
+	base_bdevs_cleanup();
+	reset_globals();
+}
+
+static void
 test_raid_io_split(void)
 {
 	struct rpc_bdev_raid_create_ctx req;
@@ -1844,6 +1898,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_raid_io_split);
 	CU_ADD_TEST(suite, test_raid_process);
 	CU_ADD_TEST(suite, test_raid_process_with_qos);
+	CU_ADD_TEST(suite, test_raid_fail_base_bdev);
 
 	spdk_thread_lib_init(test_new_thread_fn, 0);
 	g_app_thread = spdk_thread_create("app_thread", NULL);

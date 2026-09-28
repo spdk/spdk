@@ -2392,7 +2392,6 @@ raid_bdev_fail_base_remove_cb(void *ctx, int status)
 
 	if (status != 0) {
 		SPDK_WARNLOG("Failed to remove base bdev %s\n", base_info->name);
-		base_info->is_failed = false;
 	}
 }
 
@@ -2402,19 +2401,21 @@ _raid_bdev_fail_base_bdev(void *ctx)
 	struct raid_base_bdev_info *base_info = ctx;
 	int rc;
 
-	if (base_info->is_failed) {
+	if (!base_info->is_configured) {
 		return;
 	}
+
 	base_info->is_failed = true;
+
+	if (base_info->remove_scheduled) {
+		return;
+	}
 
 	SPDK_NOTICELOG("Failing base bdev in slot %d ('%s') of raid bdev '%s'\n",
 		       raid_bdev_base_bdev_slot(base_info), base_info->name, base_info->raid_bdev->bdev.name);
 
 	rc = _raid_bdev_remove_base_bdev(base_info, raid_bdev_fail_base_remove_cb, base_info);
 	if (rc != 0) {
-		if (rc == -EALREADY) {
-			rc = 0;
-		}
 		raid_bdev_fail_base_remove_cb(base_info, rc);
 	}
 }
