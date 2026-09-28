@@ -1898,7 +1898,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				continue;
 			}
 			if (ctrlr->admin_qpair->group == group) {
-				if (ns_changed) {
+				/* Count might be 0 if namespaces are not visible to host. */
+				if (ns_changed && ctrlr->changed_ns_list_count > 0) {
 					nvmf_ctrlr_async_event_ns_notice(ctrlr);
 				}
 				if (ana_changed) {
