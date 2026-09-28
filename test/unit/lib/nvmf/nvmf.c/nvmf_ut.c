@@ -47,11 +47,6 @@ nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport,
 	g_tgroup_live++;
 	return tgroup;
 }
-DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc),
-	    NULL);
-DEFINE_STUB(nvmf_ctrlr_async_event_ns_notice, int, (struct spdk_nvmf_ctrlr *ctrlr), 0);
-DEFINE_STUB(nvmf_ctrlr_async_event_ana_change_notice, int,
-	    (struct spdk_nvmf_ctrlr *ctrlr), 0);
 DEFINE_STUB(nvmf_transport_poll_group_remove, int, (struct spdk_nvmf_transport_poll_group *group,
 		struct spdk_nvmf_qpair *qpair), 0);
 DEFINE_STUB_V(nvmf_transport_req_free, (struct spdk_nvmf_request *req));
@@ -156,6 +151,47 @@ const struct spdk_uuid *
 spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 {
 	return &bdev->uuid;
+}
+
+/* Namespace channels come from a real io_device so that the gets and
+ * puts in the code under test are real and balance each other.
+ */
+static int g_ut_io_device;
+
+static int
+ut_io_device_create_cb(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+ut_io_device_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+struct spdk_io_channel *
+spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
+{
+	return spdk_get_io_channel(&g_ut_io_device);
+}
+
+static uint32_t g_ns_notice_count;
+static struct spdk_nvmf_ctrlr *g_ns_notice_ctrlr;
+static uint32_t g_ana_notice_count;
+
+int
+nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	g_ns_notice_count++;
+	g_ns_notice_ctrlr = ctrlr;
+	return 0;
+}
+
+int
+nvmf_ctrlr_async_event_ana_change_notice(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	g_ana_notice_count++;
+	return 0;
 }
 
 static void
@@ -384,16 +420,19 @@ test_nvmf_tgt_create_poll_group(void)
 	struct spdk_nvmf_subsystem	subsystem = {};
 	struct spdk_nvmf_ns		ns = {};
 	struct spdk_bdev		bdev = {};
-	struct spdk_io_channel		ch = {};
+	struct spdk_io_channel		*ch;
 	struct spdk_nvmf_transport_poll_group transport_pg = {};
 
 	thread = spdk_thread_create(NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
+	spdk_io_device_register(&g_ut_io_device, ut_io_device_create_cb,
+				ut_io_device_destroy_cb, 0, NULL);
+	ch = spdk_get_io_channel(&g_ut_io_device);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
 	/* Create group with single subsystem */
-	ch.thread = thread;
-	MOCK_SET(spdk_bdev_get_io_channel, &ch);
 
 	tgt.max_subsystems = 1;
 	RB_INIT(&tgt.subsystems);
@@ -429,7 +468,7 @@ test_nvmf_tgt_create_poll_group(void)
 	CU_ASSERT(group.num_sgroups == 1);
 	CU_ASSERT(group.sgroups != NULL);
 	CU_ASSERT(group.sgroups[0].state == SPDK_NVMF_SUBSYSTEM_ACTIVE);
-	CU_ASSERT(group.sgroups[0].ns_info[0].channel == &ch);
+	CU_ASSERT(group.sgroups[0].ns_info[0].channel == ch);
 	CU_ASSERT(!memcmp(&group.sgroups[0].ns_info[0].uuid, &bdev.uuid, 16));
 	CU_ASSERT(group.sgroups[0].ns_info[0].num_blocks == 512);
 	CU_ASSERT(TAILQ_FIRST(&tgt.poll_groups) == &group);
@@ -442,12 +481,242 @@ test_nvmf_tgt_create_poll_group(void)
 	free(subsystem.ns);
 	MOCK_CLEAR(spdk_nvmf_subsystem_get_first);
 
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(&g_ut_io_device, NULL);
 	spdk_thread_exit(thread);
 	while (!spdk_thread_is_exited(thread)) {
 		spdk_thread_poll(thread, 0, 0);
 	}
 	spdk_thread_destroy(thread);
-	MOCK_CLEAR(spdk_bdev_get_io_channel);
+}
+
+static void
+test_nvmf_poll_group_update_subsystem_ns_aen(void)
+{
+	int rc;
+	struct spdk_thread		*thread = NULL;
+	struct spdk_thread		*other_thread = NULL;
+	struct spdk_nvmf_poll_group	group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroup = {};
+	struct spdk_nvmf_subsystem	subsystem = {};
+	struct spdk_nvmf_ns		ns = {};
+	struct spdk_nvmf_ns		ns2 = {};
+	struct spdk_nvmf_ns		*ns_array[2] = { &ns, NULL };
+	struct spdk_bdev		bdev = {};
+	struct spdk_bdev		other_bdev = {};
+	struct spdk_bdev		bdev2 = {};
+	struct spdk_io_channel		*ch;
+	struct spdk_nvmf_poll_group	other_group = {};
+	struct spdk_nvmf_qpair		hidden_admin_qpair = {};
+	struct spdk_nvmf_qpair		visible_admin_qpair = {};
+	struct spdk_nvmf_qpair		other_admin_qpair = {};
+	struct spdk_nvmf_qpair		other_thread_admin_qpair = {};
+	struct spdk_nvmf_ctrlr		hidden_ctrlr = {};
+	struct spdk_nvmf_ctrlr		visible_ctrlr = {};
+	struct spdk_nvmf_ctrlr		other_group_ctrlr = {};
+	struct spdk_nvmf_ctrlr		no_admin_qpair_ctrlr = {};
+	struct spdk_nvmf_ctrlr		other_thread_ctrlr = {};
+
+	thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	other_thread = spdk_thread_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(other_thread != NULL);
+	spdk_set_thread(thread);
+
+	/* The test holds one reference of its own to know the channel. */
+	spdk_io_device_register(&g_ut_io_device, ut_io_device_create_cb,
+				ut_io_device_destroy_cb, 0, NULL);
+	ch = spdk_get_io_channel(&g_ut_io_device);
+	SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+	spdk_uuid_generate(&bdev.uuid);
+	bdev.blockcnt = 512;
+	ns.bdev = &bdev;
+	ns.nsid = 1;
+	ns.anagrpid = 1;
+	TAILQ_INIT(&ns.registrants);
+
+	subsystem.id = 0;
+	subsystem.max_nsid = 2;
+	subsystem.ns = ns_array;
+	TAILQ_INIT(&subsystem.ctrlrs);
+
+	group.num_sgroups = 1;
+	group.sgroups = &sgroup;
+	hidden_admin_qpair.group = &group;
+	visible_admin_qpair.group = &group;
+
+	/* Two controllers on this poll group. Namespace 1 is visible only to
+	 * visible_ctrlr. In production nvmf_subsystem_ns_changed() records
+	 * the nsid in the Changed Namespace List of every controller that
+	 * can see it before the poll groups are updated; that producer lives
+	 * in ctrlr.c/subsystem.c, outside this unit, so the test sets the
+	 * list state directly: nsid 1 queued for visible_ctrlr, nothing for
+	 * hidden_ctrlr.
+	 */
+	hidden_ctrlr.thread = thread;
+	hidden_ctrlr.admin_qpair = &hidden_admin_qpair;
+	hidden_ctrlr.changed_ns_list_count = 0;
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &hidden_ctrlr, link);
+
+	visible_ctrlr.thread = thread;
+	visible_ctrlr.admin_qpair = &visible_admin_qpair;
+	visible_ctrlr.changed_ns_list_count = 1;
+	visible_ctrlr.changed_ns_list.ns_list[0] = 1;
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &visible_ctrlr, link);
+
+	/* Three more controllers that can see the namespace but must never
+	 * be notified from this poll group's update: one whose admin queue
+	 * pair belongs to another poll group (its own group's update notifies
+	 * it), one whose admin queue pair is not assigned yet, and one that
+	 * lives on another thread (its own thread's update notifies it).
+	 */
+	other_admin_qpair.group = &other_group;
+	other_group_ctrlr.thread = thread;
+	other_group_ctrlr.admin_qpair = &other_admin_qpair;
+	other_group_ctrlr.changed_ns_list_count = 1;
+	other_group_ctrlr.changed_ns_list.ns_list[0] = 1;
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &other_group_ctrlr, link);
+
+	no_admin_qpair_ctrlr.thread = thread;
+	no_admin_qpair_ctrlr.admin_qpair = NULL;
+	no_admin_qpair_ctrlr.changed_ns_list_count = 1;
+	no_admin_qpair_ctrlr.changed_ns_list.ns_list[0] = 1;
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &no_admin_qpair_ctrlr, link);
+
+	other_thread_admin_qpair.group = &group;
+	other_thread_ctrlr.thread = other_thread;
+	other_thread_ctrlr.admin_qpair = &other_thread_admin_qpair;
+	other_thread_ctrlr.changed_ns_list_count = 1;
+	other_thread_ctrlr.changed_ns_list.ns_list[0] = 1;
+	TAILQ_INSERT_TAIL(&subsystem.ctrlrs, &other_thread_ctrlr, link);
+
+	g_ns_notice_count = 0;
+	g_ns_notice_ctrlr = NULL;
+	g_ana_notice_count = 0;
+
+	/* Namespace 1 appears: only the controller that can see it gets the
+	 * Namespace Attribute Changed AEN.
+	 */
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.num_ns == 2);
+	SPDK_CU_ASSERT_FATAL(sgroup.ns_info != NULL);
+	CU_ASSERT(sgroup.ns_info[1].channel == NULL);
+	CU_ASSERT(sgroup.ns_info[0].channel == ch);
+	CU_ASSERT(g_ns_notice_count == 1);
+	CU_ASSERT(g_ns_notice_ctrlr == &visible_ctrlr);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* Nothing changed: no AEN, even though visible_ctrlr still has an
+	 * unread Changed Namespace List.
+	 */
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_ns_notice_count == 1);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* Namespace 1 is resized: again only visible_ctrlr is notified. */
+	bdev.blockcnt = 1024;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[0].num_blocks == 1024);
+	CU_ASSERT(g_ns_notice_count == 2);
+	CU_ASSERT(g_ns_notice_ctrlr == &visible_ctrlr);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* Namespace 1 is backed by a different bdev (new UUID): the channel
+	 * is put and re-acquired, and only visible_ctrlr is notified.
+	 */
+	spdk_uuid_generate(&other_bdev.uuid);
+	other_bdev.blockcnt = 1024;
+	ns.bdev = &other_bdev;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[0].channel == ch);
+	CU_ASSERT(spdk_uuid_compare(&sgroup.ns_info[0].uuid, &other_bdev.uuid) == 0);
+	CU_ASSERT(g_ns_notice_count == 3);
+	CU_ASSERT(g_ns_notice_ctrlr == &visible_ctrlr);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* Namespace 1 is removed: its channel is put and, as it was listed
+	 * for visible_ctrlr, only visible_ctrlr is notified.
+	 */
+	ns_array[0] = NULL;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[0].channel == NULL);
+	CU_ASSERT(g_ns_notice_count == 4);
+	CU_ASSERT(g_ns_notice_ctrlr == &visible_ctrlr);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* A namespace appears that no controller can see (e.g. added with
+	 * no_auto_visible): every Changed Namespace List is empty, so no
+	 * controller is notified.
+	 */
+	visible_ctrlr.changed_ns_list_count = 0;
+	ns_array[0] = &ns;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[0].channel == ch);
+	CU_ASSERT(g_ns_notice_count == 4);
+	CU_ASSERT(g_ana_notice_count == 0);
+
+	/* An ANA group change is not a namespace change: both controllers on
+	 * this poll group get the ANA change AEN and neither gets a namespace
+	 * AEN, even though visible_ctrlr has nsid 1 queued in its Changed
+	 * Namespace List.
+	 */
+	visible_ctrlr.changed_ns_list_count = 1;
+	ns.anagrpid = 2;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[0].anagrpid == 2);
+	CU_ASSERT(g_ns_notice_count == 4);
+	CU_ASSERT(g_ana_notice_count == 2);
+
+	/* A namespace change and an ANA group change in the same update:
+	 * namespace 2 appears while namespace 1 moves to another ANA group.
+	 * The namespace AEN goes to visible_ctrlr only, the ANA change AEN
+	 * to both controllers on this poll group. (The two changes must be
+	 * on different namespaces: per namespace the checks are an if/else
+	 * chain in which any namespace change takes precedence over an ANA
+	 * group change.)
+	 */
+	spdk_uuid_generate(&bdev2.uuid);
+	bdev2.blockcnt = 512;
+	ns2.bdev = &bdev2;
+	ns2.nsid = 2;
+	ns2.anagrpid = 1;
+	TAILQ_INIT(&ns2.registrants);
+	ns_array[1] = &ns2;
+	ns.anagrpid = 3;
+	rc = poll_group_update_subsystem(&group, &subsystem);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(sgroup.ns_info[1].channel == ch);
+	CU_ASSERT(sgroup.ns_info[0].anagrpid == 3);
+	CU_ASSERT(g_ns_notice_count == 5);
+	CU_ASSERT(g_ns_notice_ctrlr == &visible_ctrlr);
+	CU_ASSERT(g_ana_notice_count == 4);
+
+	/* Release the references held by ns_info, then the test's own. */
+	spdk_put_io_channel(sgroup.ns_info[0].channel);
+	spdk_put_io_channel(sgroup.ns_info[1].channel);
+	free(sgroup.ns_info);
+	spdk_put_io_channel(ch);
+	spdk_io_device_unregister(&g_ut_io_device, NULL);
+	spdk_thread_exit(thread);
+	while (!spdk_thread_is_exited(thread)) {
+		spdk_thread_poll(thread, 0, 0);
+	}
+	spdk_thread_destroy(thread);
+
+	spdk_set_thread(other_thread);
+	spdk_thread_exit(other_thread);
+	while (!spdk_thread_is_exited(other_thread)) {
+		spdk_thread_poll(other_thread, 0, 0);
+	}
+	spdk_thread_destroy(other_thread);
 }
 
 static void
@@ -587,6 +856,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tgt_options);
 	CU_ADD_TEST(suite, test_nvmf_tgt_ns_metadata);
 	CU_ADD_TEST(suite, test_nvmf_pause_drains_targeted_ns);
+	CU_ADD_TEST(suite, test_nvmf_poll_group_update_subsystem_ns_aen);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
