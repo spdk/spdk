@@ -12,6 +12,34 @@ nvme_ns_mark_inactive(struct spdk_nvme_ns *ns)
 	ns->identify_pending = false;
 }
 
+void
+nvme_ns_set_pi_format(struct spdk_nvme_ns *ns)
+{
+	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
+	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
+
+	ns->pi_format = SPDK_NVME_16B_GUARD_PI;
+
+	if (!(ns->flags & SPDK_NVME_NS_DPS_PI_SUPPORTED)) {
+		return;
+	}
+
+	/* nsdata_iocs is shared by all command sets, so it only holds an NVM Command
+	 * Set specific structure when the namespace belongs to the NVM Command Set.
+	 * Its elbaf array is in turn only valid when ELBAS is 1.
+	 */
+	if (ns->csi != SPDK_NVME_CSI_NVM || !ctrlr->cdata.ctratt.elbas) {
+		return;
+	}
+
+	nsdata_nvm = ns->nsdata_nvm;
+	if (nsdata_nvm == NULL) {
+		return;
+	}
+
+	ns->pi_format = nsdata_nvm->elbaf[spdk_nvme_ns_get_active_format_index(ns)].pif;
+}
+
 /**
  * Update Namespace flags based on Identify Controller
  * and Identify Namespace.  This can be also used for
@@ -22,7 +50,6 @@ void
 nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_data *nsdata)
 {
 	struct spdk_nvme_ctrlr		*ctrlr = ns->ctrlr;
-	struct spdk_nvme_nvm_ns_data	*nsdata_nvm;
 	struct spdk_nvme_ns_data_lbaf	lbaf;
 	uint32_t			format_index;
 	uint8_t				inline_count = nvme_ctrlr_nsdata_lbaf_inline_count(ctrlr);
@@ -42,8 +69,6 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 	}
 
 	memcpy(ns->nsdata, nsdata, nvme_ctrlr_get_nsdata_size(ns->ctrlr));
-
-	nsdata_nvm = ns->nsdata_nvm;
 
 	ns->flags = 0x0000;
 	format_index = spdk_nvme_ns_get_active_format_index(ns);
@@ -112,15 +137,9 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 	if (lbaf.ms && nsdata->dps.pit) {
 		ns->flags |= SPDK_NVME_NS_DPS_PI_SUPPORTED;
 		ns->pi_type = nsdata->dps.pit;
-		if (nsdata_nvm != NULL && ctrlr->cdata.ctratt.elbas) {
-			/* We may have nsdata_nvm for other purposes but
-			 * the elbaf array is only valid when elbas is 1.
-			 */
-			ns->pi_format = nsdata_nvm->elbaf[format_index].pif;
-		} else {
-			ns->pi_format = SPDK_NVME_16B_GUARD_PI;
-		}
 	}
+
+	nvme_ns_set_pi_format(ns);
 
 	ns->identify_pending = false;
 	ns->active = true;
@@ -312,6 +331,8 @@ nvme_ns_identify_iocs_specific_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		ns->nsdata_iocs = ctx->dma_data;
 		spdk_free(prev_nsdata_iocs);
 		ctx->dma_data = NULL;
+
+		nvme_ns_set_pi_format(ns);
 	}
 
 out:

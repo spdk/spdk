@@ -762,6 +762,8 @@ nvme_ns_set_identify_data(struct spdk_nvme_ns *ns, const struct spdk_nvme_ns_dat
 	ns->identify_pending = false;
 }
 
+DEFINE_STUB_V(nvme_ns_set_pi_format, (struct spdk_nvme_ns *ns));
+
 void
 spdk_pci_device_detach(struct spdk_pci_device *device)
 {

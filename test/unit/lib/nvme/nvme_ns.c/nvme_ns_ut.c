@@ -59,7 +59,7 @@ static struct spdk_nvme_nvm_ns_data nsdata_nvm = {
 	.pic._16bpistm = 1,
 	.pic.stcrs = 1,
 	.elbaf[0].sts = 32,
-	.elbaf[0].pif = 0,
+	.elbaf[0].pif = SPDK_NVME_32B_GUARD_PI,
 };
 
 struct spdk_nvme_cmd g_ut_cmd = {};
@@ -345,6 +345,69 @@ test_nvme_ns_set_identify_data(void)
 }
 
 static void
+test_nvme_ns_set_pi_format(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns *ns;
+	struct spdk_nvme_nvm_ns_data nvm = {};
+	struct spdk_nvme_ns_data nsdata = {};
+
+	ctrlr.min_page_size = 4096;
+	ctrlr.max_xfer_size = 131072;
+	ns = ut_ns_alloc(1, &ctrlr);
+
+	nsdata.ncap = 1;
+	nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
+	nsdata.lbaf[0].lbads = 9;
+	nsdata.lbaf[0].ms = 8;
+	nsdata.lbaf[1].lbads = 9;
+	nsdata.lbaf[1].ms = 16;
+	nsdata.nlbaf = 1;
+
+	nvm.elbaf[0].pif = SPDK_NVME_32B_GUARD_PI;
+	nvm.elbaf[1].pif = SPDK_NVME_64B_GUARD_PI;
+
+	/* case 1: PI is not enabled for the active format. Expect: 16b guard. */
+	nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_DISABLE;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(!(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED));
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+	nsdata.dps.pit = SPDK_NVME_FMT_NVM_PROTECTION_TYPE1;
+
+	/* case 2: IOCS specific data has not been retrieved yet. Expect: 16b guard. */
+	ctrlr.cdata.ctratt.elbas = 1;
+	ns->csi = SPDK_NVME_CSI_NVM;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+
+	/* case 3: IOCS specific data is available. Expect: the reported PI format. */
+	ns->nsdata_nvm = &nvm;
+	nvme_ns_set_pi_format(ns);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_32B_GUARD_PI);
+
+	/* case 4: the PI format follows the active LBA format. */
+	nsdata.flbas.format = 1;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_64B_GUARD_PI);
+	nsdata.flbas.format = 0;
+
+	/* case 5: ELBAS is 0, so the elbaf array is not valid. Expect: 16b guard. */
+	ctrlr.cdata.ctratt.elbas = 0;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+	ctrlr.cdata.ctratt.elbas = 1;
+
+	/* case 6: nsdata_iocs belongs to another command set. Expect: 16b guard. */
+	ns->csi = SPDK_NVME_CSI_ZNS;
+	nvme_ns_set_identify_data(ns, &nsdata);
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+
+	ns->nsdata_nvm = NULL;
+	ut_ns_free(ns);
+}
+
+static void
 test_spdk_nvme_ns_get_values(void)
 {
 	struct spdk_nvme_ctrlr nsctrlr = {};
@@ -569,45 +632,52 @@ test_nvme_ns_has_supported_iocs_specific_data(void)
 static void
 test_nvme_ns_identify_iocs_specific(void)
 {
-	struct spdk_nvme_ns ns = {};
 	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ns *ns = ut_ns_alloc(1, &ctrlr);
 	int rc = 0;
 
-	g_ut_ns = &ns;
-	ns.ctrlr = &ctrlr;
+	g_ut_ns = ns;
 
-	ns.csi = SPDK_NVME_CSI_ZNS;
-	ns.id = 1;
-
-	/* case 1: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
-	rc = nvme_ns_identify_iocs_specific(&ns);
-	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(ns.nsdata_zns != NULL);
-	CU_ASSERT(ns.nsdata_zns->mar == 1024);
-	CU_ASSERT(ns.nsdata_zns->mor == 1024);
-
-	/* case 2: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
-	nvme_ns_free_iocs_specific_data(&ns);
-	CU_ASSERT(ns.nsdata_zns == NULL);
-
-	ns.csi = SPDK_NVME_CSI_NVM;
+	ns->csi = SPDK_NVME_CSI_ZNS;
+	ns->flags = SPDK_NVME_NS_DPS_PI_SUPPORTED;
 	ctrlr.cdata.ctratt.elbas = true;
 
-	/* case 3: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
-	rc = nvme_ns_identify_iocs_specific(&ns);
+	/* case 1: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
+	rc = nvme_ns_identify_iocs_specific(ns);
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(ns.nsdata_nvm != NULL);
-	CU_ASSERT(ns.nsdata_nvm->lbstm == 0xFFFFFFFF);
-	CU_ASSERT(ns.nsdata_nvm->pic._16bpists == 1);
-	CU_ASSERT(ns.nsdata_nvm->pic._16bpistm == 1);
-	CU_ASSERT(ns.nsdata_nvm->pic.stcrs == 1);
-	CU_ASSERT(ns.nsdata_nvm->elbaf[0].sts == 32);
-	CU_ASSERT(ns.nsdata_nvm->elbaf[0].pif == 0);
+	SPDK_CU_ASSERT_FATAL(ns->nsdata_zns != NULL);
+	CU_ASSERT(ns->nsdata_zns->mar == 1024);
+	CU_ASSERT(ns->nsdata_zns->mor == 1024);
+	/* The data belongs to the Zoned Namespace Command Set, so it must not be
+	 * interpreted as an elbaf array. */
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_16B_GUARD_PI);
+
+	/* case 2: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
+	nvme_ns_free_iocs_specific_data(ns);
+	CU_ASSERT(ns->nsdata_zns == NULL);
+
+	ns->csi = SPDK_NVME_CSI_NVM;
+
+	/* case 3: Test nvme_ns_identify_iocs_specific. Expect: PASS. */
+	rc = nvme_ns_identify_iocs_specific(ns);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(ns->nsdata_nvm != NULL);
+	CU_ASSERT(ns->nsdata_nvm->lbstm == 0xFFFFFFFF);
+	CU_ASSERT(ns->nsdata_nvm->pic._16bpists == 1);
+	CU_ASSERT(ns->nsdata_nvm->pic._16bpistm == 1);
+	CU_ASSERT(ns->nsdata_nvm->pic.stcrs == 1);
+	CU_ASSERT(ns->nsdata_nvm->elbaf[0].sts == 32);
+	CU_ASSERT(ns->nsdata_nvm->elbaf[0].pif == SPDK_NVME_32B_GUARD_PI);
+	/* The PI format must be refreshed once the NVM Command Set specific data
+	 * becomes available. */
+	CU_ASSERT(spdk_nvme_ns_get_pi_format(ns) == SPDK_NVME_32B_GUARD_PI);
 
 	/* case 4: Test nvme_ns_free_iocs_specific_data. Expect: PASS. */
-	nvme_ns_free_iocs_specific_data(&ns);
-	CU_ASSERT(ns.nsdata_nvm == NULL);
+	nvme_ns_free_iocs_specific_data(ns);
+	CU_ASSERT(ns->nsdata_nvm == NULL);
 	g_ut_ns = NULL;
+
+	ut_ns_free(ns);
 }
 
 static void
@@ -683,6 +753,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ns_data_alloc_mode);
 	CU_ADD_TEST(suite, test_nvme_ns_data_alloc_mode_lbaf_4);
 	CU_ADD_TEST(suite, test_nvme_ns_set_identify_data);
+	CU_ADD_TEST(suite, test_nvme_ns_set_pi_format);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_get_values);
 	CU_ADD_TEST(suite, test_spdk_nvme_ns_is_active);
 	CU_ADD_TEST(suite, spdk_nvme_ns_supports);

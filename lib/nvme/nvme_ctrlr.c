@@ -3032,6 +3032,8 @@ nvme_ctrlr_identify_ns_iocs_specific_async_done(void *arg, const struct spdk_nvm
 	} else {
 		ns->nsdata_iocs = ctx->dma_data;
 		ctx->dma_data = NULL;
+
+		nvme_ns_set_pi_format(ns);
 	}
 
 	nvme_ctrlr_delete_identify_ctx(ctx);
