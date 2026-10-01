@@ -1940,6 +1940,33 @@ function get_zoned_devs() {
 	done
 }
 
+function init_zram() {
+	[[ -e /sys/class/zram-control ]] || modprobe zram num_devices=0
+	return
+}
+
+function create_zram_dev() {
+	cat /sys/class/zram-control/hot_add
+}
+
+function remove_zram_dev() {
+	local id=$1
+
+	[[ -e /sys/block/zram$id ]]
+
+	echo 1 > "/sys/block/zram$id/reset"
+	echo "$id" > "/sys/class/zram-control/hot_remove"
+}
+
+function set_zram_dev() {
+	local id=$1
+	local size=${2:-64M}
+
+	[[ -e /sys/block/zram$id ]]
+
+	echo "$size" > "/sys/block/zram$id/disksize"
+}
+
 function is_pid_child() {
 	local pid=$1 _pid
 

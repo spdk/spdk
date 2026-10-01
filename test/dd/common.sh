@@ -155,33 +155,6 @@ check_liburing() {
 	done < <(objdump -p "${DD_APP[@]}" | grep "NEEDED") >&2
 }
 
-init_zram() {
-	[[ -e /sys/class/zram-control ]] || modprobe zram num_devices=0
-	return
-}
-
-create_zram_dev() {
-	cat /sys/class/zram-control/hot_add
-}
-
-remove_zram_dev() {
-	local id=$1
-
-	[[ -e /sys/block/zram$id ]]
-
-	echo 1 > "/sys/block/zram$id/reset"
-	echo "$id" > "/sys/class/zram-control/hot_remove"
-}
-
-set_zram_dev() {
-	local id=$1
-	local size=${2:-64M}
-
-	[[ -e /sys/block/zram$id ]]
-
-	echo "$size" > "/sys/block/zram$id/disksize"
-}
-
 init_null_blk() {
 	[[ -e /sys/module/null_blk ]] || modprobe null_blk "$@"
 	return
