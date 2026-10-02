@@ -93,7 +93,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_admin_qp_fd, int, (struct spdk_nvme_ctrlr *ctrlr
 DEFINE_STUB(spdk_nvme_poll_group_set_interrupt_callback, int,
 	    (struct spdk_nvme_poll_group *group,
 	     spdk_nvme_poll_group_interrupt_cb cb_fn, void *ctx), 0);
-DEFINE_STUB(spdk_nvme_ns_is_active, bool, (struct spdk_nvme_ns *ns), true);
 DEFINE_STUB(spdk_nvme_ctrlr_reset_subsystem, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(spdk_nvme_ctrlr_is_nssr_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), 0);
 
@@ -321,6 +320,12 @@ struct spdk_nvme_ns {
 	enum spdk_nvme_ana_state	ana_state;
 	enum spdk_nvme_csi		csi;
 };
+
+bool
+spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
+{
+	return ns->is_active;
+}
 
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr		*ctrlr;
@@ -775,6 +780,14 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	}
 
 	return &ctrlr->ns[nsid - 1];
+}
+
+static int g_ut_release_inactive_ns_count;
+
+void
+spdk_nvme_ctrlr_release_inactive_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	g_ut_release_inactive_ns_count++;
 }
 
 bool
@@ -2355,8 +2368,10 @@ test_aer_cb(void)
 	ctrlr->ns[2].is_active = false;
 	ctrlr->nsdata[3].nsze = 2048;
 
+	g_ut_release_inactive_ns_count = 0;
 	nvme_ctrlr_ns_attr_changed_cb(nvme_ctrlr, NULL, 0);
 
+	CU_ASSERT(g_ut_release_inactive_ns_count == 1);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 1) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2) != NULL);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 3) == NULL);
@@ -2381,11 +2396,14 @@ test_aer_cb(void)
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 2)->ana_state == SPDK_NVME_ANA_INACCESSIBLE_STATE);
 	CU_ASSERT(nvme_ctrlr_get_ns(nvme_ctrlr, 4)->ana_state == SPDK_NVME_ANA_CHANGE_STATE);
 
+	g_ut_release_inactive_ns_count = 0;
 	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
 	CU_ASSERT(rc == 0);
 
 	ut_complete_async_delete();
 
+	/* One release for each namespace still populated: 1, 2, and 4. */
+	CU_ASSERT(g_ut_release_inactive_ns_count == 3);
 	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
 }
 

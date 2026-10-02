@@ -5112,6 +5112,7 @@ nvme_ns_free(struct nvme_ns *nvme_ns)
 static void
 nvme_ns_delete(struct nvme_ns *nvme_ns)
 {
+	spdk_nvme_ctrlr_release_inactive_ns(nvme_ns->ctrlr->ctrlr, nvme_ns->id);
 	nvme_ctrlr_put_ref(nvme_ns->ctrlr);
 	nvme_ns_free(nvme_ns);
 }
