@@ -937,6 +937,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr); nsid != 0;
 			     nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
 				ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+				if (!ns) {
+					continue;
+				}
+
 				register_ns(ctrlr, ns);
 			}
 		}

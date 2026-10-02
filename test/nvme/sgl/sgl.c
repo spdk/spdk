@@ -327,7 +327,7 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 	struct spdk_nvme_qpair *qpair;
 	const struct spdk_nvme_ns_data_head *nsdata;
 
-	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, 1);
+	ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, spdk_nvme_ctrlr_get_first_active_ns(dev->ctrlr));
 	if (!ns) {
 		fprintf(stderr, "Null namespace\n");
 		return 0;

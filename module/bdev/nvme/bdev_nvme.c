@@ -5083,24 +5083,17 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 }
 
 static struct nvme_ns *
-nvme_ns_create(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid, struct nvme_async_probe_ctx *ctx)
+nvme_ns_create(struct nvme_ctrlr *nvme_ctrlr, struct spdk_nvme_ns *ns,
+	       struct nvme_async_probe_ctx *ctx)
 {
 	struct nvme_ns *nvme_ns;
-	struct spdk_nvme_ns *ns;
 
 	nvme_ns = calloc(1, sizeof(struct nvme_ns));
 	if (nvme_ns == NULL) {
 		return NULL;
 	}
 
-	ns = spdk_nvme_ctrlr_get_ns(nvme_ctrlr->ctrlr, nsid);
-	if (!ns) {
-		NVME_NS_DEBUGLOG(nvme_ns, "Invalid NS\n");
-		nvme_ns_free(nvme_ns);
-		return NULL;
-	}
-
-	nvme_ns->id = nsid;
+	nvme_ns->id = spdk_nvme_ns_get_id(ns);
 	nvme_ns->ctrlr = nvme_ctrlr;
 	nvme_ns->probe_ctx = ctx;
 	nvme_ns->ns = ns;
@@ -5364,6 +5357,7 @@ nvme_ctrlr_update_ns(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ns *nvme_ns,
 	if (spdk_nvme_ctrlr_is_active_ns(ctrlr, nvme_ns->id)) {
 		/* NS is still there or added again. Its attributes may have changed. */
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nvme_ns->id);
+		assert(ns != NULL);
 		if (nvme_ns->ns != ns) {
 			assert(nvme_ns->ns == NULL);
 			nvme_ns->ns = ns;
@@ -5406,7 +5400,7 @@ nvme_ctrlr_add_ns(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid,
 		return;
 	}
 
-	nvme_ns = nvme_ns_create(nvme_ctrlr, nsid, ctx);
+	nvme_ns = nvme_ns_create(nvme_ctrlr, ns, ctx);
 	if (nvme_ns == NULL) {
 		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Failed to allocate namespace\n");
 		/* This just fails to attach the namespace. It may work on a future attempt. */
@@ -6838,7 +6832,9 @@ bdev_nvme_check_secondary_namespace(struct nvme_ctrlr *nvme_ctrlr,
 
 	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
 		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, nvme_ns->id);
-		assert(new_ns != NULL);
+		if (!new_ns || !spdk_nvme_ns_is_active(new_ns)) {
+			return -EINVAL;
+		}
 
 		if (!bdev_nvme_compare_ns(nvme_ns->ns, new_ns)) {
 			return -EINVAL;

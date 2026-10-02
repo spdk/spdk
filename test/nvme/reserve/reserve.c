@@ -318,6 +318,10 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *q
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	if (!ns) {
+		fprintf(stderr, "Namespace %u not found\n", ns_id);
+		return -1;
+	}
 
 	if (reg) {
 		rr_data.crkey = 0;
@@ -364,6 +368,10 @@ reservation_ns_report(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpa
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	if (!ns) {
+		fprintf(stderr, "Namespace %u not found\n", ns_id);
+		return -1;
+	}
 
 	g_outstanding_commands = 0;
 	g_reserve_command_result = -1;
@@ -446,6 +454,11 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	if (!ns) {
+		fprintf(stderr, "Namespace %u not found\n", ns_id);
+		return -1;
+	}
+
 	cdata.crkey = CR_KEY;
 	cdata.prkey = 0;
 
@@ -483,6 +496,11 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 	struct spdk_nvme_ns *ns;
 
 	ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
+	if (!ns) {
+		fprintf(stderr, "Namespace %u not found\n", ns_id);
+		return -1;
+	}
+
 	cdata.crkey = CR_KEY;
 
 	g_outstanding_commands = 0;

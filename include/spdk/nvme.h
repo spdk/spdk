@@ -2455,7 +2455,8 @@ struct spdk_nvme_ns;
  * \param ctrlr Opaque handle to NVMe controller.
  * \param ns_id Namespace id.
  *
- * \return a pointer to the namespace.
+ * \return a pointer to the namespace, or NULL if \c ns_id is out of range or the
+ * namespace object cannot be allocated.
  */
 struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id);
 

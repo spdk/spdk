@@ -52,7 +52,15 @@ DEFINE_STUB_V(nvme_io_msg_ctrlr_unregister,
 DEFINE_STUB(spdk_nvme_ctrlr_is_active_ns, bool,
 	    (struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid), true);
 
-DEFINE_STUB(fuse_reply_err, int, (fuse_req_t req, int err), 0);
+static int g_fuse_reply_err;
+
+int
+fuse_reply_err(fuse_req_t req, int err)
+{
+	g_fuse_reply_err = err;
+	return 0;
+}
+
 DEFINE_STUB(pthread_join, int, (pthread_t tid, void **val), 0);
 
 DEFINE_STUB(nvme_ns_identify, int, (struct spdk_nvme_ns *ns), 0);
@@ -510,6 +518,16 @@ test_cuse_nvme_submit_io(void)
 
 	cuse_nvme_submit_io(req, 0, arg, &fi, FUSE_IOCTL_DIR, user_io, 4096, 4096);
 	SPDK_CU_ASSERT_FATAL(g_ut_ctx == NULL);
+
+	/* Namespace not found */
+	g_ut_ctx = NULL;
+	g_fuse_reply_err = 0;
+	user_io->opcode = SPDK_NVME_OPC_READ;
+	cuse_device.nsid = ctrlr.cdata.nn + 1;
+
+	cuse_nvme_submit_io(req, 0, arg, &fi, FUSE_IOCTL_DIR, user_io, 4096, 4096);
+	CU_ASSERT(g_ut_ctx == NULL);
+	CU_ASSERT(g_fuse_reply_err == ENODEV);
 
 	free(user_io);
 }

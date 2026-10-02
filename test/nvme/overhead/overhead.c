@@ -139,7 +139,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {
-	int num_ns;
+	struct spdk_nvme_ns *ns;
 	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
 	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -154,14 +154,13 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_INSERT_TAIL(&g_ctrlr, entry, link);
 
-	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	/* Only register the first namespace. */
-	if (num_ns < 1) {
-		fprintf(stderr, "controller found with no namespaces\n");
-		return;
+	ns = spdk_nvme_ctrlr_get_ns(ctrlr, spdk_nvme_ctrlr_get_first_active_ns(ctrlr));
+	if (!ns) {
+		printf("No valid namespaces in controller\n");
+	} else {
+		register_ns(ctrlr, ns);
 	}
-
-	register_ns(ctrlr, spdk_nvme_ctrlr_get_ns(ctrlr, 1));
 }
 
 #if HAVE_LIBAIO

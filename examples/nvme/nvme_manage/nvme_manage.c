@@ -671,7 +671,7 @@ format_nvm(void)
 
 	if (cdata->fna.format_all_ns) {
 		ns_id = SPDK_NVME_GLOBAL_NS_TAG;
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, 1);
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr->ctrlr, spdk_nvme_ctrlr_get_first_active_ns(ctrlr->ctrlr));
 	} else {
 		printf("Please Input Namespace ID (1 - %d):\n", cdata->nn);
 		if (!scanf("%d", &ns_id)) {

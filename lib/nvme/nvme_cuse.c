@@ -78,6 +78,19 @@ cuse_io_ctx_free(struct cuse_io_ctx *ctx)
 	free(ctx);
 }
 
+static struct spdk_nvme_ns *
+cuse_get_ns(fuse_req_t req, struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+
+	if (!ns) {
+		SPDK_ERRLOG("Namespace %u not found\n", nsid);
+		fuse_reply_err(req, ENODEV);
+	}
+
+	return ns;
+}
+
 #define FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, val)		\
 	if (out_bufsz == 0) {						\
 		struct iovec out_iov;					\
@@ -429,7 +442,12 @@ cuse_nvme_submit_io_write_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void 
 {
 	int rc;
 	struct cuse_io_ctx *ctx = arg;
-	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	struct spdk_nvme_ns *ns = cuse_get_ns(ctx->req, ctrlr, nsid);
+
+	if (!ns) {
+		cuse_io_ctx_free(ctx);
+		return;
+	}
 
 	rc = spdk_nvme_ns_cmd_write_with_md(ns, ctrlr->external_io_msgs_qpair, ctx->data, ctx->metadata,
 					    ctx->lba, /* LBA start */
@@ -534,7 +552,12 @@ cuse_nvme_submit_io_read_cb(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, void *
 {
 	int rc;
 	struct cuse_io_ctx *ctx = arg;
-	struct spdk_nvme_ns *ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	struct spdk_nvme_ns *ns = cuse_get_ns(ctx->req, ctrlr, nsid);
+
+	if (!ns) {
+		cuse_io_ctx_free(ctx);
+		return;
+	}
 
 	rc = spdk_nvme_ns_cmd_read_with_md(ns, ctrlr->external_io_msgs_qpair, ctx->data, ctx->metadata,
 					   ctx->lba, /* LBA start */
@@ -629,7 +652,11 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 
 	user_io = in_buf;
 
-	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
+	if (!ns) {
+		return;
+	}
+
 	block_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 
@@ -696,7 +723,11 @@ cuse_blkgetsize64(fuse_req_t req, int cmd, void *arg,
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
 
-	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
+	if (!ns) {
+		return;
+	}
+
 	size = spdk_nvme_ns_get_num_sectors(ns);
 	fuse_reply_ioctl(req, 0, &size, sizeof(size));
 }
@@ -712,7 +743,11 @@ cuse_blkpbszget(fuse_req_t req, int cmd, void *arg,
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, pbsz);
 
-	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
+	if (!ns) {
+		return;
+	}
+
 	pbsz = spdk_nvme_ns_get_sector_size(ns);
 	fuse_reply_ioctl(req, 0, &pbsz, sizeof(pbsz));
 }
@@ -728,7 +763,10 @@ cuse_blkgetsize(fuse_req_t req, int cmd, void *arg,
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
 
-	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
+	if (!ns) {
+		return;
+	}
 
 	/* return size in 512 bytes blocks */
 	size = spdk_nvme_ns_get_num_sectors(ns) * 512 / spdk_nvme_ns_get_sector_size(ns);
@@ -746,7 +784,11 @@ cuse_blkgetsectorsize(fuse_req_t req, int cmd, void *arg,
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, ssize);
 
-	ns = spdk_nvme_ctrlr_get_ns(cuse_device->ctrlr, cuse_device->nsid);
+	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
+	if (!ns) {
+		return;
+	}
+
 	ssize = spdk_nvme_ns_get_sector_size(ns);
 	fuse_reply_ioctl(req, 0, &ssize, sizeof(ssize));
 }

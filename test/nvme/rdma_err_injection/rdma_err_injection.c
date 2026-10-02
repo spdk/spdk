@@ -53,7 +53,6 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
 	struct dev *dev;
-	uint32_t nsid;
 
 	/* add to dev list */
 	dev = &g_devs[g_num_devs++];
@@ -62,8 +61,12 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	dev->ctrlr = ctrlr;
-	nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, spdk_nvme_ctrlr_get_first_active_ns(ctrlr));
+	if (!dev->ns) {
+		g_failure_ec = -ENODEV;
+		return;
+	}
+
 	dev->block_size = spdk_nvme_ns_get_sector_size(dev->ns);
 
 	dev->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);

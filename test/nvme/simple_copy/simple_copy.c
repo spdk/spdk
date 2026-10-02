@@ -327,7 +327,6 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
-	int			num_ns;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 
@@ -338,11 +337,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		/*
 		 * Use only the first namespace from each controller since we are testing controller level functionality.
 		 */
-		num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-		if (num_ns < 1) {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, spdk_nvme_ctrlr_get_first_active_ns(ctrlr));
+		if (!ns) {
 			printf("No valid namespaces in controller\n");
 		} else {
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 			register_ns(ctrlr, ns);
 		}
 	} else {
