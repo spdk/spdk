@@ -1139,7 +1139,14 @@ struct spdk_nvme_ctrlr {
 
 	bool				needs_io_msg_update;
 
-	/* Tree of namespaces */
+	/*
+	 * Namespace tree, protected by ctrlr_lock.
+	 *
+	 * I/O threads look it up through spdk_nvme_ctrlr_get_ns(),
+	 * nvme_ctrlr_get_ns_md_len(), spdk_nvme_ctrlr_is_active_ns(), and the
+	 * active-namespace iterators, while another thread inserts and removes
+	 * nodes.
+	 */
 	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
 
 	uint16_t			cntlid;
@@ -1183,7 +1190,7 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_ctrlr_aer_completion	*async_event_in_progress;
 	struct spdk_nvme_ctrlr_process		*async_event_in_progress_proc;
 
-	/** guards access to the controller itself, including admin queues */
+	/** Guards the controller, including admin queues and the namespace tree. */
 	pthread_mutex_t			ctrlr_lock;
 
 	struct spdk_nvme_qpair		*adminq;
