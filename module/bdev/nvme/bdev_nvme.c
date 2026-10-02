@@ -6832,6 +6832,10 @@ bdev_nvme_check_secondary_namespace(struct nvme_ctrlr *nvme_ctrlr,
 	assert(spdk_thread_is_app_thread(NULL));
 
 	RB_FOREACH(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces) {
+		if (!nvme_ns->ns || !spdk_nvme_ns_is_active(nvme_ns->ns)) {
+			continue;
+		}
+
 		new_ns = spdk_nvme_ctrlr_get_ns(new_ctrlr, nvme_ns->id);
 		if (!new_ns || !spdk_nvme_ns_is_active(new_ns)) {
 			return -EINVAL;

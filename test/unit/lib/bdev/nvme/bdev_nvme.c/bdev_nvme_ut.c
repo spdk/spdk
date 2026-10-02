@@ -1952,6 +1952,53 @@ test_race_between_failover_and_add_secondary_trid(void)
 }
 
 static void
+test_check_secondary_namespace(void)
+{
+	struct spdk_nvme_ns_data nsdata[2] = {};
+	struct spdk_nvme_ns_data new_nsdata[2] = {};
+	struct spdk_nvme_ctrlr ctrlr = { .num_ns = 2, .nsdata = nsdata };
+	struct spdk_nvme_ctrlr new_ctrlr = { .num_ns = 1, .nsdata = new_nsdata };
+	struct spdk_nvme_ns ns[2] = {
+		{ .ctrlr = &ctrlr, .id = 1, .is_active = true },
+		{ .ctrlr = &ctrlr, .id = 2, .is_active = false },
+	};
+	struct spdk_nvme_ns new_ns[2] = {
+		{ .ctrlr = &new_ctrlr, .id = 1, .is_active = true },
+		{ .ctrlr = &new_ctrlr, .id = 2, .is_active = true },
+	};
+	struct nvme_ctrlr nvme_ctrlr = {};
+	struct nvme_ns nvme_ns1 = { .id = 1, .ns = &ns[0] };
+	struct nvme_ns nvme_ns2 = { .id = 2, .ns = &ns[1] };
+
+	ctrlr.ns = ns;
+	new_ctrlr.ns = new_ns;
+
+	set_thread(0);
+	RB_INIT(&nvme_ctrlr.namespaces);
+	RB_INSERT(nvme_ns_tree, &nvme_ctrlr.namespaces, &nvme_ns1);
+	RB_INSERT(nvme_ns_tree, &nvme_ctrlr.namespaces, &nvme_ns2);
+
+	/* Inactive at the nvme layer, still in the bdev tree. The new path has no NSID 2. */
+	CU_ASSERT(bdev_nvme_check_secondary_namespace(&nvme_ctrlr, &new_ctrlr) == 0);
+
+	/* Reset leaves the bdev namespace with the driver handle cleared. */
+	nvme_ns2.ns = NULL;
+	new_ctrlr.num_ns = 2;
+	CU_ASSERT(bdev_nvme_check_secondary_namespace(&nvme_ctrlr, &new_ctrlr) == 0);
+
+	/* A live namespace the new controller does not have is still rejected. */
+	ns[1].is_active = true;
+	nvme_ns2.ns = &ns[1];
+	new_ctrlr.num_ns = 1;
+	CU_ASSERT(bdev_nvme_check_secondary_namespace(&nvme_ctrlr, &new_ctrlr) == -EINVAL);
+
+	/* The new controller has the NSID, but that namespace is inactive. */
+	new_ctrlr.num_ns = 2;
+	new_ns[1].is_active = false;
+	CU_ASSERT(bdev_nvme_check_secondary_namespace(&nvme_ctrlr, &new_ctrlr) == -EINVAL);
+}
+
+static void
 attach_ctrlr_done(void *cb_ctx, size_t bdev_count, int rc)
 {
 	CU_ASSERT(rc == g_ut_attach_ctrlr_status);
@@ -8499,6 +8546,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_race_between_reset_and_destruct_ctrlr);
 	CU_ADD_TEST(suite, test_failover_ctrlr);
 	CU_ADD_TEST(suite, test_race_between_failover_and_add_secondary_trid);
+	CU_ADD_TEST(suite, test_check_secondary_namespace);
 	CU_ADD_TEST(suite, test_pending_reset);
 	CU_ADD_TEST(suite, test_attach_ctrlr);
 	CU_ADD_TEST(suite, test_attach_ctrlr_race_process_adminq_failure);
