@@ -3488,6 +3488,20 @@ _free_ctrlr(void *ctx)
 {
 	struct nvmf_vfio_user_ctrlr *ctrlr = ctx;
 	struct nvmf_vfio_user_endpoint *endpoint = ctrlr->endpoint;
+	int i;
+
+	/*
+	 * Free the qpairs here, on the controller's thread, rather than in
+	 * free_ctrlr() which may run on a different thread (e.g. the target
+	 * shutdown thread). free_qp() clears ctrlr->sqs[]/cqs[], and the
+	 * controller interrupt handler vfio_user_ctrlr_intr() dereferences
+	 * sqs[0] (via ctrlr_to_poll_group()) on ctrlr->thread. Doing the
+	 * freeing here serializes it with the interrupt handler on the same
+	 * SPDK thread and prevents a use-after-free of the SQs.
+	 */
+	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
+		free_qp(ctrlr, i);
+	}
 
 	free_sdbl(endpoint->vfu_ctx, ctrlr->sdbl);
 
@@ -3509,17 +3523,17 @@ static void
 free_ctrlr(struct nvmf_vfio_user_ctrlr *ctrlr)
 {
 	struct spdk_thread *thread;
-	int i;
 
 	assert(ctrlr != NULL);
 	thread = ctrlr->thread ? ctrlr->thread : spdk_get_thread();
 
 	SPDK_DEBUGLOG(nvmf_vfio, "free %s\n", ctrlr_id(ctrlr));
 
-	for (i = 0; i < NVMF_VFIO_USER_MAX_QPAIRS_PER_CTRLR; i++) {
-		free_qp(ctrlr, i);
-	}
-
+	/*
+	 * Defer freeing the qpairs to _free_ctrlr(), which runs on
+	 * ctrlr->thread, so the SQ/CQ teardown is serialized with the
+	 * controller interrupt handler running on the same thread.
+	 */
 	spdk_thread_exec_msg(thread, _free_ctrlr, ctrlr);
 }
 

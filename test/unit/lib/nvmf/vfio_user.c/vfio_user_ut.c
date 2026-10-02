@@ -4,7 +4,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk_internal/cunit.h"
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "nvmf/vfio_user.c"
 #include "nvmf/transport.c"
 
@@ -250,6 +250,120 @@ test_nvmf_vfio_user_create_destroy(void)
 	CU_ASSERT(done == 1);
 }
 
+struct ut_free_ctrlr_ctx {
+	struct nvmf_vfio_user_poll_group	*expected_group;
+	int					handler_calls;
+};
+
+static struct ut_free_ctrlr_ctx g_ut_free_ctrlr_ctx;
+
+/* Stands in for the controller interrupt handler, which starts with ctrlr_to_poll_group(). */
+static int
+ut_ctrlr_handler(void *ctx)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr = ctx;
+
+	g_ut_free_ctrlr_ctx.handler_calls++;
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr->sqs[0] != NULL);
+	CU_ASSERT(ctrlr_to_poll_group(vu_ctrlr) == g_ut_free_ctrlr_ctx.expected_group);
+
+	return SPDK_POLLER_IDLE;
+}
+
+static struct nvmf_vfio_user_ctrlr *
+ut_alloc_ctrlr(struct nvmf_vfio_user_endpoint *endpoint,
+	       struct nvmf_vfio_user_poll_group *vu_group)
+{
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+
+	vu_ctrlr = calloc(1, sizeof(*vu_ctrlr));
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr != NULL);
+	vu_ctrlr->endpoint = endpoint;
+	vu_ctrlr->intr_fd = -1;
+	TAILQ_INIT(&vu_ctrlr->connected_sqs);
+
+	vu_ctrlr->sqs[0] = calloc(1, sizeof(*vu_ctrlr->sqs[0]));
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr->sqs[0] != NULL);
+	vu_ctrlr->sqs[0]->ctrlr = vu_ctrlr;
+	vu_ctrlr->sqs[0]->group = &vu_group->group;
+	TAILQ_INIT(&vu_ctrlr->sqs[0]->free_reqs);
+
+	vu_ctrlr->cqs[0] = calloc(1, sizeof(*vu_ctrlr->cqs[0]));
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr->cqs[0] != NULL);
+
+	return vu_ctrlr;
+}
+
+/*
+ * free_ctrlr() can be called from a thread other than ctrlr->thread (e.g. the
+ * thread tearing down the target). The controller interrupt handler keeps
+ * running on ctrlr->thread until _free_ctrlr() unregisters it there, so the
+ * queues must not be freed before that.
+ */
+static void
+test_free_ctrlr_from_other_thread(void)
+{
+	struct nvmf_vfio_user_endpoint endpoint = {};
+	struct nvmf_vfio_user_poll_group vu_group = {};
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+
+	allocate_threads(2);
+	set_thread(0);
+
+	memset(&g_ut_free_ctrlr_ctx, 0, sizeof(g_ut_free_ctrlr_ctx));
+	g_ut_free_ctrlr_ctx.expected_group = &vu_group;
+
+	vu_ctrlr = ut_alloc_ctrlr(&endpoint, &vu_group);
+	vu_ctrlr->thread = spdk_get_thread();
+	vu_ctrlr->vfu_ctx_poller = SPDK_POLLER_REGISTER(ut_ctrlr_handler, vu_ctrlr, 0);
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr->vfu_ctx_poller != NULL);
+
+	poll_thread(0);
+	CU_ASSERT(g_ut_free_ctrlr_ctx.handler_calls == 1);
+
+	set_thread(1);
+	free_ctrlr(vu_ctrlr);
+
+	/* Nothing may be torn down on the calling thread. */
+	SPDK_CU_ASSERT_FATAL(vu_ctrlr->sqs[0] != NULL);
+	CU_ASSERT(vu_ctrlr->cqs[0] != NULL);
+	CU_ASSERT(vu_ctrlr->vfu_ctx_poller != NULL);
+
+	/* The controller handler fires on ctrlr->thread before _free_ctrlr() runs there. */
+	set_thread(0);
+	ut_ctrlr_handler(vu_ctrlr);
+	CU_ASSERT(g_ut_free_ctrlr_ctx.handler_calls == 2);
+
+	/* _free_ctrlr() frees the queues and unregisters the handler on ctrlr->thread. */
+	CU_ASSERT(poll_thread(0));
+	poll_threads();
+	CU_ASSERT(g_ut_free_ctrlr_ctx.handler_calls == 2);
+
+	set_thread(INVALID_THREAD);
+	free_threads();
+}
+
+/* Before the admin queue connects, ctrlr->thread is NULL and free_ctrlr() frees inline. */
+static void
+test_free_ctrlr_without_thread(void)
+{
+	struct nvmf_vfio_user_endpoint endpoint = {};
+	struct nvmf_vfio_user_poll_group vu_group = {};
+	struct nvmf_vfio_user_ctrlr *vu_ctrlr;
+
+	allocate_threads(2);
+	set_thread(1);
+
+	vu_ctrlr = ut_alloc_ctrlr(&endpoint, &vu_group);
+	free_ctrlr(vu_ctrlr);
+
+	CU_ASSERT(!poll_thread(0));
+	CU_ASSERT(!poll_thread(1));
+
+	set_thread(INVALID_THREAD);
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -263,6 +377,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_cmd_map_prps);
 	CU_ADD_TEST(suite, test_nvme_cmd_map_sgls);
 	CU_ADD_TEST(suite, test_nvmf_vfio_user_create_destroy);
+	CU_ADD_TEST(suite, test_free_ctrlr_from_other_thread);
+	CU_ADD_TEST(suite, test_free_ctrlr_without_thread);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
