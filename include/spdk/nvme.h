@@ -2445,9 +2445,10 @@ struct spdk_nvme_ns;
 /**
  * Get a handle to a namespace for the given controller.
  *
- * Namespaces are numbered from 1 to the total number of namespaces. There will
- * never be any gaps in the numbering. The number of namespaces is obtained by
- * calling spdk_nvme_ctrlr_get_num_ns().
+ * NSIDs span the contiguous range from 1 to the value returned by
+ * spdk_nvme_ctrlr_get_num_ns(). Active namespaces are not necessarily
+ * contiguous within that range. Iterate over them with
+ * spdk_nvme_ctrlr_get_first_active_ns() and spdk_nvme_ctrlr_get_next_active_ns().
  *
  * This function is thread safe and can be called at any point while the controller
  * is attached to the SPDK NVMe driver.
@@ -2455,8 +2456,8 @@ struct spdk_nvme_ns;
  * \param ctrlr Opaque handle to NVMe controller.
  * \param ns_id Namespace id.
  *
- * \return a pointer to the namespace, or NULL if \c ns_id is out of range or the
- * namespace object cannot be allocated.
+ * \return a pointer to the namespace, or NULL if \c ns_id is out of range or
+ * the driver has no namespace for that id.
  */
 struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id);
 

@@ -2933,7 +2933,7 @@ test_nvme_ctrlr_ns_mgmt(void)
 	fake_cpl.cdw0 = 0;
 	CU_ASSERT(nsid == 3);
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 3));
-	CU_ASSERT(spdk_nvme_ctrlr_get_ns(&ctrlr, 3) != NULL);
+	CU_ASSERT(spdk_nvme_ctrlr_get_ns(&ctrlr, 3) == NULL);
 
 	g_active_ns_list = active_ns_list2;
 	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list2);
@@ -3002,7 +3002,7 @@ test_nvme_ctrlr_reset(void)
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_READY);
 
 	CU_ASSERT(spdk_nvme_ctrlr_get_num_ns(&ctrlr) == 4096);
-	CU_ASSERT(spdk_nvme_ctrlr_get_ns(&ctrlr, 2) != NULL);
+	CU_ASSERT(spdk_nvme_ctrlr_get_ns(&ctrlr, 2) == NULL);
 	CU_ASSERT(!spdk_nvme_ctrlr_is_active_ns(&ctrlr, 2));
 
 	nvme_ctrlr_destruct(&ctrlr);

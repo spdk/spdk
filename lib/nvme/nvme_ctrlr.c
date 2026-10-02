@@ -18,6 +18,7 @@ struct nvme_active_ns_ctx;
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 static int nvme_ctrlr_identify_active_ns_async(struct nvme_active_ns_ctx *ctx);
+static struct spdk_nvme_ns *nvme_ctrlr_alloc_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 static int nvme_ctrlr_identify_ns_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_ns_iocs_specific_async(struct spdk_nvme_ns *ns);
 static int nvme_ctrlr_identify_id_desc_async(struct spdk_nvme_ns *ns);
@@ -2631,12 +2632,14 @@ nvme_ctrlr_identify_active_ns_swap(struct spdk_nvme_ctrlr *ctrlr, uint32_t *new_
 		assert(i == 0 || nsid > new_ns_list[i - 1]);
 
 		/* If the namespace already exists, this will not construct it a second time. */
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 		if (!ns) {
-			/* We can't easily handle a failure here. But just move on. */
-			assert(false);
-			NVME_CTRLR_DEBUGLOG(ctrlr, "Failed to allocate a namespace object.\n");
-			continue;
+			ns = nvme_ctrlr_alloc_ns(ctrlr, nsid);
+			if (!ns) {
+				/* We can't easily handle a failure, move on. */
+				assert(false);
+				continue;
+			}
 		}
 
 		ns->identify_pending = true;
@@ -3728,12 +3731,13 @@ nvme_ctrlr_aer_identify_changed_ns(struct spdk_nvme_ctrlr *ctrlr,
 			break;
 		}
 
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+		ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 		if (!ns) {
-			assert(false);
-			NVME_CTRLR_ERRLOG(ctrlr, "Failed to get namespace %u from changed NS list "
-					  "(NSID out of range or OOM)\n", nsid);
-			continue;
+			ns = nvme_ctrlr_alloc_ns(ctrlr, nsid);
+			if (!ns) {
+				assert(false);
+				continue;
+			}
 		}
 
 		nvme_ns_identify(ns);
@@ -5322,35 +5326,40 @@ spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_
 	return ns ? ns->id : 0;
 }
 
-struct spdk_nvme_ns *
-spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+static struct spdk_nvme_ns *
+nvme_ctrlr_alloc_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns *ns;
 
 	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate namespace %u: out of range\n", nsid);
 		return NULL;
 	}
 
-	nvme_ctrlr_lock(ctrlr);
-	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
-	if (ns == NULL) {
-		ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns) + nvme_ctrlr_get_nsdata_size(ctrlr),
-				  SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
-		if (ns == NULL) {
-			nvme_ctrlr_unlock(ctrlr);
-			return NULL;
-		}
-
-		NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
-		ns->id = nsid;
-		ns->ctrlr = ctrlr;
-		ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
-		RB_INSERT(nvme_ns_tree, &ctrlr->ns, ns);
+	assert(!nvme_ctrlr_find_ns(ctrlr, nsid));
+	ns = spdk_zmalloc(sizeof(struct spdk_nvme_ns) + nvme_ctrlr_get_nsdata_size(ctrlr),
+			  SPDK_CACHE_LINE_SIZE, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!ns) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate namespace %u\n", nsid);
+		return NULL;
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
-
+	NVME_CTRLR_DEBUGLOG(ctrlr, "Namespace %u was added\n", nsid);
+	ns->id = nsid;
+	ns->ctrlr = ctrlr;
+	ns->ana_state = SPDK_NVME_ANA_OPTIMIZED_STATE;
+	RB_INSERT(nvme_ns_tree, &ctrlr->ns, ns);
 	return ns;
+}
+
+struct spdk_nvme_ns *
+spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
+		return NULL;
+	}
+
+	return nvme_ctrlr_find_ns(ctrlr, nsid);
 }
 
 struct spdk_pci_device *
