@@ -91,6 +91,32 @@ cuse_get_ns(fuse_req_t req, struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return ns;
 }
 
+struct cuse_ns_format {
+	uint32_t sector_size;
+	uint32_t md_size;
+	uint64_t num_sectors;
+};
+
+static int
+cuse_ns_read_format(fuse_req_t req, struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
+		    struct cuse_ns_format *fmt)
+{
+	struct spdk_nvme_ns *ns;
+
+	nvme_ctrlr_lock(ctrlr);
+	ns = cuse_get_ns(req, ctrlr, nsid);
+	if (!ns) {
+		nvme_ctrlr_unlock(ctrlr);
+		return -ENODEV;
+	}
+
+	fmt->sector_size = spdk_nvme_ns_get_sector_size(ns);
+	fmt->md_size = spdk_nvme_ns_get_md_size(ns);
+	fmt->num_sectors = spdk_nvme_ns_get_num_sectors(ns);
+	nvme_ctrlr_unlock(ctrlr);
+	return 0;
+}
+
 #define FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, val)		\
 	if (out_bufsz == 0) {						\
 		struct iovec out_iov;					\
@@ -638,7 +664,7 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 	struct iovec in_iov[3], out_iov[2];
 	int in_iovcnt = 0, out_iovcnt = 0;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
-	struct spdk_nvme_ns *ns;
+	struct cuse_ns_format fmt;
 	uint32_t block_size;
 	uint32_t md_size;
 
@@ -652,13 +678,12 @@ cuse_nvme_submit_io(fuse_req_t req, int cmd, void *arg,
 
 	user_io = in_buf;
 
-	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
-	if (!ns) {
+	if (cuse_ns_read_format(req, cuse_device->ctrlr, cuse_device->nsid, &fmt)) {
 		return;
 	}
 
-	block_size = spdk_nvme_ns_get_sector_size(ns);
-	md_size = spdk_nvme_ns_get_md_size(ns);
+	block_size = fmt.sector_size;
+	md_size = fmt.md_size;
 
 	switch (user_io->opcode) {
 	case SPDK_NVME_OPC_READ:
@@ -718,17 +743,16 @@ cuse_blkgetsize64(fuse_req_t req, int cmd, void *arg,
 		  const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	uint64_t size;
-	struct spdk_nvme_ns *ns;
+	struct cuse_ns_format fmt;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
 
-	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
-	if (!ns) {
+	if (cuse_ns_read_format(req, cuse_device->ctrlr, cuse_device->nsid, &fmt)) {
 		return;
 	}
 
-	size = spdk_nvme_ns_get_num_sectors(ns);
+	size = fmt.num_sectors;
 	fuse_reply_ioctl(req, 0, &size, sizeof(size));
 }
 
@@ -738,17 +762,16 @@ cuse_blkpbszget(fuse_req_t req, int cmd, void *arg,
 		const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	int pbsz;
-	struct spdk_nvme_ns *ns;
+	struct cuse_ns_format fmt;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, pbsz);
 
-	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
-	if (!ns) {
+	if (cuse_ns_read_format(req, cuse_device->ctrlr, cuse_device->nsid, &fmt)) {
 		return;
 	}
 
-	pbsz = spdk_nvme_ns_get_sector_size(ns);
+	pbsz = fmt.sector_size;
 	fuse_reply_ioctl(req, 0, &pbsz, sizeof(pbsz));
 }
 
@@ -758,18 +781,17 @@ cuse_blkgetsize(fuse_req_t req, int cmd, void *arg,
 		const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	long size;
-	struct spdk_nvme_ns *ns;
+	struct cuse_ns_format fmt;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, size);
 
-	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
-	if (!ns) {
+	if (cuse_ns_read_format(req, cuse_device->ctrlr, cuse_device->nsid, &fmt)) {
 		return;
 	}
 
 	/* return size in 512 bytes blocks */
-	size = spdk_nvme_ns_get_num_sectors(ns) * 512 / spdk_nvme_ns_get_sector_size(ns);
+	size = fmt.num_sectors * 512 / fmt.sector_size;
 	fuse_reply_ioctl(req, 0, &size, sizeof(size));
 }
 
@@ -779,17 +801,16 @@ cuse_blkgetsectorsize(fuse_req_t req, int cmd, void *arg,
 		      const void *in_buf, size_t in_bufsz, size_t out_bufsz)
 {
 	int ssize;
-	struct spdk_nvme_ns *ns;
+	struct cuse_ns_format fmt;
 	struct cuse_device *cuse_device = fuse_req_userdata(req);
 
 	FUSE_REPLY_CHECK_BUFFER(req, arg, out_bufsz, ssize);
 
-	ns = cuse_get_ns(req, cuse_device->ctrlr, cuse_device->nsid);
-	if (!ns) {
+	if (cuse_ns_read_format(req, cuse_device->ctrlr, cuse_device->nsid, &fmt)) {
 		return;
 	}
 
-	ssize = spdk_nvme_ns_get_sector_size(ns);
+	ssize = fmt.sector_size;
 	fuse_reply_ioctl(req, 0, &ssize, sizeof(ssize));
 }
 

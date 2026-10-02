@@ -49,6 +49,29 @@ spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 	return nvme_qpair_submit_request(qpair, req);
 }
 
+static int
+nvme_ctrlr_get_ns_md_len(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, uint32_t data_len,
+			 uint32_t *md_len)
+{
+	struct spdk_nvme_ns *ns;
+	uint32_t sector_size;
+	uint32_t md_size;
+
+	nvme_ctrlr_lock(ctrlr);
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	if (!ns) {
+		nvme_ctrlr_unlock(ctrlr);
+		return -EINVAL;
+	}
+
+	sector_size = ns->sector_size;
+	md_size = ns->md_size;
+	nvme_ctrlr_unlock(ctrlr);
+	assert(sector_size != 0);
+	*md_len = data_len / sector_size * md_size;
+	return 0;
+}
+
 int
 spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_nvme_qpair *qpair,
@@ -58,17 +81,13 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_request *req;
 	uint32_t md_len = 0;
+	int rc;
 
-	/* Calculate metadata length */
 	if (md_buf) {
-		struct spdk_nvme_ns *ns = nvme_ctrlr_find_ns(ctrlr, cmd->nsid);
-
-		if (!ns) {
-			return -EINVAL;
+		rc = nvme_ctrlr_get_ns_md_len(ctrlr, cmd->nsid, len, &md_len);
+		if (rc) {
+			return rc;
 		}
-
-		assert(ns->sector_size != 0);
-		md_len =  len / ns->sector_size * ns->md_size;
 	}
 
 	req = nvme_allocate_request(qpair);
@@ -93,21 +112,17 @@ spdk_nvme_ctrlr_cmd_iov_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct nvme_request *req;
 	uint32_t md_len = 0;
+	int rc;
 
 	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
 	}
 
-	/* Calculate metadata length */
 	if (md_buf) {
-		struct spdk_nvme_ns *ns = nvme_ctrlr_find_ns(ctrlr, cmd->nsid);
-
-		if (!ns) {
-			return -EINVAL;
+		rc = nvme_ctrlr_get_ns_md_len(ctrlr, cmd->nsid, len, &md_len);
+		if (rc) {
+			return rc;
 		}
-
-		assert(ns->sector_size != 0);
-		md_len = len / ns->sector_size * ns->md_size;
 	}
 
 	req = nvme_allocate_request(qpair);

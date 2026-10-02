@@ -5305,25 +5305,49 @@ spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 bool
 spdk_nvme_ctrlr_is_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
-	struct spdk_nvme_ns *ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	struct spdk_nvme_ns *ns;
+	bool active = false;
 
-	return ns && ns->active;
+	nvme_ctrlr_lock(ctrlr);
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	if (ns) {
+		active = ns->active;
+	}
+
+	nvme_ctrlr_unlock(ctrlr);
+	return active;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct spdk_nvme_ns *ns = nvme_ctrlr_get_first_active_ns(ctrlr);
+	struct spdk_nvme_ns *ns;
+	uint32_t nsid = 0;
 
-	return ns ? ns->id : 0;
+	nvme_ctrlr_lock(ctrlr);
+	ns = nvme_ctrlr_get_first_active_ns(ctrlr);
+	if (ns) {
+		nsid = ns->id;
+	}
+
+	nvme_ctrlr_unlock(ctrlr);
+	return nsid;
 }
 
 uint32_t
 spdk_nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	struct spdk_nvme_ns *ns = nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
+	struct spdk_nvme_ns *ns;
+	uint32_t nsid = 0;
 
-	return ns ? ns->id : 0;
+	nvme_ctrlr_lock(ctrlr);
+	ns = nvme_ctrlr_get_next_active_ns(ctrlr, prev_nsid);
+	if (ns) {
+		nsid = ns->id;
+	}
+
+	nvme_ctrlr_unlock(ctrlr);
+	return nsid;
 }
 
 static struct spdk_nvme_ns *
@@ -5537,13 +5561,17 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 		return res;
 	}
 
+	nvme_ctrlr_lock(ctrlr);
 	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
 	if (!ns) {
+		nvme_ctrlr_unlock(ctrlr);
 		NVME_CTRLR_ERRLOG(ctrlr, "Failed to find a namespace %u\n", nsid);
 		return -ENXIO;
 	}
 
-	return nvme_ns_identify(ns);
+	res = nvme_ns_identify(ns);
+	nvme_ctrlr_unlock(ctrlr);
+	return res;
 }
 
 int

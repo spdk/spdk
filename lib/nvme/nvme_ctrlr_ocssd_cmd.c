@@ -9,6 +9,8 @@
 bool
 spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 {
+	bool is_supported = false;
+
 	if (ctrlr->quirks & NVME_QUIRK_OCSSD) {
 		/* TODO: There isn't a standardized way to identify Open-Channel SSD
 		 * different verdors may have different conditions.
@@ -19,33 +21,24 @@ spdk_nvme_ctrlr_is_ocssd_supported(struct spdk_nvme_ctrlr *ctrlr)
 		 * Here check nsdata->vs[0] of the first namespace.
 		 */
 		if (ctrlr->cdata.vid == SPDK_PCI_VID_CNEXLABS) {
-			uint32_t nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
 			const uint8_t *vendor_specific;
 			struct spdk_nvme_ns *ns;
 
-			if (nsid == 0) {
-				return false;
+			nvme_ctrlr_lock(ctrlr);
+			ns = nvme_ctrlr_find_ns(ctrlr, spdk_nvme_ctrlr_get_first_active_ns(ctrlr));
+			if (ns) {
+				vendor_specific = spdk_nvme_ns_get_vendor_specific(ns);
+				if (vendor_specific && vendor_specific[0] == 0x1) {
+					is_supported = true;
+				}
 			}
 
-			ns = nvme_ctrlr_find_ns(ctrlr, nsid);
-			if (!ns) {
-				return false;
-			}
-
-			vendor_specific = spdk_nvme_ns_get_vendor_specific(ns);
-			if (!vendor_specific) {
-				return false;
-			}
-
-			if (vendor_specific[0] == 0x1) {
-				return true;
-			}
+			nvme_ctrlr_unlock(ctrlr);
 		}
 	}
 
-	return false;
+	return is_supported;
 }
-
 
 int
 spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
