@@ -4,7 +4,11 @@
 import os
 from functools import partial, update_wrapper
 
-from mcp.server.fastmcp import FastMCP  # type: ignore[import-not-found]
+try:
+    from mcp.server.fastmcp import FastMCP  # type: ignore[import-not-found]
+except ImportError:
+    # mcp 2.0 renamed FastMCP to MCPServer
+    from mcp.server.mcpserver import MCPServer as FastMCP  # type: ignore[import-not-found]
 
 from spdk.rpc import bdev  # type: ignore[attr-defined]
 from spdk.rpc.client import JSONRPCClient
