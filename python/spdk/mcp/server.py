@@ -31,5 +31,10 @@ for func in bdev_functions:
     update_wrapper(newfunc, func)
     mcp.add_tool(newfunc)
 
-if __name__ == "__main__":
+
+def main():
     mcp.run()
+
+
+if __name__ == "__main__":
+    main()

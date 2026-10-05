@@ -44,7 +44,7 @@ dependencies = []
 spdk-rpc = "spdk.spdk_rpc:main"
 spdk-sma = "spdk.spdk_sma:main"
 spdk-cli = "spdk.spdk_cli:main"
-spdk-mcp = "spdk.mcp:server"
+spdk-mcp = "spdk.mcp.server:main"
 
 [project.optional-dependencies]
 sma = [
