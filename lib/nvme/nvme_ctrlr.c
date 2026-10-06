@@ -5420,6 +5420,46 @@ spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 	return ns;
 }
 
+void
+spdk_nvme_ctrlr_release_inactive_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
+{
+	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_ns *ns;
+
+	nvme_ctrlr_lock(ctrlr);
+	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u out of range, not released\n", nsid);
+		goto out;
+	}
+
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	if (!ns) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u not tracked, not released\n", nsid);
+		goto out;
+	}
+
+	proc = TAILQ_FIRST(&ctrlr->active_procs);
+	if (proc && TAILQ_NEXT(proc, tailq)) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u other processes attached, not released\n", nsid);
+		goto out;
+	}
+
+	if (ns->active) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u still active, not released\n", nsid);
+		goto out;
+	}
+
+	if (ns->identify_pending) {
+		NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u Identify in progress, not released\n", nsid);
+		goto out;
+	}
+
+	NVME_CTRLR_DEBUGLOG(ctrlr, "NSID %u released\n", nsid);
+	nvme_ctrlr_free_ns(ctrlr, ns);
+out:
+	nvme_ctrlr_unlock(ctrlr);
+}
+
 struct spdk_pci_device *
 spdk_nvme_ctrlr_get_pci_device(struct spdk_nvme_ctrlr *ctrlr)
 {

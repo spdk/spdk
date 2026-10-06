@@ -88,6 +88,7 @@
 	spdk_nvme_ctrlr_cmd_admin_raw;
 	spdk_nvme_ctrlr_process_admin_completions;
 	spdk_nvme_ctrlr_get_ns;
+	spdk_nvme_ctrlr_release_inactive_ns;
 	spdk_nvme_ctrlr_cmd_get_log_page;
 	spdk_nvme_ctrlr_cmd_get_log_page_ext;
 	spdk_nvme_ctrlr_cmd_abort;

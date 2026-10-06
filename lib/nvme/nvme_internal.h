@@ -1145,7 +1145,8 @@ struct spdk_nvme_ctrlr {
 	 * I/O threads look it up through spdk_nvme_ctrlr_get_ns(),
 	 * nvme_ctrlr_get_ns_md_len(), spdk_nvme_ctrlr_is_active_ns(), and the
 	 * active-namespace iterators, while another thread inserts and removes
-	 * nodes.
+	 * nodes. spdk_nvme_ctrlr_release_inactive_ns() may unlink a node on
+	 * the thread that calls it.
 	 */
 	RB_HEAD(nvme_ns_tree, spdk_nvme_ns)	ns;
 

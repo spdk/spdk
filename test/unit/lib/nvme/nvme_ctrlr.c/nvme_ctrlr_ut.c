@@ -2369,6 +2369,55 @@ test_nvme_ctrlr_test_active_ns_error_case(void)
 }
 
 static void
+test_nvme_ctrlr_release_inactive_ns(void)
+{
+	struct spdk_nvme_ctrlr		ctrlr = {.cdata.nn = 2};
+	struct spdk_nvme_ctrlr_process	proc = {}, proc2 = {};
+	struct spdk_nvme_ns		*ns;
+	uint32_t			active[] = { 1, 2 };
+
+	set_status_code = SPDK_NVME_SC_SUCCESS;
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	TAILQ_INSERT_TAIL(&ctrlr.active_procs, &proc, tailq);
+
+	g_active_ns_list = active;
+	g_active_ns_list_length = SPDK_COUNTOF(active);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_identify_active_ns(&ctrlr) == 0);
+	ut_identify_all_pending_ns(&ctrlr);
+
+	/* Inactive: freed. */
+	ns = nvme_ctrlr_find_ns(&ctrlr, 2);
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+	ns->active = false;
+	spdk_nvme_ctrlr_release_inactive_ns(&ctrlr, 2);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 2) == NULL);
+
+	/* Active: kept. */
+	ns = nvme_ctrlr_find_ns(&ctrlr, 1);
+	SPDK_CU_ASSERT_FATAL(ns != NULL);
+	spdk_nvme_ctrlr_release_inactive_ns(&ctrlr, 1);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 1) == ns);
+
+	/* Identify in progress: kept. */
+	ns->active = false;
+	ns->identify_pending = true;
+	spdk_nvme_ctrlr_release_inactive_ns(&ctrlr, 1);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 1) == ns);
+	ns->identify_pending = false;
+
+	/* Another process attached: kept. */
+	TAILQ_INSERT_TAIL(&ctrlr.active_procs, &proc2, tailq);
+	spdk_nvme_ctrlr_release_inactive_ns(&ctrlr, 1);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 1) == ns);
+	TAILQ_REMOVE(&ctrlr.active_procs, &proc2, tailq);
+
+	g_active_ns_list = NULL;
+	g_active_ns_list_length = 0;
+	TAILQ_REMOVE(&ctrlr.active_procs, &proc, tailq);
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
+static void
 test_nvme_ctrlr_init_delay(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
@@ -4008,6 +4057,7 @@ main(int argc, char **argv)
 #endif
 	CU_ADD_TEST(suite, test_nvme_ctrlr_test_active_ns);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_test_active_ns_error_case);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_release_inactive_ns);
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_reconnect_io_qpair);
 	CU_ADD_TEST(suite, test_spdk_nvme_ctrlr_set_trid);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_nvmf_ioccsz);

@@ -2462,6 +2462,24 @@ struct spdk_nvme_ns;
 struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id);
 
 /**
+ * Release the driver's memory for an inactive namespace.
+ *
+ * Call this when finished with namespace \p nsid, for example after
+ * spdk_nvme_ctrlr_is_active_ns() reported it is inactive. Pointers to that
+ * namespace, including those held by other users of the controller, may then
+ * be invalid, as after a controller reset. The caller must ensure no one
+ * still uses them.
+ *
+ * The namespace is freed during this call only when the driver no longer needs it.
+ *
+ * This function is thread safe.
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ * \param nsid Namespace ID to release.
+ */
+void spdk_nvme_ctrlr_release_inactive_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
+
+/**
  * Get a specific log page from the NVMe controller.
  *
  * This function is thread safe and can be called at any point while the controller
