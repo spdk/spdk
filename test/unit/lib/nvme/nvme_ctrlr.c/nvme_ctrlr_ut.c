@@ -434,6 +434,10 @@ static uint32_t *g_active_ns_list = NULL;
 static uint32_t g_active_ns_list_length = 0;
 static struct spdk_nvme_ctrlr_data *g_cdata = NULL;
 static bool g_fail_next_identify = false;
+static uint32_t g_failed_identify_nsid;
+static bool g_hold_identify_ns = false;
+static spdk_nvme_cmd_cb g_held_identify_cb;
+static void *g_held_identify_cb_arg;
 static uint32_t g_identify_active_ns_counter = 0;
 
 int
@@ -443,6 +447,7 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 {
 	if (g_fail_next_identify) {
 		g_fail_next_identify = false;
+		g_failed_identify_nsid = nsid;
 		return 1;
 	}
 
@@ -499,6 +504,12 @@ nvme_ctrlr_cmd_identify(struct spdk_nvme_ctrlr *ctrlr, uint8_t cns, uint16_t cnt
 		if (g_cdata) {
 			memcpy(payload, g_cdata, sizeof(*g_cdata));
 		}
+	}
+
+	if (g_hold_identify_ns) {
+		g_held_identify_cb = cb_fn;
+		g_held_identify_cb_arg = cb_arg;
+		return 0;
 	}
 
 	fake_cpl_sc(cb_fn, cb_arg);
@@ -3365,7 +3376,6 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	struct spdk_nvme_ctrlr ctrlr = {};
 	uint32_t prev_nsid;
 	struct spdk_nvme_ns ns[5] = {};
-	struct spdk_nvme_ctrlr ns_ctrlr[5] = {};
 	int rc = 0;
 	int i;
 
@@ -3411,19 +3421,14 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	for (int i = 0; i < 5; i++) {
 		ns[i].csi = SPDK_NVME_CSI_NVM;
 		ns[i].id = i + 1;
-		ns[i].ctrlr = &ns_ctrlr[i];
+		ns[i].ctrlr = &ctrlr;
 	}
 	ns[4].csi = SPDK_NVME_CSI_ZNS;
-	ns_ctrlr[4].opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
-	TAILQ_INIT(&ns_ctrlr[4].active_procs);
-	CU_ASSERT(nvme_ctrlr_add_process(&ns_ctrlr[4], NULL) == 0);
 
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
 	CU_ASSERT(rc == 0);
-	CU_ASSERT(ctrlr.state == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES);
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
-	CU_ASSERT(ns_ctrlr[4].state == NVME_CTRLR_STATE_SET_SUPPORTED_LOG_PAGES);
-	CU_ASSERT(ns_ctrlr[4].state_timeout_tsc == NVME_TIMEOUT_INFINITE);
 	CU_ASSERT(ns[4].nsdata_iocs != NULL);
 
 	for (int i = 0; i < 5; i++) {
@@ -3442,9 +3447,66 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
 	nvme_ns_free_iocs_specific_data(&ns[1]);
 
-	nvme_ctrlr_free_processes(&ns_ctrlr[4]);
 	nvme_ctrlr_free_processes(&ctrlr);
 	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
+}
+
+static void
+test_nvme_ctrlr_identify_ns_after_reconnect_frees_ns(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair adminq = {};
+	struct spdk_nvme_ns *ns1, *ns2;
+	struct spdk_nvme_cpl cpl = {};
+	int rc;
+
+	ctrlr.adminq = &adminq;
+	ctrlr.cdata.nn = 2;
+	ctrlr.opts.admin_timeout_ms = 1;
+	RB_INIT(&ctrlr.ns);
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
+
+	nvme_ctrlr_lock(&ctrlr);
+	ns1 = nvme_ctrlr_alloc_ns(&ctrlr, 1);
+	ns2 = nvme_ctrlr_alloc_ns(&ctrlr, 2);
+	SPDK_CU_ASSERT_FATAL(ns1 != NULL && ns2 != NULL);
+	ns1->identify_pending = true;
+	ns2->active = true;
+	ns2->identify_pending = true;
+
+	g_hold_identify_ns = true;
+	CU_ASSERT(nvme_ctrlr_identify_ns_async(ns1) == 0);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_NS);
+	SPDK_CU_ASSERT_FATAL(g_held_identify_cb != NULL);
+
+	/* 0 means no timeout. Any past non-zero value makes process_init fail. */
+	ctrlr.state_timeout_tsc = 1;
+	MOCK_SET(spdk_get_ticks, 2);
+	rc = spdk_nvme_ctrlr_reconnect_poll_async(&ctrlr);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(ctrlr.is_failed == true);
+
+	nvme_ctrlr_lock(&ctrlr);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 1) == NULL);
+	CU_ASSERT(nvme_ctrlr_find_ns(&ctrlr, 2) == ns2);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+
+	/*
+	 * ns1 is gone, so this completion continues the walk and submits Identify
+	 * for ns2. That submit fails on the failed controller and sets ERROR again.
+	 */
+	g_hold_identify_ns = false;
+	g_fail_next_identify = true;
+	g_held_identify_cb(g_held_identify_cb_arg, &cpl);
+	CU_ASSERT(g_failed_identify_nsid == 2);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	CU_ASSERT(ns2->identify_pending == true);
+
+	nvme_ctrlr_free_ns(&ctrlr, ns2);
+	nvme_ctrlr_unlock(&ctrlr);
+	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
+	MOCK_CLEAR(spdk_get_ticks);
 }
 
 static void
@@ -3782,6 +3844,10 @@ ut_setup(void)
 	g_active_ns_list_length = 0;
 	g_cdata = NULL;
 	g_fail_next_identify = false;
+	g_failed_identify_nsid = 0;
+	g_hold_identify_ns = false;
+	g_held_identify_cb = NULL;
+	g_held_identify_cb_arg = NULL;
 	g_identify_active_ns_counter = 0;
 
 	memset(&g_aer_ns_change, 0, sizeof(g_aer_ns_change));
@@ -3852,6 +3918,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_aer_callback);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_attr_changed);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_ns_after_reconnect_frees_ns);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_supported_log_pages);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_intel_supported_log_pages);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_parse_ana_log_page);
