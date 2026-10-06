@@ -241,6 +241,13 @@ spdk_nvme_ctrlr_get_opts(struct spdk_nvme_ctrlr *ctrlr)
 	return &ctrlr->opts;
 }
 
+/* Caller holds the lock or this is initial bring-up; state is not shared in either case. */
+static void
+nvme_ctrlr_assert_locked(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr->lock_depth > 0 || TAILQ_FIRST(&ctrlr->active_procs)->ref == 0);
+}
+
 /**
  * This function will be called when the process allocates the IO qpair.
  * Note: the ctrlr_lock must be held when calling this function.
@@ -2915,7 +2922,7 @@ nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ns *ns;
 
-	nvme_ctrlr_lock(ctrlr);
+	nvme_ctrlr_assert_locked(ctrlr);
 	ns = RB_MIN(nvme_ns_tree, &ctrlr->ns);
 	while (ns) {
 		if (ns->active) {
@@ -2925,18 +2932,15 @@ nvme_ctrlr_get_first_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
 	return ns;
 }
 
 static struct spdk_nvme_ns *
 nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 {
-	struct spdk_nvme_ns tmp = {.id = prev_nsid};
 	struct spdk_nvme_ns *ns;
 
-	nvme_ctrlr_lock(ctrlr);
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
+	ns = nvme_ctrlr_find_ns(ctrlr, prev_nsid);
 	if (ns) {
 		ns = RB_NEXT(nvme_ns_tree, &ctrlr->ns, ns);
 		while (ns) {
@@ -2948,7 +2952,6 @@ nvme_ctrlr_get_next_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t prev_nsid)
 		}
 	}
 
-	nvme_ctrlr_unlock(ctrlr);
 	return ns;
 }
 
@@ -2956,12 +2959,9 @@ struct spdk_nvme_ns *
 nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
 	struct spdk_nvme_ns tmp = {.id = nsid};
-	struct spdk_nvme_ns *ns;
 
-	nvme_ctrlr_lock(ctrlr);
-	ns = RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
-	nvme_ctrlr_unlock(ctrlr);
-	return ns;
+	nvme_ctrlr_assert_locked(ctrlr);
+	return RB_FIND(nvme_ns_tree, &ctrlr->ns, &tmp);
 }
 
 static void
@@ -5379,11 +5379,16 @@ nvme_ctrlr_alloc_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 struct spdk_nvme_ns *
 spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 {
+	struct spdk_nvme_ns *ns;
+
 	if (nsid < 1 || nsid > ctrlr->cdata.nn) {
 		return NULL;
 	}
 
-	return nvme_ctrlr_find_ns(ctrlr, nsid);
+	nvme_ctrlr_lock(ctrlr);
+	ns = nvme_ctrlr_find_ns(ctrlr, nsid);
+	nvme_ctrlr_unlock(ctrlr);
+	return ns;
 }
 
 struct spdk_pci_device *

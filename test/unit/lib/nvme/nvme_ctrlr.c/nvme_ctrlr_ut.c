@@ -793,6 +793,7 @@ test_nvme_ctrlr_init_en_1_rdy_0(void)
 	g_ut_nvme_regs.csts.bits.rdy = 0;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -863,6 +864,7 @@ test_nvme_ctrlr_init_en_1_rdy_1(void)
 	g_ut_nvme_regs.csts.bits.rdy = 1;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -1063,6 +1065,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_rr(void)
 	 * Case 5: reset to default round robin arbitration mechanism
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_RR;
@@ -1256,6 +1259,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_wrr(void)
 	 * Case 5: reset to weighted round robin arbitration mechanism
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_WRR;
@@ -1448,6 +1452,7 @@ test_nvme_ctrlr_init_en_0_rdy_0_ams_vs(void)
 	 * Case 5: reset to vendor specific arbitration mechanism
 	 */
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	ctrlr.opts.arb_mechanism = SPDK_NVME_CC_AMS_VS;
@@ -1498,6 +1503,7 @@ test_nvme_ctrlr_init_en_0_rdy_0(void)
 	g_ut_nvme_regs.csts.bits.rdy = 0;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -1546,6 +1552,7 @@ test_nvme_ctrlr_init_en_0_rdy_1(void)
 	g_ut_nvme_regs.csts.bits.rdy = 1;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.cdata.nn = 1;
 	ctrlr.page_size = 0x1000;
 	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_INIT);
@@ -2244,6 +2251,7 @@ test_nvme_ctrlr_test_active_ns(void)
 
 	for (minor = 0; minor <= 2; minor++) {
 		SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+		CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 		ctrlr.state = NVME_CTRLR_STATE_READY;
 
 		ctrlr.vs.bits.mjr = 1;
@@ -2353,6 +2361,7 @@ test_nvme_ctrlr_init_delay(void)
 	g_ut_nvme_regs.csts.bits.rdy = 0;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	/* Test that the initialization delay works correctly.  We only
 	 * do the initialization delay on SSDs that require it, so
 	 * set that quirk here.
@@ -2796,6 +2805,7 @@ test_nvme_ctrlr_active_ns_list_v0(void)
 	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 0;
@@ -2827,6 +2837,7 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 	DECLARE_AND_CONSTRUCT_CTRLR();
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 2;
@@ -2859,6 +2870,7 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 	}
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
 	g_active_ns_list = active_ns_list;
@@ -2885,6 +2897,7 @@ test_nvme_ctrlr_active_ns_list_v2(void)
 	}
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
@@ -2921,6 +2934,7 @@ test_nvme_ctrlr_ns_mgmt(void)
 	ctrlr.vs.bits.ter = 0;
 	ctrlr.cdata.nn = 4096;
 
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
 	g_active_ns_list = active_ns_list;
 	g_active_ns_list_length = SPDK_COUNTOF(active_ns_list);
@@ -2971,6 +2985,7 @@ test_nvme_ctrlr_reset(void)
 	uint32_t active_ns_list2[] = { 1, 100, 1024 };
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	g_ut_nvme_regs.vs.bits.mjr = 1;
 	g_ut_nvme_regs.vs.bits.mnr = 2;
@@ -3055,6 +3070,7 @@ test_nvme_ctrlr_aer_callback(void)
 	};
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 2;
@@ -3068,7 +3084,6 @@ test_nvme_ctrlr_aer_callback(void)
 		SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
 	}
 
-	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	spdk_nvme_ctrlr_register_aer_callback(&ctrlr, aer_cb, NULL);
 
 	/* Async event */
@@ -3129,6 +3144,7 @@ test_nvme_ctrlr_ns_attr_changed(void)
 	g_aer_ns_change.aer_cpl = &aer_cpl;
 
 	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 
 	ctrlr.vs.bits.mjr = 1;
 	ctrlr.vs.bits.mnr = 3;
@@ -3146,7 +3162,6 @@ test_nvme_ctrlr_ns_attr_changed(void)
 
 	check_active_ns(&ctrlr, active_ns_list, SPDK_COUNTOF(active_ns_list));
 
-	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	spdk_nvme_ctrlr_register_aer_callback(&ctrlr, aer_cb, NULL);
 
 	/* Remove NS 100 */
@@ -3346,6 +3361,8 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	int i;
 
 	RB_INIT(&ctrlr.ns);
+	TAILQ_INIT(&ctrlr.active_procs);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
 	for (i = 0; i < 5; i++) {
 		ns[i].id = i + 1;
 		ns[i].active = true;
@@ -3389,6 +3406,8 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	}
 	ns[4].csi = SPDK_NVME_CSI_ZNS;
 	ns_ctrlr[4].opts.admin_timeout_ms = NVME_TIMEOUT_INFINITE;
+	TAILQ_INIT(&ns_ctrlr[4].active_procs);
+	CU_ASSERT(nvme_ctrlr_add_process(&ns_ctrlr[4], NULL) == 0);
 
 	rc = nvme_ctrlr_identify_namespaces_iocs_specific_next(&ctrlr, prev_nsid);
 	CU_ASSERT(rc == 0);
@@ -3414,6 +3433,8 @@ test_nvme_ctrlr_identify_namespaces_iocs_specific_next(void)
 	CU_ASSERT(ctrlr.state_timeout_tsc == NVME_TIMEOUT_INFINITE);
 	nvme_ns_free_iocs_specific_data(&ns[1]);
 
+	nvme_ctrlr_free_processes(&ns_ctrlr[4]);
+	nvme_ctrlr_free_processes(&ctrlr);
 	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 }
 
@@ -3483,6 +3504,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	struct spdk_nvme_ana_page ana_hdr;
 	char _ana_desc[UT_ANA_DESC_SIZE];
 	struct spdk_nvme_ana_group_descriptor *ana_desc;
+	struct spdk_nvme_ctrlr_process *proc = NULL;
 	uint32_t offset;
 
 	RB_INIT(&ctrlr.ns);
@@ -3493,6 +3515,9 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	}
 
 	CU_ASSERT(nvme_robust_mutex_init_recursive_shared(&ctrlr.ctrlr_lock) == 0);
+	TAILQ_INIT(&ctrlr.active_procs);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
+	proc = TAILQ_FIRST(&ctrlr.active_procs);
 
 	ctrlr.cdata.nn = 3;
 	ctrlr.cdata.nanagrpid = 3;
@@ -3551,6 +3576,7 @@ test_nvme_ctrlr_parse_ana_log_page(void)
 	CU_ASSERT(ns[2].ana_group_id == 1);
 	CU_ASSERT(ns[2].ana_state == SPDK_NVME_ANA_OPTIMIZED_STATE);
 
+	nvme_ctrlr_remove_process(&ctrlr, proc);
 	CU_ASSERT(pthread_mutex_destroy(&ctrlr.ctrlr_lock) == 0);
 
 	free(ctrlr.ana_log_page);
