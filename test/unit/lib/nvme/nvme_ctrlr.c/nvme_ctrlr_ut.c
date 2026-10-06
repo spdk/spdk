@@ -2239,6 +2239,7 @@ test_nvme_ctrlr_test_active_ns(void)
 	uint32_t		nsid, minor;
 	size_t			ns_id_count;
 	struct spdk_nvme_ctrlr	ctrlr = {};
+	struct spdk_nvme_ns	*ns;
 	uint32_t		active_ns_list[1531];
 
 	for (nsid = 1; nsid <= 1531; nsid++) {
@@ -2306,6 +2307,14 @@ test_nvme_ctrlr_test_active_ns(void)
 			CU_ASSERT(nsid == 3);
 			nsid = spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, nsid);
 			CU_ASSERT(nsid == 0);
+
+			/* NS 2 is inactive but still tracked. Remove it so the next
+			 * walk starts at an NSID that is not in the tree. */
+			ns = spdk_nvme_ctrlr_get_ns(&ctrlr, 2);
+			SPDK_CU_ASSERT_FATAL(ns != NULL);
+			nvme_ctrlr_free_ns(&ctrlr, ns);
+			SPDK_CU_ASSERT_FATAL(spdk_nvme_ctrlr_get_ns(&ctrlr, 2) == NULL);
+			CU_ASSERT(spdk_nvme_ctrlr_get_next_active_ns(&ctrlr, 1) == 3);
 
 			/* Reset the active namespace list array */
 			g_active_ns_list[1] = 2;
