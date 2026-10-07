@@ -6855,7 +6855,7 @@ test_retry_io_to_same_path(void)
 	req->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->cpl.status.crd = 1;
 
-	ctrlr2->cdata.crdt[1] = 1;
+	ctrlr2->cdata.crdt[0] = 1;
 
 	/* The 2nd I/O should be queued to nbdev_ch. */
 	spdk_delay_us(1);

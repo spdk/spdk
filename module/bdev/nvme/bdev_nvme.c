@@ -1703,7 +1703,7 @@ bdev_nvme_check_retry_io(struct nvme_bdev_io *bio,
 		cdata = spdk_nvme_ctrlr_get_data(nvme_ctrlr->ctrlr);
 
 		if (cpl->status.crd != 0) {
-			*_delay_ms = cdata->crdt[cpl->status.crd] * 100;
+			*_delay_ms = cdata->crdt[cpl->status.crd - 1] * 100;
 		} else {
 			*_delay_ms = 0;
 		}
