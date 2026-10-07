@@ -3914,6 +3914,12 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 	struct spdk_nvme_ctrlr_aer_completion *async_event;
 	struct spdk_nvme_ctrlr_process *active_proc;
 
+	if (ctrlr->is_destructed) {
+		NVME_CTRLR_ERRLOG(ctrlr, "called after destruct");
+		assert(false && "should not happen by design");
+		return;
+	}
+
 	/* Init identifies namespaces itself. Hold AEN processing and callbacks until READY. */
 	if (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		return;
