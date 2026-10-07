@@ -3112,6 +3112,17 @@ test_nvme_ctrlr_aer_callback(void)
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
 
+	/* Queued AER is held until the controller is READY. */
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY_ACTIVE_NS;
+	g_aer_cb_counter = 0;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 0);
+
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
 }
