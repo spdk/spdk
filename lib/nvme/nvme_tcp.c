@@ -1464,8 +1464,9 @@ nvme_tcp_recv_payload_seq_cb(void *cb_arg, int status)
 
 	req->accel_sequence = NULL;
 	if (spdk_unlikely(status != 0)) {
-		pdu_seq_fail(treq->pdu, status);
-		return;
+		NVME_TQPAIR_ERRLOG(tqpair, "Failed to execute accel sequence: %d\n", status);
+		treq->rsp.status.sct = SPDK_NVME_SCT_GENERIC;
+		treq->rsp.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 	}
 
 	nvme_tcp_req_complete_safe(treq);
