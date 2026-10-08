@@ -3078,6 +3078,7 @@ static void
 test_nvme_ctrlr_aer_callback(void)
 {
 	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct spdk_nvme_ctrlr_process *proc;
 	uint32_t active_ns_list[] = { 1, 2, 100, 1024 };
 	union spdk_nvme_async_event_completion	aer_event = {
 		.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE,
@@ -3104,6 +3105,7 @@ test_nvme_ctrlr_aer_callback(void)
 		SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
 	}
 
+	adminq.state = NVME_QPAIR_ENABLED;
 	spdk_nvme_ctrlr_register_aer_callback(&ctrlr, aer_cb, NULL);
 
 	/* Async event */
@@ -3122,6 +3124,39 @@ test_nvme_ctrlr_aer_callback(void)
 	ctrlr.state = NVME_CTRLR_STATE_READY;
 	nvme_ctrlr_complete_queued_async_events(&ctrlr);
 	CU_ASSERT(g_aer_cb_counter == 1);
+
+	/* Queue an error event. Processing it needs no admin command. */
+	proc = nvme_ctrlr_get_current_process(&ctrlr);
+	SPDK_CU_ASSERT_FATAL(proc != NULL);
+	aer_event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_ERROR;
+	aer_cpl.cdw0 = aer_event.raw;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+
+	/* Disconnect sets a local failure and leaves the admin qpair DISCONNECTING. */
+	adminq.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
+	adminq.state = NVME_QPAIR_DISCONNECTING;
+	g_aer_cb_counter = 0;
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+
+	/* Re-auth sets CONNECTING and clears the failure reason. */
+	adminq.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+	adminq.state = NVME_QPAIR_CONNECTING;
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+
+	adminq.state = NVME_QPAIR_ENABLING;
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+
+	/* ENABLED delivers the queued notice. */
+	adminq.state = NVME_QPAIR_ENABLED;
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 1);
+	CU_ASSERT(STAILQ_EMPTY(&proc->async_events));
 
 	nvme_ctrlr_free_processes(&ctrlr);
 	nvme_ctrlr_destruct(&ctrlr);
@@ -3251,6 +3286,7 @@ test_nvme_ctrlr_ns_attr_changed(void)
 
 	check_active_ns(&ctrlr, active_ns_list, SPDK_COUNTOF(active_ns_list));
 
+	adminq.state = NVME_QPAIR_ENABLED;
 	spdk_nvme_ctrlr_register_aer_callback(&ctrlr, aer_cb, NULL);
 
 	/* Remove NS 100 */
@@ -3775,6 +3811,7 @@ test_nvme_ctrlr_ana_resize(void)
 		SPDK_CU_ASSERT_FATAL(nvme_ctrlr_process_init(&ctrlr) == 0);
 	}
 
+	adminq.state = NVME_QPAIR_ENABLED;
 	for (i = 0; i < ana_desc->num_of_nsid; ++i) {
 		ns = spdk_nvme_ctrlr_get_ns(&ctrlr, i + 1);
 		SPDK_CU_ASSERT_FATAL(ns != NULL);

@@ -3925,6 +3925,17 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
+	/* Failed admin qpair or re-auth leaves ENABLED state. */
+	if (nvme_qpair_get_state(ctrlr->adminq) != NVME_QPAIR_ENABLED) {
+		return;
+	}
+
+	if (ctrlr->adminq->transport_failure_reason) {
+		NVME_CTRLR_ERRLOG(ctrlr, "admin qpair enabled with a failure reason\n");
+		assert(false && "should not happen by design");
+		return;
+	}
+
 	if (ctrlr->async_event_in_progress) {
 		return;
 	}
