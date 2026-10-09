@@ -28,6 +28,10 @@ Added `max_sgl_entries` parameter to the `nvmf_create_transport` RPC. It selects
 of SGL entries per request, which is the MSDBD advertised to the initiators, and it cannot exceed
 the build time maximum.
 
+Write Zeroes commands with the DEAC (Deallocate) bit set no longer fail with `INVALID_FIELD`.
+The deallocation request is treated as a hint and the specified logical blocks are written
+with zeroes.
+
 ## v26.09
 
 ### accel

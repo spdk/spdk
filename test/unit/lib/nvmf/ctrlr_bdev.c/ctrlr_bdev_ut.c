@@ -895,6 +895,24 @@ test_nvmf_bdev_ctrlr_cmd(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
 
+	/* Write Zeroes with DEAC=0 (default behavior) */
+	MOCK_SET(spdk_bdev_write_zeroes_blocks, 0);
+	bdev.blockcnt = 100000;
+	cmd.nvme_cmd.cdw10 = 0;
+	cmd.nvme_cmd.cdw12 = 0;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
+	/* DEAC is a hint and must not cause the command to fail. */
+	cmd.nvme_cmd.cdw12 = 0;
+	cmd.nvme_cmd.cdw12_bits.write_zeroes.deac = 1;
+	memset(&rsp, 0, sizeof(rsp));
+
+	rc = nvmf_bdev_ctrlr_write_zeroes_cmd(&bdev, &desc, &ch, &req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
+
 	/* Copy blocks status asynchronous */
 	MOCK_SET(spdk_bdev_io_type_supported, true);
 	cmd.nvme_cmd.cdw10 = 1024;
