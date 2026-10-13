@@ -42,13 +42,12 @@ Development for patch releases is done on the `vYY.MM.x` branch (e.g., `v26.01.x
 
 ### Tracking {#tracking}
 
-`CHANGELOG.md` and `deprecation.md` are used to notify users of modifications done
-throughout the release. Ideally commits introducing a change should update those files,
-as suggested by `scripts/check_format.sh`.
-These files should include API, ABI, JSON RPC and major functional changes.
+Document API, ABI, JSON RPC and major functional changes in `changelog.d/` fragments.
+See the [changelog contribution guide](https://github.com/spdk/spdk/blob/master/changelog.d/README.md).
+Continue documenting deprecations in `deprecation.md`.
 
-Only the section for the current release at the top of `CHANGELOG.md` should be updated,
-sections for past releases should never be updated.
+Before release, run `scripts/changelog.py` and commit `CHANGELOG.md` with
+the fragment deletions. Use `--release v26.01` to select a different existing release section.
 
 ### Submodules {#submodules}
 
@@ -74,6 +73,8 @@ Code freeze begins a week before the release by creating a release branch (e.g.,
 from the latest commit on the master branch. This branch should be tagged as a release candidate
 (e.g., v26.01-rc1). The release branch should already include all major functional and ABI changes;
 only bug fixes or documentation updates should be added after this point.
+Run `scripts/changelog.py` on master right before creating the branch. Fragments left
+on master would otherwise end up in the next release once `VERSION` is bumped.
 
 The first step after creating the branch must be updating [spdk-abi](https://github.com/spdk/spdk-abi)
 repository with ABI matching the release candidate. This repository stores ABI definitions used for
@@ -98,7 +99,8 @@ disruptions. All patches submitted for review must be rebased on the latest mast
 Merging to the master branch might be held off for patches that affect the ability to integrate
 fixes for the release. The hashtag for the release should still be used to prioritize
 any remaining commits. These commits should be first reviewed and merged on the master branch,
-and only then backported to the release branch if necessary.
+and only then backported to the release branch if necessary. Include each fix's changelog fragment
+when backporting, and merge them with `scripts/changelog.py` on the release branch before tagging.
 
 During this period, `CHANGELOG.md` entries should be reviewed, reordered alphabetically,
 and formatted. Duplicated entries should be removed or merged, and formatting errors

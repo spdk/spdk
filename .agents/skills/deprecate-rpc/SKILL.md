@@ -216,13 +216,12 @@ grep -rn 'old_param\|old_rpc_name' test/
 
 Delete the `####` block for this tag.
 
-### 6. `CHANGELOG.md` -- document the removal
+### 6. Document the removal in `changelog.d/`
 
-Under the upcoming release heading, add a removal note:
+Add a removal note in `changelog.d/<subsystem>/<filename>.md` as described in
+`changelog.d/README.md`:
 
 ```markdown
-### subsystem_name
-
 Removed the deprecated `old_param` parameter from the `rpc_method_name` RPC.
 Use `new_param` instead.
 ```
@@ -258,7 +257,7 @@ The same two-phase approach applies, but with broader scope:
 3. Delete the CLI subparser (the `add_parser` block).
 4. Remove from `schema/schema.yaml`.
 5. Remove any remaining test references to the old RPC.
-6. Remove `deprecation.md` entry; add `CHANGELOG.md` entry.
+6. Remove the `deprecation.md` entry and add a `changelog.d/` fragment.
 
 ---
 
@@ -280,7 +279,7 @@ Remove:
   [ ] python/spdk/cli/*.py   -- delete old arg, dissolve exclusive groups
   [ ] test/                  -- remove remaining compat test references
   [ ] deprecation.md         -- delete section
-  [ ] CHANGELOG.md           -- add removal note
+  [ ] changelog.d/           -- add removal fragment
   [ ] genrpc lint passes     -- python3 scripts/genrpc.py --lint
 ```
 
