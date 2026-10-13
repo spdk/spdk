@@ -8,7 +8,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 all: doc
 	@:
 
-.PHONY: all doc jsonrpc clean
+.PHONY: all doc jsonrpc clean changelog.md
 
 doc: output
 
@@ -16,12 +16,14 @@ deprecation.md: ../deprecation.md
 	$(Q)sed -e 's/^# Deprecation/# Deprecation {#deprecation}/' \
 	    < $< > $@
 
-changelog.md: ../CHANGELOG.md
+changelog.md:
+	$(Q)$(SPDK_ROOT_DIR)/scripts/changelog.py --dry-run > $@.tmp
 	$(Q)sed -e 's/^# Changelog/# Changelog {#changelog}/' \
 	    -e 's/^##/#/' \
 	    -e 's/^# \(\(v..\...\):.*\)/# \1 {#changelog-\2}/' \
 	    -e '/# v..\...:/s/\./-/2' \
-	    < $< > $@
+	    < $@.tmp > $@
+	$(Q)rm -f $@.tmp
 
 jsonrpc: $(SPDK_ROOT_DIR)/doc/jsonrpc.md
 
@@ -33,4 +35,4 @@ output: jsonrpc Doxyfile changelog.md deprecation.md $(wildcard *.md) $(wildcard
 	$(Q)doxygen Doxyfile
 
 clean:
-	$(Q)rm -rf output changelog.md deprecation.md jsonrpc.md
+	$(Q)rm -rf output changelog.md changelog.md.tmp deprecation.md jsonrpc.md
