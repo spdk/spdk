@@ -52,3 +52,4 @@ scripts/pkgdep/requirements.txt
 .spdk-isal-crypto.log
 .venv/
 __pycache__/
+!/changelog.d/

@@ -1,5 +1,8 @@
 # Changelog
 
+Upcoming release changes are tracked in `changelog.d/` and merged here before release.
+See the [changelog contribution guide](https://github.com/spdk/spdk/blob/master/changelog.d/README.md).
+
 ## v27.01: (Upcoming Release)
 
 ### bdev_nvme

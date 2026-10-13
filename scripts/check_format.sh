@@ -707,14 +707,22 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 function check_changelog() {
 	local files=() f
 
-	echo -n "Checking whether CHANGELOG.md should be updated..."
-	mapfile -t files < <(git diff --name-only --no-renames --ignore-submodules HEAD)
+	echo -n "Checking changelog fragments and release notes..."
+	if ! "$rootdir/scripts/changelog.py" --dry-run > /dev/null; then
+		echo " Invalid changelog"
+		return 1
+	fi
+	# New fragments count before they are staged.
+	mapfile -t files < <(
+		git diff --name-only --no-renames --ignore-submodules HEAD
+		git ls-files --others --exclude-standard -- 'changelog.d/*/*.md'
+	)
 	if ((${#files[@]} == 0)); then
 		mapfile -t files < <(git diff --name-only --no-renames HEAD~1 HEAD)
 	fi
 
 	for f in "${files[@]}"; do
-		if [[ $f == CHANGELOG.md ]]; then
+		if [[ $f == CHANGELOG.md || ($f == changelog.d/*/*.md && -f $f) ]]; then
 			echo " OK"
 			return 0
 		fi
@@ -722,7 +730,7 @@ function check_changelog() {
 
 	for f in "${files[@]}"; do
 		if [[ $f == include/spdk/* || $f == python/spdk/cli/* || $f == scripts/rpc.py || $f == etc/* ]]; then
-			printf '\n%s was modified. Consider updating CHANGELOG.md.\n' "$f"
+			printf '\n%s was modified. Consider adding a changelog fragment under changelog.d/.\n' "$f"
 			return 0
 		fi
 	done
