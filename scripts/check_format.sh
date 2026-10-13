@@ -882,8 +882,8 @@ function check_spdx_lic() {
 }
 
 function get_diffed_files() {
-	# Get files where changes are meant to be committed
-	git diff --name-only HEAD HEAD~1
+	# Get files changed by the last commit
+	git diff --name-only HEAD~1 HEAD
 	# Get files from staging
 	git diff --name-only --cached HEAD
 	git diff --name-only HEAD
