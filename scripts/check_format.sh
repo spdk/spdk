@@ -705,46 +705,28 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 }
 
 function check_changelog() {
-	local rc=0
+	local files=() f
 
-	# Check if any of the public interfaces were modified by this patch.
-	# Warn the user to consider updating the changelog any changes
-	# are detected.
 	echo -n "Checking whether CHANGELOG.md should be updated..."
-	staged=$(git diff --name-only --cached .)
-	working=$(git status -s --porcelain --ignore-submodules | grep -iv "??" | awk '{print $2}')
-	files="$staged $working"
-	if [[ "$files" = " " ]]; then
-		files=$(git diff-tree --no-commit-id --name-only -r HEAD)
+	mapfile -t files < <(git diff --name-only --no-renames --ignore-submodules HEAD)
+	if ((${#files[@]} == 0)); then
+		mapfile -t files < <(git diff --name-only --no-renames HEAD~1 HEAD)
 	fi
 
-	has_changelog=0
-	for f in $files; do
+	for f in "${files[@]}"; do
 		if [[ $f == CHANGELOG.md ]]; then
-			# The user has a changelog entry, so exit.
-			has_changelog=1
-			break
+			echo " OK"
+			return 0
 		fi
 	done
 
-	needs_changelog=0
-	if [ $has_changelog -eq 0 ]; then
-		for f in $files; do
-			if [[ $f == include/spdk/* ]] || [[ $f == python/spdk/cli/* ]] || [[ $f == scripts/rpc.py ]] || [[ $f == etc/* ]]; then
-				echo ""
-				echo -n "$f was modified. Consider updating CHANGELOG.md."
-				needs_changelog=1
-			fi
-		done
-	fi
-
-	if [ $needs_changelog -eq 0 ]; then
-		echo " OK"
-	else
-		echo ""
-	fi
-
-	return $rc
+	for f in "${files[@]}"; do
+		if [[ $f == include/spdk/* || $f == python/spdk/cli/* || $f == scripts/rpc.py || $f == etc/* ]]; then
+			printf '\n%s was modified. Consider updating CHANGELOG.md.\n' "$f"
+			return 0
+		fi
+	done
+	echo " OK"
 }
 
 function check_json_rpc() {
