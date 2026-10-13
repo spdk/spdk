@@ -5,36 +5,6 @@ See the [changelog contribution guide](https://github.com/spdk/spdk/blob/master/
 
 ## v27.01: (Upcoming Release)
 
-### bdev_nvme
-
-Added `spdk_bdev_nvme_get_path_stat()` as a public C-callable equivalent of the
-`bdev_nvme_get_path_iostat` JSON-RPC. The caller provides an already-open
-`spdk_bdev_desc` and receives an array of public `spdk_bdev_nvme_path_stat`
-objects (`trid` and `stat`) in `spdk_bdev_nvme_get_path_stat_cb`. The array is
-owned by SPDK and is valid only during the callback. The API requires
-`spdk_bdev_nvme_opts.io_path_stat` to be enabled.
-
-### nvme
-
-`NVME_RDMA_MAX_SGL_DESCRIPTORS`, the compile-time upper bound for the NVMe/RDMA initiator's SGL
-descriptor arrays, now follows `SPDK_CONFIG_NVMF_MAX_SGL_ENTRIES` (build-time configurable via
-`--max-nvmf-sgl-entries`, default 16). The effective per-controller value is still limited at
-runtime by `nvme_rdma_ctrlr_get_max_sges()` to the target's advertised MSDBD and the HCA's
-`max_sge`, so behavior is unchanged unless the build option is raised.
-
-### nvmf
-
-Removed the deprecated `discovery_filter` parameter from the `nvmf_set_config` RPC.
-Use `discovery_filters` instead.
-
-Added `max_sgl_entries` parameter to the `nvmf_create_transport` RPC. It selects the maximum number
-of SGL entries per request, which is the MSDBD advertised to the initiators, and it cannot exceed
-the build time maximum.
-
-Write Zeroes commands with the DEAC (Deallocate) bit set no longer fail with `INVALID_FIELD`.
-The deallocation request is treated as a hint and the specified logical blocks are written
-with zeroes.
-
 ## v26.09
 
 ### accel
