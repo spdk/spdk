@@ -1,7 +1,9 @@
 # Changelog fragments
 
 Document API, ABI, JSON RPC and major functional changes in a fragment in the
-same commit as the change.
+same commit as the change. `scripts/check_format.sh` fails when a change to
+`SO_VER` or `SO_MINOR` has no fragment, and suggests one when a public header,
+RPC or CLI file changes.
 
 Create `changelog.d/<category>/<filename>.md`, for example
 `changelog.d/accel/software_interrupt_mode.md`. Choose a descriptive filename without

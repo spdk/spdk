@@ -705,7 +705,7 @@ SC2119,SC2120,SC2128,SC2148,SC2153,SC2154,SC2164,SC2174,SC2178,SC2001,SC2206,SC2
 }
 
 function check_changelog() {
-	local files=() f
+	local range=(HEAD) files=() so_files=() f
 
 	echo -n "Checking changelog fragments and release notes..."
 	if ! "$rootdir/scripts/changelog.py" --dry-run > /dev/null; then
@@ -718,7 +718,8 @@ function check_changelog() {
 		git ls-files --others --exclude-standard -- 'changelog.d/*/*.md'
 	)
 	if ((${#files[@]} == 0)); then
-		mapfile -t files < <(git diff --name-only --no-renames HEAD~1 HEAD)
+		range=(HEAD~1 HEAD)
+		mapfile -t files < <(git diff --name-only --no-renames "${range[@]}")
 	fi
 
 	for f in "${files[@]}"; do
@@ -727,6 +728,13 @@ function check_changelog() {
 			return 0
 		fi
 	done
+
+	# SO_VER and SO_MINOR change only with the API or ABI, so require an entry.
+	mapfile -t so_files < <(git diff --name-only -M -G'^SO_(VER|MINOR)[[:space:]]*:=' "${range[@]}" -- '*Makefile')
+	if ((${#so_files[@]} > 0)); then
+		printf '\n%s changes the ABI version. Add a changelog fragment under changelog.d/.\n' "${so_files[@]}"
+		return 1
+	fi
 
 	for f in "${files[@]}"; do
 		if [[ $f == include/spdk/* || $f == python/spdk/cli/* || $f == scripts/rpc.py || $f == etc/* ]]; then

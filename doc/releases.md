@@ -84,7 +84,8 @@ compatibility checking between releases. The ABI definitions are generated using
 The commit following the release candidate should update `VERSION` and `CHANGELOG.md`
 to reference the next release. That commit should be tagged with the `-pre` suffix (e.g., 'v26.05-pre').
 
-After an LTS release, the master branch should update the major `SO_VER` by 1 for all libraries.
+After an LTS release, the master branch should update the major `SO_VER` by 1 for all libraries,
+with a changelog fragment that notes the increase.
 This allows for `SO_MINOR` updates throughout the support period of the LTS release.
 This prevents scenarios where two versions exist with identical `SO_VER.SO_MINOR` but conflicting ABI.
 For example, if the next SPDK release adds an ABI call that increases the minor version,
