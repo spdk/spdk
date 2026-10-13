@@ -158,6 +158,7 @@ nvme_transport_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
 
 	assert(transport != NULL);
+	nvme_ctrlr_remove_adminq_fd(ctrlr);
 	return transport->ops.ctrlr_destruct(ctrlr);
 }
 
@@ -567,6 +568,11 @@ nvme_transport_ctrlr_disconnect_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk
 
 	if (qpair->poll_group && (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr))) {
 		nvme_poll_group_disconnect_qpair(qpair);
+	}
+
+	/* The transport may close the admin queue fd during the disconnect. */
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		nvme_ctrlr_remove_adminq_fd(ctrlr);
 	}
 
 	transport->ops.ctrlr_disconnect_qpair(ctrlr, qpair);

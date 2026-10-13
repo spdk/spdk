@@ -450,7 +450,71 @@ int
 spdk_nvme_ctrlr_get_admin_qp_fd(struct spdk_nvme_ctrlr *ctrlr,
 				struct spdk_event_handler_opts *opts)
 {
-	return spdk_nvme_qpair_get_fd(ctrlr->adminq, opts);
+	if (ctrlr->adminq_fgrp == NULL) {
+		return spdk_nvme_qpair_get_fd(ctrlr->adminq, opts);
+	}
+
+	if (opts != NULL) {
+		if (!SPDK_FIELD_VALID(opts, fd_type, opts->opts_size)) {
+			return -EINVAL;
+		}
+
+		spdk_fd_group_get_default_event_handler_opts(opts, opts->opts_size);
+		opts->fd_type = SPDK_FD_TYPE_DEFAULT;
+	}
+
+	return spdk_fd_group_get_fd(ctrlr->adminq_fgrp);
+}
+
+static int
+nvme_ctrlr_adminq_fd_event(void *ctx)
+{
+	/* Nothing to do here, the event only wakes up the user of the admin queue fd. */
+	return 0;
+}
+
+void
+nvme_ctrlr_add_adminq_fd(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_event_handler_opts opts;
+	enum nvme_qpair_state state;
+	int fd, rc;
+
+	if (ctrlr->adminq_fgrp == NULL || ctrlr->adminq_fd >= 0) {
+		return;
+	}
+
+	/* Transports may recreate their fd while the qpair is connecting. */
+	state = nvme_qpair_get_state(ctrlr->adminq);
+	if (state < NVME_QPAIR_CONNECTED || state > NVME_QPAIR_ENABLED) {
+		return;
+	}
+
+	spdk_fd_group_get_default_event_handler_opts(&opts, sizeof(opts));
+	fd = nvme_transport_qpair_get_fd(ctrlr, ctrlr->adminq, &opts);
+	if (fd < 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Cannot get admin queue fd: %d\n", fd);
+		return;
+	}
+
+	rc = SPDK_FD_GROUP_ADD_EXT(ctrlr->adminq_fgrp, fd, nvme_ctrlr_adminq_fd_event, ctrlr, &opts);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Cannot add admin queue fd %d: %s\n", fd, spdk_strerror(-rc));
+		return;
+	}
+
+	ctrlr->adminq_fd = fd;
+}
+
+void
+nvme_ctrlr_remove_adminq_fd(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->adminq_fgrp == NULL || ctrlr->adminq_fd < 0) {
+		return;
+	}
+
+	spdk_fd_group_remove(ctrlr->adminq_fgrp, ctrlr->adminq_fd);
+	ctrlr->adminq_fd = -1;
 }
 
 struct spdk_nvme_qpair *
@@ -4485,6 +4549,8 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	ticks = spdk_get_ticks();
 
+	nvme_ctrlr_add_adminq_fd(ctrlr);
+
 	/*
 	 * May need to avoid accessing any register on the target controller
 	 * for a while. Return early without touching the FSM.
@@ -4872,8 +4938,23 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->ana_log_page = NULL;
 	ctrlr->ana_log_page_size = 0;
 
+	ctrlr->adminq_fgrp = NULL;
+	ctrlr->adminq_fd = -1;
+	if (ctrlr->opts.enable_interrupts && spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
+		rc = spdk_fd_group_create(&ctrlr->adminq_fgrp);
+		if (rc != 0) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Cannot create admin queue fd group: %s\n",
+					  spdk_strerror(-rc));
+			return rc;
+		}
+	}
+
 	rc = nvme_robust_mutex_init_recursive_shared(&ctrlr->ctrlr_lock);
 	if (rc != 0) {
+		if (ctrlr->adminq_fgrp != NULL) {
+			spdk_fd_group_destroy(ctrlr->adminq_fgrp);
+			ctrlr->adminq_fgrp = NULL;
+		}
 		return rc;
 	}
 
@@ -4927,6 +5008,12 @@ nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr)
 	if (rc) {
 		NVME_CTRLR_ERRLOG(ctrlr, "could not destroy ctrlr_lock: %s\n", spdk_strerror(rc));
 		assert(false);
+	}
+
+	if (ctrlr->adminq_fgrp != NULL) {
+		assert(ctrlr->adminq_fd < 0);
+		spdk_fd_group_destroy(ctrlr->adminq_fgrp);
+		ctrlr->adminq_fgrp = NULL;
 	}
 
 	nvme_ctrlr_free_processes(ctrlr);
@@ -5110,6 +5197,8 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	if (rc == -ENXIO && ctrlr->is_disconnecting) {
 		nvme_ctrlr_disconnect_done(ctrlr);
 	}
+
+	nvme_ctrlr_add_adminq_fd(ctrlr);
 
 	nvme_ctrlr_unlock(ctrlr);
 

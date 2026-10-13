@@ -1188,6 +1188,16 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_qpair		*adminq;
 
+	/**
+	 * Used in interrupt mode on fabrics. Its fd is returned by spdk_nvme_ctrlr_get_admin_qp_fd()
+	 * and stays the same for the lifetime of the controller. The transport fd of the admin queue
+	 * changes on every reconnect, so it is added to this group while the admin queue is connected
+	 * and removed before the transport closes it.
+	 */
+	struct spdk_fd_group		*adminq_fgrp;
+	/** Transport fd of the admin queue added to adminq_fgrp, or -1. */
+	int				adminq_fd;
+
 	/** shadow doorbell buffer */
 	uint32_t			*shadow_doorbell;
 	/** eventidx buffer */
@@ -1488,6 +1498,8 @@ int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_add_adminq_fd(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_remove_adminq_fd(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 				  struct nvme_ctrlr_detach_ctx *ctx);

@@ -2067,6 +2067,11 @@ struct spdk_event_handler_opts;
  * This function also allows the transport layer to fill out event handler opts required by the
  * application during interrupt registration phase.
  *
+ * The returned fd stays valid for the lifetime of the controller, including across controller
+ * resets and reconnects. On fabrics transports, it signals events of the admin queue only while
+ * the admin queue is connected, so the application must still process the admin queue
+ * periodically, e.g. to send keep-alive commands.
+ *
  * \param ctrlr Controller for which fd has to be fetched.
  * \param[out] opts Event handler options to be filled by the transport, or NULL.
  *
