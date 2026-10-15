@@ -2568,14 +2568,6 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) *
-				   rtransport->rdma_opts.max_sgl_entries;
-	if (opts->in_capsule_data_size < min_in_capsule_data_size) {
-		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=%u\n",
-			     min_in_capsule_data_size, rtransport->rdma_opts.max_sgl_entries);
-		opts->in_capsule_data_size = min_in_capsule_data_size;
-	}
-
 	rtransport->event_channel = spdk_rdma_cm_create_event_channel();
 	if (rtransport->event_channel == NULL) {
 		SPDK_ERRLOG("spdk_rdma_cm_create_event_channel() failed, %s\n", spdk_strerror(errno));
@@ -2645,6 +2637,15 @@ nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			     rtransport->rdma_opts.max_sgl_entries, max_device_sge,
 			     max_device_sge);
 		rtransport->rdma_opts.max_sgl_entries = max_device_sge;
+	}
+
+	min_in_capsule_data_size = sizeof(struct spdk_nvme_sgl_descriptor) *
+				   rtransport->rdma_opts.max_sgl_entries;
+	if (rtransport->rdma_opts.max_sgl_entries > 1 &&
+	    opts->in_capsule_data_size < min_in_capsule_data_size) {
+		SPDK_WARNLOG("In capsule data size is set to %u, this is minimum size required to support msdbd=%u\n",
+			     min_in_capsule_data_size, rtransport->rdma_opts.max_sgl_entries);
+		opts->in_capsule_data_size = min_in_capsule_data_size;
 	}
 
 	rc = generate_poll_fds(rtransport);
