@@ -21,8 +21,8 @@ extern "C" {
 #endif
 
 #ifdef SPDK_CONFIG_ISAL_CRYPTO_INSTALLED
-#include <isa-l-crypto/aes_xts.h>
-#include <isa-l-crypto/isal_crypto_api.h>
+#include <isa-l_crypto/aes_xts.h>
+#include <isa-l_crypto/isal_crypto_api.h>
 #else
 #include "../isa-l-crypto/include/isa-l_crypto/aes_xts.h"
 #include "../isa-l-crypto/include/isa-l_crypto/isal_crypto_api.h"
