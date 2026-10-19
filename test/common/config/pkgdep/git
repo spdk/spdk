@@ -345,6 +345,8 @@ function install_bpftrace() {
 
 	git clone "$GIT_REPO_BPFTRACE" "$GIT_REPOS/bpftrace"
 	git -C $GIT_REPOS/bpftrace checkout $BPFTRACE_VERSION
+	git -C $GIT_REPOS/bpftrace submodule update --init --recursive
+	git -C $GIT_REPOS/bpftrace/libbpf checkout v1.8.0
 
 	mkdir -p "$GIT_REPOS/bpftrace/build"
 	cmake \
@@ -422,7 +424,7 @@ function install_sources() {
 }
 
 GIT_VERSION=2.25.1
-BPFTRACE_VERSION=${BPFTRACE_VERSION:-v0.24.1}
+BPFTRACE_VERSION=${BPFTRACE_VERSION:-v0.27.0}
 VFIO_QEMU_VERSION=${VFIO_QEMU_VERSION:-v10.1.1}
 VHOST_QEMU_VERSION=${VHOST_QEMU_VERSION:-v8.0.0}
 DPDK_STABLE_BRANCH=${DPDK_STABLE_BRANCH:-24.11}
