@@ -3936,6 +3936,24 @@ nvme_ctrlr_complete_queued_async_events(struct spdk_nvme_ctrlr *ctrlr)
 		return;
 	}
 
+	if (ctrlr->is_resetting) {
+		NVME_CTRLR_ERRLOG(ctrlr, "resetting with an enabled admin qpair\n");
+		assert(false && "should not happen by design");
+		return;
+	}
+
+	if (ctrlr->is_failed) {
+		NVME_CTRLR_ERRLOG(ctrlr, "failed controller is still READY\n");
+		assert(false && "should not happen by design");
+		return;
+	}
+
+	if (ctrlr->is_removed) {
+		NVME_CTRLR_ERRLOG(ctrlr, "removed controller is still READY\n");
+		assert(false && "should not happen by design");
+		return;
+	}
+
 	if (ctrlr->async_event_in_progress) {
 		return;
 	}
