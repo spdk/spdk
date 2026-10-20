@@ -3128,6 +3128,64 @@ test_nvme_ctrlr_aer_callback(void)
 }
 
 static void
+test_nvme_ctrlr_aer_queued_across_failed_reconnect(void)
+{
+	DECLARE_AND_CONSTRUCT_CTRLR();
+	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_cpl aer_cpl = {};
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_construct(&ctrlr) == 0);
+	CU_ASSERT(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
+	proc = nvme_ctrlr_get_current_process(&ctrlr);
+	SPDK_CU_ASSERT_FATAL(proc != NULL);
+
+	adminq.state = NVME_QPAIR_ENABLED;
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	ctrlr.aer[0].ctrlr = &ctrlr;
+	spdk_nvme_ctrlr_register_aer_callback(&ctrlr, aer_cb, NULL);
+
+	/* Queued before reset. Disconnect drops it. */
+	g_aer_cb_counter = 0;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+	CU_ASSERT(nvme_ctrlr_disconnect(&ctrlr) == 0);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(STAILQ_EMPTY(&proc->async_events));
+
+	/* Failure reason is clear and the controller is not READY, so this notice is held. */
+	ctrlr.is_disconnecting = false;
+	adminq.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+	adminq.state = NVME_QPAIR_ENABLED;
+	ctrlr.state = NVME_CTRLR_STATE_IDENTIFY;
+	nvme_ctrlr_async_event_cb(&ctrlr.aer[0], &aer_cpl);
+	nvme_ctrlr_complete_queued_async_events(&ctrlr);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+
+	/* Time out while waiting for identify. */
+	ctrlr.state = NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY;
+	ctrlr.state_timeout_tsc = 1;
+	MOCK_SET(spdk_get_ticks, 2);
+	nvme_ctrlr_lock(&ctrlr);
+	rc = spdk_nvme_ctrlr_reconnect_poll_async(&ctrlr);
+	MOCK_CLEAR(spdk_get_ticks);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(ctrlr.is_failed == true);
+	CU_ASSERT(ctrlr.state == NVME_CTRLR_STATE_ERROR);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(!STAILQ_EMPTY(&proc->async_events));
+
+	/* The next attempt disconnects first and drops the notice. */
+	CU_ASSERT(nvme_ctrlr_disconnect(&ctrlr) == 0);
+	CU_ASSERT(g_aer_cb_counter == 0);
+	CU_ASSERT(STAILQ_EMPTY(&proc->async_events));
+
+	nvme_ctrlr_free_processes(&ctrlr);
+	nvme_ctrlr_destruct(&ctrlr);
+}
+
+static void
 check_active_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t *active_ns_list, uint32_t max_count)
 {
 	uint32_t i;
@@ -3927,6 +3985,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_mgmt);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_reset);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_aer_callback);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_aer_queued_across_failed_reconnect);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_ns_attr_changed);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_namespaces_iocs_specific_next);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_identify_ns_after_reconnect_frees_ns);

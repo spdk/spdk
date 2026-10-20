@@ -1837,6 +1837,8 @@ nvme_ctrlr_abort_queued_aborts(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
+static void nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr *ctrlr);
+
 static int
 nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1863,6 +1865,9 @@ nvme_ctrlr_disconnect(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_abort_queued_aborts(ctrlr);
 
 	nvme_transport_admin_qpair_abort_aers(ctrlr->adminq);
+
+	/* Drop notices so a later reconnect cannot replay them. */
+	nvme_ctrlr_free_async_events(ctrlr);
 
 	ctrlr->adminq->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_LOCAL;
 	nvme_transport_ctrlr_disconnect_qpair(ctrlr, ctrlr->adminq);
@@ -3545,7 +3550,7 @@ nvme_ctrlr_duplicate_changed_ns_list(struct spdk_nvme_ctrlr *ctrlr, const uint32
 }
 
 static void
-nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr_process *proc)
+nvme_ctrlr_proc_free_async_events(struct spdk_nvme_ctrlr_process *proc)
 {
 	struct spdk_nvme_ctrlr_aer_completion *event;
 
@@ -3553,6 +3558,16 @@ nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr_process *proc)
 		event = STAILQ_FIRST(&proc->async_events);
 		STAILQ_REMOVE_HEAD(&proc->async_events, link);
 		nvme_ctrlr_free_async_event(event);
+	}
+}
+
+static void
+nvme_ctrlr_free_async_events(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_ctrlr_process *proc;
+
+	TAILQ_FOREACH(proc, &ctrlr->active_procs, tailq) {
+		nvme_ctrlr_proc_free_async_events(proc);
 	}
 }
 
@@ -4137,7 +4152,7 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 
 	assert(STAILQ_EMPTY(&proc->active_reqs));
 
-	nvme_ctrlr_free_async_events(proc);
+	nvme_ctrlr_proc_free_async_events(proc);
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
@@ -4172,7 +4187,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		nvme_free_request(req);
 	}
 
-	nvme_ctrlr_free_async_events(proc);
+	nvme_ctrlr_proc_free_async_events(proc);
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		TAILQ_REMOVE(&proc->allocated_io_qpairs, qpair, per_process_tailq);
@@ -4206,7 +4221,7 @@ nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_FOREACH_SAFE(active_proc, &ctrlr->active_procs, tailq, tmp) {
 		TAILQ_REMOVE(&ctrlr->active_procs, active_proc, tailq);
 		assert(STAILQ_EMPTY(&active_proc->active_reqs));
-		nvme_ctrlr_free_async_events(active_proc);
+		nvme_ctrlr_proc_free_async_events(active_proc);
 		spdk_free(active_proc);
 	}
 }
