@@ -252,6 +252,7 @@ kvmalloc_handle_store(struct kvmalloc_disk *kvmalloc, const struct spdk_nvme_cmd
 	}
 
 	spdk_spin_unlock(&kvmalloc->kv_tree_lock);
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_WRITE, data_len);
 	spdk_bdev_io_complete_nvme_status(bdev_io, 0,
 					  SPDK_NVME_SCT_GENERIC,
 					  SPDK_NVME_SC_SUCCESS);
@@ -299,6 +300,7 @@ kvmalloc_handle_retrieve(struct kvmalloc_disk *kvmalloc, const struct spdk_nvme_
 	value_len = entry->value_len;
 
 	spdk_spin_unlock(&kvmalloc->kv_tree_lock);
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_READ, copy_len);
 	spdk_bdev_io_complete_nvme_status(bdev_io, value_len,
 					  SPDK_NVME_SCT_GENERIC,
 					  SPDK_NVME_SC_SUCCESS);
@@ -310,6 +312,7 @@ kvmalloc_handle_delete(struct kvmalloc_disk *kvmalloc, const struct spdk_nvme_cm
 		       struct spdk_bdev_io *bdev_io)
 {
 	struct kvmalloc_kv_entry *entry;
+	uint32_t data_len = 0;
 	uint8_t *key;
 	uint8_t key_len;
 	int rc;
@@ -336,9 +339,11 @@ kvmalloc_handle_delete(struct kvmalloc_disk *kvmalloc, const struct spdk_nvme_cm
 	}
 
 	RB_REMOVE(kvmalloc_tree, &kvmalloc->kv_tree, entry);
+	data_len = entry->value_len;
 	kvmalloc_free_entry(entry);
 
 	spdk_spin_unlock(&kvmalloc->kv_tree_lock);
+	spdk_bdev_io_account_stat(bdev_io, SPDK_BDEV_IO_TYPE_UNMAP, data_len);
 	spdk_bdev_io_complete_nvme_status(bdev_io, 0,
 					  SPDK_NVME_SCT_GENERIC,
 					  SPDK_NVME_SC_SUCCESS);
