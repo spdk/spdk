@@ -35,7 +35,7 @@ uninstall: empty_rule
 empty_rule:
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(VFIO_USER_LIB_FILE)
 	$(LINK_C)
 
 clean :

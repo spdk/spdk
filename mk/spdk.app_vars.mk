@@ -16,6 +16,12 @@ endef
 SPDK_LIB_LIST += $(ENV_DEPLIBS)
 SPDK_DEPLIB_LIST += $(call deplibs,$(SPDK_LIB_LIST))
 
+ifeq ($(CONFIG_VFIO_USER),y)
+ifeq ($(CONFIG_SHARED),n)
+VFIO_USER_LIB_FILE = $(if $(filter nvmf vfu_tgt,$(SPDK_DEPLIB_LIST)),$(VFIO_USER_LIBRARY_DIR)/libvfio-user.a)
+endif
+endif
+
 SPDK_LIB_FILES = $(call spdk_lib_list_to_static_libs,$(SPDK_DEPLIB_LIST))
 SPDK_LIB_LINKER_ARGS = \
 	-L$(SPDK_ROOT_DIR)/build/lib \

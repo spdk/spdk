@@ -47,7 +47,7 @@ uninstall:
 	$(Q)rm -f "$(DESTDIR)$(libdir)/fio/$(notdir $(FIO_PLUGIN))";
 	$(Q)if [ -d "$(DESTDIR)$(libdir)/fio" ] && [ $$(ls -A "$(DESTDIR)$(libdir)/fio" | wc -l) -eq 0 ]; then rm -rf "$(DESTDIR)$(libdir)/fio"; fi
 
-$(FIO_PLUGIN) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+$(FIO_PLUGIN) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(VFIO_USER_LIB_FILE)
 	$(LINK_C)
 
 clean :
