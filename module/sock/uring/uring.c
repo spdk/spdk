@@ -478,8 +478,9 @@ retry:
 		return NULL;
 	}
 
-	enable_zcopy_user_opts = opts->zcopy && !spdk_net_is_loopback(fd);
-	sock = uring_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts);
+	enable_zcopy_user_opts = opts->zcopy;
+	sock = uring_sock_alloc(fd, &impl_opts, enable_zcopy_user_opts && enable_zcopy_impl_opts &&
+				!spdk_net_is_loopback(fd));
 	if (sock == NULL) {
 		SPDK_ERRLOG("sock allocation failed\n");
 		close(fd);

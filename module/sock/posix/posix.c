@@ -969,8 +969,8 @@ retry:
 	}
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	posix_sock_init(sock, opts->zcopy && !spdk_net_is_loopback(fd) && !enable_ssl &&
-			impl_opts.enable_zerocopy_send_server);
+	posix_sock_init(sock, opts->zcopy && impl_opts.enable_zerocopy_send_server &&
+			!enable_ssl && !spdk_net_is_loopback(fd));
 	return &sock->base;
 }
 
@@ -2329,8 +2329,8 @@ posix_connect_poller(struct spdk_posix_sock *sock)
 	sock->fd = ctx->fd;
 
 	/* Only enable zero copy for non-loopback and non-ssl sockets. */
-	posix_sock_init(sock, base->opts.zcopy && !spdk_net_is_loopback(sock->fd) && !ctx->ssl &&
-			base->impl_opts.enable_zerocopy_send_client);
+	posix_sock_init(sock, base->opts.zcopy && base->impl_opts.enable_zerocopy_send_client &&
+			!ctx->ssl && !spdk_net_is_loopback(sock->fd));
 
 	if (ctx->ssl) {
 		rc = posix_sock_configure_ssl(sock, true);
