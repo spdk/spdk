@@ -217,6 +217,7 @@ struct spdk_vfu_endpoint_ops {
 
 	/**
 	 * PCI device reset callback.
+	 * Required for devices advertising Function Level Reset (FLR) capability.
 	 */
 	int (*reset_device)(struct spdk_vfu_endpoint *endpoint);
 

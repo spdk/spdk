@@ -38,6 +38,7 @@
 #define NVMF_VFIO_USER_DEFAULT_MAX_QUEUE_DEPTH 256
 #define NVMF_VFIO_USER_DEFAULT_AQ_DEPTH 32
 #define NVMF_VFIO_USER_DEFAULT_MAX_IO_SIZE ((NVMF_REQ_MAX_BUFFERS - 1) << SHIFT_4KB)
+#define NVMF_VFIO_USER_MAX_DMA_REGIONS 64
 
 #define NVME_DOORBELLS_OFFSET	0x1000
 #define NVMF_VFIO_USER_SHADOW_DOORBELLS_BUFFER_COUNT 2
@@ -3391,7 +3392,9 @@ vfio_user_dev_info_fill(struct nvmf_vfio_user_transport *vu_transport,
 		return ret;
 	}
 
-	ret = vfu_setup_device_dma(vfu_ctx, memory_region_add_cb, memory_region_remove_cb);
+	/* Bound the number of DMA regions a client can register. */
+	ret = vfu_setup_device_dma(vfu_ctx, NVMF_VFIO_USER_MAX_DMA_REGIONS,
+				   memory_region_add_cb, memory_region_remove_cb);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup dma callback\n", vfu_ctx);
 		return ret;

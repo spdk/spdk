@@ -15,6 +15,8 @@
 
 #include "tgt_internal.h"
 
+#define VFU_TGT_MAX_DMA_REGIONS 64
+
 struct tgt_pci_device_ops {
 	struct spdk_vfu_endpoint_ops ops;
 	TAILQ_ENTRY(tgt_pci_device_ops) link;
@@ -433,7 +435,9 @@ tgt_endpoint_realize(struct spdk_vfu_endpoint *endpoint)
 			      region->nr_sparse_mmaps, region->fd);
 	}
 
-	ret = vfu_setup_device_dma(endpoint->vfu_ctx, tgt_memory_region_add_cb,
+	/* Bound the number of DMA regions a client can register. */
+	ret = vfu_setup_device_dma(endpoint->vfu_ctx, VFU_TGT_MAX_DMA_REGIONS,
+				   tgt_memory_region_add_cb,
 				   tgt_memory_region_remove_cb);
 	if (ret < 0) {
 		SPDK_ERRLOG("vfu_ctx %p failed to setup dma callback\n", endpoint->vfu_ctx);
