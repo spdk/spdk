@@ -22,12 +22,14 @@ VFIO_USER_MESON_COMPILE_OPTS =
 VFIO_USER_MESON_INSTALL_OPTS = --quiet
 endif
 
+VFIO_USER_MESON_INSTALL_OPTS += --no-rebuild --only-changed
+
 all: scan-build
 
 build:
 	$(Q)test -d $(VFIO_USER_BUILD_DIR) || \
 	     CC=$(SUB_CC) meson setup $(VFIO_USER_CFG_OPTS) $(VFIO_USER_BUILD_DIR) $(VFIO_USER_SRC_DIR)
-	$(Q)meson compile $(VFIO_USER_MESON_COMPILE_OPTS) -C $(VFIO_USER_BUILD_DIR)
+	$(Q)meson compile $(VFIO_USER_MESON_COMPILE_OPTS) -C $(VFIO_USER_BUILD_DIR) vfio-user
 	$(Q)DESTDIR=$(VFIO_USER_INSTALL_DIR) meson install $(VFIO_USER_MESON_INSTALL_OPTS) -C $(VFIO_USER_BUILD_DIR)
 
 scan-build: build
