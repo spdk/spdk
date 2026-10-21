@@ -798,6 +798,14 @@ if [[ -n "${CONFIG[OPENSSL_PATH]}" ]]; then
 fi
 
 if [[ "${CONFIG[VFIO_USER]}" = "y" ]]; then
+	vfio_user_src=${CONFIG[VFIO_USER_DIR]:-$rootdir/libvfio-user}
+	if [[ ! -f $vfio_user_src/meson.build || ! -f $vfio_user_src/include/libvfio-user.h ]]; then
+		echo "ERROR: --with-vfio-user requires a complete libvfio-user source tree at $vfio_user_src"
+		if [[ -z ${CONFIG[VFIO_USER_DIR]} ]]; then
+			echo "Initialize it with: git submodule update --init libvfio-user"
+		fi
+		exit 1
+	fi
 	if ! echo -e '#include <json-c/json.h>' \
 		| "${BUILD_CMD[@]}" -E - 2> /dev/null; then
 		echo "ERROR: --with-vfio-user requires json-c-devel"
