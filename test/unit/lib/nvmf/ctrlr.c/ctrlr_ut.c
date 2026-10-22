@@ -4649,6 +4649,52 @@ test_identify_ns_kv_active_iov(void)
 	spdk_bit_array_free(&ctrlr.visible_ns);
 }
 
+static void
+test_cmd_to_disabled_ctrlr(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_poll_group group = {};
+	struct spdk_nvmf_subsystem_poll_group sgroups = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	struct spdk_nvmf_request req = {};
+
+	subsystem.id = 0;
+	group.sgroups = &sgroups;
+	group.num_sgroups = 1;
+	qpair.group = &group;
+	qpair.ctrlr = &ctrlr;
+	ctrlr.subsys = &subsystem;
+	ctrlr.thread = spdk_get_thread();
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+
+	/* Commands to a controller with CC.EN == 0 fail with Command Sequence Error and DNR set,
+	 * as the Linux nvmet target does: resubmitting them cannot succeed.
+	 */
+	ctrlr.vcprop.cc.bits.en = 0;
+
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_READ;
+	cmd.nvme_cmd.nsid = 1;
+	qpair.qid = 1;
+	CU_ASSERT(nvmf_ctrlr_process_io_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.dnr, 1);
+
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	qpair.qid = 0;
+	CU_ASSERT(nvmf_ctrlr_process_admin_cmd(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sct, SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT_EQUAL(rsp.nvme_cpl.status.dnr, 1);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4659,6 +4705,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvmf", NULL, NULL);
 	CU_ADD_TEST(suite, test_get_log_page);
+	CU_ADD_TEST(suite, test_cmd_to_disabled_ctrlr);
 	CU_ADD_TEST(suite, test_process_fabrics_cmd);
 	CU_ADD_TEST(suite, test_connect);
 	CU_ADD_TEST(suite, test_get_ns_id_desc_list);

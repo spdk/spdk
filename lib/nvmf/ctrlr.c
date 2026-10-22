@@ -4730,6 +4730,7 @@ nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Admin command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		response->status.dnr = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -5421,6 +5422,7 @@ nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("I/O command sent to disabled controller\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		response->status.dnr = 1;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
