@@ -34,6 +34,13 @@ get_discovery_entries() {
 		| jq ".records[] | select(.subtype == \"$subtype\")"
 }
 
+get_referral_field() {
+	local traddr="$1" field="$2"
+
+	get_discovery_entries "discovery subsystem referral" \
+		| jq -r "select(.traddr == \"$traddr\").$field"
+}
+
 nvmftestinit
 nvmfappstart -m 0xF
 
@@ -81,6 +88,27 @@ rpc_cmd nvmf_discovery_remove_referral -t $TEST_TRANSPORT -a $NVMF_REFERRAL_IP_1
 
 (($(rpc_cmd nvmf_discovery_get_referrals | jq 'length') == 0))
 [[ $(get_referral_ips "nvme") == "" ]]
+
+# A TCP referral requiring a secure channel must advertise TLS 1.3 as its sectype
+if [[ $TEST_TRANSPORT == "tcp" ]]; then
+	rpc_cmd nvmf_discovery_add_referral -t $TEST_TRANSPORT -a $NVMF_REFERRAL_IP_1 \
+		-s $NVMF_PORT_REFERRAL -k
+	rpc_cmd nvmf_discovery_add_referral -t $TEST_TRANSPORT -a $NVMF_REFERRAL_IP_2 \
+		-s $NVMF_PORT_REFERRAL
+
+	[[ $(get_referral_field $NVMF_REFERRAL_IP_1 treq) == "required" ]]
+	[[ $(get_referral_field $NVMF_REFERRAL_IP_1 sectype) == "tls13" ]]
+	[[ $(get_referral_field $NVMF_REFERRAL_IP_2 treq) == "not required" ]]
+	[[ $(get_referral_field $NVMF_REFERRAL_IP_2 sectype) == "none" ]]
+
+	rpc_cmd nvmf_discovery_remove_referral -t $TEST_TRANSPORT -a $NVMF_REFERRAL_IP_1 \
+		-s $NVMF_PORT_REFERRAL
+	rpc_cmd nvmf_discovery_remove_referral -t $TEST_TRANSPORT -a $NVMF_REFERRAL_IP_2 \
+		-s $NVMF_PORT_REFERRAL
+
+	(($(rpc_cmd nvmf_discovery_get_referrals | jq 'length') == 0))
+	[[ $(get_referral_ips "nvme") == "" ]]
+fi
 
 trap - SIGINT SIGTERM EXIT
 nvmftestfini

@@ -104,6 +104,11 @@ spdk_nvmf_tgt_add_referral(struct spdk_nvmf_tgt *tgt,
 	referral->entry.cntlid = 0xffff;
 	referral->entry.trtype = trid->trtype;
 	referral->entry.adrfam = trid->adrfam;
+	if (trid->trtype == SPDK_NVME_TRANSPORT_TCP) {
+		referral->entry.tsas.tcp.sectype = opts.secure_channel ?
+						   SPDK_NVME_TCP_SECURITY_TLS_1_3 :
+						   SPDK_NVME_TCP_SECURITY_NONE;
+	}
 	memcpy(&referral->trid, trid, sizeof(struct spdk_nvme_transport_id));
 	spdk_strcpy_pad(referral->entry.subnqn, trid->subnqn, sizeof(trid->subnqn), '\0');
 	spdk_strcpy_pad(referral->entry.trsvcid, trid->trsvcid, sizeof(referral->entry.trsvcid), ' ');

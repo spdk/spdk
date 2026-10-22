@@ -407,6 +407,7 @@ test_nvmf_tgt_options(void)
 		tgt->dup_host_policy == SPDK_NVMF_SUBSYSTEM_DUP_HOST_POLICY_RESTRICT_PER_LISTENER);
 	spdk_nvmf_tgt_destroy(tgt, NULL, NULL);
 	poll_threads();
+	free_threads();
 }
 
 static void
@@ -717,6 +718,7 @@ test_nvmf_poll_group_update_subsystem_ns_aen(void)
 		spdk_thread_poll(other_thread, 0, 0);
 	}
 	spdk_thread_destroy(other_thread);
+	spdk_thread_lib_fini();
 }
 
 static void
@@ -840,6 +842,70 @@ test_nvmf_pause_drains_targeted_ns(void)
 	CU_ASSERT(done == true);
 }
 
+/*
+ * spdk_nvme_transport_id_compare() is stubbed to always match, so the referral
+ * must be removed before the next add, or that add is skipped as a duplicate.
+ */
+static void
+ut_add_referral_check_sectype(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type trtype,
+			      bool secure_channel, uint8_t expected_sectype)
+{
+	struct spdk_nvmf_referral_opts opts = {};
+	struct spdk_nvmf_referral *referral;
+	int rc;
+
+	SPDK_CU_ASSERT_FATAL(spdk_nvmf_tgt_get_first_referral(tgt) == NULL);
+
+	opts.size = SPDK_SIZEOF(&opts, allow_any_host);
+	opts.trid.trtype = trtype;
+	opts.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", "127.0.0.1");
+	snprintf(opts.trid.trsvcid, sizeof(opts.trid.trsvcid), "%s", "4420");
+	opts.secure_channel = secure_channel;
+	opts.allow_any_host = true;
+
+	rc = spdk_nvmf_tgt_add_referral(tgt, &opts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+
+	referral = spdk_nvmf_tgt_get_first_referral(tgt);
+	SPDK_CU_ASSERT_FATAL(referral != NULL);
+	if (secure_channel) {
+		CU_ASSERT(referral->entry.treq.secure_channel ==
+			  SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED);
+	} else {
+		CU_ASSERT(referral->entry.treq.secure_channel ==
+			  SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED);
+	}
+	if (trtype != SPDK_NVME_TRANSPORT_TCP) {
+		CU_ASSERT(spdk_mem_all_zero(&referral->entry.tsas, sizeof(referral->entry.tsas)));
+	} else {
+		CU_ASSERT(referral->entry.tsas.tcp.sectype == expected_sectype);
+	}
+
+	rc = spdk_nvmf_tgt_remove_referral(tgt, &opts);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(spdk_nvmf_tgt_get_first_referral(tgt) == NULL);
+}
+
+static void
+test_nvmf_referral_tcp_sectype(void)
+{
+	struct spdk_nvmf_tgt tgt = {};
+
+	allocate_threads(1);
+	set_thread(0);
+	TAILQ_INIT(&tgt.referrals);
+
+	ut_add_referral_check_sectype(&tgt, SPDK_NVME_TRANSPORT_TCP, true,
+				      SPDK_NVME_TCP_SECURITY_TLS_1_3);
+	ut_add_referral_check_sectype(&tgt, SPDK_NVME_TRANSPORT_TCP, false,
+				      SPDK_NVME_TCP_SECURITY_NONE);
+	/* sectype is TCP-only; other transports must leave tsas zeroed. */
+	ut_add_referral_check_sectype(&tgt, SPDK_NVME_TRANSPORT_RDMA, true, 0);
+
+	free_threads();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -857,6 +923,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvmf_tgt_ns_metadata);
 	CU_ADD_TEST(suite, test_nvmf_pause_drains_targeted_ns);
 	CU_ADD_TEST(suite, test_nvmf_poll_group_update_subsystem_ns_aen);
+	CU_ADD_TEST(suite, test_nvmf_referral_tcp_sectype);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);
 	CU_cleanup_registry();
