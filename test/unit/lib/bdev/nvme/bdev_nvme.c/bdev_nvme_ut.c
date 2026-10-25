@@ -63,11 +63,22 @@ DEFINE_STUB(spdk_jsonrpc_begin_result, struct spdk_json_write_ctx *,
 DEFINE_STUB_V(spdk_jsonrpc_end_result,
 	      (struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w));
 
-DEFINE_STUB_V(spdk_nvme_transport_get_opts, (struct spdk_nvme_transport_opts *opts,
-		size_t opts_size));
+static struct spdk_nvme_transport_opts g_ut_transport_opts;
 
-DEFINE_STUB(spdk_nvme_transport_set_opts, int, (const struct spdk_nvme_transport_opts *opts,
-		size_t opts_size), 0);
+void
+spdk_nvme_transport_get_opts(struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	memcpy(opts, &g_ut_transport_opts, spdk_min(opts_size, sizeof(*opts)));
+	opts->opts_size = opts_size;
+}
+
+int
+spdk_nvme_transport_set_opts(const struct spdk_nvme_transport_opts *opts, size_t opts_size)
+{
+	memcpy(&g_ut_transport_opts, opts, spdk_min(opts_size, sizeof(*opts)));
+	return 0;
+}
+
 DEFINE_STUB(spdk_nvme_dhchap_get_digest_name, const char *, (int id), NULL);
 DEFINE_STUB(spdk_nvme_dhchap_get_dhgroup_name, const char *, (int id), NULL);
 
@@ -8531,6 +8542,37 @@ test_bdev_nvme_ctrlr_iterators(void)
 	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
 }
 
+static void
+test_set_opts_rdma_umr_per_io(void)
+{
+	struct spdk_bdev_nvme_opts saved_opts, opts;
+	int rc;
+
+	set_thread(0);
+	spdk_bdev_nvme_get_opts(&saved_opts, sizeof(saved_opts));
+
+	/* rdma_umr_per_io is passed to the transport and reported back */
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	opts.rdma_umr_per_io = true;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_ut_transport_opts.rdma_umr_per_io == true);
+
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	CU_ASSERT(opts.rdma_umr_per_io == true);
+
+	opts.rdma_umr_per_io = false;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_ut_transport_opts.rdma_umr_per_io == false);
+
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	CU_ASSERT(opts.rdma_umr_per_io == false);
+
+	rc = spdk_bdev_nvme_set_opts(&saved_opts);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8600,6 +8642,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_multipath_opts_mismatch);
 	CU_ADD_TEST(suite, test_multipath_opts_validation);
 	CU_ADD_TEST(suite, test_bdev_nvme_ctrlr_iterators);
+	CU_ADD_TEST(suite, test_set_opts_rdma_umr_per_io);
 
 	allocate_threads(3);
 	set_thread(0);

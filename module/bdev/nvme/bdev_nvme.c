@@ -6700,6 +6700,7 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	SET_FIELD(rdma_cm_event_timeout_ms, 0);
 	SET_FIELD(dhchap_digests, 0);
 	SET_FIELD(dhchap_dhgroups, 0);
+	SET_FIELD(rdma_umr_per_io, false);
 	SET_FIELD(tcp_connect_timeout_ms, 0);
 	SET_FIELD(enable_flush, false);
 	SET_FIELD(multipath_policy, BDEV_NVME_MULTIPATH_POLICY_DEFAULT);
