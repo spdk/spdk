@@ -6,6 +6,7 @@
 # Minimal install
 pkg install -y pkgconf gmake cunit openssl git bash python ncurses ninja meson gcc
 pkg install -g -y "py*-pyelftools-*" "py*-pandas" "py*-Jinja2" "py*-tabulate-*"
+pkg install -y uv
 # Additional dependencies for ISA-L used in compression
 pkg install -y autoconf automake libtool help2man
 if [[ $INSTALL_DEV_TOOLS == "true" ]]; then
