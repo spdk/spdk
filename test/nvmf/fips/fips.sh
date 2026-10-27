@@ -125,7 +125,7 @@ if ((${#providers[@]} != 2)) || [[ ${providers[0],,} != *base* || ${providers[1]
 fi
 
 # MD5 is not FIPS compliant, so below command should fail in FIPS-only environment.
-NOT openssl md5 <(:)
+NOT openssl dgst -md5 <(:)
 
 # Start NVMf TLS test.
 nvmftestinit
