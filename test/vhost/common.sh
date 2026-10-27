@@ -647,7 +647,6 @@ function vm_setup() {
 	local monitor_port=$((vm_socket_offset + 2))
 	local migration_port=$((vm_socket_offset + 3))
 	local gdbserver_socket=$((vm_socket_offset + 4))
-	local vnc_socket=$((100 + vm_num))
 	local qemu_pid_file="$vm_dir/qemu.pid"
 	local cpu_list
 	local cpu_num=0 queue_number=0
@@ -664,7 +663,6 @@ function vm_setup() {
 	monitor_port=$(get_free_tcp_port "$monitor_port")
 	migration_port=$(get_free_tcp_port "$migration_port")
 	gdbserver_socket=$(get_free_tcp_port "$gdbserver_socket")
-	vnc_socket=$(get_free_tcp_port "$vnc_socket")
 
 	xtrace_restore
 
@@ -672,7 +670,7 @@ function vm_setup() {
 	local boot_disk_present=false
 	notice "NUMA NODE: $node_num"
 	cmd+=(-M "type=q35,kernel_irqchip=split" -device "intel-iommu,pt=on,intremap=on")
-	cmd+=(-m "$guest_memory" --enable-kvm -cpu host -smp "$cpu_num" -vga std -vnc ":$vnc_socket" -daemonize)
+	cmd+=(-m "$guest_memory" --enable-kvm -cpu host -smp "$cpu_num" -vga none -display none -daemonize)
 	cmd+=(-object "memory-backend-file,id=mem,size=${guest_memory}M,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind")
 	[[ $os_mode == snapshot ]] && cmd+=(-snapshot)
 	[[ -n "$vm_incoming" ]] && cmd+=(-incoming "tcp:0:$migration_port")
@@ -839,7 +837,6 @@ function vm_setup() {
 	[[ -z $vm_incoming ]] || echo $migration_port > $vm_dir/migration_port
 
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
-	echo $vnc_socket >> $vm_dir/vnc_socket
 
 	[[ -z $vm_incoming ]] || ln -fs $VM_DIR/$vm_incoming $vm_dir/vm_incoming
 	[[ -z $vm_migrate_to ]] || ln -fs $VM_DIR/$vm_migrate_to $vm_dir/vm_migrate_to
