@@ -26,7 +26,6 @@ pthread_cond_t g_test_cond;
 
 static struct spdk_thread *g_thread[WORKER_COUNT];
 static int g_num_failures = 0;
-static bool g_shutdown = false;
 static bool g_completion_success;
 struct spdk_io_channel	*g_channel = NULL;
 
@@ -2412,7 +2411,6 @@ accel_dif_parse_arg(int ch, char *arg)
 static void
 spdk_dif_shutdown_cb(void)
 {
-	g_shutdown = true;
 	spdk_thread_send_msg(g_thread[WORKER_UT], _stop_init_thread, NULL);
 }
 

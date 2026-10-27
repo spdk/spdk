@@ -56,7 +56,6 @@ struct ioat_task {
 };
 
 static struct worker_thread *g_workers = NULL;
-static int g_num_workers = 0;
 static int g_ioat_chan_num = 0;
 
 static void submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *ioat_task,
@@ -130,7 +129,6 @@ register_workers(void)
 	struct worker_thread *worker;
 
 	g_workers = NULL;
-	g_num_workers = 0;
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		worker = calloc(1, sizeof(*worker));
@@ -142,7 +140,6 @@ register_workers(void)
 		worker->core = i;
 		worker->next = g_workers;
 		g_workers = worker;
-		g_num_workers++;
 	}
 
 	return 0;

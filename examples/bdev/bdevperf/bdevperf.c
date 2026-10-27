@@ -47,8 +47,6 @@ static char *g_workload_type = NULL;
 static int g_io_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
-static bool g_verify = false;
-static bool g_reset = false;
 static bool g_continue_on_failure = false;
 static bool g_abort = false;
 static bool g_error_to_exit = false;
@@ -3001,10 +2999,6 @@ verify_test_params(void)
 	if (!strcmp(g_workload_type, "verify") ||
 	    !strcmp(g_workload_type, "reset")) {
 		g_rw_percentage = 50;
-		g_verify = true;
-		if (!strcmp(g_workload_type, "reset")) {
-			g_reset = true;
-		}
 	}
 
 	if (!strcmp(g_workload_type, "read") ||

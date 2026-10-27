@@ -74,7 +74,6 @@ static void			*g_init_cb_arg = NULL;
 
 static spdk_fsdev_fini_cb	g_fini_cb_fn = NULL;
 static void			*g_fini_cb_arg = NULL;
-static struct spdk_thread	*g_fini_thread = NULL;
 
 struct spdk_fsdev_mgmt_channel {
 	/*
@@ -437,7 +436,6 @@ void
 spdk_fsdev_finish(spdk_fsdev_fini_cb cb_fn, void *cb_arg)
 {
 	assert(cb_fn != NULL);
-	g_fini_thread = spdk_get_thread();
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 	fsdev_finish_unregister_fsdevs_iter(NULL, 0);

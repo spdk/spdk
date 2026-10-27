@@ -1174,14 +1174,12 @@ spdk_nvme_ns_cmd_read_iov(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_READ, cb_fn, cb_arg);
 }
 
-static bool g_ut_write_iov_called;
 int
 spdk_nvme_ns_cmd_write_iov(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 			   uint64_t lba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
 			   void *cb_arg, struct iovec *iov, uint32_t iov_count,
 			   struct spdk_nvme_ns_cmd_ext_io_opts *opts)
 {
-	g_ut_write_iov_called = true;
 	return ut_submit_nvme_request(ns, qpair, SPDK_NVME_OPC_WRITE, cb_fn, cb_arg);
 }
 

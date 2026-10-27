@@ -2260,7 +2260,6 @@ bdev_set_io_timeout_mt(void)
 
 static bool g_io_done2;
 static bool g_lock_lba_range_done;
-static bool g_unlock_lba_range_done;
 
 static void
 io_done2(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -2278,7 +2277,6 @@ lock_lba_range_done(struct lba_range *range, void *ctx, int status)
 static void
 unlock_lba_range_done(struct lba_range *range, void *ctx, int status)
 {
-	g_unlock_lba_range_done = true;
 }
 
 static uint32_t
