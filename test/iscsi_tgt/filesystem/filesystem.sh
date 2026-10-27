@@ -89,7 +89,7 @@ function filesystem_test() {
 	fstype=$1
 
 	make_filesystem ${fstype} /dev/${dev}1
-	mount /dev/${dev}1 /mnt/device
+	mount -t ${fstype} /dev/${dev}1 /mnt/device
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randwrite -ioengine=libaio -bs=4k \
 			-size=1024M -name=job0
@@ -103,7 +103,7 @@ function filesystem_test() {
 		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 		waitforfile /dev/${dev}1
-		mount -o rw /dev/${dev}1 /mnt/device
+		mount -t ${fstype} -o rw /dev/${dev}1 /mnt/device
 		if [ -f "/mnt/device/test" ]; then
 			echo "File existed."
 			fio -filename=/mnt/device/test -direct=1 -iodepth 64 -thread=1 -invalidate=1 -rw=randread \
@@ -127,7 +127,7 @@ function filesystem_test() {
 		dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 		waitforfile /dev/${dev}1
-		mount -o rw /dev/${dev}1 /mnt/device
+		mount -t ${fstype} -o rw /dev/${dev}1 /mnt/device
 
 		if [ -f "/mnt/device/aaa" ]; then
 			echo "File existed."

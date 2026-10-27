@@ -21,7 +21,7 @@ function nvmf_filesystem_create() {
 
 	make_filesystem ${fstype} /dev/${nvme_name}p1
 
-	mount /dev/${nvme_name}p1 /mnt/device
+	mount -t ${fstype} /dev/${nvme_name}p1 /mnt/device
 	touch /mnt/device/aaa
 	sync
 	rm /mnt/device/aaa

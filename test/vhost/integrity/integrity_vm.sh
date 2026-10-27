@@ -56,7 +56,7 @@ for fs in $fs; do
 		fi
 
 		mkdir -p /mnt/${dev}dir
-		mount -o sync /dev/${dev}1 /mnt/${dev}dir
+		mount -t "$fs" -o sync /dev/${dev}1 /mnt/${dev}dir
 
 		fio --name="integrity" --bsrange=4k-512k --iodepth=128 --numjobs=1 --direct=1 \
 			--thread=1 --group_reporting=1 --rw=randrw --rwmixread=70 \
