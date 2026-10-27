@@ -78,12 +78,10 @@ def generateCoverageReport(output_dir, repo_dir):
         '--rc', f'{lcov_opt_prefix}function_coverage=1',
         '--rc', f'{genhtml_opt_prefix}branch_coverage=1',
         '--rc', f'{genhtml_opt_prefix}function_coverage=1',
-        '--rc', 'genhtml_legend=1',
-        '--rc', 'geninfo_all_blocks=1',
     ]
 
     if lcov_major_version >= 2:
-        lcov_opts.extend(['--ignore-errors', 'mismatch'])
+        lcov_opts.extend(['--ignore-errors', 'mismatch,inconsistent'])
 
     # HACK: This is a workaround for some odd CI assumptions
     details = '--show-details'
