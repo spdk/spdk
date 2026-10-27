@@ -132,7 +132,8 @@ static struct spdk_sock_impl_opts g_spdk_uring_sock_impl_opts = {
 	.tls_version = 0,
 	.enable_ktls = false,
 	.psk_key = NULL,
-	.psk_identity = NULL
+	.psk_identity = NULL,
+	.disable_tls_session_tickets = false
 };
 
 static struct spdk_sock_map g_map = {
@@ -174,6 +175,7 @@ uring_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(enable_ktls);
 	SET_FIELD(psk_key);
 	SET_FIELD(psk_identity);
+	SET_FIELD(disable_tls_session_tickets);
 
 #undef SET_FIELD
 #undef FIELD_OK

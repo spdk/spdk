@@ -205,6 +205,13 @@ struct spdk_sock_impl_opts {
 	 * example: "TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256"
 	 */
 	const char *tls_cipher_suites;
+
+	/**
+	 * Disable TLS 1.3 session tickets (NewSessionTicket). Used by ssl socket module, where it
+	 * defaults to true. Peers that move the connection to kernel TLS after the handshake
+	 * (e.g. Linux nvme-tcp hosts) cannot process post-handshake messages.
+	 */
+	bool disable_tls_session_tickets;
 };
 
 /**

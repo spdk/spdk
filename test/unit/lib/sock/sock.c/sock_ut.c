@@ -1245,10 +1245,13 @@ override_impl_opts(void)
 	/* Use send_buf_size to verify that impl_opts get overridden */
 	send_buf_size = impl_opts.send_buf_size;
 	impl_opts.send_buf_size = send_buf_size + 1;
+	CU_ASSERT(impl_opts.disable_tls_session_tickets == false);
+	impl_opts.disable_tls_session_tickets = true;
 
 	lsock = spdk_sock_listen("127.0.0.1", UT_PORT, &opts);
 	SPDK_CU_ASSERT_FATAL(lsock != NULL);
 	CU_ASSERT_EQUAL(lsock->impl_opts.send_buf_size, send_buf_size + 1);
+	CU_ASSERT(lsock->impl_opts.disable_tls_session_tickets == true);
 
 	/* Check the same for connect() */
 	opts_size = sizeof(impl_opts);
@@ -1270,6 +1273,7 @@ override_impl_opts(void)
 	asock = spdk_sock_accept(lsock);
 	SPDK_CU_ASSERT_FATAL(asock != NULL);
 	CU_ASSERT_EQUAL(asock->impl_opts.send_buf_size, send_buf_size + 1);
+	CU_ASSERT(asock->impl_opts.disable_tls_session_tickets == true);
 
 	spdk_sock_close(&asock);
 	spdk_sock_close(&csock);

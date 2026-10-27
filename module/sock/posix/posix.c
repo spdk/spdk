@@ -103,7 +103,8 @@ static struct spdk_sock_impl_opts g_posix_impl_opts = {
 	.psk_identity = NULL,
 	.get_key = NULL,
 	.get_key_ctx = NULL,
-	.tls_cipher_suites = NULL
+	.tls_cipher_suites = NULL,
+	.disable_tls_session_tickets = false
 };
 
 static struct spdk_sock_impl_opts g_ssl_impl_opts = {
@@ -118,7 +119,8 @@ static struct spdk_sock_impl_opts g_ssl_impl_opts = {
 	.tls_version = 0,
 	.enable_ktls = false,
 	.psk_key = NULL,
-	.psk_identity = NULL
+	.psk_identity = NULL,
+	.disable_tls_session_tickets = true
 };
 
 static struct spdk_sock_map g_map = {
@@ -164,6 +166,7 @@ posix_sock_copy_impl_opts(struct spdk_sock_impl_opts *dest, const struct spdk_so
 	SET_FIELD(get_key);
 	SET_FIELD(get_key_ctx);
 	SET_FIELD(tls_cipher_suites);
+	SET_FIELD(disable_tls_session_tickets);
 
 #undef SET_FIELD
 #undef FIELD_OK
@@ -743,6 +746,14 @@ posix_sock_create_ssl_context(const SSL_METHOD *method, struct spdk_sock_impl_op
 			SPDK_ERRLOG("Unable to set kTLS offload via SSL_CTX_set_options(). Configure openssl with 'enable-ktls'\n");
 			goto err;
 		}
+	}
+
+	if (impl_opts->disable_tls_session_tickets) {
+		if (!SSL_CTX_set_num_tickets(ctx, 0)) {
+			SPDK_ERRLOG("Unable to disable TLS 1.3 session tickets\n");
+			goto err;
+		}
+		SPDK_DEBUGLOG(sock_posix, "Disabled TLS 1.3 session tickets\n");
 	}
 
 	/* SSL_CTX_set_ciphersuites() return 1 if the requested

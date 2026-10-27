@@ -9343,7 +9343,8 @@ Example response:
     "enable_zerocopy_send_client": false,
     "zerocopy_threshold": 0,
     "tls_version": 13,
-    "enable_ktls": false
+    "enable_ktls": false,
+    "disable_tls_session_tickets": false
   }
 }
 ~~~
@@ -9364,7 +9365,7 @@ Example response:
 
 Example request:
 
-{{ example_request("sock_impl_set_options", "-i", "posix", "-r", "2097152", "-s", "2097152", "-p", "0", "--no-recv-pipe", "--no-quickack", "--zerocopy-send-server", "--no-zerocopy-send-client", "--zerocopy-threshold", "10240", "--tls-version", "13", "--no-ktls") }}
+{{ example_request("sock_impl_set_options", "-i", "posix", "-r", "2097152", "-s", "2097152", "-p", "0", "--no-recv-pipe", "--no-quickack", "--zerocopy-send-server", "--no-zerocopy-send-client", "--zerocopy-threshold", "10240", "--tls-version", "13", "--no-ktls", "--no-disable-tls-session-tickets") }}
 
 Example response:
 

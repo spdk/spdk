@@ -157,6 +157,13 @@ if ! echo "$response" | grep -q "$message"; then
 	exit 1
 fi
 
+# TLS session tickets are disabled by default, so no NewSessionTicket follows the handshake
+response=$(sleep 2 | $OPENSSL_APP s_client -msg -tls1_3 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" \
+	-connect $NVMF_FIRST_TARGET_IP:$NVMF_PORT 2>&1)
+if [[ $response != *"Finished"* || $response == *"NewSessionTicket"* ]]; then
+	exit 1
+fi
+
 # send message using hello_sock client with unmatching PSK KEY, expect a failure
 message="**MESSAGE:This is a test message from the hello_sock client with unmatching psk_key**"
 echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -E 4321DEADBEEF1234 -m 0x2 && exit 1
@@ -167,6 +174,25 @@ echo "$message" | $HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT $PSK -I
 
 trap '-' SIGINT SIGTERM EXIT
 # NOTE: socat returns code 143 on SIGINT
+killprocess $server_pid || true
+
+# With TLS session tickets re-enabled, the server sends a NewSessionTicket after the handshake
+hello_sock_rpc=/var/tmp/hello_sock.sock
+$HELLO_SOCK_APP -H $NVMF_FIRST_TARGET_IP -P $NVMF_PORT -S $PSK -m 0x1 -r $hello_sock_rpc --wait-for-rpc &
+server_pid=$!
+trap 'killprocess $server_pid; nvmftestfini; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $server_pid $hello_sock_rpc
+$rootdir/scripts/rpc.py -s $hello_sock_rpc sock_impl_set_options -i ssl --no-disable-tls-session-tickets
+$rootdir/scripts/rpc.py -s $hello_sock_rpc framework_start_init
+waitfortcp $server_pid $NVMF_FIRST_TARGET_IP:$NVMF_PORT
+
+response=$(sleep 2 | $OPENSSL_APP s_client -msg -tls1_3 -psk_identity psk.spdk.io -psk "1234567890ABCDEF" \
+	-connect $NVMF_FIRST_TARGET_IP:$NVMF_PORT 2>&1)
+if [[ $response != *"NewSessionTicket"* ]]; then
+	exit 1
+fi
+
+trap '-' SIGINT SIGTERM EXIT
 killprocess $server_pid || true
 
 timing_exit sock_ssl_server

@@ -5315,6 +5315,9 @@ methods:
       - name: enable_ktls
         type: boolean
         description: 'Enable Kernel TLS (ssl only). Default: false'
+      - name: disable_tls_session_tickets
+        type: boolean
+        description: 'Disable TLS 1.3 session tickets (ssl only). Default: true'
   - name: sock_set_default_impl
     description: Set the default sock implementation.
     result:

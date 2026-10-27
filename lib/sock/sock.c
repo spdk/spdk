@@ -1334,6 +1334,8 @@ spdk_sock_write_config_json(struct spdk_json_write_ctx *w)
 			spdk_json_write_named_uint32(w, "zerocopy_threshold", opts.zerocopy_threshold);
 			spdk_json_write_named_uint32(w, "tls_version", opts.tls_version);
 			spdk_json_write_named_bool(w, "enable_ktls", opts.enable_ktls);
+			spdk_json_write_named_bool(w, "disable_tls_session_tickets",
+						   opts.disable_tls_session_tickets);
 			spdk_json_write_object_end(w);
 			spdk_json_write_object_end(w);
 		} else {

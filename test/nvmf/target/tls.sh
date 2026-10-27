@@ -116,6 +116,29 @@ if [[ "$ktls" != "false" ]]; then
 	exit 1
 fi
 
+# Check TLS session tickets are disabled by default
+tickets=$($rpc_py sock_impl_get_options -i ssl | jq -r .disable_tls_session_tickets)
+if [[ "$tickets" != "true" ]]; then
+	echo "TLS session tickets option was not set correctly $tickets != true"
+	exit 1
+fi
+
+# Check re-enabling TLS session tickets
+$rpc_py sock_impl_set_options -i ssl --no-disable-tls-session-tickets
+tickets=$($rpc_py sock_impl_get_options -i ssl | jq -r .disable_tls_session_tickets)
+if [[ "$tickets" != "false" ]]; then
+	echo "TLS session tickets option was not set correctly $tickets != false"
+	exit 1
+fi
+
+# Check disabling TLS session tickets again
+$rpc_py sock_impl_set_options -i ssl --disable-tls-session-tickets
+tickets=$($rpc_py sock_impl_get_options -i ssl | jq -r .disable_tls_session_tickets)
+if [[ "$tickets" != "true" ]]; then
+	echo "TLS session tickets option was not set correctly $tickets != true"
+	exit 1
+fi
+
 key=$(format_interchange_psk 00112233445566778899aabbccddeeff 1)
 key_2=$(format_interchange_psk ffeeddccbbaa99887766554433221100 1)
 
