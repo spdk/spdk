@@ -144,6 +144,7 @@ base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char 
 	size_t tail_len = 0;
 	const uint8_t *src_in;
 	uint32_t tmp[4];
+	uint8_t tail[4];
 	int i;
 
 	if (!src) {
@@ -222,8 +223,8 @@ base64_decode(void *dst, size_t *_dst_len, const uint8_t *dec_table, const char 
 		return -EINVAL;
 	}
 
-	to_be32(&tmp[3], tmp[3] << 8 | tmp[2] << 14 | tmp[1] << 20 | tmp[0] << 26);
-	memcpy(dst, (uint8_t *)&tmp[3], tail_len);
+	to_be32(tail, tmp[3] << 8 | tmp[2] << 14 | tmp[1] << 20 | tmp[0] << 26);
+	memcpy(dst, tail, tail_len);
 
 	return 0;
 }
