@@ -86,7 +86,7 @@ build_dpdk_rpm() (
 		-ba "$spec"
 
 	# Put our dummy package in place
-	sudo rpm -i "$rpmdir/$arch/dpdk-devel-$version-$release.$arch.rpm"
+	sudo rpm -i --nosignature "$rpmdir/$arch/dpdk-devel-$version-$release.$arch.rpm"
 
 	# Run actual test
 	MV_RUNPATH=$dpdkdir build_rpm --with-shared --with-dpdk="$dpdkdir"
@@ -102,7 +102,7 @@ install_uninstall_rpms() {
 	# Clean repo first to make sure linker won't follow $SPDK_APP's RUNPATH
 	make -C "$rootdir" clean $MAKEFLAGS
 
-	sudo rpm -i "${rpms[@]}"
+	sudo rpm -i --nosignature "${rpms[@]}"
 	# Check if we can find one of the apps in the PATH now and verify if it doesn't miss
 	# any libs.
 	LIST_LIBS=yes "$rootdir/rpmbuild/rpm-deps.sh" "${SPDK_APP[@]##*/}"
@@ -136,7 +136,7 @@ build_rpm_with_rpmed_dpdk() {
 	dpdk_rpms=(/var/spdk/dependencies/autotest/dpdk/dpdk?(-devel).rpm)
 	if ((${#dpdk_rpms[@]} == 2)); then # dpdk, dpdk-devel
 		echo "INFO: Installing DPDK from local package: $(rpm -q --queryformat="%{VERSION}" "${dpdk_rpms[0]}")" >&2
-		sudo rpm -i "${dpdk_rpms[@]}"
+		sudo rpm -i --nosignature "${dpdk_rpms[@]}"
 	else
 		echo "WARNING: No local packages found, trying to install DPDK from the remote" >&2
 		sudo dnf install -y dpdk-devel
