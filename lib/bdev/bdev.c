@@ -8614,10 +8614,15 @@ bdev_register(struct spdk_bdev *bdev)
 		SPDK_LOG_DEPRECATED(bdev_get_memory_domains);
 	}
 
-	bdev->memory_domains_supported =
-		spdk_bdev_get_memory_domain_types(bdev, NULL, 0) > 0 ||
-		(bdev->fn_table->get_memory_domains &&
-		 bdev->fn_table->get_memory_domains(bdev->ctxt, NULL, 0) > 0);
+	if (bdev->fn_table->get_memory_domain_types) {
+		bdev->memory_domains_supported =
+			bdev->fn_table->get_memory_domain_types(bdev->ctxt, NULL, 0) > 0;
+	} else if (bdev->fn_table->get_memory_domains) {
+		bdev->memory_domains_supported =
+			bdev->fn_table->get_memory_domains(bdev->ctxt, NULL, 0) > 0;
+	} else {
+		bdev->memory_domains_supported = false;
+	}
 
 	/* If the user didn't specify a write unit size, set it to one. */
 	if (bdev->write_unit_size == 0) {
