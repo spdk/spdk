@@ -5035,12 +5035,11 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 	NVME_CTRLR_WARNLOG(nvme_ctrlr, "Warning: Detected a timeout. ctrlr:%p,qpair:%p,cid:%u\n", ctrlr,
 			   qpair, cid);
 
-	/* Only try to read CSTS if it's a PCIe controller or we have a timeout on an I/O
-	 * queue.  (Note: qpair == NULL when there's an admin cmd timeout.)  Otherwise we
-	 * would submit another fabrics cmd on the admin queue to read CSTS and check for its
-	 * completion recursively.
+	/* For PCIe and vfio-user the CSTS read is local. Elsewhere, it can stall
+	 * this poller if the controller does not respond.
 	 */
-	if (nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE || qpair != NULL) {
+	if (nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_PCIE ||
+	    nvme_ctrlr->active_path_id->trid.trtype == SPDK_NVME_TRANSPORT_VFIOUSER) {
 		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 		if (csts.bits.cfs) {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "%s on qpair:%p, reset required\n",
