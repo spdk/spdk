@@ -16,7 +16,7 @@ Use `--help` to see information on installing dependencies for optional componen
 sudo scripts/pkgdep.sh
 ~~~
 
-Option --all will install all dependencies needed by SPDK features.
+Option `--all` will install all dependencies needed by SPDK features.
 
 ~~~{.sh}
 sudo scripts/pkgdep.sh --all

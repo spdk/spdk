@@ -246,7 +246,7 @@ command.
 
 ## Macros available
 
-- spdk_load_macros: load the macros (use --reload in order to reload them)
+- spdk_load_macros: load the macros (use `--reload` in order to reload them)
 - spdk_print_bdevs: information about bdevs
 - spdk_find_bdev: find a bdev (substring search)
 - spdk_print_io_devices: information about io devices

@@ -52,7 +52,7 @@ The scheduler in use may be controlled by JSON-RPC. Please use the
 switch between schedulers or change their options. Currently only dynamic
 scheduler supports changing its parameters.
 
-[spdk_top](spdk_top.html#spdk_top) is a useful tool to observe the behavior of
+[spdk_top](spdk_top.html) is a useful tool to observe the behavior of
 schedulers in different scenarios and workloads.
 
 ### static [default]

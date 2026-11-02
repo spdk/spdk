@@ -53,12 +53,12 @@ target user:
 
 - spdk            - provides all the binaries, common tooling, etc.
 - spdk-devel      - provides development files
-- spdk-libs       - provides target lib, .pc files (--with-shared)
-- spdk-dpdk-libs  - provides dpdk lib files (--with-shared|--with-dpdk)
+- spdk-libs       - provides target lib, .pc files (`--with-shared`)
+- spdk-dpdk-libs  - provides dpdk lib files (`--with-shared`|`--with-dpdk`)
 
 ## Special case for dpdk-devel {#dpdk_devel}
 
-When rpm.sh finds a bare --with-dpdk argument on the cmdline it will try to
+When rpm.sh finds a bare `--with-dpdk` argument on the cmdline it will try to
 adjust the behavior of the rpmbuild to make sure only SPDK RPMs are built.
 Since this argument requests SPDK to be built against installed DPDK (e.g.
 dpdk-devel package) the spdk-dpdk-libs RPM won't be included.  Moreover, the

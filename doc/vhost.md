@@ -39,7 +39,7 @@ Additional command line flags are available for Vhost target.
 
 Param    | Type     | Default                | Description
 -------- | -------- | ---------------------- | -----------
--S       | string   | $PWD                   | directory where UNIX domain sockets will be created
+`-S`       | string   | $PWD                   | directory where UNIX domain sockets will be created
 
 ### Supported Guest Operating Systems
 

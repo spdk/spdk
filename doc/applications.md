@@ -27,25 +27,25 @@ applications that use it. Specific applications may implement additional flags.
 
 Param    | Long Param             | Type     | Default                | Description
 -------- | ---------------------- | -------- | ---------------------- | -----------
--c       | --config               | string   |                        | @ref cmd_arg_config_file
--d       | --limit-coredump       | flag     | false                  | @ref cmd_arg_limit_coredump
--e       | --tpoint-group         | integer  |                        | @ref cmd_arg_limit_tpoint_group_mask
--g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
--h       | --help                 | flag     |                        | show all available parameters and exit
--i       | --shm-id               | integer  |                        | @ref cmd_arg_multi_process
--m       | --cpumask              | CPU mask | 0x1                    | application @ref cpu_mask
--n       | --mem-channels         | integer  | all channels           | number of memory channels used for DPDK
--p       | --main-core            | integer  | first core in CPU mask | main (primary) core for DPDK
--r       | --rpc-socket           | string   | /var/tmp/spdk.sock     | RPC listen address
--s       | --mem-size             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
-|        | --silence-noticelog    | flag     |                        | disable notice level logging to `stderr`
--u       | --no-pci               | flag     |                        | @ref cmd_arg_disable_pci_access.
-|        | --wait-for-rpc         | flag     |                        | @ref cmd_arg_deferred_initialization
--B       | --pci-blocked          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
--A       | --pci-allowed          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
--R       | --huge-unlink          | flag     |                        | @ref cmd_arg_huge_unlink
-|        | --huge-dir             | string   | the first discovered   | allocate hugepages from a specific mount
--L       | --logflag              | string   |                        | @ref cmd_arg_log_flags
+`-c`       | `--config`               | string   |                        | @ref cmd_arg_config_file
+`-d`       | `--limit-coredump`       | flag     | false                  | @ref cmd_arg_limit_coredump
+`-e`       | `--tpoint-group`         | integer  |                        | @ref cmd_arg_limit_tpoint_group_mask
+`-g`       | `--single-file-segments` | flag     |                        | @ref cmd_arg_single_file_segments
+`-h`       | `--help`                 | flag     |                        | show all available parameters and exit
+`-i`       | `--shm-id`               | integer  |                        | @ref cmd_arg_multi_process
+`-m`       | `--cpumask`              | CPU mask | 0x1                    | application @ref cpu_mask
+`-n`       | `--mem-channels`         | integer  | all channels           | number of memory channels used for DPDK
+`-p`       | `--main-core`            | integer  | first core in CPU mask | main (primary) core for DPDK
+`-r`       | `--rpc-socket`           | string   | /var/tmp/spdk.sock     | RPC listen address
+`-s`       | `--mem-size`             | integer  | all hugepage memory    | @ref cmd_arg_memory_size
+|        | `--silence-noticelog`    | flag     |                        | disable notice level logging to `stderr`
+`-u`       | `--no-pci`               | flag     |                        | @ref cmd_arg_disable_pci_access.
+|        | `--wait-for-rpc`         | flag     |                        | @ref cmd_arg_deferred_initialization
+`-B`       | `--pci-blocked`          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
+`-A`       | `--pci-allowed`          | B:D:F    |                        | @ref cmd_arg_pci_blocked_allowed.
+`-R`       | `--huge-unlink`          | flag     |                        | @ref cmd_arg_huge_unlink
+|        | `--huge-dir`             | string   | the first discovered   | allocate hugepages from a specific mount
+`-L`       | `--logflag`              | string   |                        | @ref cmd_arg_log_flags
 
 ### Configuration file {#cmd_arg_config_file}
 
@@ -101,7 +101,7 @@ becomes a primary process, with the rest, called secondary processes, only
 attaching to it. When the primary process exits, the secondary ones continue to
 operate, but no new processes can be attached at this point. All processes within
 the same shm-id group must use the same
-[--single-file-segments setting](@ref cmd_arg_single_file_segments).
+[`--single-file-segments` setting](@ref cmd_arg_single_file_segments).
 
 ### Memory size {#cmd_arg_memory_size}
 

@@ -6,7 +6,7 @@
 NVMe enabled virtual machine sandbox running without the need for any
 special hardware.
 The Vagrant environment for SPDK has support for a variety of Linux distributions as well as FreeBSD.
-Run scripts/vagrant/create_vbox.sh -h to see the complete list.
+Run `scripts/vagrant/create_vbox.sh -h` to see the complete list.
 This environment requires Vagrant 1.9.4 or newer and
 VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
 

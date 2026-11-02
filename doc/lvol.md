@@ -13,7 +13,7 @@ block devices with variable size. The SPDK Logical Volume library is built on to
 A logical volume store uses the super blob feature of blobstore to hold uuid (and in future other metadata).
 Blobstore types are implemented in blobstore itself, and saved on disk. An lvolstore will generate a UUID on
 creation, so that it can be uniquely identified from other lvolstores.
-By default when creating lvol store data region is unmapped. Optional --clear-method parameter can be passed
+By default when creating lvol store data region is unmapped. Optional `--clear-method` parameter can be passed
 on creation to change that behavior to writing zeroes or performing no operation.
 
 ### Logical volume {#lvol}
@@ -36,7 +36,7 @@ a form "lvs_name/lvol_name". block_size of the created bdev is always 4096, due 
 Cluster_size is configurable by parameter. Size of the new bdev will be rounded up to nearest multiple of
 cluster_size. By default lvol bdevs claim part of lvol store equal to their set size. When thin provision
 option is enabled, no space is taken from lvol store until data is written to lvol bdev.
-By default when deleting lvol bdev or resizing down, allocated clusters are unmapped. Optional --clear-method
+By default when deleting lvol bdev or resizing down, allocated clusters are unmapped. Optional `--clear-method`
 parameter can be passed on creation to change that behavior to writing zeroes or performing no operation.
 
 ### Thin provisioning {#lvol_thin_provisioning}

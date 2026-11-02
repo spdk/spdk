@@ -81,9 +81,9 @@ To create RBD bdev with a registered cluster.
 `rpc.py bdev_rbd_create rbd foo 512 -c rbd_cluster`
 
 This command will create a bdev that represents the 'foo' image from a pool called 'rbd'.
-When specifying -c for `bdev_rbd_create`, RBD bdevs will share the same rados cluster with
+When specifying `-c` for `bdev_rbd_create`, RBD bdevs will share the same rados cluster with
 one connection of Ceph in librbd module. Instead it will create a new rados cluster with one
-cluster connection for every bdev without specifying -c.
+cluster connection for every bdev without specifying `-c`.
 
 To remove a block device representation use the bdev_rbd_delete command.
 
