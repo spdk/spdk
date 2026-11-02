@@ -375,7 +375,7 @@ function install_doxygen() {
 		-S "$GIT_REPOS/doxygen"
 
 	# This build is quite heavy, so let's not go crazy with -j here
-	make -C "$GIT_REPOS/doxygen/build" -j$(($(nproc) / 2))
+	make -C "$GIT_REPOS/doxygen/build" -j$((($(nproc) + 1) / 2))
 	make -C "$GIT_REPOS/doxygen/build" install
 }
 
