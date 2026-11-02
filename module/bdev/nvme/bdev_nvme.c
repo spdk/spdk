@@ -2423,7 +2423,6 @@ bdev_nvme_ctrlr_reconnect_timer(void *ctx)
 	assert(nvme_ctrlr->resetting == false);
 	nvme_ctrlr->resetting = true;
 
-	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 	return SPDK_POLLER_BUSY;
 }
@@ -2692,6 +2691,7 @@ bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Start reconnecting ctrlr.\n");
 
+	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
 	spdk_nvme_ctrlr_reconnect_async(nvme_ctrlr->ctrlr);
 
 	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect, nvme_ctrlr->nbdev_ctrlr->name);
@@ -2734,7 +2734,6 @@ bdev_nvme_reconnect_ctrlr_now(void *ctx)
 	assert(nvme_ctrlr->resetting == true);
 	assert(spdk_thread_is_app_thread(NULL));
 
-	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 }
 
