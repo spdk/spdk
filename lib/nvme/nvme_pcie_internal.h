@@ -21,12 +21,43 @@
 
 #define NVME_MAX_PRP_LIST_ENTRIES	(503)
 
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+#define NVME_PRP_POOL_MAX_SLOTS		(1024)
+/* Bound the DMA memory reserved for PRP lists per controller. */
+#define NVME_PRP_POOL_MAX_SIZE		(16 * 1024 * 1024)
+
+struct nvme_pcie_prp_pool;
+
+struct nvme_pcie_prp_pool_slot {
+	void					*buffer;
+	uint64_t				phys_addr;
+	struct nvme_pcie_prp_pool		*pool;
+	struct nvme_pcie_prp_pool_slot		*next_free;
+	bool					in_use;
+};
+
+struct nvme_pcie_prp_pool {
+	void					*buffer;
+	struct nvme_pcie_prp_pool_slot		*slots;
+	struct nvme_pcie_prp_pool_slot		*free_head;
+	uint32_t				slot_count;
+	uint32_t				slot_pages;
+	uint32_t				page_size;
+	uint32_t				inflight;
+	size_t					slot_size;
+};
+#endif
+
 /* Minimum admin queue size */
 #define NVME_PCIE_MIN_ADMIN_QUEUE_SIZE	(256)
 
 /* PCIe transport extensions for spdk_nvme_ctrlr */
 struct nvme_pcie_ctrlr {
 	struct spdk_nvme_ctrlr ctrlr;
+
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	struct nvme_pcie_prp_pool	*prp_pool;
+#endif
 
 	/** NVMe MMIO register space */
 	volatile struct spdk_nvme_registers *regs;
@@ -140,10 +171,14 @@ struct nvme_pcie_qpair {
 
 	/* Array of trackers indexed by command ID. */
 	struct nvme_tracker *tr;
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	struct nvme_pcie_prp_pool_slot **prp_pool_slots;
+#endif
 
 	struct spdk_nvme_pcie_stat *stat;
 
 	uint16_t num_entries;
+	uint16_t num_trackers;
 
 	uint8_t pcie_state;
 
@@ -346,5 +381,10 @@ void nvme_pcie_poll_group_check_disconnected_qpairs(
 	struct spdk_nvme_transport_poll_group *tgroup,
 	spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb);
 int nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup);
+
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+int nvme_pcie_prp_pool_init(struct spdk_nvme_ctrlr *ctrlr, uint32_t max_xfer_size);
+void nvme_pcie_prp_pool_destroy(struct spdk_nvme_ctrlr *ctrlr);
+#endif
 
 #endif

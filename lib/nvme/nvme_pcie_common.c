@@ -93,6 +93,160 @@ nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phy
 	tr->req = NULL;
 }
 
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+static uint64_t
+nvme_pcie_prp_list_page_index(uint64_t list_index, uint64_t entries_per_page)
+{
+	assert(entries_per_page >= 2);
+
+	if (list_index < entries_per_page) {
+		return 0;
+	}
+
+	return 1 + (list_index - entries_per_page) / (entries_per_page - 1);
+}
+
+static uint32_t
+nvme_pcie_prp_list_pages_for_entries(uint64_t entries, uint32_t page_size)
+{
+	uint64_t entries_per_page = page_size / sizeof(uint64_t);
+	uint64_t pages;
+
+	if (entries_per_page < 2) {
+		return 0;
+	}
+
+	if (entries <= entries_per_page) {
+		return 1;
+	}
+
+	pages = nvme_pcie_prp_list_page_index(entries - 1, entries_per_page) + 1;
+	return pages > UINT32_MAX ? 0 : (uint32_t)pages;
+}
+
+int
+nvme_pcie_prp_pool_init(struct spdk_nvme_ctrlr *ctrlr, uint32_t max_xfer_size)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	struct nvme_pcie_prp_pool *pool;
+	uint64_t data_pages, list_entries;
+	uint32_t slot_pages, slot_count, i;
+	size_t slot_size, total_size;
+
+	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE || !ctrlr->page_size ||
+	    !spdk_u32_is_pow2(ctrlr->page_size)) {
+		return -EINVAL;
+	}
+
+	if (pctrlr->prp_pool) {
+		return 0;
+	}
+
+	data_pages = max_xfer_size / ctrlr->page_size;
+	if (max_xfer_size % ctrlr->page_size != 0) {
+		data_pages++;
+	}
+	/* Account for a buffer beginning at the end of PRP1's first page. */
+	data_pages++;
+	list_entries = data_pages - 1;
+	slot_pages = nvme_pcie_prp_list_pages_for_entries(list_entries, ctrlr->page_size);
+	if (slot_pages == 0 || slot_pages > SIZE_MAX / ctrlr->page_size) {
+		return -E2BIG;
+	}
+
+	slot_size = (size_t)slot_pages * ctrlr->page_size;
+	slot_count = spdk_min(NVME_PRP_POOL_MAX_SLOTS,
+			      (uint32_t)(NVME_PRP_POOL_MAX_SIZE / slot_size));
+	if (slot_count == 0 || slot_size > SIZE_MAX / slot_count) {
+		return -E2BIG;
+	}
+	total_size = slot_size * slot_count;
+
+	pool = spdk_zmalloc(sizeof(*pool), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!pool) {
+		return -ENOMEM;
+	}
+
+	pool->buffer = spdk_zmalloc(total_size, ctrlr->page_size, NULL,
+				    spdk_nvme_ctrlr_get_numa_id(ctrlr),
+				    SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
+	pool->slots = spdk_zmalloc(slot_count * sizeof(*pool->slots), 64, NULL,
+				   SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (!pool->buffer || !pool->slots) {
+		SPDK_ERRLOG("PRP pool allocation failed for controller %p: size=%" PRIu64 "\n",
+			    ctrlr, total_size);
+		spdk_free(pool->buffer);
+		spdk_free(pool->slots);
+		spdk_free(pool);
+		return -ENOMEM;
+	}
+
+	pool->slot_count = slot_count;
+	pool->slot_pages = slot_pages;
+	pool->page_size = ctrlr->page_size;
+	pool->slot_size = slot_size;
+	for (i = slot_count; i-- > 0;) {
+		struct nvme_pcie_prp_pool_slot *slot = &pool->slots[i];
+
+		slot->buffer = (uint8_t *)pool->buffer + (size_t)i * slot_size;
+		slot->phys_addr = spdk_vtophys(slot->buffer, NULL);
+		slot->pool = pool;
+		if (slot->phys_addr == SPDK_VTOPHYS_ERROR ||
+		    (slot->phys_addr & (ctrlr->page_size - 1)) != 0) {
+			SPDK_ERRLOG("PRP pool DMA translation failed for controller %p slot %u\n",
+				    ctrlr, i);
+			spdk_free(pool->buffer);
+			spdk_free(pool->slots);
+			spdk_free(pool);
+			return -EFAULT;
+		}
+		slot->next_free = pool->free_head;
+		pool->free_head = slot;
+	}
+
+	pctrlr->prp_pool = pool;
+	if (ctrlr->adminq != NULL) {
+		struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(ctrlr->adminq);
+
+		if (!pqpair->prp_pool_slots) {
+			pqpair->prp_pool_slots = spdk_zmalloc(pqpair->num_trackers *
+							      sizeof(*pqpair->prp_pool_slots), 64, NULL,
+							      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		}
+		if (pqpair->prp_pool_slots == NULL) {
+			SPDK_ERRLOG("PRP pool tracker map allocation failed for admin queue %p\n",
+				    ctrlr->adminq);
+			nvme_pcie_prp_pool_destroy(ctrlr);
+			return -ENOMEM;
+		}
+	}
+
+	return 0;
+}
+
+void
+nvme_pcie_prp_pool_destroy(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	struct nvme_pcie_prp_pool *pool = pctrlr->prp_pool;
+
+	if (!pool) {
+		return;
+	}
+
+	if (pool->inflight != 0) {
+		SPDK_ERRLOG("Destroying PRP pool for controller %p with %u in-flight slots\n",
+			    ctrlr, pool->inflight);
+	}
+
+	spdk_free(pool->buffer);
+	spdk_free(pool->slots);
+	spdk_free(pool);
+	pctrlr->prp_pool = NULL;
+}
+
+#endif
+
 static void *
 nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t size, uint64_t alignment,
 			  uint64_t *phys_addr)
