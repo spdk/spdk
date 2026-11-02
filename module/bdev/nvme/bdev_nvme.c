@@ -1194,6 +1194,12 @@ nvme_io_path_is_available(struct nvme_io_path *io_path)
 }
 
 static inline bool
+nvme_ctrlr_has_sched_reconnect(struct nvme_ctrlr *nvme_ctrlr)
+{
+	return nvme_ctrlr->sched_reconnect;
+}
+
+static inline bool
 nvme_ctrlr_is_failed(struct nvme_ctrlr *nvme_ctrlr)
 {
 	if (nvme_ctrlr->destruct) {
@@ -1212,7 +1218,7 @@ nvme_ctrlr_is_failed(struct nvme_ctrlr *nvme_ctrlr)
 		}
 	}
 
-	if (nvme_ctrlr->reconnect_is_delayed) {
+	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		return false;
 	}
 
@@ -1238,7 +1244,11 @@ nvme_ctrlr_is_available(struct nvme_ctrlr *nvme_ctrlr)
 		return false;
 	}
 
-	if (nvme_ctrlr->resetting || nvme_ctrlr->reconnect_is_delayed) {
+	if (nvme_ctrlr->resetting) {
+		return false;
+	}
+
+	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		return false;
 	}
 
@@ -2351,7 +2361,7 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 enum bdev_nvme_op_after_reset {
 	OP_NONE,
 	OP_DESTRUCT,
-	OP_DELAYED_RECONNECT,
+	OP_SCHED_RECONNECT,
 	OP_FAILOVER,
 };
 
@@ -2379,7 +2389,7 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
 		return OP_DESTRUCT;
 	} else {
-		return OP_DELAYED_RECONNECT;
+		return OP_SCHED_RECONNECT;
 	}
 }
 
@@ -2396,11 +2406,11 @@ bdev_nvme_reconnect_delay_timer_expired(void *ctx)
 	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect_delay, nvme_ctrlr->nbdev_ctrlr->name);
 	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
 
-	if (!nvme_ctrlr->reconnect_is_delayed) {
+	if (!nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		return SPDK_POLLER_BUSY;
 	}
 
-	nvme_ctrlr->reconnect_is_delayed = false;
+	nvme_ctrlr->sched_reconnect = false;
 
 	if (nvme_ctrlr->destruct) {
 		return SPDK_POLLER_BUSY;
@@ -2420,8 +2430,8 @@ bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
 {
 	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
 
-	assert(nvme_ctrlr->reconnect_is_delayed == false);
-	nvme_ctrlr->reconnect_is_delayed = true;
+	assert(!nvme_ctrlr_has_sched_reconnect(nvme_ctrlr));
+	nvme_ctrlr->sched_reconnect = true;
 
 	assert(nvme_ctrlr->reconnect_delay_timer == NULL);
 	nvme_ctrlr->reconnect_delay_timer = SPDK_POLLER_REGISTER(bdev_nvme_reconnect_delay_timer_expired,
@@ -2506,7 +2516,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		bdev_nvme_start_ctrlr_destruct(nvme_ctrlr, false);
 		remove_discovery_entry(nvme_ctrlr);
 		break;
-	case OP_DELAYED_RECONNECT:
+	case OP_SCHED_RECONNECT:
 		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
 		break;
 	case OP_FAILOVER:
@@ -2766,10 +2776,10 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->dont_retry = true;
 
-	if (nvme_ctrlr->reconnect_is_delayed) {
+	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
 		*msg_fn = bdev_nvme_reconnect_ctrlr_now;
-		nvme_ctrlr->reconnect_is_delayed = false;
+		nvme_ctrlr->sched_reconnect = false;
 	} else {
 		*msg_fn = _bdev_nvme_reset_ctrlr;
 	}
@@ -2938,9 +2948,9 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->resetting = true;
 	nvme_ctrlr->dont_retry = true;
 
-	if (nvme_ctrlr->reconnect_is_delayed) {
+	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		msg_fn = _bdev_nvme_cancel_reconnect_and_disable_ctrlr;
-		nvme_ctrlr->reconnect_is_delayed = false;
+		nvme_ctrlr->sched_reconnect = false;
 	} else {
 		msg_fn = _bdev_nvme_disconnect_and_disable_ctrlr;
 	}
@@ -3316,7 +3326,7 @@ bdev_nvme_start_ctrlr_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 
 	bdev_nvme_failover_trid(nvme_ctrlr, remove, true);
 
-	if (nvme_ctrlr->reconnect_is_delayed) {
+	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
 
 		/* We rely on the next reconnect for the failover. */
@@ -4149,7 +4159,7 @@ nvme_ctrlr_get_state_str(struct nvme_ctrlr *nvme_ctrlr)
 		return "failed";
 	} else if (nvme_ctrlr->resetting) {
 		return "resetting";
-	} else if (nvme_ctrlr->reconnect_is_delayed > 0) {
+	} else if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		return "reconnect_is_delayed";
 	} else if (nvme_ctrlr->disabled) {
 		return "disabled";

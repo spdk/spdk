@@ -5870,7 +5870,7 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 
 	/* A new reset starts from thread 0. */
 	set_thread(0);
@@ -5884,7 +5884,7 @@ test_reconnect_ctrlr(void)
 	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(nvme_ctrlr->resetting == true);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 	CU_ASSERT(ctrlr.is_failed == true);
 
 	poll_threads();
@@ -5894,7 +5894,7 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 
 	/* Then a reconnect retry should suceeed. */
 	ctrlr.fail_reset = false;
@@ -5910,7 +5910,7 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(ctrlr_ch1->qpair->qpair != NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 
 	/* The reset should fail and a reconnect timer should be registered. */
 	ctrlr.fail_reset = true;
@@ -5928,7 +5928,7 @@ test_reconnect_ctrlr(void)
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 
 	/* Then a reconnect retry should still fail. */
 	spdk_delay_us(SPDK_SEC_TO_USEC);
@@ -6049,7 +6049,7 @@ test_retry_failover_ctrlr(void)
 	CU_ASSERT(ctrlr.is_failed == false);
 	CU_ASSERT(ctrlr_ch->qpair->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 	CU_ASSERT(path_id1->last_failed_tsc != 0);
 
 	CU_ASSERT(path_id2->last_failed_tsc != 0);
@@ -6085,7 +6085,7 @@ test_retry_failover_ctrlr(void)
 	CU_ASSERT(path_id2 == nvme_ctrlr->active_path_id);
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(ctrlr_ch->qpair->qpair != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 
 	spdk_put_io_channel(ch);
 
@@ -7549,13 +7549,13 @@ test_disable_enable_ctrlr(void)
 	CU_ASSERT(ctrlr_ch1->qpair->qpair == NULL);
 	CU_ASSERT(ctrlr_ch2->qpair->qpair == NULL);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 
 	rc = bdev_nvme_disable_ctrlr(nvme_ctrlr);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 
 	poll_threads();
 	spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
@@ -8179,7 +8179,7 @@ test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(nvme_ctrlr->pending_failover == false);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
 
 	/* Reset should fail again. */
@@ -8190,7 +8190,7 @@ test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer == NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
 
 	/* Failover is requested again. */
@@ -8204,7 +8204,7 @@ test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
 	CU_ASSERT(nvme_ctrlr->resetting == false);
 	CU_ASSERT(nvme_ctrlr->pending_failover == false);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer != NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == true);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == true);
 	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
 
 	/* Reset should fail again. */
@@ -8215,7 +8215,7 @@ test_race_between_ctrlr_loss_timeout_and_pending_failover(void)
 
 	CU_ASSERT(nvme_ctrlr->resetting == true);
 	CU_ASSERT(nvme_ctrlr->reconnect_delay_timer == NULL);
-	CU_ASSERT(nvme_ctrlr->reconnect_is_delayed == false);
+	CU_ASSERT(nvme_ctrlr->sched_reconnect == false);
 	CU_ASSERT(nvme_ctrlr->reset_start_tsc == reset_start_tsc);
 
 	/* Failover is requested again. */
