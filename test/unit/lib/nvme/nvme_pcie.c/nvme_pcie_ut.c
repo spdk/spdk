@@ -284,6 +284,301 @@ test_prp_list_append(void)
 					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EFAULT);
 }
 
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+static void
+test_prp_list_page_layout(void)
+{
+	CU_ASSERT(nvme_pcie_prp_list_page_index(0, 512) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_page_index(511, 512) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_page_index(512, 512) == 1);
+	CU_ASSERT(nvme_pcie_prp_list_page_index(1022, 512) == 1);
+	CU_ASSERT(nvme_pcie_prp_list_page_index(1023, 512) == 2);
+
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(0, 4096) == 1);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(512, 4096) == 1);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(513, 4096) == 2);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1023, 4096) == 2);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1024, 4096) == 3);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1024, 8192) == 1);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1025, 8192) == 2);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1, 0) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(1, sizeof(uint64_t)) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries(UINT64_MAX, 16) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries((uint64_t)UINT32_MAX + 1, 16) ==
+		  UINT32_MAX);
+	CU_ASSERT(nvme_pcie_prp_list_pages_for_entries((uint64_t)UINT32_MAX + 2, 16) == 0);
+}
+
+static void
+test_prp_list_pool_chaining(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct nvme_pcie_prp_pool pool = {};
+	struct nvme_pcie_prp_pool_slot slot = {};
+	struct nvme_pcie_prp_pool_slot *slot_by_cid = NULL;
+	struct nvme_tracker tr;
+	struct nvme_request req;
+	pthread_mutexattr_t mutex_attr;
+	uint32_t prp_index;
+	uint32_t page_size = 0x1000;
+	uint64_t *first_page, *second_page;
+	void *list_buffer;
+	int rc;
+
+	rc = posix_memalign(&list_buffer, page_size, page_size * 2);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	memset(list_buffer, 0, page_size * 2);
+
+	rc = pthread_mutexattr_init(&mutex_attr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, &mutex_attr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	pthread_mutexattr_destroy(&mutex_attr);
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.prp_pool = &pool;
+	pool.buffer = list_buffer;
+	pool.slot_count = 1;
+	pool.slot_pages = 2;
+	pool.page_size = page_size;
+	pool.slot_size = page_size * 2;
+	pool.slots = &slot;
+	pool.free_head = &slot;
+	slot.buffer = list_buffer;
+	slot.phys_addr = (uintptr_t)list_buffer;
+	slot.pool = &pool;
+
+	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair.qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair.qpair.id = 1;
+	pqpair.num_trackers = 1;
+	pqpair.prp_pool_slots = &slot_by_cid;
+	prp_list_prep(&tr, &req, &prp_index, &pqpair.qpair);
+
+	CU_ASSERT(nvme_pcie_prp_list_append(&pqpair.qpair, &tr, &prp_index,
+					    (void *)0x100000, (NVME_MAX_PRP_LIST_ENTRIES + 11) *
+					    page_size, page_size) == 0);
+	CU_ASSERT(prp_index == NVME_MAX_PRP_LIST_ENTRIES + 11);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == slot.phys_addr);
+	CU_ASSERT(pool.inflight == 1);
+	CU_ASSERT(slot.in_use);
+
+	first_page = list_buffer;
+	second_page = (uint64_t *)((uint8_t *)list_buffer + page_size);
+	CU_ASSERT(first_page[page_size / sizeof(uint64_t) - 1] ==
+		  (uintptr_t)second_page);
+	CU_ASSERT(second_page[0] == 0x100000 +
+		  (page_size / sizeof(uint64_t)) * page_size);
+	CU_ASSERT(second_page[1] == second_page[0] + page_size);
+
+	nvme_pcie_prp_pool_release(&pqpair.qpair, &tr);
+	CU_ASSERT(pool.inflight == 0);
+	CU_ASSERT(pool.free_head == &slot);
+	CU_ASSERT(!slot.in_use);
+	CU_ASSERT(slot_by_cid == NULL);
+
+	pool.free_head = NULL;
+	prp_list_prep(&tr, &req, &prp_index, &pqpair.qpair);
+	CU_ASSERT(nvme_pcie_prp_list_append(&pqpair.qpair, &tr, &prp_index,
+					    (void *)0x100000, (NVME_MAX_PRP_LIST_ENTRIES + 2) *
+					    page_size, page_size) == -EAGAIN);
+	CU_ASSERT(prp_index == 0);
+	CU_ASSERT(pool.inflight == 0);
+	CU_ASSERT(slot_by_cid == NULL);
+
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
+	free(list_buffer);
+}
+
+static void
+test_prp_pool_shared_across_qpairs(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair pqpair1 = {}, pqpair2 = {};
+	struct nvme_pcie_prp_pool pool = {};
+	struct nvme_pcie_prp_pool_slot slots[2] = {};
+	struct nvme_pcie_prp_pool_slot *slot_by_cid1 = NULL, *slot_by_cid2 = NULL;
+	struct nvme_tracker tr1 = {}, tr2 = {};
+	struct nvme_request req1 = {}, req2 = {};
+	pthread_mutexattr_t mutex_attr;
+	uint32_t prp_index1 = 0, prp_index2 = 0;
+	uint32_t page_size = 0x1000;
+	void *list_buffer;
+	int rc;
+
+	rc = posix_memalign(&list_buffer, page_size, page_size * 2);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	memset(list_buffer, 0, page_size * 2);
+
+	rc = pthread_mutexattr_init(&mutex_attr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = pthread_mutexattr_settype(&mutex_attr, PTHREAD_MUTEX_RECURSIVE);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, &mutex_attr);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	pthread_mutexattr_destroy(&mutex_attr);
+
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.ctrlr.page_size = page_size;
+	pctrlr.prp_pool = &pool;
+	pool.buffer = list_buffer;
+	pool.slots = slots;
+	pool.slot_count = 2;
+	pool.slot_pages = 1;
+	pool.page_size = page_size;
+	pool.slot_size = page_size;
+	pool.free_head = &slots[0];
+	slots[0].buffer = list_buffer;
+	slots[0].phys_addr = (uintptr_t)list_buffer;
+	slots[0].pool = &pool;
+	slots[0].next_free = &slots[1];
+	slots[1].buffer = (uint8_t *)list_buffer + page_size;
+	slots[1].phys_addr = (uintptr_t)slots[1].buffer;
+	slots[1].pool = &pool;
+
+	pqpair1.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair1.qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair1.qpair.id = 1;
+	pqpair1.num_trackers = 1;
+	pqpair1.prp_pool_slots = &slot_by_cid1;
+	pqpair2.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair2.qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair2.qpair.id = 2;
+	pqpair2.num_trackers = 1;
+	pqpair2.prp_pool_slots = &slot_by_cid2;
+	tr1.cid = tr2.cid = 0;
+	tr1.req = &req1;
+	tr2.req = &req2;
+	prp_list_prep(&tr1, &req1, &prp_index1, &pqpair1.qpair);
+	prp_list_prep(&tr2, &req2, &prp_index2, &pqpair2.qpair);
+
+	CU_ASSERT(nvme_pcie_prp_list_append(&pqpair1.qpair, &tr1, &prp_index1,
+					    (void *)0x100000, (NVME_MAX_PRP_LIST_ENTRIES + 2) *
+					    page_size, page_size) == 0);
+	CU_ASSERT(nvme_pcie_prp_list_append(&pqpair2.qpair, &tr2, &prp_index2,
+					    (void *)0x200000, (NVME_MAX_PRP_LIST_ENTRIES + 2) *
+					    page_size, page_size) == 0);
+	CU_ASSERT(slot_by_cid1 != NULL);
+	CU_ASSERT(slot_by_cid2 != NULL);
+	CU_ASSERT(slot_by_cid1 != slot_by_cid2);
+	CU_ASSERT(pool.inflight == 2);
+
+	nvme_pcie_prp_pool_release(&pqpair1.qpair, &tr1);
+	CU_ASSERT(slot_by_cid1 == NULL);
+	CU_ASSERT(slot_by_cid2 != NULL);
+	CU_ASSERT(pool.inflight == 1);
+	nvme_pcie_prp_pool_release(&pqpair2.qpair, &tr2);
+	CU_ASSERT(slot_by_cid2 == NULL);
+	CU_ASSERT(pool.inflight == 0);
+
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
+	free(list_buffer);
+}
+
+static void
+test_prp_pool_exhaustion_queues_request(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair pqpair = {};
+	struct nvme_pcie_prp_pool pool = {};
+	struct nvme_pcie_prp_pool_slot *slot_by_cid = NULL;
+	struct nvme_tracker tr = {};
+	struct nvme_request req = {};
+	struct spdk_nvme_pcie_stat stat = {};
+	int rc;
+
+	pctrlr.ctrlr.page_size = 0x1000;
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.prp_pool = &pool;
+	pqpair.qpair.ctrlr = &pctrlr.ctrlr;
+	pqpair.qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair.qpair.id = 1;
+	pqpair.num_trackers = 1;
+	pqpair.tr = &tr;
+	pqpair.prp_pool_slots = &slot_by_cid;
+	pqpair.stat = &stat;
+	TAILQ_INIT(&pqpair.free_tr);
+	TAILQ_INIT(&pqpair.outstanding_tr);
+	TAILQ_INSERT_TAIL(&pqpair.free_tr, &tr, tq_list);
+	tr.cid = 0;
+	req.payload_type = NVME_PAYLOAD_TYPE_CONTIG;
+	req.payload.contig_or_cb_arg = (void *)0x100000;
+	req.payload.size = (NVME_MAX_PRP_LIST_ENTRIES + 2) * 0x1000;
+
+	rc = pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	rc = nvme_pcie_qpair_submit_request(&pqpair.qpair, &req);
+	CU_ASSERT(rc == -EAGAIN);
+	CU_ASSERT(pqpair.qpair.queue_depth == 0);
+	CU_ASSERT(TAILQ_FIRST(&pqpair.free_tr) == &tr);
+	CU_ASSERT(TAILQ_EMPTY(&pqpair.outstanding_tr));
+	CU_ASSERT(tr.req == NULL);
+	CU_ASSERT(stat.submitted_requests == 0);
+	CU_ASSERT(stat.queued_requests == 1);
+	CU_ASSERT(slot_by_cid == NULL);
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
+}
+
+static void
+test_prp_pool_init_for_mdts(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair adminq = {};
+	struct nvme_tracker tr = {};
+	struct nvme_request req = {};
+	uint32_t max_xfer_size;
+	uint32_t prp_index = 0;
+	int rc;
+
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.ctrlr.page_size = 0x1000;
+	pctrlr.ctrlr.min_page_size = 0x1000;
+	pctrlr.ctrlr.cdata.mdts = 9;
+	pctrlr.ctrlr.adminq = &adminq.qpair;
+	adminq.num_trackers = 4;
+	adminq.qpair.ctrlr = &pctrlr.ctrlr;
+	adminq.qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+	CU_ASSERT(nvme_pcie_ctrlr_get_max_xfer_size(&pctrlr.ctrlr) ==
+		  NVME_MAX_PRP_LIST_ENTRIES * pctrlr.ctrlr.page_size);
+	CU_ASSERT(pctrlr.prp_pool == NULL);
+	pctrlr.ctrlr.cdata_valid = true;
+	pctrlr.ctrlr.cdata.mdts = 0;
+	CU_ASSERT(nvme_pcie_ctrlr_get_max_xfer_size(&pctrlr.ctrlr) ==
+		  NVME_MAX_PRP_LIST_ENTRIES * pctrlr.ctrlr.page_size);
+	CU_ASSERT(pctrlr.prp_pool == NULL);
+	pctrlr.ctrlr.cdata.mdts = 9;
+
+	max_xfer_size = nvme_pcie_ctrlr_get_max_xfer_size(&pctrlr.ctrlr);
+	CU_ASSERT(max_xfer_size == 2 * 1024 * 1024);
+	SPDK_CU_ASSERT_FATAL(pctrlr.prp_pool != NULL);
+	CU_ASSERT(pctrlr.prp_pool->slot_count == NVME_PRP_POOL_MAX_SLOTS);
+	CU_ASSERT(pctrlr.prp_pool->slot_pages == 1);
+	SPDK_CU_ASSERT_FATAL(adminq.prp_pool_slots != NULL);
+
+	rc = pthread_mutex_init(&pctrlr.ctrlr.ctrlr_lock, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	tr.cid = 0;
+	tr.req = &req;
+	rc = nvme_pcie_prp_list_append(&adminq.qpair, &tr, &prp_index,
+				       (void *)0x100FFC, max_xfer_size, pctrlr.ctrlr.page_size);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(prp_index == 513);
+	SPDK_CU_ASSERT_FATAL(adminq.prp_pool_slots[0] != NULL);
+	CU_ASSERT(req.cmd.dptr.prp.prp2 == adminq.prp_pool_slots[0]->phys_addr);
+	CU_ASSERT(pctrlr.prp_pool->inflight == 1);
+	nvme_pcie_prp_pool_release(&adminq.qpair, &tr);
+	CU_ASSERT(pctrlr.prp_pool->inflight == 0);
+	pthread_mutex_destroy(&pctrlr.ctrlr.ctrlr_lock);
+
+	nvme_pcie_prp_pool_destroy(&pctrlr.ctrlr);
+	spdk_free(adminq.prp_pool_slots);
+	CU_ASSERT(pctrlr.prp_pool == NULL);
+}
+#endif
+
 struct spdk_event_entry {
 	struct spdk_pci_event		event;
 	STAILQ_ENTRY(spdk_event_entry)	link;
@@ -1323,6 +1618,13 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_pcie", NULL, NULL);
 	CU_ADD_TEST(suite, test_prp_list_append);
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	CU_ADD_TEST(suite, test_prp_list_page_layout);
+	CU_ADD_TEST(suite, test_prp_list_pool_chaining);
+	CU_ADD_TEST(suite, test_prp_pool_shared_across_qpairs);
+	CU_ADD_TEST(suite, test_prp_pool_exhaustion_queues_request);
+	CU_ADD_TEST(suite, test_prp_pool_init_for_mdts);
+#endif
 	CU_ADD_TEST(suite, test_nvme_pcie_hotplug_monitor);
 	CU_ADD_TEST(suite, test_shadow_doorbell_update);
 	CU_ADD_TEST(suite, test_build_contig_hw_sgl_request);
