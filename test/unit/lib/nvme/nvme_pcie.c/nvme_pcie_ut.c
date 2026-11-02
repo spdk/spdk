@@ -284,7 +284,6 @@ test_prp_list_append(void)
 					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EFAULT);
 }
 
-#ifdef SPDK_CONFIG_NVME_PRP_POOL
 static void
 test_prp_list_page_layout(void)
 {
@@ -544,6 +543,11 @@ test_prp_pool_init_for_mdts(void)
 	CU_ASSERT(nvme_pcie_ctrlr_get_max_xfer_size(&pctrlr.ctrlr) ==
 		  NVME_MAX_PRP_LIST_ENTRIES * pctrlr.ctrlr.page_size);
 	CU_ASSERT(pctrlr.prp_pool == NULL);
+	if (!nvme_prp_pool_enabled()) {
+		CU_ASSERT(nvme_pcie_prp_pool_init(&pctrlr.ctrlr, 2 * 1024 * 1024) == -ENOTSUP);
+		return;
+	}
+
 	pctrlr.ctrlr.cdata_valid = true;
 	pctrlr.ctrlr.cdata.mdts = 0;
 	CU_ASSERT(nvme_pcie_ctrlr_get_max_xfer_size(&pctrlr.ctrlr) ==
@@ -577,7 +581,6 @@ test_prp_pool_init_for_mdts(void)
 	spdk_free(adminq.prp_pool_slots);
 	CU_ASSERT(pctrlr.prp_pool == NULL);
 }
-#endif
 
 struct spdk_event_entry {
 	struct spdk_pci_event		event;
@@ -1618,13 +1621,13 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_pcie", NULL, NULL);
 	CU_ADD_TEST(suite, test_prp_list_append);
-#ifdef SPDK_CONFIG_NVME_PRP_POOL
 	CU_ADD_TEST(suite, test_prp_list_page_layout);
-	CU_ADD_TEST(suite, test_prp_list_pool_chaining);
-	CU_ADD_TEST(suite, test_prp_pool_shared_across_qpairs);
-	CU_ADD_TEST(suite, test_prp_pool_exhaustion_queues_request);
+	if (nvme_prp_pool_enabled()) {
+		CU_ADD_TEST(suite, test_prp_list_pool_chaining);
+		CU_ADD_TEST(suite, test_prp_pool_shared_across_qpairs);
+		CU_ADD_TEST(suite, test_prp_pool_exhaustion_queues_request);
+	}
 	CU_ADD_TEST(suite, test_prp_pool_init_for_mdts);
-#endif
 	CU_ADD_TEST(suite, test_nvme_pcie_hotplug_monitor);
 	CU_ADD_TEST(suite, test_shadow_doorbell_update);
 	CU_ADD_TEST(suite, test_build_contig_hw_sgl_request);

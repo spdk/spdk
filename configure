@@ -128,6 +128,8 @@ function usage() {
 	echo " --without-fsdev           No path required"
 	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
 	echo " --without-nvme-cuse       No path required."
+	echo " --enable-nvme-prp-pool    Enable MDTS-sized PRP lists for PCIe controllers."
+	echo " --disable-nvme-prp-pool   Disable MDTS-sized PRP lists for PCIe controllers."
 	echo " --with-raid5f             Build with bdev_raid module RAID5f support."
 	echo " --without-raid5f          No path required."
 	echo " --with-wpdk=DIR           Build using WPDK to provide support for Windows (experimental)."
@@ -685,6 +687,12 @@ for i in "$@"; do
 			;;
 		--without-nvme-cuse)
 			CONFIG[NVME_CUSE]=n
+			;;
+		--enable-nvme-prp-pool)
+			CONFIG[NVME_PRP_POOL]=y
+			;;
+		--disable-nvme-prp-pool)
+			CONFIG[NVME_PRP_POOL]=n
 			;;
 		--with-raid5f)
 			CONFIG[RAID5F]=y

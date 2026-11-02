@@ -297,10 +297,8 @@ static  uint32_t
 nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t max_xfer_size;
-#ifdef SPDK_CONFIG_NVME_PRP_POOL
 	uint64_t mdts_max_xfer_size;
 	int rc;
-#endif
 
 	/*
 	 * For commands requiring more than 2 PRP entries, one PRP will be
@@ -315,7 +313,10 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	max_xfer_size = NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
 
-#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	if (!nvme_prp_pool_enabled()) {
+		return max_xfer_size;
+	}
+
 	/*
 	 * MDTS == 0 means the controller does not specify a transfer limit.
 	 * Only enable the expanded limit after Identify Controller succeeded and
@@ -344,9 +345,6 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	return mdts_max_xfer_size;
-#endif
-
-	return max_xfer_size;
 }
 
 static uint16_t
@@ -1093,9 +1091,7 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_pci_device_unclaim(pctrlr->devhandle);
 	}
 
-#ifdef SPDK_CONFIG_NVME_PRP_POOL
 	nvme_pcie_prp_pool_destroy(ctrlr);
-#endif
 	spdk_free(pctrlr);
 
 	return 0;

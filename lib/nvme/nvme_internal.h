@@ -1213,6 +1213,7 @@ struct spdk_nvme_ctrlr {
 
 	/** Identify Controller data. */
 	struct spdk_nvme_ctrlr_data	cdata;
+	bool				cdata_valid;
 	struct spdk_nvme_zns_ctrlr_data	*cdata_zns;
 	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
 	struct spdk_nvme_kv_ctrlr_data	*cdata_kv;

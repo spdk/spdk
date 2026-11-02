@@ -61,6 +61,10 @@ endif
 
 COMMON_CFLAGS = -g -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
+ifeq ($(CONFIG_NVME_PRP_POOL),y)
+COMMON_CFLAGS += -DSPDK_CONFIG_NVME_PRP_POOL
+endif
+
 ifneq ($(filter powerpc% ppc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=$(TARGET_ARCHITECTURE)
 else ifeq ($(TARGET_MACHINE),aarch64)

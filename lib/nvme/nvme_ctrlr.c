@@ -2207,12 +2207,15 @@ static void
 nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_ctrlr *ctrlr = (struct spdk_nvme_ctrlr *)arg;
+	uint64_t mdts_max_xfer_size;
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "nvme_identify_controller failed!\n");
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
+
+	ctrlr->cdata_valid = true;
 
 	/*
 	 * Use MDTS to ensure our default max_xfer_size doesn't exceed what the
@@ -2221,8 +2224,13 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	ctrlr->max_xfer_size = nvme_transport_ctrlr_get_max_xfer_size(ctrlr);
 	NVME_CTRLR_DEBUGLOG(ctrlr, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
-		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size,
-						ctrlr->min_page_size * (1 << ctrlr->cdata.mdts));
+		if (ctrlr->cdata.mdts >= 32 ||
+		    ctrlr->min_page_size > (UINT32_MAX >> ctrlr->cdata.mdts)) {
+			mdts_max_xfer_size = UINT32_MAX;
+		} else {
+			mdts_max_xfer_size = (uint64_t)ctrlr->min_page_size << ctrlr->cdata.mdts;
+		}
+		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size, (uint32_t)mdts_max_xfer_size);
 		NVME_CTRLR_DEBUGLOG(ctrlr, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
 
@@ -2280,6 +2288,7 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int	rc;
 
+	ctrlr->cdata_valid = false;
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY,
 			     ctrlr->opts.admin_timeout_ms);
 
