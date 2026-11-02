@@ -245,6 +245,32 @@ nvme_pcie_prp_pool_destroy(struct spdk_nvme_ctrlr *ctrlr)
 	pctrlr->prp_pool = NULL;
 }
 
+static void
+nvme_pcie_prp_pool_release(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_prp_pool *pool = nvme_pcie_ctrlr(qpair->ctrlr)->prp_pool;
+	struct nvme_pcie_prp_pool_slot *slot;
+
+	if (!pool || !pqpair->prp_pool_slots || tr->cid >= pqpair->num_trackers) {
+		return;
+	}
+
+	nvme_ctrlr_lock(qpair->ctrlr);
+	slot = pqpair->prp_pool_slots[tr->cid];
+	if (slot) {
+		pqpair->prp_pool_slots[tr->cid] = NULL;
+		if (slot->in_use) {
+			slot->in_use = false;
+			slot->next_free = pool->free_head;
+			pool->free_head = slot;
+			assert(pool->inflight > 0);
+			pool->inflight--;
+		}
+	}
+	nvme_ctrlr_unlock(qpair->ctrlr);
+}
+
 #endif
 
 static void *
@@ -396,6 +422,19 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		NVME_QPAIR_ERRLOG(qpair, "nvme_tr failed\n");
 		return -ENOMEM;
 	}
+
+	pqpair->num_trackers = num_trackers;
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	if (pctrlr->prp_pool) {
+		pqpair->prp_pool_slots = spdk_zmalloc(num_trackers * sizeof(*pqpair->prp_pool_slots),
+						      64, NULL, SPDK_ENV_NUMA_ID_ANY,
+						      SPDK_MALLOC_SHARE);
+		if (!pqpair->prp_pool_slots) {
+			NVME_QPAIR_ERRLOG(qpair, "nvme_prp_pool_slots failed\n");
+			return -ENOMEM;
+		}
+	}
+#endif
 
 	TAILQ_INIT(&pqpair->free_tr);
 	TAILQ_INIT(&pqpair->outstanding_tr);
@@ -900,6 +939,9 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 	} else {
 		TAILQ_REMOVE(&pqpair->outstanding_tr, tr, tq_list);
 		pqpair->qpair.queue_depth--;
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+		nvme_pcie_prp_pool_release(qpair, tr);
+#endif
 
 		/* Only check admin requests from different processes. */
 		if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
@@ -1194,10 +1236,21 @@ int
 nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	uint16_t i;
+#endif
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_pcie_admin_qpair_destroy(qpair);
 	}
+
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	for (i = 0; i < pqpair->num_trackers; i++) {
+		if (pqpair->prp_pool_slots && pqpair->prp_pool_slots[i]) {
+			nvme_pcie_prp_pool_release(qpair, &pqpair->tr[i]);
+		}
+	}
+#endif
 	/*
 	 * We check sq_vaddr and cq_vaddr to see if the user specified the memory
 	 * buffers when creating the I/O queue.
@@ -1213,6 +1266,9 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (pqpair->tr) {
 		spdk_free(pqpair->tr);
 	}
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	spdk_free(pqpair->prp_pool_slots);
+#endif
 
 	nvme_qpair_deinit(qpair);
 
