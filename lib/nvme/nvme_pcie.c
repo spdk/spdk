@@ -296,6 +296,12 @@ nvme_pcie_ctrlr_set_pmrmscu(struct nvme_pcie_ctrlr *pctrlr, uint32_t value)
 static  uint32_t
 nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
+	uint32_t max_xfer_size;
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	uint64_t mdts_max_xfer_size;
+	int rc;
+#endif
+
 	/*
 	 * For commands requiring more than 2 PRP entries, one PRP will be
 	 *  embedded in the command (prp1), and the rest of the PRP entries
@@ -307,7 +313,40 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	 *  because the first PRP entry may not be aligned on a 4KiB
 	 *  boundary.
 	 */
-	return NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
+	max_xfer_size = NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
+
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	/*
+	 * MDTS == 0 means the controller does not specify a transfer limit.
+	 * Only enable the expanded limit after Identify Controller succeeded and
+	 * supplied a finite MDTS that can size the controller-shared pool.
+	 */
+	if (!ctrlr->cdata_valid || ctrlr->cdata.mdts == 0) {
+		return max_xfer_size;
+	}
+
+	if (ctrlr->cdata.mdts >= 32 ||
+	    ctrlr->min_page_size > (UINT32_MAX >> ctrlr->cdata.mdts)) {
+		mdts_max_xfer_size = UINT32_MAX;
+	} else {
+		mdts_max_xfer_size = (uint64_t)ctrlr->min_page_size << ctrlr->cdata.mdts;
+	}
+
+	if (mdts_max_xfer_size <= max_xfer_size) {
+		return max_xfer_size;
+	}
+
+	rc = nvme_pcie_prp_pool_init(ctrlr, (uint32_t)mdts_max_xfer_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not initialize MDTS-sized PRP pool for controller %p: %s\n",
+			    ctrlr, spdk_strerror(-rc));
+		return max_xfer_size;
+	}
+
+	return mdts_max_xfer_size;
+#endif
+
+	return max_xfer_size;
 }
 
 static uint16_t
@@ -1054,6 +1093,9 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		spdk_pci_device_unclaim(pctrlr->devhandle);
 	}
 
+#ifdef SPDK_CONFIG_NVME_PRP_POOL
+	nvme_pcie_prp_pool_destroy(ctrlr);
+#endif
 	spdk_free(pctrlr);
 
 	return 0;
