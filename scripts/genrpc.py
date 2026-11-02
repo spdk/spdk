@@ -441,6 +441,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.doc:
-        print(generate_docs(schema))
+        print(generate_docs(schema).rstrip())
     if args.rpc:
         print(generate_rpcs(schema))
