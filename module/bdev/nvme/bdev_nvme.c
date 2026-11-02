@@ -801,11 +801,18 @@ nvme_detach_poller(void *arg)
 }
 
 static void
+bdev_nvme_ctrlr_unregister_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr)
+{
+	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
+	nvme_ctrlr->sched_reconnect = false;
+}
+
+static void
 nvme_ctrlr_delete(struct nvme_ctrlr *nvme_ctrlr)
 {
 	int rc;
 
-	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
+	bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
 
 	if (spdk_interrupt_mode_is_enabled()) {
 		spdk_interrupt_unregister(&nvme_ctrlr->intr);
@@ -2397,20 +2404,16 @@ static int bdev_nvme_start_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr, bool ho
 static void bdev_nvme_reconnect_ctrlr(struct nvme_ctrlr *nvme_ctrlr);
 
 static int
-bdev_nvme_reconnect_delay_timer_expired(void *ctx)
+bdev_nvme_ctrlr_reconnect_timer(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
 	SPDK_DTRACE_PROBE1(bdev_nvme_ctrlr_reconnect_delay, nvme_ctrlr->nbdev_ctrlr->name);
-	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
 
-	if (!nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		return SPDK_POLLER_BUSY;
-	}
-
-	nvme_ctrlr->sched_reconnect = false;
+	assert(nvme_ctrlr_has_sched_reconnect(nvme_ctrlr));
+	bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
 
 	if (nvme_ctrlr->destruct) {
 		return SPDK_POLLER_BUSY;
@@ -2426,7 +2429,7 @@ bdev_nvme_reconnect_delay_timer_expired(void *ctx)
 }
 
 static void
-bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
+bdev_nvme_ctrlr_register_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr)
 {
 	spdk_poller_pause(nvme_ctrlr->adminq_timer_poller);
 
@@ -2434,7 +2437,7 @@ bdev_nvme_start_reconnect_delay_timer(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->sched_reconnect = true;
 
 	assert(nvme_ctrlr->reconnect_delay_timer == NULL);
-	nvme_ctrlr->reconnect_delay_timer = SPDK_POLLER_REGISTER(bdev_nvme_reconnect_delay_timer_expired,
+	nvme_ctrlr->reconnect_delay_timer = SPDK_POLLER_REGISTER(bdev_nvme_ctrlr_reconnect_timer,
 					    nvme_ctrlr,
 					    nvme_ctrlr->opts.reconnect_delay_sec * SPDK_SEC_TO_USEC);
 }
@@ -2517,7 +2520,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		remove_discovery_entry(nvme_ctrlr);
 		break;
 	case OP_SCHED_RECONNECT:
-		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_start_reconnect_delay_timer);
+		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_ctrlr_register_reconnect_timer);
 		break;
 	case OP_FAILOVER:
 		nvme_ctrlr->ctrlr_op_cb_fn = ctrlr_op_cb_fn;
@@ -2731,10 +2734,7 @@ bdev_nvme_reconnect_ctrlr_now(void *ctx)
 	assert(nvme_ctrlr->resetting == true);
 	assert(spdk_thread_is_app_thread(NULL));
 
-	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
-
 	spdk_poller_resume(nvme_ctrlr->adminq_timer_poller);
-
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 }
 
@@ -2778,8 +2778,8 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
+		bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
 		*msg_fn = bdev_nvme_reconnect_ctrlr_now;
-		nvme_ctrlr->sched_reconnect = false;
 	} else {
 		*msg_fn = _bdev_nvme_reset_ctrlr;
 	}
@@ -2898,14 +2898,12 @@ bdev_nvme_disable_destroy_qpairs(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
-_bdev_nvme_cancel_reconnect_and_disable_ctrlr(void *ctx)
+_bdev_nvme_disable_ctrlr(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
 	assert(nvme_ctrlr->resetting == true);
 	assert(spdk_thread_is_app_thread(NULL));
-
-	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
 
 	bdev_nvme_disable_ctrlr_complete(nvme_ctrlr);
 }
@@ -2949,8 +2947,8 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	nvme_ctrlr->dont_retry = true;
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		msg_fn = _bdev_nvme_cancel_reconnect_and_disable_ctrlr;
-		nvme_ctrlr->sched_reconnect = false;
+		bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
+		msg_fn = _bdev_nvme_disable_ctrlr;
 	} else {
 		msg_fn = _bdev_nvme_disconnect_and_disable_ctrlr;
 	}
