@@ -1352,7 +1352,7 @@ Added `spdk_nvmf_subsystem_add_listener_ext()` API for accepting new connections
 address, now allowing to specify additional options for the listener.
 
 Deprecated `spdk_nvmf_subsystem_any_listener_allowed()` API (to be removed in 24.01) and replaced with
-spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
+`spdk_nvmf_subsystem_any_listener_allowed()` API fixing the typo.
 
 Added `spdk_nvmf_subsystem_is_discovery()` API to check whether a given susbystem is discovery subsystem.
 

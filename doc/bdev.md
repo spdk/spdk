@@ -626,7 +626,7 @@ To enable the module, configure SPDK using `--with-daos` flag.
 Running `daos_agent` service on the target machine is required for the SPDK DAOS bdev communication with a DAOS cluster.
 
 The implementation uses the independent pool and container connections per device's channel for the best IO throughput, therefore,
-running a target application with multiple cores (`-m [0-7], for example) is highly advisable.
+running a target application with multiple cores (`-m [0-7]`, for example) is highly advisable.
 
 Example command for creating daos bdev:
 
