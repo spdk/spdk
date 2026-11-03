@@ -5021,13 +5021,26 @@ struct spdk_nvme_transport_ops {
  */
 void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
 
+/**
+ * Register transport operations with explicit structure size.
+ *
+ * This API enables forward-compatible extension of struct
+ * spdk_nvme_transport_ops by allowing callers to provide the size of the
+ * structure they were compiled against.
+ *
+ * \param ops The operations associated with an NVMe-oF transport.
+ * \param ops_size Size of the caller's struct spdk_nvme_transport_ops.
+ */
+void spdk_nvme_transport_register_ext(const struct spdk_nvme_transport_ops *ops,
+				      size_t ops_size);
+
 /*
  * Macro used to register new transports.
  */
 #define SPDK_NVME_TRANSPORT_REGISTER(name, transport_ops) \
 static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(void) \
 { \
-	spdk_nvme_transport_register(transport_ops); \
+	spdk_nvme_transport_register_ext((transport_ops), sizeof(*(transport_ops))); \
 }
 
 /**

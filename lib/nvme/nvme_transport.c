@@ -83,9 +83,16 @@ spdk_nvme_transport_available_by_name(const char *transport_name)
 }
 
 void
-spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+spdk_nvme_transport_register_ext(const struct spdk_nvme_transport_ops *ops,
+				 size_t ops_size)
 {
 	struct spdk_nvme_transport *new_transport;
+	size_t copy_size;
+
+	if (ops == NULL || ops_size < sizeof(ops->name)) {
+		SPDK_ERRLOG("Invalid transport ops or ops_size too small to cover the transport name.\n");
+		return;
+	}
 
 	if (nvme_get_transport(ops->name)) {
 		SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
@@ -98,9 +105,31 @@ spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 		return;
 	}
 	new_transport = &g_transports[g_current_transport_index++];
+	copy_size = spdk_min(ops_size, sizeof(new_transport->ops));
 
-	new_transport->ops = *ops;
+	memset(&new_transport->ops, 0, sizeof(new_transport->ops));
+	memcpy(&new_transport->ops, ops, copy_size);
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, new_transport, link);
+}
+
+void
+spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+{
+	/*
+	 * Backward-compatible registration: copy only the original SPDK fields
+	 * (up through and including ctrlr_process_transport_events, the last upstream
+	 * field) and zero-fill any appended extension callbacks.
+	 *
+	 * The static assertion below enforces that no new fields were ever inserted
+	 * before ctrlr_connect_qpair (which would shift it and corrupt the prefix copy).
+	 */
+	SPDK_STATIC_ASSERT(
+		offsetof(struct spdk_nvme_transport_ops, ctrlr_connect_qpair) ==
+		offsetof(struct spdk_nvme_transport_ops, ctrlr_delete_io_qpair) + sizeof(void *),
+		"ctrlr_connect_qpair offset changed: a field was inserted before it");
+	spdk_nvme_transport_register_ext(ops,
+					 offsetof(struct spdk_nvme_transport_ops, ctrlr_process_transport_events) +
+					 sizeof(((struct spdk_nvme_transport_ops *)0)->ctrlr_process_transport_events));
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,

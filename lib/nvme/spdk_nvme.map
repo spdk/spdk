@@ -3,6 +3,7 @@
 
 	# public functions from nvme.h
 	spdk_nvme_transport_register;
+	spdk_nvme_transport_register_ext;
 	spdk_nvme_transport_available;
 	spdk_nvme_transport_available_by_name;
 	spdk_nvme_transport_get_opts;
