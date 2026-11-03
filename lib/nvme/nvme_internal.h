@@ -497,6 +497,19 @@ struct nvme_auth {
 	void				*cb_ctx;
 };
 
+struct spdk_nvme_cq {
+	struct spdk_nvme_ctrlr		*ctrlr;
+	uint16_t			id;
+	uint16_t			refcount;
+	/* A timed-out device command retains the object and DMA memory until reset. */
+	bool				pending;
+	uint16_t			num_entries;
+	TAILQ_ENTRY(spdk_nvme_cq)	tailq;
+	struct spdk_nvme_ctrlr_process	*proc;
+	struct spdk_nvme_ctrlr_process	*bound_proc;
+	TAILQ_ENTRY(spdk_nvme_cq)	per_process_tailq;
+};
+
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr			*ctrlr;
 
@@ -1221,6 +1234,8 @@ struct spdk_nvme_ctrlr {
 	struct spdk_bit_array		*free_io_sqids;
 	struct spdk_bit_array		*free_io_cqids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
+	bool				io_cq_create_timed_out;
+	bool				io_cq_delete_timed_out;
 
 	struct spdk_nvme_ctrlr_opts	opts;
 

@@ -1122,6 +1122,200 @@ nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 	return qpair;
 }
 
+static int
+nvme_pcie_io_cq_register(struct spdk_nvme_ctrlr *ctrlr, struct nvme_pcie_cq *cq)
+{
+	struct nvme_completion_poll_status *status;
+	struct nvme_request *req;
+	struct spdk_nvme_cmd *cmd;
+	int rc;
+
+	status = calloc(1, sizeof(*status));
+	if (status == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate CQ command status\n");
+		return -ENOMEM;
+	}
+	req = nvme_allocate_request_null(ctrlr->adminq, nvme_completion_poll_cb, status);
+	if (req == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate CREATE_IO_CQ request\n");
+		free(status);
+		return -ENOMEM;
+	}
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_CREATE_IO_CQ;
+	cmd->cdw10_bits.create_io_q.qid = cq->cqid;
+	cmd->cdw10_bits.create_io_q.qsize = cq->num_entries - 1;
+	cmd->cdw11_bits.create_io_cq.pc = 1;
+	if (ctrlr->opts.enable_interrupts) {
+		cmd->cdw11_bits.create_io_cq.ien = 1;
+		cmd->cdw11_bits.create_io_cq.iv = cq->cqid;
+	}
+	cmd->dptr.prp.prp1 = cq->cpl_bus_addr;
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	if (rc != 0) {
+		free(status);
+		return rc;
+	}
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "CREATE_IO_CQ %u failed: rc=%d\n", cq->cqid, rc);
+	}
+	if (status->timed_out) {
+		ctrlr->io_cq_create_timed_out = true;
+	} else {
+		free(status);
+	}
+	return rc;
+}
+
+struct spdk_nvme_cq *
+nvme_pcie_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+			     const struct spdk_nvme_io_cq_opts *opts)
+{
+	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+	struct nvme_pcie_io_cq *pcq;
+	struct nvme_pcie_cq *cq;
+	uint32_t num_entries = opts && opts->io_queue_size ?
+			       opts->io_queue_size : ctrlr->opts.io_queue_size;
+	size_t queue_len, queue_align;
+	uint16_t i;
+	int rc;
+
+	if (num_entries < 2 || num_entries > UINT16_MAX) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid completion queue size %u\n", num_entries);
+		return NULL;
+	}
+	pcq = spdk_zmalloc(sizeof(*pcq), 64, NULL, SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (pcq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate completion queue\n");
+		return NULL;
+	}
+	cq = &pcq->pcie_cq;
+	cq->num_entries = num_entries;
+	cq->cqid = cqid;
+	cq->phase = 1;
+	cq->sq_map_size = ctrlr->opts.num_io_queues + 1;
+	TAILQ_INIT(&cq->sq_members);
+	cq->sq_map = spdk_zmalloc(cq->sq_map_size * sizeof(*cq->sq_map), 64, NULL,
+				  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	if (cq->sq_map == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate CQ routing table\n");
+		goto free_pcq;
+	}
+	if (opts && opts->cq.vaddr) {
+		cq->cq_vaddr = cq->cpl = opts->cq.vaddr;
+	} else {
+		queue_len = num_entries * sizeof(struct spdk_nvme_cpl);
+		queue_align = spdk_max(spdk_align32pow2(queue_len), (size_t)sysconf(_SC_PAGESIZE));
+		cq->cpl = spdk_zmalloc(queue_len, queue_align, NULL,
+				       spdk_nvme_ctrlr_get_numa_id(ctrlr),
+				       SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
+		if (cq->cpl == NULL) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate CQ ring\n");
+			goto free_pcq;
+		}
+	}
+	if (opts && opts->cq.paddr) {
+		cq->cpl_bus_addr = opts->cq.paddr;
+	} else {
+		cq->cpl_bus_addr = spdk_vtophys(cq->cpl, NULL);
+		if (cq->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
+			NVME_CTRLR_ERRLOG(ctrlr, "vtophys(CQ ring) failed\n");
+			goto free_ring;
+		}
+	}
+	cq->cq_hdbl = pctrlr->doorbell_base + (2 * cqid + 1) * pctrlr->doorbell_stride_u32;
+	for (i = 0; i < num_entries; i++) {
+		cq->cpl[i].status.p = 0;
+	}
+	rc = nvme_pcie_io_cq_register(ctrlr, cq);
+	if (rc != 0 && !ctrlr->io_cq_create_timed_out) {
+		goto free_ring;
+	}
+	/* A timed-out create keeps its DMA ring until controller reset or removal. */
+	return &pcq->cq;
+
+free_ring:
+	if (cq->cq_vaddr == NULL) {
+		spdk_free(cq->cpl);
+	}
+free_pcq:
+	spdk_free(cq->sq_map);
+	spdk_free(pcq);
+	return NULL;
+}
+
+int
+nvme_pcie_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	struct nvme_pcie_cq *pcie_cq = &nvme_pcie_io_cq(cq)->pcie_cq;
+	uint16_t i;
+
+	pcie_cq->cq_head = 0;
+	pcie_cq->phase = 1;
+	for (i = 0; i < pcie_cq->num_entries; i++) {
+		pcie_cq->cpl[i].status.p = 0;
+	}
+	return nvme_pcie_io_cq_register(ctrlr, pcie_cq);
+}
+
+int
+nvme_pcie_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	struct nvme_pcie_io_cq *pcq = nvme_pcie_io_cq(cq);
+
+	if (pcq->pcie_cq.cq_vaddr == NULL) {
+		spdk_free(pcq->pcie_cq.cpl);
+	}
+	spdk_free(pcq->pcie_cq.sq_map);
+	spdk_free(pcq);
+	return 0;
+}
+
+int
+nvme_pcie_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	struct nvme_pcie_cq *pcie_cq = &nvme_pcie_io_cq(cq)->pcie_cq;
+	struct nvme_completion_poll_status *status;
+	struct nvme_request *req;
+	int rc;
+
+	if (ctrlr->is_removed) {
+		return nvme_pcie_ctrlr_delete_io_cq_force(ctrlr, cq);
+	}
+	status = calloc(1, sizeof(*status));
+	if (status == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate CQ command status\n");
+		return -ENOMEM;
+	}
+	req = nvme_allocate_request_null(ctrlr->adminq, nvme_completion_poll_cb, status);
+	if (req == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to allocate DELETE_IO_CQ request\n");
+		free(status);
+		return -ENOMEM;
+	}
+	req->cmd.opc = SPDK_NVME_OPC_DELETE_IO_CQ;
+	req->cmd.cdw10_bits.delete_io_q.qid = pcie_cq->cqid;
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+	if (rc != 0) {
+		free(status);
+		return rc;
+	}
+	rc = nvme_wait_for_adminq_completion(ctrlr, status, false);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "DELETE_IO_CQ %u failed: rc=%d\n", pcie_cq->cqid, rc);
+	}
+	if (status->timed_out) {
+		ctrlr->io_cq_delete_timed_out = true;
+	} else {
+		free(status);
+	}
+	if (rc == 0) {
+		return nvme_pcie_ctrlr_delete_io_cq_force(ctrlr, cq);
+	}
+	return rc;
+}
+
 int
 nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {

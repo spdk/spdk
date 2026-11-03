@@ -15,12 +15,39 @@ pid_t g_spdk_nvme_pid;
 DEFINE_STUB(nvme_ctrlr_get_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr, pid_t pid), NULL);
 
-DEFINE_STUB(nvme_ctrlr_submit_admin_request, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_request *req), 0);
+static bool g_capture_cq_commands;
+static struct spdk_nvme_cmd g_cq_command;
+static int g_cq_submit_rc;
+static int g_cq_wait_rc;
+static bool g_cq_wait_timeout;
+static struct nvme_completion_poll_status *g_cq_timed_out_status;
+
+int
+nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr, struct nvme_request *req)
+{
+	if (g_capture_cq_commands) {
+		g_cq_command = req->cmd;
+		_nvme_free_request(req, ctrlr->adminq);
+		return g_cq_submit_rc;
+	}
+	return 0;
+}
 
 DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
-DEFINE_STUB(nvme_wait_for_adminq_completion, int, (struct spdk_nvme_ctrlr *ctrlr,
-		struct nvme_completion_poll_status *status, bool release), 0);
+int
+nvme_wait_for_adminq_completion(struct spdk_nvme_ctrlr *ctrlr,
+				struct nvme_completion_poll_status *status, bool release)
+{
+	if (g_capture_cq_commands) {
+		CU_ASSERT(!release);
+		status->timed_out = g_cq_wait_timeout;
+		if (status->timed_out) {
+			g_cq_timed_out_status = status;
+		}
+		return g_cq_wait_rc;
+	}
+	return 0;
+}
 
 DEFINE_STUB(nvme_completion_is_retry, bool, (const struct spdk_nvme_cpl *cpl), false);
 
@@ -93,6 +120,105 @@ nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 	qpair->async = async;
 
 	return 0;
+}
+
+static void
+test_nvme_pcie_standalone_cq_lifecycle(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct spdk_nvme_qpair adminq = {};
+	struct nvme_request req = {};
+	struct spdk_nvme_cpl ring[8];
+	struct spdk_nvme_io_cq_opts opts = {
+		.io_queue_size = SPDK_COUNTOF(ring),
+		.cq = {.vaddr = ring, .paddr = 0x12345000, .buffer_size = sizeof(ring)},
+	};
+	uint32_t doorbells[32] = {};
+	struct spdk_nvme_cq *cq;
+	struct nvme_pcie_cq *pcie_cq;
+	uint32_t i;
+
+	pctrlr.ctrlr.adminq = &adminq;
+	pctrlr.ctrlr.opts.num_io_queues = 8;
+	pctrlr.ctrlr.opts.io_queue_size = 8;
+	pctrlr.ctrlr.opts.enable_interrupts = true;
+	pctrlr.doorbell_base = doorbells;
+	pctrlr.doorbell_stride_u32 = 2;
+	STAILQ_INIT(&adminq.free_req);
+	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);
+	req.qpair = &adminq;
+	g_capture_cq_commands = true;
+	g_cq_submit_rc = g_cq_wait_rc = 0;
+	g_cq_wait_timeout = false;
+	memset(ring, 0xff, sizeof(ring));
+	cq = nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 3, &opts);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	pcie_cq = &nvme_pcie_io_cq(cq)->pcie_cq;
+	CU_ASSERT(g_cq_command.opc == SPDK_NVME_OPC_CREATE_IO_CQ);
+	CU_ASSERT(g_cq_command.cdw10_bits.create_io_q.qid == 3);
+	CU_ASSERT(g_cq_command.cdw10_bits.create_io_q.qsize == 7);
+	CU_ASSERT(g_cq_command.cdw11_bits.create_io_cq.ien == 1);
+	CU_ASSERT(g_cq_command.cdw11_bits.create_io_cq.iv == 3);
+	CU_ASSERT(g_cq_command.dptr.prp.prp1 == opts.cq.paddr);
+	CU_ASSERT(pcie_cq->cq_hdbl == &doorbells[14]);
+	CU_ASSERT(pcie_cq->sq_map_size == 9);
+	CU_ASSERT(TAILQ_EMPTY(&pcie_cq->sq_members));
+	for (i = 0; i < SPDK_COUNTOF(ring); i++) {
+		CU_ASSERT(ring[i].status.p == 0);
+		CU_ASSERT(pcie_cq->sq_map[i] == NULL);
+		ring[i].status.p = 1;
+	}
+	pcie_cq->cq_head = 5;
+	pcie_cq->phase = 0;
+	CU_ASSERT(nvme_pcie_ctrlr_connect_io_cq(&pctrlr.ctrlr, cq) == 0);
+	CU_ASSERT(pcie_cq->cq_head == 0);
+	CU_ASSERT(pcie_cq->phase == 1);
+	for (i = 0; i < SPDK_COUNTOF(ring); i++) {
+		CU_ASSERT(ring[i].status.p == 0);
+	}
+	g_cq_wait_rc = -EIO;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq(&pctrlr.ctrlr, cq) == -EIO);
+	CU_ASSERT(g_cq_command.opc == SPDK_NVME_OPC_DELETE_IO_CQ);
+	CU_ASSERT(g_cq_command.cdw10_bits.delete_io_q.qid == 3);
+	CU_ASSERT(pcie_cq->cpl == ring);
+	g_cq_wait_rc = 0;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq(&pctrlr.ctrlr, cq) == 0);
+	/* Caller memory must remain writable after deletion. */
+	ring[0].status.p = 1;
+
+	cq = nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 1, NULL);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(nvme_pcie_io_cq(cq)->pcie_cq.cq_vaddr == NULL);
+	pctrlr.ctrlr.is_removed = true;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq(&pctrlr.ctrlr, cq) == 0);
+	pctrlr.ctrlr.is_removed = false;
+
+	g_cq_wait_rc = -ETIMEDOUT;
+	g_cq_wait_timeout = true;
+	cq = nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 2, &opts);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(pctrlr.ctrlr.io_cq_create_timed_out);
+	CU_ASSERT(nvme_pcie_io_cq(cq)->pcie_cq.cpl == ring);
+	free(g_cq_timed_out_status);
+	g_cq_timed_out_status = NULL;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq(&pctrlr.ctrlr, cq) == -ETIMEDOUT);
+	CU_ASSERT(pctrlr.ctrlr.io_cq_delete_timed_out);
+	CU_ASSERT(nvme_pcie_io_cq(cq)->pcie_cq.cpl == ring);
+	free(g_cq_timed_out_status);
+	g_cq_timed_out_status = NULL;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq_force(&pctrlr.ctrlr, cq) == 0);
+	g_cq_wait_rc = 0;
+	g_cq_wait_timeout = false;
+	pctrlr.ctrlr.io_cq_create_timed_out = false;
+	g_cq_submit_rc = -ENOMEM;
+	CU_ASSERT(nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 2, &opts) == NULL);
+	g_cq_submit_rc = 0;
+	MOCK_SET(spdk_vtophys, SPDK_VTOPHYS_ERROR);
+	CU_ASSERT(nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 2, NULL) == NULL);
+	MOCK_CLEAR(spdk_vtophys);
+	opts.io_queue_size = UINT16_MAX + 1U;
+	CU_ASSERT(nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 2, &opts) == NULL);
+	g_capture_cq_commands = false;
 }
 
 static void
@@ -882,6 +1008,7 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_pcie_common", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
+	CU_ADD_TEST(suite, test_nvme_pcie_standalone_cq_lifecycle);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_private_cq_wrap_reset);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);

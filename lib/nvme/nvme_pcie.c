@@ -1147,6 +1147,10 @@ const struct spdk_nvme_transport_ops pcie_ops = {
 	.ctrlr_unmap_pmr = nvme_pcie_ctrlr_unmap_io_pmr,
 
 	.ctrlr_create_io_qpair = nvme_pcie_ctrlr_create_io_qpair,
+	.ctrlr_create_io_cq = nvme_pcie_ctrlr_create_io_cq,
+	.ctrlr_delete_io_cq = nvme_pcie_ctrlr_delete_io_cq,
+	.ctrlr_delete_io_cq_force = nvme_pcie_ctrlr_delete_io_cq_force,
+	.ctrlr_connect_io_cq = nvme_pcie_ctrlr_connect_io_cq,
 	.ctrlr_delete_io_qpair = nvme_pcie_ctrlr_delete_io_qpair,
 	.ctrlr_connect_qpair = nvme_pcie_ctrlr_connect_qpair,
 	.ctrlr_disconnect_qpair = nvme_pcie_ctrlr_disconnect_qpair,

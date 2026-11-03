@@ -1971,6 +1971,24 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		const struct spdk_nvme_io_qpair_opts *opts,
 		size_t opts_size);
 
+/** Options for an independently allocated PCIe completion queue. */
+struct spdk_nvme_io_cq_opts {
+	/** Number of CQ entries, or zero to use the controller default. */
+	uint32_t io_queue_size;
+	/** Requested CQID, or zero to allocate any free CQID independently of SQIDs. */
+	uint16_t cqid;
+	uint8_t reserved6[2];
+	/** Optional caller-owned DMA ring, with the same requirements as qpair CQ memory. */
+	struct {
+		struct spdk_nvme_cpl *vaddr;
+		uint64_t paddr;
+		uint64_t buffer_size;
+	} cq;
+	/** Size of this structure as known to the caller. */
+	size_t opts_size;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_cq_opts) == 40, "Incorrect size");
+
 /**
  * Connect a newly created I/O qpair.
  *
@@ -4898,7 +4916,6 @@ struct nvme_request;
 
 struct spdk_nvme_transport;
 struct spdk_nvme_cq;
-struct spdk_nvme_io_cq_opts;
 
 struct spdk_nvme_transport_ops {
 	char name[SPDK_NVMF_TRSTRING_MAX_LEN + 1];

@@ -136,7 +136,22 @@ struct nvme_pcie_cq {
 	volatile uint32_t *shadow_cq_eventidx;
 	struct spdk_nvme_cpl *cq_vaddr;
 	uint64_t cpl_bus_addr;
+	uint16_t refcount;
+	struct nvme_pcie_qpair **sq_map;
+	uint32_t sq_map_size;
+	TAILQ_HEAD(, nvme_pcie_qpair) sq_members;
 };
+
+struct nvme_pcie_io_cq {
+	struct spdk_nvme_cq cq;
+	struct nvme_pcie_cq pcie_cq;
+};
+
+static inline struct nvme_pcie_io_cq *
+nvme_pcie_io_cq(struct spdk_nvme_cq *cq)
+{
+	return SPDK_CONTAINEROF(cq, struct nvme_pcie_io_cq, cq);
+}
 
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
@@ -337,6 +352,11 @@ int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 struct spdk_nvme_qpair *nvme_pcie_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid,
 		const struct spdk_nvme_io_qpair_opts *opts);
 int nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair);
+struct spdk_nvme_cq *nvme_pcie_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+		const struct spdk_nvme_io_cq_opts *opts);
+int nvme_pcie_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+int nvme_pcie_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+int nvme_pcie_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
 int nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
 int nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 				   struct spdk_nvme_transport_poll_group_stat **_stats);
