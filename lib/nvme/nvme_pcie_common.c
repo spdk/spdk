@@ -960,7 +960,9 @@ nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
 		member->qpair.in_completion_context = 1;
 	}
 	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
-		if (nvme_qpair_check_enabled(&member->qpair)) {
+		if (nvme_qpair_check_enabled(&member->qpair) ||
+		    (nvme_qpair_get_state(&member->qpair) == NVME_QPAIR_DESTROYING &&
+		     member->flags.sq_deleted)) {
 			ready = true;
 		}
 	}
