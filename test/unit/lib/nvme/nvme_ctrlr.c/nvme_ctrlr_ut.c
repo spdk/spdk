@@ -62,6 +62,45 @@ DEFINE_STUB(nvme_transport_qpair_get_fd, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair, struct spdk_event_handler_opts *opts), -ENOTSUP);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
 DEFINE_STUB_V(nvme_fabric_qpair_auth_cleanup, (struct spdk_nvme_qpair *qpair, int status));
+DEFINE_STUB(nvme_shared_cq_enabled, bool, (void), false);
+
+static int g_cq_create_rc, g_cq_delete_rc, g_cq_connect_calls, g_cq_force_calls;
+static bool g_cq_create_timeout, g_cq_delete_timeout;
+static struct spdk_nvme_io_cq_opts g_cq_opts;
+
+struct spdk_nvme_cq *
+nvme_transport_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+				  const struct spdk_nvme_io_cq_opts *opts)
+{
+	g_cq_opts = *opts;
+	ctrlr->io_cq_create_timed_out = g_cq_create_timeout;
+	return g_cq_create_rc ? NULL : calloc(1, sizeof(struct spdk_nvme_cq));
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	ctrlr->io_cq_delete_timed_out = g_cq_delete_timeout;
+	if (g_cq_delete_rc == 0) {
+		free(cq);
+	}
+	return g_cq_delete_rc;
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	g_cq_force_calls++;
+	free(cq);
+	return 0;
+}
+
+int
+nvme_transport_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	g_cq_connect_calls++;
+	return 0;
+}
 
 int
 nvme_get_default_hostnqn(char *buf, int len)
@@ -1637,6 +1676,205 @@ static void
 cleanup_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_ctrlr_destruct(ctrlr);
+}
+
+static void
+setup_managed_cqs(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct spdk_nvme_queue_mgmt_opts opts = {
+		.opts_size = sizeof(opts),
+		.mode = SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ,
+	};
+
+	setup_qpairs(ctrlr, 4);
+	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	ctrlr->cap.bits.mqes = 127;
+	ctrlr->opts.io_queue_size = 8;
+	CU_ASSERT(nvme_ctrlr_add_process(ctrlr, NULL) == 0);
+	g_cq_create_rc = g_cq_delete_rc = g_cq_connect_calls = g_cq_force_calls = 0;
+	g_cq_create_timeout = g_cq_delete_timeout = false;
+	MOCK_SET(nvme_shared_cq_enabled, true);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(ctrlr, &opts, sizeof(opts)) == 0);
+}
+
+static void
+test_queue_mgmt_opts(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_queue_mgmt_opts opts, readback;
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_cq *cq;
+
+	setup_qpairs(&ctrlr, 4);
+	spdk_nvme_ctrlr_get_default_queue_mgmt_opts(&opts, sizeof(opts));
+	CU_ASSERT(opts.opts_size == sizeof(opts));
+	CU_ASSERT(opts.mode == SPDK_NVME_QUEUE_MGMT_MODE_LEGACY);
+	opts.mode = SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ;
+	MOCK_SET(nvme_shared_cq_enabled, false);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == -ENOTSUP);
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0) == NULL);
+	MOCK_SET(nvme_shared_cq_enabled, true);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == 0);
+	CU_ASSERT(spdk_nvme_ctrlr_get_queue_mgmt_opts(&ctrlr, &readback, sizeof(readback)) == 0);
+	CU_ASSERT(readback.mode == SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ);
+	CU_ASSERT(readback.opts_size == sizeof(readback));
+	/* A partial mode field must retain the LEGACY default. */
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts,
+			offsetof(struct spdk_nvme_queue_mgmt_opts, mode) + 1) == 0);
+	CU_ASSERT(ctrlr.queue_mgmt_opts.mode == SPDK_NVME_QUEUE_MGMT_MODE_LEGACY);
+	TAILQ_INSERT_TAIL(&ctrlr.active_io_qpairs, &qpair, tailq);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == -EBUSY);
+	TAILQ_REMOVE(&ctrlr.active_io_qpairs, &qpair, tailq);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == 0);
+	ctrlr.opts.io_queue_size = 8;
+	ctrlr.cap.bits.mqes = 127;
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == -EBUSY);
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == 0);
+	opts.mode = (enum spdk_nvme_queue_mgmt_mode)99;
+	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == -EINVAL);
+	cleanup_qpairs(&ctrlr);
+	MOCK_SET(nvme_shared_cq_enabled, false);
+}
+
+static void
+test_independent_cq_ids_and_failures(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_cq *cq;
+	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_io_cq_opts opts = {.cqid = 2};
+
+	setup_managed_cqs(&ctrlr);
+	proc = nvme_ctrlr_get_current_process(&ctrlr);
+	SPDK_CU_ASSERT_FATAL(proc != NULL);
+	spdk_bit_array_clear(ctrlr.free_io_sqids, 2);
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(cq->id == 2);
+	CU_ASSERT(cq->proc == proc);
+	CU_ASSERT(cq->num_entries == 8);
+	CU_ASSERT(TAILQ_FIRST(&proc->allocated_io_cqs) == cq);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	cq->refcount = 1;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == -EBUSY);
+	cq->refcount = 0;
+	g_cq_delete_rc = -EIO;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == -EIO);
+	CU_ASSERT(!cq->pending);
+	CU_ASSERT(cq->proc == proc);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	g_cq_delete_rc = 0;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == 0);
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_sqids, 2));
+	CU_ASSERT(TAILQ_EMPTY(&proc->allocated_io_cqs));
+	g_cq_create_rc = -ENOMEM;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	g_cq_create_rc = 0;
+	opts.cqid = 5;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.cqid = 0;
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(cq->id == 1);
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == 0);
+	cleanup_qpairs(&ctrlr);
+	MOCK_SET(nvme_shared_cq_enabled, false);
+}
+
+static void
+test_independent_cq_opts_abi(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_cpl ring[8] = {};
+	struct spdk_nvme_io_cq_opts opts = {
+		.io_queue_size = 8,
+		.cqid = 3,
+		.cq = {.vaddr = ring, .paddr = 0x1000, .buffer_size = sizeof(ring)},
+	};
+	struct spdk_nvme_cq *cq;
+
+	setup_managed_cqs(&ctrlr);
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, 0) == NULL);
+	opts.cq.buffer_size--;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.cq.buffer_size++;
+	opts.cq.vaddr = NULL;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.cq.vaddr = ring;
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts,
+					 offsetof(struct spdk_nvme_io_cq_opts, cq.vaddr) + 1);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(g_cq_opts.cq.vaddr == NULL);
+	CU_ASSERT(g_cq_opts.cq.paddr == 0);
+	CU_ASSERT(g_cq_opts.cq.buffer_size == 0);
+	CU_ASSERT(g_cq_opts.cqid == 3);
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == 0);
+	opts.io_queue_size = 129;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.io_queue_size = 1;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.io_queue_size = UINT16_MAX + 1U;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts)) == NULL);
+	opts.io_queue_size = 8;
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, &opts, sizeof(opts));
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	CU_ASSERT(g_cq_opts.cq.vaddr == ring);
+	CU_ASSERT(g_cq_opts.cq.paddr == 0x1000);
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == 0);
+	cleanup_qpairs(&ctrlr);
+	MOCK_SET(nvme_shared_cq_enabled, false);
+}
+
+static void
+test_independent_cq_reset_and_cleanup(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_cq *cq, *pending;
+	struct spdk_nvme_ctrlr_process *proc;
+
+	setup_managed_cqs(&ctrlr);
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	g_cq_create_timeout = true;
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0) == NULL);
+	g_cq_create_timeout = false;
+	pending = TAILQ_NEXT(cq, tailq);
+	SPDK_CU_ASSERT_FATAL(pending != NULL);
+	CU_ASSERT(pending->pending);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(pending) == -EBUSY);
+	/* Model the fresh ID pool established by controller reinitialization. */
+	spdk_bit_array_set(ctrlr.free_io_cqids, 1);
+	spdk_bit_array_set(ctrlr.free_io_cqids, 2);
+	nvme_ctrlr_lock(&ctrlr);
+	CU_ASSERT(spdk_nvme_ctrlr_reconnect_poll_async(&ctrlr) == 0);
+	CU_ASSERT(g_cq_connect_calls == 1);
+	CU_ASSERT(g_cq_force_calls == 1);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 1));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 2));
+	CU_ASSERT(TAILQ_FIRST(&ctrlr.active_io_cqs) == cq);
+	g_cq_delete_rc = -ETIMEDOUT;
+	g_cq_delete_timeout = true;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == -ETIMEDOUT);
+	CU_ASSERT(cq->pending);
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == -EBUSY);
+	proc = cq->proc;
+	nvme_ctrlr_lock(&ctrlr);
+	nvme_ctrlr_remove_process(&ctrlr, proc);
+	nvme_ctrlr_unlock(&ctrlr);
+	CU_ASSERT(cq->proc == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_procs));
+	CU_ASSERT(TAILQ_FIRST(&ctrlr.active_io_cqs) == cq);
+	cleanup_qpairs(&ctrlr);
+	CU_ASSERT(g_cq_force_calls == 2);
+	g_cq_delete_rc = 0;
+	g_cq_delete_timeout = false;
+	MOCK_SET(nvme_shared_cq_enabled, false);
 }
 
 static void
@@ -4092,6 +4330,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_delay);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_rr_1);
 	CU_ADD_TEST(suite, test_alloc_qid_independent_namespaces);
+	CU_ADD_TEST(suite, test_queue_mgmt_opts);
+	CU_ADD_TEST(suite, test_independent_cq_ids_and_failures);
+	CU_ADD_TEST(suite, test_independent_cq_opts_abi);
+	CU_ADD_TEST(suite, test_independent_cq_reset_and_cleanup);
 	CU_ADD_TEST(suite, test_alloc_qid_requires_common_free_id);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_ctrlr_opts);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_io_qpair_opts);

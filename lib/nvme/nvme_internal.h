@@ -1088,6 +1088,7 @@ struct spdk_nvme_ctrlr_process {
 
 	/** Allocated IO qpairs */
 	TAILQ_HEAD(, spdk_nvme_qpair)			allocated_io_qpairs;
+	TAILQ_HEAD(, spdk_nvme_cq)			allocated_io_cqs;
 
 	spdk_nvme_aer_cb				aer_cb_fn;
 	void						*aer_cb_arg;
@@ -1234,6 +1235,8 @@ struct spdk_nvme_ctrlr {
 	struct spdk_bit_array		*free_io_sqids;
 	struct spdk_bit_array		*free_io_cqids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
+	TAILQ_HEAD(, spdk_nvme_cq)	active_io_cqs;
+	struct spdk_nvme_queue_mgmt_opts	queue_mgmt_opts;
 	bool				io_cq_create_timed_out;
 	bool				io_cq_delete_timed_out;
 
@@ -1972,6 +1975,7 @@ int nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct
 int nvme_transport_ctrlr_scan_attached(struct spdk_nvme_probe_ctx *probe_ctx);
 int nvme_transport_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_ready(struct spdk_nvme_ctrlr *ctrlr);
+bool nvme_shared_cq_enabled(void);
 int nvme_transport_ctrlr_enable_interrupts(struct spdk_nvme_ctrlr *ctrlr);
 int nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value);
 int nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);

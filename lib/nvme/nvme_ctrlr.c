@@ -241,6 +241,124 @@ spdk_nvme_ctrlr_get_opts(struct spdk_nvme_ctrlr *ctrlr)
 	return &ctrlr->opts;
 }
 
+void
+spdk_nvme_ctrlr_get_default_queue_mgmt_opts(struct spdk_nvme_queue_mgmt_opts *opts,
+		size_t opts_size)
+{
+	if (opts == NULL || opts_size == 0) {
+		SPDK_ERRLOG("Invalid queue-management options buffer\n");
+		return;
+	}
+	memset(opts, 0, opts_size);
+	if (offsetof(struct spdk_nvme_queue_mgmt_opts, opts_size) + sizeof(opts->opts_size) <= opts_size) {
+		opts->opts_size = opts_size;
+	}
+	if (offsetof(struct spdk_nvme_queue_mgmt_opts, mode) + sizeof(opts->mode) <= opts_size) {
+		opts->mode = SPDK_NVME_QUEUE_MGMT_MODE_LEGACY;
+	}
+}
+
+int
+spdk_nvme_ctrlr_set_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+				    const struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size)
+{
+	struct spdk_nvme_queue_mgmt_opts new_opts = {}, local = {};
+
+	if (ctrlr == NULL || opts == NULL || opts_size == 0) {
+		SPDK_ERRLOG("Invalid queue-management options\n");
+		return -EINVAL;
+	}
+	spdk_nvme_ctrlr_get_default_queue_mgmt_opts(&new_opts, sizeof(new_opts));
+	memcpy(&local, opts, spdk_min(opts_size, sizeof(local)));
+	new_opts.mode = SPDK_GET_FIELD(&local, mode, new_opts.mode, opts_size);
+	if (new_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_LEGACY &&
+	    new_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid queue-management mode %d\n", new_opts.mode);
+		return -EINVAL;
+	}
+	if (new_opts.mode == SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ && !nvme_shared_cq_enabled()) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Shared completion queues are not enabled in this build\n");
+		return -ENOTSUP;
+	}
+	nvme_ctrlr_lock(ctrlr);
+	if (!TAILQ_EMPTY(&ctrlr->active_io_qpairs) || !TAILQ_EMPTY(&ctrlr->active_io_cqs)) {
+		nvme_ctrlr_unlock(ctrlr);
+		return -EBUSY;
+	}
+	ctrlr->queue_mgmt_opts = new_opts;
+	nvme_ctrlr_unlock(ctrlr);
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_get_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+				    struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size)
+{
+	if (ctrlr == NULL || opts == NULL || opts_size == 0) {
+		SPDK_ERRLOG("Invalid queue-management options buffer\n");
+		return -EINVAL;
+	}
+	spdk_nvme_ctrlr_get_default_queue_mgmt_opts(opts, opts_size);
+	nvme_ctrlr_lock(ctrlr);
+	if (offsetof(struct spdk_nvme_queue_mgmt_opts, mode) + sizeof(opts->mode) <= opts_size) {
+		opts->mode = ctrlr->queue_mgmt_opts.mode;
+	}
+	nvme_ctrlr_unlock(ctrlr);
+	return 0;
+}
+
+static void
+nvme_ctrlr_proc_move_io_cq(struct spdk_nvme_cq *cq, struct spdk_nvme_ctrlr_process *proc)
+{
+	if (cq->proc == proc) {
+		return;
+	}
+	if (cq->proc) {
+		TAILQ_REMOVE(&cq->proc->allocated_io_cqs, cq, per_process_tailq);
+	}
+	cq->proc = proc;
+	if (proc) {
+		TAILQ_INSERT_TAIL(&proc->allocated_io_cqs, cq, per_process_tailq);
+	}
+}
+
+static void
+nvme_ctrlr_force_free_io_cq(struct spdk_nvme_cq *cq)
+{
+	struct spdk_nvme_ctrlr *ctrlr = cq->ctrlr;
+	uint16_t cqid = cq->id;
+	int rc;
+
+	rc = nvme_transport_ctrlr_delete_io_cq_force(ctrlr, cq);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to release CQ %u host resources: rc=%d\n", cqid, rc);
+		return;
+	}
+	if (ctrlr->free_io_cqids) {
+		spdk_bit_array_set(ctrlr->free_io_cqids, cqid);
+	}
+}
+
+static void
+nvme_ctrlr_proc_cleanup_io_cqs(struct spdk_nvme_ctrlr_process *proc)
+{
+	struct spdk_nvme_cq *cq, *tmp;
+	int rc;
+
+	TAILQ_FOREACH_SAFE(cq, &proc->allocated_io_cqs, per_process_tailq, tmp) {
+		rc = spdk_nvme_ctrlr_free_io_cq(cq);
+		if (rc != 0) {
+			/* Retain uncertain device ownership until reset or terminal teardown. */
+			NVME_CTRLR_ERRLOG(cq->ctrlr,
+					  "Retaining CQ %u after process cleanup failed: rc=%d\n", cq->id, rc);
+			nvme_ctrlr_proc_move_io_cq(cq, cq->bound_proc == proc ? NULL : cq->bound_proc);
+			if (cq->bound_proc == proc) {
+				cq->bound_proc = NULL;
+			}
+		}
+	}
+}
+
 /* Caller holds the lock or this is initial bring-up; state is not shared in either case. */
 static void
 nvme_ctrlr_assert_locked(struct spdk_nvme_ctrlr *ctrlr)
@@ -1963,6 +2081,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ns *ns, *tmp_ns;
 	struct spdk_nvme_qpair	*qpair;
+	struct spdk_nvme_cq *cq, *tmp_cq;
 	int rc = 0, rc_tmp = 0;
 
 	if (nvme_ctrlr_process_init(ctrlr) != 0) {
@@ -1981,6 +2100,22 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	 * own thread outside of the context of the reset.
 	 */
 	if (rc == 0 && !spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
+		TAILQ_FOREACH_SAFE(cq, &ctrlr->active_io_cqs, tailq, tmp_cq) {
+			if (cq->pending || (cq->proc == NULL && cq->refcount == 0)) {
+				TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
+				nvme_ctrlr_proc_move_io_cq(cq, NULL);
+				nvme_ctrlr_force_free_io_cq(cq);
+				continue;
+			}
+			assert(spdk_bit_array_get(ctrlr->free_io_cqids, cq->id));
+			spdk_bit_array_clear(ctrlr->free_io_cqids, cq->id);
+			ctrlr->io_cq_create_timed_out = false;
+			rc_tmp = nvme_transport_ctrlr_connect_io_cq(ctrlr, cq);
+			if (rc_tmp != 0) {
+				cq->pending = ctrlr->io_cq_create_timed_out;
+				rc = rc_tmp;
+			}
+		}
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 			/* Always clear the qid bit here, even for a foreign qpair. We need
@@ -4174,6 +4309,7 @@ nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle)
 	ctrlr_proc->devhandle = devhandle;
 	ctrlr_proc->ref = 0;
 	TAILQ_INIT(&ctrlr_proc->allocated_io_qpairs);
+	TAILQ_INIT(&ctrlr_proc->allocated_io_cqs);
 	STAILQ_INIT(&ctrlr_proc->async_events);
 
 	TAILQ_INSERT_TAIL(&ctrlr->active_procs, ctrlr_proc, tailq);
@@ -4198,6 +4334,7 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
+	nvme_ctrlr_proc_cleanup_io_cqs(proc);
 
 	TAILQ_REMOVE(&ctrlr->active_procs, proc, tailq);
 
@@ -4245,6 +4382,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
+	nvme_ctrlr_proc_cleanup_io_cqs(proc);
 	spdk_free(proc);
 }
 
@@ -4990,6 +5128,11 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->async_event_in_progress_proc = NULL;
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
+	TAILQ_INIT(&ctrlr->active_io_cqs);
+	spdk_nvme_ctrlr_get_default_queue_mgmt_opts(&ctrlr->queue_mgmt_opts,
+			sizeof(ctrlr->queue_mgmt_opts));
+	ctrlr->io_cq_create_timed_out = false;
+	ctrlr->io_cq_delete_timed_out = false;
 	STAILQ_INIT(&ctrlr->queued_aborts);
 	ctrlr->outstanding_aborts = 0;
 
@@ -5082,6 +5225,7 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 			  struct nvme_ctrlr_detach_ctx *ctx)
 {
 	struct spdk_nvme_qpair *qpair, *tmp;
+	struct spdk_nvme_cq *cq, *tmp_cq;
 
 	NVME_CTRLR_DEBUGLOG(ctrlr, "Prepare to destruct SSD\n");
 
@@ -5101,6 +5245,9 @@ nvme_ctrlr_destruct_async(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
+	}
+	TAILQ_FOREACH_SAFE(cq, &ctrlr->active_io_cqs, tailq, tmp_cq) {
+		spdk_nvme_ctrlr_free_io_cq(cq);
 	}
 
 	nvme_ctrlr_free_doorbell_buffer(ctrlr);
@@ -5122,6 +5269,14 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 			return -EAGAIN;
 		}
 		/* Destruct ctrlr forcefully for any other error. */
+	}
+
+	while (!TAILQ_EMPTY(&ctrlr->active_io_cqs)) {
+		struct spdk_nvme_cq *cq = TAILQ_FIRST(&ctrlr->active_io_cqs);
+
+		TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
+		nvme_ctrlr_proc_move_io_cq(cq, NULL);
+		nvme_ctrlr_force_free_io_cq(cq);
 	}
 
 	if (ctx->cb_fn) {
@@ -6284,6 +6439,165 @@ const struct spdk_nvme_transport_id *
 spdk_nvme_ctrlr_get_transport_id(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return &ctrlr->trid;
+}
+
+static int32_t
+nvme_ctrlr_reserve_qid_from_pool(struct spdk_nvme_ctrlr *ctrlr, struct spdk_bit_array *pool,
+				 const char *which, uint16_t qid)
+{
+	assert(pool);
+	if (qid == 0 || qid > ctrlr->opts.num_io_queues) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Requested %s ID %u out of range\n", which, qid);
+		return -1;
+	}
+	if (!spdk_bit_array_get(pool, qid)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Requested %s ID %u is already in use\n", which, qid);
+		return -1;
+	}
+	spdk_bit_array_clear(pool, qid);
+	return qid;
+}
+
+static int32_t
+nvme_ctrlr_alloc_qid_from_pool(struct spdk_nvme_ctrlr *ctrlr, struct spdk_bit_array *pool,
+			       const char *which)
+{
+	uint32_t qid;
+
+	assert(pool);
+	qid = spdk_bit_array_find_first_set(pool, 1);
+	if (qid > ctrlr->opts.num_io_queues) {
+		NVME_CTRLR_ERRLOG(ctrlr, "No free %s queue IDs\n", which);
+		return -1;
+	}
+	spdk_bit_array_clear(pool, qid);
+	return qid;
+}
+
+static bool
+nvme_ctrlr_io_queue_size_is_valid(struct spdk_nvme_ctrlr *ctrlr, uint32_t size,
+				  const char *which)
+{
+	if (size < SPDK_NVME_IO_QUEUE_MIN_ENTRIES || size > UINT16_MAX ||
+	    size > ctrlr->cap.bits.mqes + 1U) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid %s queue size %u (MQES=%u)\n",
+				  which, size, ctrlr->cap.bits.mqes);
+		return false;
+	}
+	return true;
+}
+
+struct spdk_nvme_cq *
+spdk_nvme_ctrlr_alloc_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+			    const struct spdk_nvme_io_cq_opts *user_opts, size_t opts_size)
+{
+	struct spdk_nvme_io_cq_opts opts = {}, local = {};
+	struct spdk_nvme_cq *cq;
+	int32_t cqid;
+
+	if (ctrlr == NULL || !nvme_shared_cq_enabled()) {
+		SPDK_ERRLOG("Independent CQ allocation unavailable\n");
+		return NULL;
+	}
+	opts.io_queue_size = ctrlr->opts.io_queue_size;
+	if (user_opts) {
+		if (opts_size == 0) {
+			NVME_CTRLR_ERRLOG(ctrlr, "CQ opts_size must not be zero\n");
+			return NULL;
+		}
+		memcpy(&local, user_opts, spdk_min(opts_size, sizeof(local)));
+		opts.io_queue_size = SPDK_GET_FIELD(&local, io_queue_size, 0, opts_size);
+		if (opts.io_queue_size == 0) {
+			opts.io_queue_size = ctrlr->opts.io_queue_size;
+		}
+		opts.cqid = SPDK_GET_FIELD(&local, cqid, 0, opts_size);
+		opts.cq.vaddr = SPDK_GET_FIELD(&local, cq.vaddr, NULL, opts_size);
+		opts.cq.paddr = SPDK_GET_FIELD(&local, cq.paddr, 0, opts_size);
+		opts.cq.buffer_size = SPDK_GET_FIELD(&local, cq.buffer_size, 0, opts_size);
+	}
+	opts.opts_size = sizeof(opts);
+	if (!nvme_ctrlr_io_queue_size_is_valid(ctrlr, opts.io_queue_size, "CQ")) {
+		return NULL;
+	}
+	if ((opts.cq.vaddr && opts.cq.buffer_size <
+	     (uint64_t)opts.io_queue_size * sizeof(struct spdk_nvme_cpl)) ||
+	    (!opts.cq.vaddr && opts.cq.paddr)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid CQ ring address or buffer size\n");
+		return NULL;
+	}
+	nvme_ctrlr_lock(ctrlr);
+	if (ctrlr->queue_mgmt_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ ||
+	    ctrlr->state != NVME_CTRLR_STATE_READY || ctrlr->is_failed || ctrlr->is_removed) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Independent CQ requires a ready controller in SHARED_CQ mode\n");
+		nvme_ctrlr_unlock(ctrlr);
+		return NULL;
+	}
+	cqid = opts.cqid ?
+	       nvme_ctrlr_reserve_qid_from_pool(ctrlr, ctrlr->free_io_cqids, "CQ", opts.cqid) :
+	       nvme_ctrlr_alloc_qid_from_pool(ctrlr, ctrlr->free_io_cqids, "CQ");
+	if (cqid < 0) {
+		nvme_ctrlr_unlock(ctrlr);
+		return NULL;
+	}
+	ctrlr->io_cq_create_timed_out = false;
+	cq = nvme_transport_ctrlr_create_io_cq(ctrlr, cqid, &opts);
+	if (cq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to create independent CQ %u\n", cqid);
+		if (!ctrlr->io_cq_create_timed_out) {
+			spdk_bit_array_set(ctrlr->free_io_cqids, cqid);
+		}
+		nvme_ctrlr_unlock(ctrlr);
+		return NULL;
+	}
+	cq->ctrlr = ctrlr;
+	cq->id = cqid;
+	cq->refcount = 0;
+	cq->num_entries = opts.io_queue_size;
+	cq->bound_proc = NULL;
+	cq->pending = ctrlr->io_cq_create_timed_out;
+	TAILQ_INSERT_TAIL(&ctrlr->active_io_cqs, cq, tailq);
+	nvme_ctrlr_proc_move_io_cq(cq, nvme_ctrlr_get_current_process(ctrlr));
+	if (cq->pending) {
+		nvme_ctrlr_unlock(ctrlr);
+		return NULL;
+	}
+	nvme_ctrlr_unlock(ctrlr);
+	return cq;
+}
+
+int
+spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr_process *owner_proc;
+	uint16_t cqid;
+	int rc;
+
+	if (cq == NULL) {
+		return 0;
+	}
+	ctrlr = cq->ctrlr;
+	cqid = cq->id;
+	nvme_ctrlr_lock(ctrlr);
+	if ((cq->pending || cq->refcount) && !ctrlr->is_removed) {
+		nvme_ctrlr_unlock(ctrlr);
+		return -EBUSY;
+	}
+	owner_proc = cq->proc;
+	TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
+	nvme_ctrlr_proc_move_io_cq(cq, NULL);
+	ctrlr->io_cq_delete_timed_out = false;
+	rc = nvme_transport_ctrlr_delete_io_cq(ctrlr, cq);
+	if (rc != 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to delete independent CQ %u: rc=%d\n", cqid, rc);
+		cq->pending = ctrlr->io_cq_delete_timed_out;
+		TAILQ_INSERT_TAIL(&ctrlr->active_io_cqs, cq, tailq);
+		nvme_ctrlr_proc_move_io_cq(cq, owner_proc);
+	} else if (ctrlr->free_io_cqids) {
+		spdk_bit_array_set(ctrlr->free_io_cqids, cqid);
+	}
+	nvme_ctrlr_unlock(ctrlr);
+	return rc;
 }
 
 int32_t

@@ -1971,6 +1971,36 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		const struct spdk_nvme_io_qpair_opts *opts,
 		size_t opts_size);
 
+struct spdk_nvme_cq;
+
+/** Controller queue-management mode. Legacy coupled qpairs remain the default. */
+enum spdk_nvme_queue_mgmt_mode {
+	SPDK_NVME_QUEUE_MGMT_MODE_LEGACY = 0,
+	SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ = 1,
+};
+
+struct spdk_nvme_queue_mgmt_opts {
+	size_t opts_size;
+	enum spdk_nvme_queue_mgmt_mode mode;
+};
+
+/** Initialize queue-management options to legacy mode. */
+void spdk_nvme_ctrlr_get_default_queue_mgmt_opts(struct spdk_nvme_queue_mgmt_opts *opts,
+		size_t opts_size);
+
+/**
+ * Select queue management before allocating any I/O queues.
+ *
+ * \return 0 on success, -EINVAL for invalid options, -ENOTSUP when shared CQ
+ * support is not built, or -EBUSY while any I/O SQ/CQ is allocated.
+ */
+int spdk_nvme_ctrlr_set_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+					const struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size);
+
+/** Read the controller's current queue-management options. Returns 0 or -EINVAL. */
+int spdk_nvme_ctrlr_get_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size);
+
 /** Options for an independently allocated PCIe completion queue. */
 struct spdk_nvme_io_cq_opts {
 	/** Number of CQ entries, or zero to use the controller default. */
@@ -1988,6 +2018,30 @@ struct spdk_nvme_io_cq_opts {
 	size_t opts_size;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_cq_opts) == 40, "Incorrect size");
+
+/**
+ * Allocate an independent PCIe CQ in SHARED_CQ mode.
+ *
+ * Only fully covered option fields are read; opts_size must be nonzero when
+ * opts is non-NULL. A zero queue size uses the controller default. Caller-owned
+ * ring memory must remain DMA-accessible until successful deletion or reset
+ * cleanup. CQ depth is independent of individual and aggregate SQ depth; the
+ * caller must provision sufficient completion capacity for its workload.
+ *
+ * \return CQ handle, or NULL on failure. A timed-out create retains internal
+ * ownership of the ring and CQID until reset or controller destruction.
+ */
+struct spdk_nvme_cq *spdk_nvme_ctrlr_alloc_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+		const struct spdk_nvme_io_cq_opts *opts, size_t opts_size);
+
+/**
+ * Free an independent CQ after all bound SQs have been freed.
+ *
+ * \return 0 on success, -EBUSY if bound or pending, or another negative errno
+ * on failure. Only success invalidates the handle. A failed delete retains
+ * the handle, ring and CQID; a timed-out delete requires controller reset.
+ */
+int spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq);
 
 /**
  * Connect a newly created I/O qpair.
@@ -4915,7 +4969,6 @@ typedef void (*spdk_nvme_reg_cb)(void *ctx, uint64_t value, const struct spdk_nv
 struct nvme_request;
 
 struct spdk_nvme_transport;
-struct spdk_nvme_cq;
 
 struct spdk_nvme_transport_ops {
 	char name[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
