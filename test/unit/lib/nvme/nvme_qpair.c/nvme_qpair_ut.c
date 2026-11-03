@@ -79,7 +79,8 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
-	ctrlr->free_io_qids = NULL;
+	ctrlr->free_io_sqids = NULL;
+	ctrlr->free_io_cqids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
 	MOCK_CLEAR(spdk_zmalloc);

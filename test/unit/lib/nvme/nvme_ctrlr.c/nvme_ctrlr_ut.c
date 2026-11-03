@@ -1619,13 +1619,17 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 
 	ctrlr->page_size = 0x1000;
 	ctrlr->opts.num_io_queues = num_io_queues;
-	ctrlr->free_io_qids = spdk_bit_array_create(num_io_queues + 1);
+	ctrlr->free_io_sqids = spdk_bit_array_create(num_io_queues + 1);
+	ctrlr->free_io_cqids = spdk_bit_array_create(num_io_queues + 1);
 	ctrlr->state = NVME_CTRLR_STATE_READY;
-	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_qids != NULL);
+	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_sqids != NULL);
+	SPDK_CU_ASSERT_FATAL(ctrlr->free_io_cqids != NULL);
 
-	spdk_bit_array_clear(ctrlr->free_io_qids, 0);
+	spdk_bit_array_clear(ctrlr->free_io_sqids, 0);
+	spdk_bit_array_clear(ctrlr->free_io_cqids, 0);
 	for (i = 1; i <= num_io_queues; i++) {
-		spdk_bit_array_set(ctrlr->free_io_qids, i);
+		spdk_bit_array_set(ctrlr->free_io_sqids, i);
+		spdk_bit_array_set(ctrlr->free_io_cqids, i);
 	}
 }
 
@@ -1633,6 +1637,51 @@ static void
 cleanup_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	nvme_ctrlr_destruct(ctrlr);
+}
+
+static void
+test_alloc_qid_independent_namespaces(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int32_t qid;
+
+	setup_qpairs(&ctrlr, 4);
+	/* Model independently occupied SQID 1 and CQID 2. */
+	spdk_bit_array_clear(ctrlr.free_io_sqids, 1);
+	spdk_bit_array_clear(ctrlr.free_io_cqids, 2);
+	qid = spdk_nvme_ctrlr_alloc_qid(&ctrlr);
+	CU_ASSERT(qid == 3);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_sqids, 3));
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 3));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 1));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_sqids, 2));
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_qid(&ctrlr) == 4);
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_qid(&ctrlr) == -1);
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 1));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_sqids, 2));
+	spdk_nvme_ctrlr_free_qid(&ctrlr, 3);
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_sqids, 3));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 3));
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_qid(&ctrlr) == 3);
+	cleanup_qpairs(&ctrlr);
+}
+
+static void
+test_alloc_qid_requires_common_free_id(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	setup_qpairs(&ctrlr, 2);
+	spdk_bit_array_clear(ctrlr.free_io_sqids, 1);
+	spdk_bit_array_clear(ctrlr.free_io_cqids, 2);
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_qid(&ctrlr) == -1);
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_sqids, 0));
+	CU_ASSERT(!spdk_bit_array_get(ctrlr.free_io_cqids, 0));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_sqids, 2));
+	CU_ASSERT(spdk_bit_array_get(ctrlr.free_io_cqids, 1));
+	spdk_bit_array_set(ctrlr.free_io_cqids, 2);
+	CU_ASSERT(spdk_nvme_ctrlr_alloc_qid(&ctrlr) == 2);
+	cleanup_qpairs(&ctrlr);
 }
 
 static void
@@ -4042,6 +4091,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_en_0_rdy_0_ams_vs);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_delay);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_rr_1);
+	CU_ADD_TEST(suite, test_alloc_qid_independent_namespaces);
+	CU_ADD_TEST(suite, test_alloc_qid_requires_common_free_id);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_ctrlr_opts);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_io_qpair_opts);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_wrr_1);

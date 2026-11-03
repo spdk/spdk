@@ -1217,7 +1217,9 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_nvm_ctrlr_data	*cdata_nvm;
 	struct spdk_nvme_kv_ctrlr_data	*cdata_kv;
 
-	struct spdk_bit_array		*free_io_qids;
+	/* Coupled qpairs reserve the same ID in both independent namespaces. */
+	struct spdk_bit_array		*free_io_sqids;
+	struct spdk_bit_array		*free_io_cqids;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 
 	struct spdk_nvme_ctrlr_opts	opts;

@@ -784,7 +784,8 @@ test_nvme_pcie_ctrlr_construct_admin_qpair(void)
 	pctrlr.doorbell_base = (void *)0xF7000000;
 	pctrlr.doorbell_stride_u32 = 1;
 	pctrlr.ctrlr.flags = 0;
-	pctrlr.ctrlr.free_io_qids = NULL;
+	pctrlr.ctrlr.free_io_sqids = NULL;
+	pctrlr.ctrlr.free_io_cqids = NULL;
 	pctrlr.ctrlr.is_resetting = false;
 	pctrlr.ctrlr.is_failed = false;
 	pctrlr.ctrlr.is_destructed = false;

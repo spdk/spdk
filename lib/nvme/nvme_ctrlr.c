@@ -538,7 +538,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr_lock(ctrlr);
 
 	if (spdk_unlikely(ctrlr->state != NVME_CTRLR_STATE_READY)) {
-		/* When controller is resetting or initializing, free_io_qids is deleted or not created yet.
+		/* When controller is resetting or initializing, free_io_sqids is deleted or not created yet.
 		 * We can't create IO qpair in that case */
 		goto unlock;
 	}
@@ -587,7 +587,7 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		NVME_CTRLR_ERRLOG(ctrlr, "nvme_transport_ctrlr_connect_io_qpair() failed\n");
 		nvme_ctrlr_proc_remove_io_qpair(qpair);
 		TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
-		spdk_bit_array_set(ctrlr->free_io_qids, qpair->id);
+		spdk_nvme_ctrlr_free_qid(ctrlr, qpair->id);
 		nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
 		qpair = NULL;
 		goto unlock;
@@ -1887,7 +1887,8 @@ nvme_ctrlr_disconnect_done(struct spdk_nvme_ctrlr *ctrlr)
 	/* I/O Command Set Specific Identify Controller data is invalidated during reset */
 	nvme_ctrlr_free_iocs_specific_data(ctrlr);
 
-	spdk_bit_array_free(&ctrlr->free_io_qids);
+	spdk_bit_array_free(&ctrlr->free_io_sqids);
+	spdk_bit_array_free(&ctrlr->free_io_cqids);
 
 	/* Set the state back to DISCONNECTED to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISCONNECTED, NVME_TIMEOUT_INFINITE);
@@ -1986,8 +1987,10 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 			 * to make sure another process doesn't get the chance to grab that
 			 * qid.
 			 */
-			assert(spdk_bit_array_get(ctrlr->free_io_qids, qpair->id));
-			spdk_bit_array_clear(ctrlr->free_io_qids, qpair->id);
+			assert(spdk_bit_array_get(ctrlr->free_io_sqids, qpair->id));
+			assert(spdk_bit_array_get(ctrlr->free_io_cqids, qpair->id));
+			spdk_bit_array_clear(ctrlr->free_io_sqids, qpair->id);
+			spdk_bit_array_clear(ctrlr->free_io_cqids, qpair->id);
 			if (nvme_ctrlr_get_current_process(ctrlr) != qpair->active_proc) {
 				/*
 				 * We cannot reinitialize a foreign qpair. The qpair's owning
@@ -3301,8 +3304,11 @@ nvme_ctrlr_set_num_queues_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		}
 	}
 
-	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
-	if (ctrlr->free_io_qids == NULL) {
+	ctrlr->free_io_sqids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
+	ctrlr->free_io_cqids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
+	if (ctrlr->free_io_sqids == NULL || ctrlr->free_io_cqids == NULL) {
+		spdk_bit_array_free(&ctrlr->free_io_sqids);
+		spdk_bit_array_free(&ctrlr->free_io_cqids);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
 		return;
 	}
@@ -4975,7 +4981,8 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	ctrlr->flags = 0;
-	ctrlr->free_io_qids = NULL;
+	ctrlr->free_io_sqids = NULL;
+	ctrlr->free_io_cqids = NULL;
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
 	ctrlr->is_destructed = false;
@@ -5129,7 +5136,8 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		nvme_ctrlr_free_ns(ctrlr, ns);
 	}
 
-	spdk_bit_array_free(&ctrlr->free_io_qids);
+	spdk_bit_array_free(&ctrlr->free_io_sqids);
+	spdk_bit_array_free(&ctrlr->free_io_cqids);
 
 	free(ctrlr->ana_log_page);
 	free(ctrlr->copied_ana_desc);
@@ -6283,16 +6291,25 @@ spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t qid;
 
-	assert(ctrlr->free_io_qids);
+	assert(ctrlr->free_io_sqids);
+	assert(ctrlr->free_io_cqids);
 	nvme_ctrlr_lock(ctrlr);
-	qid = spdk_bit_array_find_first_set(ctrlr->free_io_qids, 1);
+	/* A coupled qpair needs the same ID free in both namespaces. */
+	for (qid = spdk_bit_array_find_first_set(ctrlr->free_io_sqids, 1);
+	     qid <= ctrlr->opts.num_io_queues;
+	     qid = spdk_bit_array_find_first_set(ctrlr->free_io_sqids, qid + 1)) {
+		if (spdk_bit_array_get(ctrlr->free_io_cqids, qid)) {
+			break;
+		}
+	}
 	if (qid > ctrlr->opts.num_io_queues) {
 		NVME_CTRLR_ERRLOG(ctrlr, "No free I/O queue IDs\n");
 		nvme_ctrlr_unlock(ctrlr);
 		return -1;
 	}
 
-	spdk_bit_array_clear(ctrlr->free_io_qids, qid);
+	spdk_bit_array_clear(ctrlr->free_io_sqids, qid);
+	spdk_bit_array_clear(ctrlr->free_io_cqids, qid);
 	nvme_ctrlr_unlock(ctrlr);
 	return qid;
 }
@@ -6304,8 +6321,11 @@ spdk_nvme_ctrlr_free_qid(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid)
 
 	nvme_ctrlr_lock(ctrlr);
 
-	if (spdk_likely(ctrlr->free_io_qids)) {
-		spdk_bit_array_set(ctrlr->free_io_qids, qid);
+	if (spdk_likely(ctrlr->free_io_sqids)) {
+		spdk_bit_array_set(ctrlr->free_io_sqids, qid);
+	}
+	if (spdk_likely(ctrlr->free_io_cqids)) {
+		spdk_bit_array_set(ctrlr->free_io_cqids, qid);
 	}
 
 	nvme_ctrlr_unlock(ctrlr);
