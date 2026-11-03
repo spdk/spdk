@@ -4897,6 +4897,8 @@ typedef void (*spdk_nvme_reg_cb)(void *ctx, uint64_t value, const struct spdk_nv
 struct nvme_request;
 
 struct spdk_nvme_transport;
+struct spdk_nvme_cq;
+struct spdk_nvme_io_cq_opts;
 
 struct spdk_nvme_transport_ops {
 	char name[SPDK_NVMF_TRSTRING_MAX_LEN + 1];
@@ -5009,6 +5011,20 @@ struct spdk_nvme_transport_ops {
 
 	/* Optional callback for transports to process transport-specific events. E.g. poll RDMA_CM event channel */
 	int (*ctrlr_process_transport_events)(struct spdk_nvme_ctrlr *ctrlr);
+
+	/* Optional operations for independently managed PCIe queues. */
+	struct spdk_nvme_cq *(*ctrlr_create_io_cq)(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+			const struct spdk_nvme_io_cq_opts *opts);
+
+	int (*ctrlr_delete_io_cq)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	/* Release host resources only after the controller can no longer DMA to the CQ. */
+	int (*ctrlr_delete_io_cq_force)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	struct spdk_nvme_qpair *(*ctrlr_create_io_sq)(struct spdk_nvme_ctrlr *ctrlr,
+			struct spdk_nvme_cq *cq, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
+
+	int (*ctrlr_connect_io_cq)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
 };
 
 /**

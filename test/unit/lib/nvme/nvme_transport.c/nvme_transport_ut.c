@@ -27,6 +27,81 @@ DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 DEFINE_STUB(spdk_nvme_ctrlr_is_fabrics, bool, (struct spdk_nvme_ctrlr *ctrlr), false);
 
 static void
+test_nvme_managed_queue_unsupported(void)
+{
+	struct spdk_nvme_transport transport = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	memcpy(ctrlr.trid.trstring, "ut_unsupported", sizeof("ut_unsupported"));
+	memcpy(transport.ops.name, ctrlr.trid.trstring, sizeof(transport.ops.name));
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &transport, link);
+	CU_ASSERT(nvme_transport_ctrlr_create_io_cq(&ctrlr, 1, NULL) == NULL);
+	CU_ASSERT(nvme_transport_ctrlr_delete_io_cq(&ctrlr, NULL) == -ENOTSUP);
+	CU_ASSERT(nvme_transport_ctrlr_delete_io_cq_force(&ctrlr, NULL) == -ENOTSUP);
+	CU_ASSERT(nvme_transport_ctrlr_connect_io_cq(&ctrlr, NULL) == -ENOTSUP);
+	CU_ASSERT(nvme_transport_ctrlr_create_io_sq(&ctrlr, NULL, 1, NULL) == NULL);
+	TAILQ_REMOVE(&g_spdk_nvme_transports, &transport, link);
+}
+
+static int
+ut_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	return -EAGAIN;
+}
+
+static int
+ut_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	return -EIO;
+}
+
+static struct spdk_nvme_cq *
+ut_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+		const struct spdk_nvme_io_cq_opts *opts)
+{
+	CU_ASSERT(cqid == 7);
+	return NULL;
+}
+
+static struct spdk_nvme_qpair g_managed_sq;
+
+static struct spdk_nvme_qpair *
+ut_create_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq,
+		uint16_t sqid, const struct spdk_nvme_io_qpair_opts *opts)
+{
+	CU_ASSERT(sqid == 9);
+	g_managed_sq.id = sqid;
+	return &g_managed_sq;
+}
+
+static void
+test_nvme_managed_queue_dispatch(void)
+{
+	struct spdk_nvme_transport transport = {
+		.ops = {
+			.name = "ut_managed",
+			.ctrlr_create_io_cq = ut_create_io_cq,
+			.ctrlr_delete_io_cq = ut_delete_io_cq,
+			.ctrlr_delete_io_cq_force = ut_connect_io_cq,
+			.ctrlr_connect_io_cq = ut_connect_io_cq,
+			.ctrlr_create_io_sq = ut_create_io_sq,
+		},
+	};
+	struct spdk_nvme_ctrlr ctrlr = {};
+
+	memcpy(ctrlr.trid.trstring, transport.ops.name, sizeof(transport.ops.name));
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &transport, link);
+	CU_ASSERT(nvme_transport_ctrlr_create_io_cq(&ctrlr, 7, NULL) == NULL);
+	CU_ASSERT(nvme_transport_ctrlr_delete_io_cq(&ctrlr, NULL) == -EIO);
+	CU_ASSERT(nvme_transport_ctrlr_delete_io_cq_force(&ctrlr, NULL) == -EAGAIN);
+	CU_ASSERT(nvme_transport_ctrlr_connect_io_cq(&ctrlr, NULL) == -EAGAIN);
+	memset(&g_managed_sq, 0, sizeof(g_managed_sq));
+	CU_ASSERT(nvme_transport_ctrlr_create_io_sq(&ctrlr, NULL, 9, NULL) == &g_managed_sq);
+	CU_ASSERT(g_managed_sq.transport == &transport);
+	TAILQ_REMOVE(&g_spdk_nvme_transports, &transport, link);
+}
+
+static void
 ut_reset_transport_registry(void)
 {
 	TAILQ_INIT(&g_spdk_nvme_transports);
@@ -52,6 +127,8 @@ test_nvme_transport_register_ext(void)
 	struct spdk_nvme_transport_ops ops = {
 		.ctrlr_ready = ut_registration_ready,
 		.ctrlr_process_transport_events = ut_registration_events,
+		.ctrlr_create_io_cq = ut_create_io_cq,
+		.ctrlr_connect_io_cq = ut_connect_io_cq,
 	};
 	const struct spdk_nvme_transport *t;
 
@@ -62,6 +139,8 @@ test_nvme_transport_register_ext(void)
 	SPDK_CU_ASSERT_FATAL(t != NULL);
 	CU_ASSERT(t->ops.ctrlr_ready == ut_registration_ready);
 	CU_ASSERT(t->ops.ctrlr_process_transport_events == ut_registration_events);
+	CU_ASSERT(t->ops.ctrlr_create_io_cq == ut_create_io_cq);
+	CU_ASSERT(t->ops.ctrlr_connect_io_cq == ut_connect_io_cq);
 
 	snprintf(ops.name, sizeof(ops.name), "ut_ext_small");
 	spdk_nvme_transport_register_ext(&ops,
@@ -70,6 +149,8 @@ test_nvme_transport_register_ext(void)
 	SPDK_CU_ASSERT_FATAL(t != NULL);
 	CU_ASSERT(t->ops.ctrlr_ready == ut_registration_ready);
 	CU_ASSERT(t->ops.ctrlr_process_transport_events == NULL);
+	CU_ASSERT(t->ops.ctrlr_create_io_cq == NULL);
+	CU_ASSERT(t->ops.ctrlr_connect_io_cq == NULL);
 
 	snprintf(ops.name, sizeof(ops.name), "ut_ext_big");
 	spdk_nvme_transport_register_ext(&ops, sizeof(ops) + 4096);
@@ -85,6 +166,8 @@ test_nvme_transport_register_legacy(void)
 	struct spdk_nvme_transport_ops ops = {
 		.ctrlr_ready = ut_registration_ready,
 		.ctrlr_process_transport_events = ut_registration_events,
+		.ctrlr_create_io_cq = ut_create_io_cq,
+		.ctrlr_connect_io_cq = ut_connect_io_cq,
 	};
 	const struct spdk_nvme_transport *t;
 
@@ -95,6 +178,8 @@ test_nvme_transport_register_legacy(void)
 	SPDK_CU_ASSERT_FATAL(t != NULL);
 	CU_ASSERT(t->ops.ctrlr_ready == ut_registration_ready);
 	CU_ASSERT(t->ops.ctrlr_process_transport_events == ut_registration_events);
+	CU_ASSERT(t->ops.ctrlr_create_io_cq == NULL);
+	CU_ASSERT(t->ops.ctrlr_connect_io_cq == NULL);
 	ut_reset_transport_registry();
 }
 
@@ -301,6 +386,8 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("nvme_transport", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_get_transport);
+	CU_ADD_TEST(suite, test_nvme_managed_queue_unsupported);
+	CU_ADD_TEST(suite, test_nvme_managed_queue_dispatch);
 	CU_ADD_TEST(suite, test_nvme_transport_register_ext);
 	CU_ADD_TEST(suite, test_nvme_transport_register_legacy);
 	CU_ADD_TEST(suite, test_nvme_transport_register_invalid_size);

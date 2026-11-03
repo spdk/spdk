@@ -516,6 +516,82 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	}
 }
 
+struct spdk_nvme_cq *
+nvme_transport_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+				  const struct spdk_nvme_io_cq_opts *opts)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_create_io_cq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "transport %s does not support independent completion queues\n",
+				  transport->ops.name);
+		return NULL;
+	}
+
+	return transport->ops.ctrlr_create_io_cq(ctrlr, cqid, opts);
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_delete_io_cq == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_delete_io_cq(ctrlr, cq);
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_delete_io_cq_force == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_delete_io_cq_force(ctrlr, cq);
+}
+
+int
+nvme_transport_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_connect_io_cq == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_connect_io_cq(ctrlr, cq);
+}
+
+struct spdk_nvme_qpair *
+nvme_transport_ctrlr_create_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq,
+				  uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	struct spdk_nvme_qpair *qpair;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_create_io_sq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "transport %s does not support independent submission queues\n",
+				  transport->ops.name);
+		return NULL;
+	}
+
+	qpair = transport->ops.ctrlr_create_io_sq(ctrlr, cq, qid, opts);
+	if (qpair != NULL && !nvme_qpair_is_admin_queue(qpair)) {
+		qpair->transport = transport;
+	}
+	return qpair;
+}
+
 static void
 nvme_transport_connect_qpair_fail(struct spdk_nvme_qpair *qpair, void *unused)
 {
