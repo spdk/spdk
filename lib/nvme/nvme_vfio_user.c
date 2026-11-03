@@ -270,7 +270,7 @@ nvme_vfio_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		return -EIO;
 	}
 
-	if (nvme_vfio_ctrlr_set_acq(ctrlr, vadminq->cpl_bus_addr)) {
+	if (nvme_vfio_ctrlr_set_acq(ctrlr, vadminq->cq->cpl_bus_addr)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_acq() failed\n");
 		return -EIO;
 	}

@@ -121,19 +121,34 @@ enum nvme_pcie_qpair_state {
 	NVME_PCIE_QPAIR_FAILED,
 };
 
+/* PCIe transport extensions for an NVMe completion queue. */
+struct nvme_pcie_cq {
+	/* Completion queue head doorbell */
+	volatile uint32_t *cq_hdbl;
+
+	struct spdk_nvme_cpl *cpl;
+	uint16_t num_entries;
+	uint16_t cq_head;
+	uint16_t cqid;
+	uint8_t phase : 1;
+
+	volatile uint32_t *shadow_cq_hdbl;
+	volatile uint32_t *shadow_cq_eventidx;
+	struct spdk_nvme_cpl *cq_vaddr;
+	uint64_t cpl_bus_addr;
+};
+
 /* PCIe transport extensions for spdk_nvme_qpair */
 struct nvme_pcie_qpair {
 	/* Submission queue tail doorbell */
 	volatile uint32_t *sq_tdbl;
 
-	/* Completion queue head doorbell */
-	volatile uint32_t *cq_hdbl;
-
 	/* Submission queue */
 	struct spdk_nvme_cmd *cmd;
 
-	/* Completion queue */
-	struct spdk_nvme_cpl *cpl;
+	/* Completion queue backing store. */
+	struct nvme_pcie_cq *cq;
+	struct nvme_pcie_cq cq_local;
 
 	TAILQ_HEAD(, nvme_tracker) free_tr;
 	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker) outstanding_tr;
@@ -153,11 +168,9 @@ struct nvme_pcie_qpair {
 
 	uint16_t last_sq_tail;
 	uint16_t sq_tail;
-	uint16_t cq_head;
 	uint16_t sq_head;
 
 	struct {
-		uint8_t phase			: 1;
 		uint8_t delay_cmd_submit	: 1;
 		uint8_t has_shadow_doorbell	: 1;
 		uint8_t has_pending_vtophys_failures : 1;
@@ -178,14 +191,8 @@ struct nvme_pcie_qpair {
 		/* Submission queue shadow tail doorbell */
 		volatile uint32_t *sq_tdbl;
 
-		/* Completion queue shadow head doorbell */
-		volatile uint32_t *cq_hdbl;
-
 		/* Submission queue event index */
 		volatile uint32_t *sq_eventidx;
-
-		/* Completion queue event index */
-		volatile uint32_t *cq_eventidx;
 	} shadow_doorbell;
 
 	/*
@@ -196,10 +203,8 @@ struct nvme_pcie_qpair {
 	bool shared_stats;
 
 	uint64_t cmd_bus_addr;
-	uint64_t cpl_bus_addr;
 
 	struct spdk_nvme_cmd *sq_vaddr;
-	struct spdk_nvme_cpl *cq_vaddr;
 };
 
 static inline struct nvme_pcie_qpair *
@@ -284,15 +289,15 @@ nvme_pcie_qpair_ring_cq_doorbell(struct spdk_nvme_qpair *qpair)
 	if (spdk_unlikely(pqpair->flags.has_shadow_doorbell)) {
 		pqpair->stat->cq_shadow_doorbell_updates++;
 		need_mmio = nvme_pcie_qpair_update_mmio_required(
-				    pqpair->cq_head,
-				    pqpair->shadow_doorbell.cq_hdbl,
-				    pqpair->shadow_doorbell.cq_eventidx);
+				    pqpair->cq->cq_head,
+				    pqpair->cq->shadow_cq_hdbl,
+				    pqpair->cq->shadow_cq_eventidx);
 	}
 
 	if (spdk_likely(need_mmio)) {
 		pqpair->stat->cq_mmio_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
-		spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
+		spdk_mmio_write_4(pqpair->cq->cq_hdbl, pqpair->cq->cq_head);
 		g_thread_mmio_ctrlr = NULL;
 	}
 }

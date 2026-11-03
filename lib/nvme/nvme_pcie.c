@@ -1011,7 +1011,7 @@ nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 		return -EIO;
 	}
 
-	if (nvme_pcie_ctrlr_set_acq(pctrlr, padminq->cpl_bus_addr)) {
+	if (nvme_pcie_ctrlr_set_acq(pctrlr, padminq->cq->cpl_bus_addr)) {
 		NVME_CTRLR_ERRLOG(ctrlr, "set_acq() failed\n");
 		return -EIO;
 	}

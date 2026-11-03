@@ -43,7 +43,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	uint32_t i;
 
 	/* all head/tail vals are set to 0 */
-	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->sq_head = pqpair->cq_head = 0;
+	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->sq_head = pqpair->cq->cq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -52,9 +52,9 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	 *  we'll toggle the bit each time when the completion queue
 	 *  rolls over.
 	 */
-	pqpair->flags.phase = 1;
-	for (i = 0; i < pqpair->num_entries; i++) {
-		pqpair->cpl[i].status.p = 0;
+	pqpair->cq->phase = 1;
+	for (i = 0; i < pqpair->cq->num_entries; i++) {
+		pqpair->cq->cpl[i].status.p = 0;
 	}
 
 	return 0;
@@ -137,9 +137,13 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	uint64_t		sq_paddr = 0;
 	uint64_t		cq_paddr = 0;
 
+	pqpair->cq = &pqpair->cq_local;
+	pqpair->cq->num_entries = pqpair->num_entries;
+	pqpair->cq->cqid = qpair->id;
+
 	if (opts) {
 		pqpair->sq_vaddr = opts->sq.vaddr;
-		pqpair->cq_vaddr = opts->cq.vaddr;
+		pqpair->cq->cq_vaddr = opts->cq.vaddr;
 		pqpair->flags.disable_pcie_sgl_merge = opts->disable_pcie_sgl_merge;
 		sq_paddr = opts->sq.paddr;
 		cq_paddr = opts->cq.paddr;
@@ -204,31 +208,31 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 		}
 	}
 
-	if (pqpair->cq_vaddr) {
-		pqpair->cpl = pqpair->cq_vaddr;
+	if (pqpair->cq->cq_vaddr) {
+		pqpair->cq->cpl = pqpair->cq->cq_vaddr;
 	} else {
-		queue_len = pqpair->num_entries * sizeof(struct spdk_nvme_cpl);
+		queue_len = pqpair->cq->num_entries * sizeof(struct spdk_nvme_cpl);
 		queue_align = spdk_max(spdk_align32pow2(queue_len), page_align);
 		numa_id = spdk_nvme_ctrlr_get_numa_id(ctrlr);
-		pqpair->cpl = spdk_zmalloc(queue_len, queue_align, NULL, numa_id, flags);
-		if (pqpair->cpl == NULL) {
+		pqpair->cq->cpl = spdk_zmalloc(queue_len, queue_align, NULL, numa_id, flags);
+		if (pqpair->cq->cpl == NULL) {
 			NVME_QPAIR_ERRLOG(qpair, "alloc qpair_cpl failed\n");
 			return -ENOMEM;
 		}
 	}
 	if (cq_paddr) {
-		assert(pqpair->cq_vaddr != NULL);
-		pqpair->cpl_bus_addr = cq_paddr;
+		assert(pqpair->cq->cq_vaddr != NULL);
+		pqpair->cq->cpl_bus_addr = cq_paddr;
 	} else {
-		pqpair->cpl_bus_addr =  nvme_pcie_vtophys(qpair, pqpair->cpl, NULL);
-		if (pqpair->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
-			NVME_QPAIR_ERRLOG(qpair, "spdk_vtophys(pqpair->cpl) failed\n");
+		pqpair->cq->cpl_bus_addr =  nvme_pcie_vtophys(qpair, pqpair->cq->cpl, NULL);
+		if (pqpair->cq->cpl_bus_addr == SPDK_VTOPHYS_ERROR) {
+			NVME_QPAIR_ERRLOG(qpair, "spdk_vtophys(pqpair->cq->cpl) failed\n");
 			return -EFAULT;
 		}
 	}
 
 	pqpair->sq_tdbl = pctrlr->doorbell_base + (2 * qpair->id + 0) * pctrlr->doorbell_stride_u32;
-	pqpair->cq_hdbl = pctrlr->doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
+	pqpair->cq->cq_hdbl = pctrlr->doorbell_base + (2 * qpair->id + 1) * pctrlr->doorbell_stride_u32;
 
 	/*
 	 * Reserve space for all of the trackers in a single allocation.
@@ -378,7 +382,7 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->opc = SPDK_NVME_OPC_CREATE_IO_CQ;
 
 	cmd->cdw10_bits.create_io_q.qid = io_que->id;
-	cmd->cdw10_bits.create_io_q.qsize = pqpair->num_entries - 1;
+	cmd->cdw10_bits.create_io_q.qsize = pqpair->cq->num_entries - 1;
 
 	cmd->cdw11_bits.create_io_cq.pc = 1;
 	if (ien) {
@@ -389,7 +393,8 @@ nvme_pcie_ctrlr_cmd_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 		cmd->cdw11_bits.create_io_cq.iv = io_que->id;
 	}
 
-	cmd->dptr.prp.prp1 = pqpair->cpl_bus_addr;
+	pqpair->cq->cqid = io_que->id;
+	cmd->dptr.prp.prp1 = pqpair->cq->cpl_bus_addr;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
 }
@@ -414,7 +419,7 @@ nvme_pcie_ctrlr_cmd_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
 	cmd->cdw10_bits.create_io_q.qsize = pqpair->num_entries - 1;
 	cmd->cdw11_bits.create_io_sq.pc = 1;
 	cmd->cdw11_bits.create_io_sq.qprio = io_que->qprio;
-	cmd->cdw11_bits.create_io_sq.cqid = io_que->id;
+	cmd->cdw11_bits.create_io_sq.cqid = pqpair->cq->cqid;
 	cmd->dptr.prp.prp1 = pqpair->cmd_bus_addr;
 
 	return nvme_ctrlr_submit_admin_request(ctrlr, req);
@@ -505,12 +510,12 @@ nvme_completion_create_sq_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 	if (ctrlr->shadow_doorbell) {
 		pqpair->shadow_doorbell.sq_tdbl = ctrlr->shadow_doorbell + (2 * qpair->id + 0) *
 						  pctrlr->doorbell_stride_u32;
-		pqpair->shadow_doorbell.cq_hdbl = ctrlr->shadow_doorbell + (2 * qpair->id + 1) *
-						  pctrlr->doorbell_stride_u32;
+		pqpair->cq->shadow_cq_hdbl = ctrlr->shadow_doorbell + (2 * qpair->id + 1) *
+					     pctrlr->doorbell_stride_u32;
 		pqpair->shadow_doorbell.sq_eventidx = ctrlr->eventidx + (2 * qpair->id + 0) *
 						      pctrlr->doorbell_stride_u32;
-		pqpair->shadow_doorbell.cq_eventidx = ctrlr->eventidx + (2 * qpair->id + 1) *
-						      pctrlr->doorbell_stride_u32;
+		pqpair->cq->shadow_cq_eventidx = ctrlr->eventidx + (2 * qpair->id + 1) *
+						 pctrlr->doorbell_stride_u32;
 		pqpair->flags.has_shadow_doorbell = 1;
 	} else {
 		pqpair->flags.has_shadow_doorbell = 0;
@@ -873,6 +878,7 @@ int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_cq	*cq = pqpair->cq;
 	struct nvme_tracker	*tr;
 	struct spdk_nvme_cpl	*cpl, *next_cpl;
 	uint32_t		 num_completions = 0;
@@ -927,20 +933,20 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	pqpair->stat->polls++;
 
 	while (1) {
-		cpl = &pqpair->cpl[pqpair->cq_head];
+		cpl = &cq->cpl[cq->cq_head];
 
-		if (!next_is_valid && cpl->status.p != pqpair->flags.phase) {
+		if (!next_is_valid && cpl->status.p != cq->phase) {
 			break;
 		}
 
-		if (spdk_likely(pqpair->cq_head + 1 != pqpair->num_entries)) {
-			next_cq_head = pqpair->cq_head + 1;
-			next_phase = pqpair->flags.phase;
+		if (spdk_likely(cq->cq_head + 1 != cq->num_entries)) {
+			next_cq_head = cq->cq_head + 1;
+			next_phase = cq->phase;
 		} else {
 			next_cq_head = 0;
-			next_phase = !pqpair->flags.phase;
+			next_phase = !cq->phase;
 		}
-		next_cpl = &pqpair->cpl[next_cq_head];
+		next_cpl = &cq->cpl[next_cq_head];
 		next_is_valid = (next_cpl->status.p == next_phase);
 		if (next_is_valid) {
 			__builtin_prefetch(&pqpair->tr[next_cpl->cid]);
@@ -957,9 +963,9 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		__asm volatile("dmb oshld" ::: "memory");
 #endif
 
-		if (spdk_unlikely(++pqpair->cq_head == pqpair->num_entries)) {
-			pqpair->cq_head = 0;
-			pqpair->flags.phase = !pqpair->flags.phase;
+		if (spdk_unlikely(++cq->cq_head == cq->num_entries)) {
+			cq->cq_head = 0;
+			cq->phase = !cq->phase;
 		}
 
 		tr = &pqpair->tr[cpl->cid];
@@ -1053,8 +1059,8 @@ nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair)
 	if (!pqpair->sq_vaddr && pqpair->cmd && !pqpair->sq_in_cmb) {
 		spdk_free(pqpair->cmd);
 	}
-	if (!pqpair->cq_vaddr && pqpair->cpl) {
-		spdk_free(pqpair->cpl);
+	if (pqpair->cq && !pqpair->cq->cq_vaddr && pqpair->cq->cpl) {
+		spdk_free(pqpair->cq->cpl);
 	}
 	if (pqpair->tr) {
 		spdk_free(pqpair->tr);
@@ -1198,9 +1204,9 @@ nvme_pcie_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_
 clear_shadow_doorbells:
 	if (pqpair->flags.has_shadow_doorbell && ctrlr->shadow_doorbell) {
 		*pqpair->shadow_doorbell.sq_tdbl = 0;
-		*pqpair->shadow_doorbell.cq_hdbl = 0;
+		*pqpair->cq->shadow_cq_hdbl = 0;
 		*pqpair->shadow_doorbell.sq_eventidx = 0;
-		*pqpair->shadow_doorbell.cq_eventidx = 0;
+		*pqpair->cq->shadow_cq_eventidx = 0;
 	}
 free:
 	if (qpair->no_deletion_notification_needed == 0) {
