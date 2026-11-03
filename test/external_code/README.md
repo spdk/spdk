@@ -15,3 +15,6 @@ sudo ./test_make.sh /path/to/spdk
 The application `hello_bdev` is a symlink and bdev module `passthru_external` have been copied from their namesakes
 in the top level [SPDK github repository](https://github.com/spdk/spdk) and don't have any special
 functionality.
+
+The [NVMe SIT runner](nvme_sit/README.md) provides standalone, read-only
+PCIe PRP integration tests for a dedicated NVMe test device.
