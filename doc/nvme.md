@@ -188,6 +188,47 @@ require that data should be done by sending a request to the owning thread.
 This results in a message passing architecture, as opposed to a locking
 architecture, and will result in superior scaling across CPU cores.
 
+#### Maximum Outstanding I/O and Usable Queue Depth {#nvme_queue_depth}
+
+For PCIe queue pairs, the number of I/O commands that may be outstanding in
+hardware is lower than the configured I/O queue size. Two independent limits
+apply:
+
+- Trackers. Each PCIe queue pair allocates a number of trackers equal to the
+  queue size minus a reserved portion of the completion queue. For an effective
+  queue size of N entries, the driver uses:
+
+  ```text
+  max_completions_cap = min(max(floor(N / 4), 1), 128)
+  num_trackers = N - max_completions_cap
+  ```
+
+  A command cannot be submitted to hardware without a free tracker. The driver
+  processes at most max_completions_cap completions per poll and updates the
+  completion queue head doorbell after processing the batch. Completion
+  callbacks may submit replacement I/O before that doorbell update. Reserving
+  completion entries provides headroom for those commands to complete before
+  the controller learns that the host has consumed the earlier entries. The
+  completion batch cap also prevents a single head doorbell update from
+  advancing a full lap around the queue, which would be indistinguishable from
+  no progress. A queue size of 128 therefore provides 96 trackers, 512 provides
+  384, and 1024 provides 896.
+
+- Requests. The spdk_nvme_io_qpair_opts::io_queue_requests field controls the
+  number of request objects allocated for the queue pair (default 512). A single
+  I/O may consume more than one request when it must be split to honor the
+  controller's maximum data transfer size, PRP list constraints, or
+  driver-assisted striping, so io_queue_requests should be set at least as large
+  as io_queue_size, and larger if the workload generates split I/O. If the
+  request pool is exhausted, submission fails with -ENOMEM.
+
+Increasing io_queue_requests does not increase the tracker count. Conversely,
+increasing io_queue_size alone may leave the request pool as the limiting
+factor. Applications that need a large outstanding queue depth should therefore
+raise io_queue_requests to match (or exceed) io_queue_size when allocating a
+queue pair with spdk_nvme_ctrlr_alloc_io_qpair(). The bundled spdk_nvme_perf
+tool demonstrates this pattern.
+
 ### NVMe Driver Internal Memory Usage {#nvme_memory_usage}
 
 The SPDK NVMe driver provides a zero-copy data transfer path, which means that
@@ -198,7 +239,11 @@ Each queue pair has a number of trackers used to track commands submitted by the
 caller. The number trackers for I/O queues depend on the users' input for queue
 size and the value read from controller capabilities register field Maximum Queue
 Entries Supported(MQES, 0 based value). Each tracker has a fixed size 4096 Bytes,
-so the maximum memory used for each I/O queue is: (MQES + 1) * 4 KiB.
+so the maximum memory used for each I/O queue is: (MQES + 1) * 4 KiB. Note that
+the number of trackers actually allocated, and therefore the maximum number of
+outstanding commands, is lower than the queue size because a portion of the
+completion queue is reserved; see [Maximum Outstanding I/O and Usable Queue
+Depth](#nvme_queue_depth).
 
 I/O queue pairs can be allocated in host memory, this is used for most NVMe controllers,
 some NVMe controllers which can support Controller Memory Buffer may put I/O queue
