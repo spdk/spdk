@@ -186,6 +186,233 @@ test_nvme_pcie_qpair_tracker_capacity(void)
 }
 
 static void
+test_nvme_pcie_tracker_capacity_scope(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_pcie_qpair pqpair = {};
+
+	pqpair.num_entries = 128;
+	pqpair.max_completions_cap = 32;
+	pqpair.qpair.id = 1;
+	CU_ASSERT(nvme_pcie_qpair_num_trackers(&pqpair) == 96);
+	pqpair.qpair.ctrlr = &ctrlr;
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_VFIOUSER;
+	CU_ASSERT(nvme_pcie_qpair_num_trackers(&pqpair) == 96);
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair.qpair.id = 0;
+	CU_ASSERT(nvme_pcie_qpair_num_trackers(&pqpair) == 96);
+}
+
+struct tracker_test_ctx {
+	struct nvme_pcie_ctrlr pctrlr;
+	struct nvme_pcie_qpair *pqpair;
+	struct spdk_nvme_pcie_stat stat;
+	struct nvme_request reqs[8];
+	uint32_t sq_doorbell;
+	uint32_t cq_doorbell;
+	uint32_t expected_cq_doorbell;
+	uint32_t completions;
+	uint32_t errors;
+	bool resubmit;
+};
+
+static void
+tracker_test_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct tracker_test_ctx *ctx = arg;
+	struct nvme_request *req;
+
+	ctx->completions++;
+	ctx->errors += spdk_nvme_cpl_is_error(cpl);
+	if (ctx->resubmit) {
+		CU_ASSERT(ctx->cq_doorbell == ctx->expected_cq_doorbell);
+		req = nvme_allocate_request_null(&ctx->pqpair->qpair, tracker_test_cb, ctx);
+		SPDK_CU_ASSERT_FATAL(req != NULL);
+		CU_ASSERT(nvme_pcie_qpair_submit_request(&ctx->pqpair->qpair, req) == 0);
+	}
+}
+
+static void
+tracker_test_init(struct tracker_test_ctx *ctx)
+{
+	struct nvme_pcie_qpair *pqpair;
+	size_t i;
+	int rc;
+
+	memset(ctx, 0, sizeof(*ctx));
+	ctx->pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	ctx->pctrlr.ctrlr.opts.disable_error_logging = true;
+	ctx->pctrlr.doorbell_base = (void *)0xF7000000;
+	ctx->pctrlr.doorbell_stride_u32 = 1;
+	pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
+			      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+	SPDK_CU_ASSERT_FATAL(pqpair != NULL);
+	ctx->pqpair = pqpair;
+	pqpair->qpair.ctrlr = &ctx->pctrlr.ctrlr;
+	pqpair->qpair.id = 1;
+	pqpair->qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pqpair->num_entries = 8;
+	rc = nvme_pcie_qpair_construct(&pqpair->qpair, NULL);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	pqpair->stat = &ctx->stat;
+	pqpair->shared_stats = true;
+	pqpair->sq_tdbl = &ctx->sq_doorbell;
+	pqpair->cq_hdbl = &ctx->cq_doorbell;
+	pqpair->pcie_state = NVME_PCIE_QPAIR_READY;
+	pqpair->qpair.state = NVME_QPAIR_ENABLED;
+	STAILQ_INIT(&pqpair->qpair.free_req);
+	STAILQ_INIT(&pqpair->qpair.queued_req);
+	TAILQ_INIT(&pqpair->qpair.err_cmd_head);
+	for (i = 0; i < SPDK_COUNTOF(ctx->reqs); i++) {
+		ctx->reqs[i].qpair = &pqpair->qpair;
+		STAILQ_INSERT_TAIL(&pqpair->qpair.free_req, &ctx->reqs[i], stailq);
+	}
+}
+
+static void
+tracker_test_fini(struct tracker_test_ctx *ctx)
+{
+	ctx->resubmit = false;
+	nvme_pcie_qpair_abort_trackers(&ctx->pqpair->qpair, 1);
+	CU_ASSERT(ctx->pqpair->qpair.queue_depth == 0);
+	CU_ASSERT(ctx->pqpair->qpair.num_outstanding_reqs == 0);
+	CU_ASSERT(TAILQ_EMPTY(&ctx->pqpair->outstanding_tr));
+	nvme_pcie_qpair_destroy(&ctx->pqpair->qpair);
+}
+
+static void
+test_nvme_pcie_tracker_exhaustion_retry_reuse(void)
+{
+	struct tracker_test_ctx ctx;
+	struct nvme_pcie_qpair *pqpair;
+	struct nvme_request *req, *deferred;
+	struct nvme_tracker *tr;
+	uint16_t count, i, high_cid;
+
+	tracker_test_init(&ctx);
+	pqpair = ctx.pqpair;
+	count = nvme_pcie_qpair_num_trackers(pqpair);
+	high_cid = count - 1;
+	for (i = 0; i < count; i++) {
+		req = nvme_allocate_request_null(&pqpair->qpair, tracker_test_cb, &ctx);
+		SPDK_CU_ASSERT_FATAL(req != NULL);
+		CU_ASSERT(nvme_pcie_qpair_submit_request(&pqpair->qpair, req) == 0);
+	}
+	CU_ASSERT(TAILQ_EMPTY(&pqpair->free_tr));
+	CU_ASSERT(pqpair->qpair.queue_depth == count);
+	deferred = nvme_allocate_request_null(&pqpair->qpair, tracker_test_cb, &ctx);
+	SPDK_CU_ASSERT_FATAL(deferred != NULL);
+	CU_ASSERT(nvme_pcie_qpair_submit_request(&pqpair->qpair, deferred) == -EAGAIN);
+	CU_ASSERT(pqpair->qpair.queue_depth == count);
+
+	tr = &pqpair->tr[high_cid];
+	pqpair->retry_count = 1;
+	pqpair->cpl[0].cid = high_cid;
+	pqpair->cpl[0].sqhd = pqpair->sq_tail;
+	pqpair->cpl[0].status.p = 1;
+	pqpair->cpl[0].status.sc = SPDK_NVME_SC_NAMESPACE_NOT_READY;
+	MOCK_SET(nvme_completion_is_retry, true);
+	CU_ASSERT(nvme_pcie_qpair_process_completions(&pqpair->qpair, 1) == 1);
+	CU_ASSERT(tr->req != NULL);
+	CU_ASSERT(tr->req->retries == 1);
+	CU_ASSERT(ctx.completions == 0);
+	CU_ASSERT(TAILQ_EMPTY(&pqpair->free_tr));
+	CU_ASSERT(pqpair->qpair.queue_depth == count);
+	MOCK_SET(nvme_completion_is_retry, false);
+
+	pqpair->cpl[1].cid = high_cid;
+	pqpair->cpl[1].sqhd = pqpair->sq_tail;
+	pqpair->cpl[1].status.p = 1;
+	CU_ASSERT(nvme_pcie_qpair_process_completions(&pqpair->qpair, 1) == 1);
+	CU_ASSERT(ctx.completions == 1);
+	CU_ASSERT(ctx.errors == 0);
+	CU_ASSERT(tr->req == NULL);
+	CU_ASSERT(TAILQ_FIRST(&pqpair->free_tr) == tr);
+	CU_ASSERT(nvme_pcie_qpair_submit_request(&pqpair->qpair, deferred) == 0);
+	CU_ASSERT(deferred->cmd.cid == high_cid);
+	CU_ASSERT(pqpair->qpair.queue_depth == count);
+	tracker_test_fini(&ctx);
+	CU_ASSERT(ctx.completions == count + 1U);
+	CU_ASSERT(ctx.errors == count);
+}
+
+static void
+test_nvme_pcie_tracker_callback_resubmit_wraparound(void)
+{
+	struct tracker_test_ctx ctx;
+	struct nvme_pcie_qpair *pqpair;
+	struct nvme_request *req;
+	struct nvme_tracker *tr;
+	uint16_t count, i, round, tail = 0;
+	uint8_t phase = 1;
+
+	tracker_test_init(&ctx);
+	pqpair = ctx.pqpair;
+	count = nvme_pcie_qpair_num_trackers(pqpair) - 1;
+	for (i = 0; i < count; i++) {
+		req = nvme_allocate_request_null(&pqpair->qpair, tracker_test_cb, &ctx);
+		SPDK_CU_ASSERT_FATAL(req != NULL);
+		CU_ASSERT(nvme_pcie_qpair_submit_request(&pqpair->qpair, req) == 0);
+	}
+	ctx.resubmit = true;
+	for (round = 0; round < 16; round++) {
+		tr = TAILQ_FIRST(&pqpair->outstanding_tr);
+		for (i = 0; i < 3; i++) {
+			SPDK_CU_ASSERT_FATAL(tr != NULL);
+			memset(&pqpair->cpl[tail], 0, sizeof(pqpair->cpl[tail]));
+			pqpair->cpl[tail].cid = tr->cid;
+			pqpair->cpl[tail].sqhd = pqpair->sq_tail;
+			pqpair->cpl[tail].status.p = phase;
+			tr = TAILQ_NEXT(tr, tq_list);
+			if (++tail == pqpair->num_entries) {
+				tail = 0;
+				phase = !phase;
+			}
+		}
+		ctx.expected_cq_doorbell = ctx.cq_doorbell;
+		CU_ASSERT(nvme_pcie_qpair_process_completions(&pqpair->qpair, 0) == 2);
+		ctx.expected_cq_doorbell = ctx.cq_doorbell;
+		CU_ASSERT(nvme_pcie_qpair_process_completions(&pqpair->qpair, 1) == 1);
+		CU_ASSERT(ctx.cq_doorbell == tail);
+		CU_ASSERT(pqpair->flags.phase == phase);
+		CU_ASSERT(pqpair->qpair.queue_depth == count);
+		CU_ASSERT(ctx.completions == (round + 1U) * 3);
+		CU_ASSERT(ctx.errors == 0);
+	}
+	CU_ASSERT(ctx.stat.cq_mmio_doorbell_updates == 32);
+	tracker_test_fini(&ctx);
+}
+
+static void
+test_nvme_pcie_tracker_deferred_mapping_failure(void)
+{
+	struct tracker_test_ctx ctx;
+	struct nvme_request *req;
+	struct nvme_tracker *tr;
+
+	tracker_test_init(&ctx);
+	ctx.pctrlr.ctrlr.page_size = 4096;
+	req = nvme_allocate_request_contig(&ctx.pqpair->qpair, (void *)0x100000,
+					   512, tracker_test_cb, &ctx);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	tr = TAILQ_FIRST(&ctx.pqpair->free_tr);
+	MOCK_SET(spdk_vtophys, SPDK_VTOPHYS_ERROR);
+	CU_ASSERT(nvme_pcie_qpair_submit_request(&ctx.pqpair->qpair, req) == 0);
+	CU_ASSERT(tr->bad_vtophys == 1);
+	CU_ASSERT(ctx.completions == 0);
+	CU_ASSERT(ctx.sq_doorbell == 0);
+	MOCK_CLEAR(spdk_vtophys);
+	ctx.pqpair->qpair.in_completion_context = true;
+	CU_ASSERT(nvme_pcie_qpair_process_completions(&ctx.pqpair->qpair, 0) == 0);
+	CU_ASSERT(ctx.completions == 1);
+	CU_ASSERT(ctx.errors == 1);
+	CU_ASSERT(tr->bad_vtophys == 0);
+	CU_ASSERT(tr->req == NULL);
+	CU_ASSERT(TAILQ_FIRST(&ctx.pqpair->free_tr) == tr);
+	tracker_test_fini(&ctx);
+}
+
+static void
 test_nvme_pcie_qpair_construct_destroy(void)
 {
 	struct spdk_nvme_io_qpair_opts opts = {};
@@ -823,6 +1050,10 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_tracker_capacity);
+	CU_ADD_TEST(suite, test_nvme_pcie_tracker_capacity_scope);
+	CU_ADD_TEST(suite, test_nvme_pcie_tracker_exhaustion_retry_reuse);
+	CU_ADD_TEST(suite, test_nvme_pcie_tracker_callback_resubmit_wraparound);
+	CU_ADD_TEST(suite, test_nvme_pcie_tracker_deferred_mapping_failure);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_disconnect_admin_qpair);
