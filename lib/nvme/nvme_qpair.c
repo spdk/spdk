@@ -859,11 +859,35 @@ spdk_nvme_qpair_get_fd(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_
 	return nvme_transport_qpair_get_fd(ctrlr, qpair, opts);
 }
 
+static void
+nvme_qpair_complete_expired_error_reqs(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_request *req, *tmp;
+
+	if (spdk_unlikely(qpair->err_cmd_enabled && !STAILQ_EMPTY(&qpair->err_req_head))) {
+		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
+			if ((qpair->id != 0 || req->pid == getpid()) &&
+			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
+				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
+				nvme_qpair_manual_complete_request(qpair, req,
+								   req->cpl.status.sct,
+								   req->cpl.status.sc, qpair->abort_dnr, true);
+			}
+		}
+	}
+}
+
+void
+nvme_qpair_process_sw_completions(struct spdk_nvme_qpair *qpair)
+{
+	nvme_qpair_complete_expired_error_reqs(qpair);
+	_nvme_qpair_complete_abort_queued_reqs(qpair);
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
-	struct nvme_request *req, *tmp;
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		/* Complete any pending register operations */
@@ -893,19 +917,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	/* error injection for those queued error requests */
-	if (spdk_unlikely(qpair->err_cmd_enabled && !STAILQ_EMPTY(&qpair->err_req_head))) {
-		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
-			if ((qpair->id != 0 || req->pid == getpid()) &&
-			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
-				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
-				nvme_qpair_manual_complete_request(qpair, req,
-								   req->cpl.status.sct,
-								   req->cpl.status.sc, qpair->abort_dnr, true);
-			}
-		}
-	}
+	nvme_qpair_complete_expired_error_reqs(qpair);
 
 	qpair->in_completion_context = 1;
+	qpair->completion_resubmit_handled = false;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
 		if (ret == -ENXIO && nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
@@ -931,9 +946,9 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	 * At this point, ret must represent the number of completions we reaped.
 	 * submit as many queued requests as we completed.
 	 */
-	if (ret > 0) {
+	if (ret > 0 && !qpair->completion_resubmit_handled) {
 		nvme_qpair_resubmit_requests(qpair, ret);
-	} else {
+	} else if (ret <= 0) {
 		_nvme_qpair_complete_abort_queued_reqs(qpair);
 	}
 

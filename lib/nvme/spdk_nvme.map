@@ -9,6 +9,7 @@
 	spdk_nvme_ctrlr_get_queue_mgmt_opts;
 	spdk_nvme_ctrlr_alloc_io_cq;
 	spdk_nvme_ctrlr_free_io_cq;
+	spdk_nvme_pcie_cq_process_completions;
 	spdk_nvme_transport_available;
 	spdk_nvme_transport_available_by_name;
 	spdk_nvme_transport_get_opts;

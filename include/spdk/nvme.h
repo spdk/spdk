@@ -2044,6 +2044,19 @@ struct spdk_nvme_cq *spdk_nvme_ctrlr_alloc_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 int spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq);
 
 /**
+ * Poll an independent PCIe CQ, dispatching completions to their owning SQs.
+ *
+ * A zero maximum uses the bounded default batch size. The caller must serialize
+ * all polling and queue operations in the CQ's polling domain.
+ *
+ * \return Number of CQEs consumed, or -EINVAL for a NULL handle, -ENOTSUP if
+ * unavailable, -EBUSY for poll-group ownership or recursive polling, -EPERM for
+ * a foreign process, or -ENXIO for a failed/removed controller.
+ */
+int32_t spdk_nvme_pcie_cq_process_completions(struct spdk_nvme_cq *cq,
+		uint32_t max_completions);
+
+/**
  * Connect a newly created I/O qpair.
  *
  * This function does any connection activities required for a newly created qpair.
@@ -2168,11 +2181,14 @@ spdk_nvme_qp_failure_reason spdk_nvme_ctrlr_get_admin_qp_failure_reason(
 /**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
- * The qpair must not be accessed after calling this function.
+ * The qpair must not be accessed after a successful free. In SHARED_CQ mode,
+ * freeing from a completion callback returns -EAGAIN without freeing it; retry
+ * after polling returns.
  *
  * \param qpair I/O queue pair to free.
  *
- * \return 0 on success.  This function will never return any value other than 0.
+ * \return 0 on success, or -EAGAIN from a completion callback in SHARED_CQ mode.
+ * Legacy coupled qpair behavior is unchanged.
  */
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
 

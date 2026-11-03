@@ -15,6 +15,9 @@
 #include "common/lib/nvme/common_stubs.h"
 
 pid_t g_spdk_nvme_pid;
+DEFINE_STUB_V(nvme_qpair_process_sw_completions, (struct spdk_nvme_qpair *qpair));
+DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair,
+		uint32_t num_requests));
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 

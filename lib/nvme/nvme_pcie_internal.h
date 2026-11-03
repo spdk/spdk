@@ -140,6 +140,11 @@ struct nvme_pcie_cq {
 	struct nvme_pcie_qpair **sq_map;
 	uint32_t sq_map_size;
 	TAILQ_HEAD(, nvme_pcie_qpair) sq_members;
+	struct spdk_nvme_ctrlr_process *owner_proc;
+	struct spdk_nvme_transport_poll_group *owner_tgroup;
+	struct spdk_nvme_pcie_stat stat;
+	uint64_t completions;
+	bool in_completion_context;
 };
 
 struct nvme_pcie_io_cq {
@@ -164,6 +169,7 @@ struct nvme_pcie_qpair {
 	/* Completion queue backing store. */
 	struct nvme_pcie_cq *cq;
 	struct nvme_pcie_cq cq_local;
+	TAILQ_ENTRY(nvme_pcie_qpair) cq_member_link;
 
 	TAILQ_HEAD(, nvme_tracker) free_tr;
 	TAILQ_HEAD(nvme_outstanding_tr_head, nvme_tracker) outstanding_tr;
@@ -290,6 +296,25 @@ nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
 		pqpair->stat->sq_mmio_doorbell_updates++;
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
+		g_thread_mmio_ctrlr = NULL;
+	}
+}
+
+static inline void
+nvme_pcie_cq_ring_doorbell(struct nvme_pcie_cq *cq, struct spdk_nvme_ctrlr *ctrlr)
+{
+	bool need_mmio = true;
+
+	if (spdk_unlikely(cq->shadow_cq_hdbl != NULL)) {
+		cq->stat.cq_shadow_doorbell_updates++;
+		need_mmio = nvme_pcie_qpair_update_mmio_required(cq->cq_head,
+				cq->shadow_cq_hdbl, cq->shadow_cq_eventidx);
+	}
+	if (spdk_likely(need_mmio)) {
+		spdk_wmb();
+		cq->stat.cq_mmio_doorbell_updates++;
+		g_thread_mmio_ctrlr = nvme_pcie_ctrlr(ctrlr);
+		spdk_mmio_write_4(cq->cq_hdbl, cq->cq_head);
 		g_thread_mmio_ctrlr = NULL;
 	}
 }

@@ -1715,6 +1715,11 @@ test_queue_mgmt_opts(void)
 	CU_ASSERT(spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0) == NULL);
 	MOCK_SET(nvme_shared_cq_enabled, true);
 	CU_ASSERT(spdk_nvme_ctrlr_set_queue_mgmt_opts(&ctrlr, &opts, sizeof(opts)) == 0);
+	qpair.ctrlr = &ctrlr;
+	qpair.in_completion_context = 1;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_qpair(&qpair) == -EAGAIN);
+	CU_ASSERT(!qpair.delete_after_completion_context);
+	qpair.in_completion_context = 0;
 	CU_ASSERT(spdk_nvme_ctrlr_get_queue_mgmt_opts(&ctrlr, &readback, sizeof(readback)) == 0);
 	CU_ASSERT(readback.mode == SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ);
 	CU_ASSERT(readback.opts_size == sizeof(readback));

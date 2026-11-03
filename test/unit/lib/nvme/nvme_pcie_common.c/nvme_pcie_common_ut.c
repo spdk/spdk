@@ -107,6 +107,22 @@ nvme_transport_ctrlr_disconnect_qpair_done(struct spdk_nvme_qpair *qpair)
 DEFINE_STUB(spdk_nvme_ctrlr_get_numa_id, int32_t, (struct spdk_nvme_ctrlr *ctrlr),
 	    SPDK_ENV_NUMA_ID_ANY);
 DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), NULL);
+DEFINE_STUB(nvme_shared_cq_enabled, bool, (void), false);
+static uint32_t g_cq_resubmits[4], g_cq_sw_maintenance[4];
+
+void
+nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests)
+{
+	CU_ASSERT(qpair->id < SPDK_COUNTOF(g_cq_resubmits));
+	g_cq_resubmits[qpair->id] += num_requests;
+}
+
+void
+nvme_qpair_process_sw_completions(struct spdk_nvme_qpair *qpair)
+{
+	CU_ASSERT(qpair->id < SPDK_COUNTOF(g_cq_sw_maintenance));
+	g_cq_sw_maintenance[qpair->id]++;
+}
 
 int
 nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
@@ -471,6 +487,148 @@ test_nvme_pcie_private_cq_wrap_reset(void)
 	}
 	CU_ASSERT(pqpair->cq->cqid == 1);
 	nvme_pcie_qpair_destroy(&pqpair->qpair);
+}
+
+static void
+test_nvme_pcie_shared_cq_routing(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_io_cq pcq = {};
+	struct nvme_pcie_cq *cq = &pcq.pcie_cq;
+	struct nvme_pcie_qpair *members[2], *map[4] = {};
+	struct spdk_nvme_cpl ring[8] = {};
+	struct nvme_request reqs[2] = {};
+	struct spdk_nvme_pcie_stat stats[2] = {};
+	struct spdk_nvme_ctrlr_process foreign = {};
+	struct spdk_nvme_transport_poll_group tgroup = {};
+	uint32_t doorbells[16] = {}, completed[2] = {};
+	uint32_t i, n, before;
+	struct nvme_tracker *tr;
+
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.ctrlr.page_size = 4096;
+	pctrlr.doorbell_base = doorbells;
+	pctrlr.doorbell_stride_u32 = 1;
+	pcq.cq.ctrlr = &pctrlr.ctrlr;
+	cq->num_entries = SPDK_COUNTOF(ring);
+	cq->phase = 1;
+	cq->cqid = 3;
+	cq->cpl = ring;
+	cq->cq_hdbl = &doorbells[7];
+	cq->sq_map = map;
+	cq->sq_map_size = SPDK_COUNTOF(map);
+	TAILQ_INIT(&cq->sq_members);
+	memset(g_cq_resubmits, 0, sizeof(g_cq_resubmits));
+	memset(g_cq_sw_maintenance, 0, sizeof(g_cq_sw_maintenance));
+	MOCK_SET(nvme_shared_cq_enabled, true);
+	for (n = 0; n < 2; n++) {
+		members[n] = spdk_zmalloc(sizeof(*members[n]), 64, NULL,
+					  SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+		SPDK_CU_ASSERT_FATAL(members[n] != NULL);
+		members[n]->qpair.ctrlr = &pctrlr.ctrlr;
+		members[n]->qpair.id = n + 1;
+		members[n]->num_entries = 4;
+		CU_ASSERT(nvme_pcie_qpair_construct(&members[n]->qpair, NULL) == 0);
+		members[n]->cq = cq;
+		members[n]->stat = &stats[n];
+		members[n]->shared_stats = true;
+		members[n]->qpair.state = NVME_QPAIR_ENABLED;
+		STAILQ_INIT(&members[n]->qpair.free_req);
+		map[n + 1] = members[n];
+		TAILQ_INSERT_TAIL(&cq->sq_members, members[n], cq_member_link);
+		reqs[n].qpair = &members[n]->qpair;
+	}
+	for (i = 0; i < 24; i++) {
+		n = i % 2;
+		tr = &members[n]->tr[0];
+		tr->req = &reqs[n];
+		tr->cb_fn = private_cq_test_cb;
+		tr->cb_arg = &completed[n];
+		members[n]->qpair.num_outstanding_reqs = 1;
+		members[n]->qpair.queue_depth = 1;
+		TAILQ_REMOVE(&members[n]->free_tr, tr, tq_list);
+		TAILQ_INSERT_TAIL(&members[n]->outstanding_tr, tr, tq_list);
+		ring[cq->cq_head].sqid = n + 1;
+		ring[cq->cq_head].cid = 0;
+		ring[cq->cq_head].sqhd = (i / 2) % 4;
+		ring[cq->cq_head].status.p = cq->phase;
+		CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 1);
+		CU_ASSERT(completed[n] == i / 2 + 1);
+		CU_ASSERT(g_cq_resubmits[n + 1] == completed[n]);
+		CU_ASSERT(members[n]->sq_head == (i / 2) % 4);
+		CU_ASSERT(tr->req == NULL);
+		CU_ASSERT(!members[n]->qpair.in_completion_context);
+		CU_ASSERT(doorbells[7] == cq->cq_head);
+		STAILQ_INIT(&members[n]->qpair.free_req);
+	}
+	CU_ASSERT(cq->cq_head == 0);
+	CU_ASSERT(cq->phase == 0);
+	CU_ASSERT(cq->completions == 24);
+	CU_ASSERT(g_cq_sw_maintenance[1] == 24);
+	CU_ASSERT(g_cq_sw_maintenance[2] == 24);
+	tr = &members[0]->tr[0];
+	tr->req = &reqs[0];
+	members[0]->qpair.num_outstanding_reqs = 1;
+	members[0]->qpair.queue_depth = 1;
+	members[0]->retry_count = 1;
+	members[0]->flags.delay_cmd_submit = 1;
+	TAILQ_REMOVE(&members[0]->free_tr, tr, tq_list);
+	TAILQ_INSERT_TAIL(&members[0]->outstanding_tr, tr, tq_list);
+	ring[cq->cq_head].sqid = 1;
+	ring[cq->cq_head].cid = 0;
+	ring[cq->cq_head].status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+	ring[cq->cq_head].status.p = cq->phase;
+	before = g_cq_resubmits[1];
+	MOCK_SET(nvme_completion_is_retry, true);
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 1);
+	CU_ASSERT(tr->req == &reqs[0]);
+	CU_ASSERT(reqs[0].retries == 1);
+	CU_ASSERT(g_cq_resubmits[1] == before);
+	CU_ASSERT(members[0]->last_sq_tail == members[0]->sq_tail);
+	MOCK_SET(nvme_completion_is_retry, false);
+	ring[cq->cq_head].sqid = 1;
+	ring[cq->cq_head].cid = 0;
+	ring[cq->cq_head].status.sc = 0;
+	ring[cq->cq_head].status.p = cq->phase;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 1);
+	CU_ASSERT(tr->req == NULL);
+	CU_ASSERT(g_cq_resubmits[1] == before + 1);
+	CU_ASSERT(completed[0] == 13);
+	/* Malformed SQIDs/CIDs must be consumed without indexing past either table. */
+	for (i = 0; i < SPDK_COUNTOF(ring); i++) {
+		ring[i].sqid = i == 0 ? 1 : UINT16_MAX;
+		ring[i].cid = UINT16_MAX;
+		ring[i].status.p = i >= cq->cq_head ? cq->phase : !cq->phase;
+	}
+	before = g_cq_resubmits[1];
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 7);
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 1);
+	CU_ASSERT(g_cq_resubmits[1] == before);
+	CU_ASSERT(cq->phase == 1);
+	cq->owner_tgroup = &tgroup;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == -EBUSY);
+	cq->owner_tgroup = NULL;
+	cq->owner_proc = &foreign;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == -EPERM);
+	cq->owner_proc = NULL;
+	cq->in_completion_context = true;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == -EBUSY);
+	cq->in_completion_context = false;
+	pctrlr.ctrlr.is_failed = true;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == -ENXIO);
+	pctrlr.ctrlr.is_failed = false;
+	pctrlr.ctrlr.is_removed = true;
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == -ENXIO);
+	pctrlr.ctrlr.is_removed = false;
+	for (n = 0; n < 2; n++) {
+		members[n]->qpair.state = NVME_QPAIR_DISCONNECTED;
+	}
+	CU_ASSERT(spdk_nvme_pcie_cq_process_completions(&pcq.cq, 0) == 0);
+	for (n = 0; n < 2; n++) {
+		members[n]->cq = &members[n]->cq_local;
+		nvme_pcie_qpair_destroy(&members[n]->qpair);
+	}
+	MOCK_SET(nvme_shared_cq_enabled, false);
 }
 
 static void
@@ -1009,6 +1167,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvme_pcie_common", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_standalone_cq_lifecycle);
+	CU_ADD_TEST(suite, test_nvme_pcie_shared_cq_routing);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_private_cq_wrap_reset);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);

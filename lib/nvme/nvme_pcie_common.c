@@ -874,6 +874,175 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+static void
+nvme_pcie_qpair_completion_maintenance(struct spdk_nvme_qpair *qpair,
+				       struct spdk_nvme_ctrlr *ctrlr, bool process_admin_qpair)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	int rc;
+
+	if (ctrlr->timeout_enabled) {
+		nvme_pcie_qpair_check_timeout(qpair);
+	}
+	if (process_admin_qpair && nvme_qpair_is_admin_queue(qpair)) {
+		nvme_pcie_qpair_complete_pending_admin_request(qpair);
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
+			rc = nvme_ctrlr_disable_poll(ctrlr);
+			if (rc != -EAGAIN) {
+				nvme_pcie_qpair_abort_trackers(qpair, qpair->abort_dnr);
+				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
+			}
+		}
+		nvme_ctrlr_unlock(ctrlr);
+	}
+	if (spdk_unlikely(pqpair->flags.has_pending_vtophys_failures)) {
+		struct nvme_tracker *tr, *tmp;
+
+		TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
+			if (tr->bad_vtophys) {
+				tr->bad_vtophys = 0;
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			}
+		}
+		pqpair->flags.has_pending_vtophys_failures = 0;
+	}
+}
+
+static int32_t
+nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
+					struct spdk_nvme_ctrlr *ctrlr, uint32_t max_completions)
+{
+	struct nvme_pcie_qpair *member;
+	struct nvme_pcie_qpair *delayed[NVME_MAX_COMPLETIONS];
+	uint32_t num_delayed = 0, i;
+	uint32_t num_completions = 0;
+
+	if (cq->in_completion_context) {
+		return -EBUSY;
+	}
+	cq->in_completion_context = true;
+	if (max_completions == 0 || max_completions > NVME_MAX_COMPLETIONS) {
+		max_completions = NVME_MAX_COMPLETIONS;
+	}
+	max_completions = spdk_min(max_completions, (uint32_t)cq->num_entries - 1);
+	cq->stat.polls++;
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		member->qpair.in_completion_context = 1;
+	}
+	while (num_completions < max_completions) {
+		struct spdk_nvme_cpl *cpl = &cq->cpl[cq->cq_head];
+		struct nvme_pcie_qpair *owning;
+		struct nvme_tracker *tr;
+
+		if (cpl->status.p != cq->phase) {
+			break;
+		}
+#if defined(__PPC64__) || defined(__riscv) || defined(__loongarch__)
+		spdk_mb();
+#elif defined(__aarch64__)
+		__asm volatile("dmb oshld" ::: "memory");
+#endif
+		if (++cq->cq_head == cq->num_entries) {
+			cq->cq_head = 0;
+			cq->phase = !cq->phase;
+		}
+		num_completions++;
+		if (cpl->sqid == 0 || cpl->sqid >= cq->sq_map_size || cq->sq_map[cpl->sqid] == NULL) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Completion for unknown SQID %u on CQID %u\n",
+					  cpl->sqid, cq->cqid);
+			continue;
+		}
+		owning = cq->sq_map[cpl->sqid];
+		owning->sq_head = cpl->sqhd;
+		if (owning->num_entries <= owning->max_completions_cap ||
+		    cpl->cid >= owning->num_entries - owning->max_completions_cap) {
+			NVME_QPAIR_ERRLOG(&owning->qpair, "Completion CID %u out of range\n", cpl->cid);
+			continue;
+		}
+		tr = &owning->tr[cpl->cid];
+		if (tr->req == NULL) {
+			NVME_QPAIR_ERRLOG(&owning->qpair, "Stale completion CID %u on SQID %u\n",
+					  cpl->cid, cpl->sqid);
+			continue;
+		}
+		nvme_pcie_qpair_complete_tracker(&owning->qpair, tr, cpl, true);
+		if (tr->req == NULL) {
+			nvme_qpair_resubmit_requests(&owning->qpair, 1);
+			if (owning->flags.delay_cmd_submit && owning->last_sq_tail != owning->sq_tail) {
+				for (i = 0; i < num_delayed; i++) {
+					if (delayed[i] == owning) {
+						break;
+					}
+				}
+				if (i == num_delayed) {
+					delayed[num_delayed++] = owning;
+				}
+			}
+		}
+	}
+	for (i = 0; i < num_delayed; i++) {
+		nvme_pcie_qpair_ring_sq_doorbell(&delayed[i]->qpair);
+		delayed[i]->last_sq_tail = delayed[i]->sq_tail;
+	}
+	if (num_completions > 0) {
+		cq->completions += num_completions;
+		cq->stat.completions += num_completions;
+		nvme_pcie_cq_ring_doorbell(cq, ctrlr);
+	} else {
+		cq->stat.idle_polls++;
+	}
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		if (member->flags.delay_cmd_submit && member->last_sq_tail != member->sq_tail) {
+			nvme_pcie_qpair_ring_sq_doorbell(&member->qpair);
+			member->last_sq_tail = member->sq_tail;
+		}
+		nvme_pcie_qpair_completion_maintenance(&member->qpair, ctrlr, false);
+		nvme_qpair_process_sw_completions(&member->qpair);
+	}
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		member->qpair.in_completion_context = 0;
+	}
+	cq->in_completion_context = false;
+	return num_completions;
+}
+
+int32_t
+spdk_nvme_pcie_cq_process_completions(struct spdk_nvme_cq *cq, uint32_t max_completions)
+{
+	struct nvme_pcie_cq *pcie_cq;
+	struct nvme_pcie_qpair *member;
+	struct spdk_nvme_ctrlr *ctrlr;
+
+	if (cq == NULL) {
+		SPDK_ERRLOG("NULL completion queue\n");
+		return -EINVAL;
+	}
+	ctrlr = cq->ctrlr;
+	if (!nvme_shared_cq_enabled() || ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Independent CQ polling unavailable\n");
+		return -ENOTSUP;
+	}
+	if (ctrlr->is_failed || ctrlr->is_removed || cq->pending) {
+		return -ENXIO;
+	}
+	pcie_cq = &nvme_pcie_io_cq(cq)->pcie_cq;
+	if (pcie_cq->owner_tgroup || pcie_cq->in_completion_context) {
+		return -EBUSY;
+	}
+	if (pcie_cq->owner_proc &&
+	    pcie_cq->owner_proc != nvme_ctrlr_get_current_process(ctrlr)) {
+		return -EPERM;
+	}
+	TAILQ_FOREACH(member, &pcie_cq->sq_members, cq_member_link) {
+		enum nvme_qpair_state state = nvme_qpair_get_state(&member->qpair);
+
+		if (state >= NVME_QPAIR_CONNECTED && state <= NVME_QPAIR_ENABLED) {
+			return nvme_pcie_cq_process_completions_shared(pcie_cq, ctrlr, max_completions);
+		}
+	}
+	return 0;
+}
+
 int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -915,6 +1084,14 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			}
 		}
 		return 0;
+	}
+
+	if (spdk_unlikely(cq->sq_map != NULL)) {
+		struct nvme_pcie_io_cq *pcq = SPDK_CONTAINEROF(cq, struct nvme_pcie_io_cq, pcie_cq);
+
+		rc = spdk_nvme_pcie_cq_process_completions(&pcq->cq, max_completions);
+		qpair->completion_resubmit_handled = true;
+		return rc;
 	}
 
 	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
@@ -1003,41 +1180,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 	}
 
-	if (ctrlr->timeout_enabled) {
-		/*
-		 * User registered for timeout callback
-		 */
-		nvme_pcie_qpair_check_timeout(qpair);
-	}
-
-	/* Before returning, complete any pending admin request or
-	 * process the admin qpair disconnection.
-	 */
-	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
-		nvme_pcie_qpair_complete_pending_admin_request(qpair);
-
-		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
-			rc = nvme_ctrlr_disable_poll(qpair->ctrlr);
-			if (rc != -EAGAIN) {
-				nvme_pcie_qpair_abort_trackers(qpair, qpair->abort_dnr);
-				nvme_transport_ctrlr_disconnect_qpair_done(qpair);
-			}
-		}
-
-		nvme_ctrlr_unlock(ctrlr);
-	}
-
-	if (spdk_unlikely(pqpair->flags.has_pending_vtophys_failures)) {
-		struct nvme_tracker *tr, *tmp;
-
-		TAILQ_FOREACH_SAFE(tr, &pqpair->outstanding_tr, tq_list, tmp) {
-			if (tr->bad_vtophys) {
-				tr->bad_vtophys = 0;
-				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			}
-		}
-		pqpair->flags.has_pending_vtophys_failures = 0;
-	}
+	nvme_pcie_qpair_completion_maintenance(qpair, ctrlr, true);
 
 	return num_completions;
 }

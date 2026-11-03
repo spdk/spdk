@@ -531,6 +531,7 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t					in_completion_context: 1;
 	uint8_t					delete_after_completion_context: 1;
+	bool					completion_resubmit_handled;
 
 	/*
 	 * Set when no deletion notification is needed. For example, the process
@@ -1565,6 +1566,7 @@ void	nvme_qpair_abort_all_queued_reqs(struct spdk_nvme_qpair *qpair);
 uint32_t nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg);
 void	nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests);
+void	nvme_qpair_process_sw_completions(struct spdk_nvme_qpair *qpair);
 struct spdk_nvme_ns *nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 bool	nvme_ctrlr_identify_ns_error_is_fatal(struct spdk_nvme_ctrlr *ctrlr,

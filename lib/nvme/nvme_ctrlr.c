@@ -799,6 +799,9 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	ctrlr = qpair->ctrlr;
 
 	if (qpair->in_completion_context) {
+		if (ctrlr->queue_mgmt_opts.mode == SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ) {
+			return -EAGAIN;
+		}
 		/*
 		 * There are many cases where it is convenient to delete an io qpair in the context
 		 *  of that qpair's completion routine.  To handle this properly, set a flag here
