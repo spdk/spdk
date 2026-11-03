@@ -103,6 +103,9 @@ CONFIG_RDMA_CM=cma
 # Enable NVMe Character Devices.
 CONFIG_NVME_CUSE=y
 
+# Enable experimental N-1 tracker capacity for PCIe I/O queues.
+CONFIG_NVME_N_MINUS_1_TRACKERS=n
+
 # Enable FC support for the NVMf target.
 # Requires FC low level driver (from FC vendor)
 CONFIG_FC=n

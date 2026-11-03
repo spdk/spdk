@@ -208,6 +208,22 @@ nvme_pcie_qpair(struct spdk_nvme_qpair *qpair)
 	return SPDK_CONTAINEROF(qpair, struct nvme_pcie_qpair, qpair);
 }
 
+static inline uint16_t
+nvme_pcie_qpair_num_trackers(struct nvme_pcie_qpair *pqpair)
+{
+	uint16_t num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
+
+#ifdef SPDK_CONFIG_NVME_N_MINUS_1_TRACKERS
+	if (pqpair->qpair.ctrlr != NULL &&
+	    pqpair->qpair.ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE &&
+	    !nvme_qpair_is_admin_queue(&pqpair->qpair)) {
+		num_trackers = pqpair->num_entries - 1;
+	}
+#endif
+
+	return num_trackers;
+}
+
 static inline struct nvme_pcie_ctrlr *
 nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 {

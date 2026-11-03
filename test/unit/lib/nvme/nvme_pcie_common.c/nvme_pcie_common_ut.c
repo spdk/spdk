@@ -133,6 +133,59 @@ test_nvme_pcie_ctrlr_alloc_cmb(void)
 }
 
 static void
+test_nvme_pcie_qpair_tracker_capacity(void)
+{
+	static const uint16_t depths[] = { 2, 8, 64, 128, 512, 1024, UINT16_MAX };
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct nvme_pcie_qpair *pqpair;
+	struct nvme_tracker *tr;
+	uint16_t expected, count, cap;
+	size_t i;
+	unsigned int admin;
+	int rc;
+
+	pctrlr.ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	pctrlr.doorbell_base = (void *)0xF7000000;
+	pctrlr.doorbell_stride_u32 = 1;
+	MOCK_SET(spdk_vtophys, 0xDAADBEEF);
+
+	for (admin = 0; admin < 2; admin++) {
+		for (i = 0; i < SPDK_COUNTOF(depths); i++) {
+			pqpair = spdk_zmalloc(sizeof(*pqpair), 64, NULL,
+					      SPDK_ENV_NUMA_ID_ANY, SPDK_MALLOC_SHARE);
+			SPDK_CU_ASSERT_FATAL(pqpair != NULL);
+			pqpair->qpair.ctrlr = &pctrlr.ctrlr;
+			pqpair->qpair.id = admin ? 0 : 1;
+			pqpair->num_entries = depths[i];
+
+			rc = nvme_pcie_qpair_construct(&pqpair->qpair, NULL);
+			SPDK_CU_ASSERT_FATAL(rc == 0);
+			cap = spdk_min(spdk_max(depths[i] / 4, NVME_MIN_COMPLETIONS),
+				       NVME_MAX_COMPLETIONS);
+			expected = depths[i] - cap;
+#ifdef SPDK_CONFIG_NVME_N_MINUS_1_TRACKERS
+			if (!admin) {
+				expected = depths[i] - 1;
+			}
+#endif
+			CU_ASSERT(pqpair->max_completions_cap == cap);
+			CU_ASSERT(nvme_pcie_qpair_num_trackers(pqpair) == expected);
+			count = 0;
+			TAILQ_FOREACH(tr, &pqpair->free_tr, tq_list) {
+				CU_ASSERT(tr == &pqpair->tr[expected - count - 1]);
+				CU_ASSERT(tr->cid == expected - count - 1);
+				count++;
+			}
+			CU_ASSERT(count == expected);
+			CU_ASSERT(TAILQ_EMPTY(&pqpair->outstanding_tr));
+			nvme_pcie_qpair_destroy(&pqpair->qpair);
+		}
+	}
+
+	MOCK_CLEAR(spdk_vtophys);
+}
+
+static void
 test_nvme_pcie_qpair_construct_destroy(void)
 {
 	struct spdk_nvme_io_qpair_opts opts = {};
@@ -769,6 +822,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvme_pcie_common", NULL, NULL);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
+	CU_ADD_TEST(suite, test_nvme_pcie_qpair_tracker_capacity);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_disconnect_admin_qpair);

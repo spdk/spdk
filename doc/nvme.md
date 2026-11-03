@@ -229,6 +229,23 @@ raise io_queue_requests to match (or exceed) io_queue_size when allocating a
 queue pair with spdk_nvme_ctrlr_alloc_io_qpair(). The bundled spdk_nvme_perf
 tool demonstrates this pattern.
 
+##### Experimental N-1 Tracker Capacity
+
+Configure SPDK with `--enable-nvme-n-minus-1-trackers` to allocate N-1 trackers
+for each PCIe I/O queue pair with N entries. This build-time option is disabled
+by default; `--disable-nvme-n-minus-1-trackers` explicitly selects the default
+reservation. Admin queues and other transports are unchanged.
+
+The option changes only the tracker capacity, not the completion batch cap,
+doorbell timing, or request pool size. At queue size 128 it provides 127
+trackers instead of 96; at queue size 1024 it provides 1023 instead of 896.
+Each additional tracker consumes 4 KiB of memory.
+
+This is an experimental opt-in that reduces the completion headroom described
+above. Workloads that resubmit I/O from completion callbacks must be validated
+under sustained load, including queue wraparound, before deploying this option.
+Enabling it is not a guarantee of higher performance.
+
 ### NVMe Driver Internal Memory Usage {#nvme_memory_usage}
 
 The SPDK NVMe driver provides a zero-copy data transfer path, which means that
@@ -241,9 +258,8 @@ size and the value read from controller capabilities register field Maximum Queu
 Entries Supported(MQES, 0 based value). Each tracker has a fixed size 4096 Bytes,
 so the maximum memory used for each I/O queue is: (MQES + 1) * 4 KiB. Note that
 the number of trackers actually allocated, and therefore the maximum number of
-outstanding commands, is lower than the queue size because a portion of the
-completion queue is reserved; see [Maximum Outstanding I/O and Usable Queue
-Depth](#nvme_queue_depth).
+outstanding commands, is lower than the queue size; see
+[Maximum Outstanding I/O and Usable Queue Depth](#nvme_queue_depth).
 
 I/O queue pairs can be allocated in host memory, this is used for most NVMe controllers,
 some NVMe controllers which can support Controller Memory Buffer may put I/O queue

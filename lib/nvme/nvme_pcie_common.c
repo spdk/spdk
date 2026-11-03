@@ -148,14 +148,15 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair,
 	pqpair->retry_count = ctrlr->opts.transport_retry_count;
 
 	/*
-	 * Limit the maximum number of completions to return per call to prevent wraparound,
-	 * and calculate how many trackers can be submitted at once without overflowing the
-	 * completion queue.
+	 * Limit the maximum number of completions to return per call to prevent wraparound.
+	 * By default, reserve completion headroom for callback-driven resubmission before
+	 * the CQ head doorbell update. Experimental N-1 capacity retains the batch limit
+	 * but reduces the reservation for PCIe I/O queues.
 	 */
 	pqpair->max_completions_cap = pqpair->num_entries / 4;
 	pqpair->max_completions_cap = spdk_max(pqpair->max_completions_cap, NVME_MIN_COMPLETIONS);
 	pqpair->max_completions_cap = spdk_min(pqpair->max_completions_cap, NVME_MAX_COMPLETIONS);
-	num_trackers = pqpair->num_entries - pqpair->max_completions_cap;
+	num_trackers = nvme_pcie_qpair_num_trackers(pqpair);
 
 	NVME_QPAIR_INFOLOG(qpair, "max_completions_cap = %" PRIu16 " num_trackers = %" PRIu16 "\n",
 			   pqpair->max_completions_cap, num_trackers);

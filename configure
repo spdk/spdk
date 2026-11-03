@@ -128,6 +128,10 @@ function usage() {
 	echo " --without-fsdev           No path required"
 	echo " --with-nvme-cuse          Build NVMe driver with support for CUSE-based character devices."
 	echo " --without-nvme-cuse       No path required."
+	echo " --enable-nvme-n-minus-1-trackers"
+	echo "                           Enable experimental N-1 tracker capacity for PCIe I/O queues."
+	echo " --disable-nvme-n-minus-1-trackers"
+	echo "                           Preserve the default PCIe completion headroom reservation."
 	echo " --with-raid5f             Build with bdev_raid module RAID5f support."
 	echo " --without-raid5f          No path required."
 	echo " --with-wpdk=DIR           Build using WPDK to provide support for Windows (experimental)."
@@ -685,6 +689,12 @@ for i in "$@"; do
 			;;
 		--without-nvme-cuse)
 			CONFIG[NVME_CUSE]=n
+			;;
+		--enable-nvme-n-minus-1-trackers)
+			CONFIG[NVME_N_MINUS_1_TRACKERS]=y
+			;;
+		--disable-nvme-n-minus-1-trackers)
+			CONFIG[NVME_N_MINUS_1_TRACKERS]=n
 			;;
 		--with-raid5f)
 			CONFIG[RAID5F]=y
