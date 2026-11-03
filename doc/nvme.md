@@ -188,18 +188,20 @@ require that data should be done by sending a request to the owning thread.
 This results in a message passing architecture, as opposed to a locking
 architecture, and will result in superior scaling across CPU cores.
 
-#### Proposed Independent PCIe Submission and Completion Queues {#nvme_shared_cq}
+#### Independent PCIe Submission and Completion Queues {#nvme_shared_cq}
 
-The shared-CQ proposal separates the lifetime of a PCIe I/O completion queue
+Shared-CQ queue management separates the lifetime of a PCIe I/O completion queue
 (CQ) from the submission queues (SQs) bound to it. Several SQs may post
 completions to one CQ. Each SQ remains a queue-pair handle for normal I/O
 submission, while the application owns the standalone CQ. Existing coupled
 1:1 qpairs remain the default and retain their private completion path.
 
-The following describes the proposed contract, not functionality available
-through the current public API.
-
 ##### Configuration and allocation
+
+Build with `./configure --enable-nvme-shared-cq` to enable this experimental
+extension. It is disabled by default; `--disable-nvme-shared-cq` explicitly
+disables it. Without build support, selecting shared-CQ mode returns `-ENOTSUP`.
+Enabled builds still default to legacy mode.
 
 Independent CQ/SQ management requires an explicit per-controller opt-in before
 allocating I/O queues. The default is legacy coupled-qpair behavior. Mode
@@ -225,7 +227,7 @@ A shared CQ has one serialized polling domain. Polling a bound SQ may complete
 requests belonging to any sibling SQ, so callbacks execute on the thread
 draining the CQ, not necessarily through the SQ handle used to initiate the
 poll. All access must respect SPDK's single-thread-at-a-time qpair contract.
-There are no new data-path locks, and this proposal does not permit concurrent
+There are no new data-path locks, and this extension does not permit concurrent
 polling or arbitrary cross-thread submission to shared queues.
 
 The CQ records its process ownership and, when attached, its poll-group
@@ -264,7 +266,7 @@ Retained managed queues are released during terminal teardown only after
 controller disable confirms that DMA has stopped, or after device removal.
 If disable fails, the driver reports and retains the uncertain DMA resources.
 
-This proposal is intended for evaluating queue topology and resource usage.
+This extension is intended for evaluating queue topology and resource usage.
 Functional tests must cover routing, wraparound, ownership, partial failures,
 deletion under load, and recovery. No throughput, CPU, or latency improvement
 is implied without measurements on representative workloads.

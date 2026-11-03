@@ -1667,6 +1667,16 @@ test_nvme_parse_addr(void)
 	CU_ASSERT(dst_addr.ss_family == AF_INET);
 }
 
+static void
+test_nvme_shared_cq_build_support(void)
+{
+#ifdef SPDK_CONFIG_NVME_SHARED_CQ
+	CU_ASSERT(nvme_shared_cq_enabled());
+#else
+	CU_ASSERT(!nvme_shared_cq_enabled());
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1678,6 +1688,7 @@ main(int argc, char **argv)
 	suite = CU_add_suite("nvme", NULL, NULL);
 
 	CU_ADD_TEST(suite, test_opc_data_transfer);
+	CU_ADD_TEST(suite, test_nvme_shared_cq_build_support);
 	CU_ADD_TEST(suite, test_spdk_nvme_transport_id_parse_trtype);
 	CU_ADD_TEST(suite, test_spdk_nvme_transport_id_parse_adrfam);
 	CU_ADD_TEST(suite, test_trid_parse_and_compare);

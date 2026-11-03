@@ -103,6 +103,9 @@ CONFIG_RDMA_CM=cma
 # Enable NVMe Character Devices.
 CONFIG_NVME_CUSE=y
 
+# Enable opt-in independent PCIe I/O submission/completion queue management.
+CONFIG_NVME_SHARED_CQ=n
+
 # Enable FC support for the NVMf target.
 # Requires FC low level driver (from FC vendor)
 CONFIG_FC=n

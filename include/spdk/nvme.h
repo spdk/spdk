@@ -1990,6 +1990,8 @@ void spdk_nvme_ctrlr_get_default_queue_mgmt_opts(struct spdk_nvme_queue_mgmt_opt
 
 /**
  * Select queue management before allocating any I/O queues.
+ * Independent PCIe SQ/CQ management requires --enable-nvme-shared-cq at build
+ * time and SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ at runtime.
  *
  * \return 0 on success, -EINVAL for invalid options, -ENOTSUP when shared CQ
  * support is not built, or -EBUSY while any I/O SQ/CQ is allocated.

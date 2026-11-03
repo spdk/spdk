@@ -38,6 +38,8 @@ function usage() {
 	echo "                           target request (default: 16, max: 52)"
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
+	echo " --enable-nvme-shared-cq   Enable opt-in independent PCIe I/O SQ/CQ management"
+	echo " --disable-nvme-shared-cq  Disable independent PCIe I/O SQ/CQ management (default)"
 	echo " --enable-asan             Enable address sanitizer"
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
@@ -402,6 +404,12 @@ for i in "$@"; do
 			;;
 		--disable-werror)
 			CONFIG[WERROR]=n
+			;;
+		--enable-nvme-shared-cq)
+			CONFIG[NVME_SHARED_CQ]=y
+			;;
+		--disable-nvme-shared-cq)
+			CONFIG[NVME_SHARED_CQ]=n
 			;;
 		--enable-cet)
 			CONFIG[CET]=y
