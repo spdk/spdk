@@ -11,6 +11,7 @@
 
 SPDK_LOG_REGISTER_COMPONENT(nvme)
 
+DEFINE_STUB(nvme_qpair_state_string, const char *, (enum nvme_qpair_state state), "test");
 DEFINE_STUB(nvme_poll_group_connect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB(nvme_poll_group_disconnect_qpair, int, (struct spdk_nvme_qpair *qpair), 0);
@@ -25,6 +26,62 @@ DEFINE_STUB(spdk_nvme_poll_group_process_completions, int64_t, (struct spdk_nvme
 DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 DEFINE_STUB(spdk_nvme_ctrlr_is_fabrics, bool, (struct spdk_nvme_ctrlr *ctrlr), false);
+DEFINE_STUB(ut_poll_group_add, int, (struct spdk_nvme_transport_poll_group *group,
+				     struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(ut_poll_group_remove, int, (struct spdk_nvme_transport_poll_group *group,
+					struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(ut_poll_group_connect, int, (struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(ut_poll_group_disconnect, int, (struct spdk_nvme_qpair *qpair), 0);
+
+static void
+test_nvme_transport_poll_group_hooks(void)
+{
+	struct spdk_nvme_transport transport = {
+		.ops = {
+			.poll_group_add = ut_poll_group_add,
+			.poll_group_remove = ut_poll_group_remove,
+			.poll_group_connect_qpair = ut_poll_group_connect,
+			.poll_group_disconnect_qpair = ut_poll_group_disconnect,
+		},
+	};
+	struct spdk_nvme_transport_poll_group group = {.transport = &transport};
+	struct spdk_nvme_qpair qpair = {};
+
+	STAILQ_INIT(&group.connected_qpairs);
+	STAILQ_INIT(&group.disconnected_qpairs);
+	nvme_qpair_set_state(&qpair, NVME_QPAIR_DISCONNECTED);
+	MOCK_SET(ut_poll_group_add, -EINVAL);
+	CU_ASSERT(nvme_transport_poll_group_add(&group, &qpair) == -EINVAL);
+	CU_ASSERT(qpair.poll_group == NULL && qpair.poll_group_tailq_head == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group.disconnected_qpairs));
+	MOCK_SET(ut_poll_group_add, 0);
+	CU_ASSERT(nvme_transport_poll_group_add(&group, &qpair) == 0);
+	MOCK_SET(ut_poll_group_connect, -EINVAL);
+	CU_ASSERT(nvme_transport_poll_group_connect_qpair(&qpair) == -EINVAL);
+	CU_ASSERT(qpair.poll_group_tailq_head == &group.disconnected_qpairs);
+	CU_ASSERT(group.num_connected_qpairs == 0);
+	MOCK_SET(ut_poll_group_connect, -EINPROGRESS);
+	CU_ASSERT(nvme_transport_poll_group_connect_qpair(&qpair) == 0);
+	CU_ASSERT(qpair.poll_group_tailq_head == &group.disconnected_qpairs);
+	MOCK_SET(ut_poll_group_connect, 0);
+	CU_ASSERT(nvme_transport_poll_group_connect_qpair(&qpair) == 0);
+	CU_ASSERT(group.num_connected_qpairs == 1);
+	MOCK_SET(ut_poll_group_disconnect, -EIO);
+	CU_ASSERT(nvme_transport_poll_group_disconnect_qpair(&qpair) == -EIO);
+	CU_ASSERT(qpair.poll_group_tailq_head == &group.connected_qpairs);
+	CU_ASSERT(group.num_connected_qpairs == 1);
+	MOCK_SET(ut_poll_group_disconnect, 0);
+	CU_ASSERT(nvme_transport_poll_group_disconnect_qpair(&qpair) == 0);
+	MOCK_SET(ut_poll_group_remove, -EBUSY);
+	CU_ASSERT(nvme_transport_poll_group_remove(&group, &qpair) == -EBUSY);
+	CU_ASSERT(qpair.poll_group == &group);
+	CU_ASSERT(qpair.poll_group_tailq_head == &group.disconnected_qpairs);
+	MOCK_SET(ut_poll_group_remove, 0);
+	CU_ASSERT(nvme_transport_poll_group_remove(&group, &qpair) == 0);
+	CU_ASSERT(qpair.poll_group == NULL && qpair.poll_group_tailq_head == NULL);
+	CU_ASSERT(STAILQ_EMPTY(&group.connected_qpairs));
+	CU_ASSERT(STAILQ_EMPTY(&group.disconnected_qpairs));
+}
 
 static void
 test_nvme_managed_queue_unsupported(void)
@@ -129,6 +186,10 @@ test_nvme_transport_register_ext(void)
 		.ctrlr_process_transport_events = ut_registration_events,
 		.ctrlr_create_io_cq = ut_create_io_cq,
 		.ctrlr_connect_io_cq = ut_connect_io_cq,
+		.poll_group_add = ut_poll_group_add,
+		.poll_group_remove = ut_poll_group_remove,
+		.poll_group_connect_qpair = ut_poll_group_connect,
+		.poll_group_disconnect_qpair = ut_poll_group_disconnect,
 	};
 	const struct spdk_nvme_transport *t;
 
@@ -141,6 +202,10 @@ test_nvme_transport_register_ext(void)
 	CU_ASSERT(t->ops.ctrlr_process_transport_events == ut_registration_events);
 	CU_ASSERT(t->ops.ctrlr_create_io_cq == ut_create_io_cq);
 	CU_ASSERT(t->ops.ctrlr_connect_io_cq == ut_connect_io_cq);
+	CU_ASSERT(t->ops.poll_group_add == ut_poll_group_add);
+	CU_ASSERT(t->ops.poll_group_remove == ut_poll_group_remove);
+	CU_ASSERT(t->ops.poll_group_connect_qpair == ut_poll_group_connect);
+	CU_ASSERT(t->ops.poll_group_disconnect_qpair == ut_poll_group_disconnect);
 
 	snprintf(ops.name, sizeof(ops.name), "ut_ext_small");
 	spdk_nvme_transport_register_ext(&ops,
@@ -168,6 +233,10 @@ test_nvme_transport_register_legacy(void)
 		.ctrlr_process_transport_events = ut_registration_events,
 		.ctrlr_create_io_cq = ut_create_io_cq,
 		.ctrlr_connect_io_cq = ut_connect_io_cq,
+		.poll_group_add = ut_poll_group_add,
+		.poll_group_remove = ut_poll_group_remove,
+		.poll_group_connect_qpair = ut_poll_group_connect,
+		.poll_group_disconnect_qpair = ut_poll_group_disconnect,
 	};
 	const struct spdk_nvme_transport *t;
 
@@ -180,6 +249,10 @@ test_nvme_transport_register_legacy(void)
 	CU_ASSERT(t->ops.ctrlr_process_transport_events == ut_registration_events);
 	CU_ASSERT(t->ops.ctrlr_create_io_cq == NULL);
 	CU_ASSERT(t->ops.ctrlr_connect_io_cq == NULL);
+	CU_ASSERT(t->ops.poll_group_add == NULL);
+	CU_ASSERT(t->ops.poll_group_remove == NULL);
+	CU_ASSERT(t->ops.poll_group_connect_qpair == NULL);
+	CU_ASSERT(t->ops.poll_group_disconnect_qpair == NULL);
 	ut_reset_transport_registry();
 }
 
@@ -394,6 +467,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_connect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_disconnect_qpair);
 	CU_ADD_TEST(suite, test_nvme_transport_poll_group_add_remove);
+	CU_ADD_TEST(suite, test_nvme_transport_poll_group_hooks);
 	CU_ADD_TEST(suite, test_ctrlr_get_memory_domains);
 
 	num_failures = spdk_ut_run_tests(argc, argv, NULL);

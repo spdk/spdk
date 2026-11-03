@@ -24,6 +24,9 @@ static struct spdk_nvme_pcie_stat g_dummy_stat = {};
 
 static void nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair,
 		struct nvme_tracker *tr);
+static void nvme_pcie_poll_group_untrack_shared_cq(struct spdk_nvme_qpair *qpair);
+static bool nvme_pcie_shared_cq_has_tgroup_member(struct nvme_pcie_cq *cq,
+		struct spdk_nvme_transport_poll_group *tgroup, struct nvme_pcie_qpair *exclude);
 
 static inline uint64_t
 nvme_pcie_vtophys(struct spdk_nvme_qpair *qpair, const void *buf, uint64_t *size)
@@ -957,6 +960,9 @@ nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
 	}
 	max_completions = spdk_min(max_completions, (uint32_t)cq->num_entries - 1);
 	cq->stat.polls++;
+	if (cq->poll_group) {
+		cq->poll_group->stats.polls++;
+	}
 	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
 		member->qpair.in_completion_context = 1;
 	}
@@ -1018,9 +1024,15 @@ nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
 	if (num_completions > 0) {
 		cq->completions += num_completions;
 		cq->stat.completions += num_completions;
+		if (cq->poll_group) {
+			cq->poll_group->stats.completions += num_completions;
+		}
 		nvme_pcie_cq_ring_doorbell(cq, ctrlr);
 	} else {
 		cq->stat.idle_polls++;
+		if (cq->poll_group) {
+			cq->poll_group->stats.idle_polls++;
+		}
 	}
 	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
 		if (member->flags.delay_cmd_submit && member->last_sq_tail != member->sq_tail) {
@@ -1543,8 +1555,12 @@ nvme_pcie_ctrlr_unbind_shared_cq(struct nvme_pcie_qpair *pqpair)
 	assert(cq->refcount > 0 && pcq->cq.refcount > 0);
 	cq->refcount--;
 	pcq->cq.refcount--;
+	nvme_pcie_poll_group_untrack_shared_cq(&pqpair->qpair);
 	if (cq->refcount == 0) {
 		cq->owner_proc = NULL;
+		cq->owner_tgroup = NULL;
+	} else if (cq->owner_tgroup &&
+		   !nvme_pcie_shared_cq_has_tgroup_member(cq, cq->owner_tgroup, NULL)) {
 		cq->owner_tgroup = NULL;
 	}
 }
@@ -2490,6 +2506,137 @@ exit:
 	return rc;
 }
 
+static bool
+nvme_pcie_shared_cq_has_tgroup_member(struct nvme_pcie_cq *cq,
+				      struct spdk_nvme_transport_poll_group *tgroup, struct nvme_pcie_qpair *exclude)
+{
+	struct nvme_pcie_qpair *member;
+
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		if (member != exclude && member->qpair.poll_group == tgroup) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static void
+nvme_pcie_poll_group_untrack_shared_cq(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_cq *cq = pqpair->cq;
+
+	if (!pqpair->flags.shared_cq_tracked) {
+		return;
+	}
+	if (cq->owner_proc && cq->owner_proc != nvme_ctrlr_get_current_process(qpair->ctrlr)) {
+		cq->poll_group = NULL;
+		cq->poll_group_qpair_count = 0;
+		cq->poll_group_connected_count = 0;
+	} else if (cq->poll_group && cq->poll_group_qpair_count) {
+		cq->poll_group_qpair_count--;
+		if (pqpair->flags.shared_cq_connected && cq->poll_group_connected_count) {
+			cq->poll_group_connected_count--;
+		}
+		if (cq->poll_group_qpair_count == 0) {
+			TAILQ_REMOVE(&cq->poll_group->shared_cqs, cq, poll_group_link);
+			cq->poll_group = NULL;
+			cq->poll_group_connected_count = 0;
+		}
+	}
+	pqpair->flags.shared_cq_tracked = false;
+	pqpair->flags.shared_cq_connected = false;
+}
+
+int
+nvme_pcie_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
+			 struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_cq *cq = pqpair->cq;
+
+	if (pqpair->flags.shared_cq) {
+		if (cq->in_completion_context || (cq->owner_tgroup && cq->owner_tgroup != tgroup) ||
+		    (cq->poll_group && cq->poll_group != group)) {
+			NVME_QPAIR_ERRLOG(qpair, "Shared CQ cannot belong to multiple poll groups\n");
+			return -EINVAL;
+		}
+		if (cq->owner_proc && cq->owner_proc != nvme_ctrlr_get_current_process(qpair->ctrlr)) {
+			NVME_QPAIR_ERRLOG(qpair, "Shared CQ belongs to another process\n");
+			return -EPERM;
+		}
+		cq->owner_tgroup = tgroup;
+		if (!pqpair->flags.shared_cq_tracked) {
+			if (cq->poll_group == NULL) {
+				cq->poll_group = group;
+				TAILQ_INSERT_TAIL(&group->shared_cqs, cq, poll_group_link);
+			}
+			cq->poll_group_qpair_count++;
+			pqpair->flags.shared_cq_tracked = true;
+		}
+	}
+	if (!pqpair->shared_stats) {
+		free(pqpair->stat);
+	}
+	pqpair->stat = &group->stats;
+	pqpair->shared_stats = true;
+	return 0;
+}
+
+int
+nvme_pcie_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
+			    struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_cq *cq = pqpair->cq;
+
+	if (pqpair->flags.shared_cq) {
+		if (cq->in_completion_context) {
+			return -EBUSY;
+		}
+		if (cq->owner_tgroup == tgroup &&
+		    !nvme_pcie_shared_cq_has_tgroup_member(cq, tgroup, pqpair)) {
+			cq->owner_tgroup = NULL;
+		}
+		nvme_pcie_poll_group_untrack_shared_cq(qpair);
+	}
+	pqpair->stat = &g_dummy_stat;
+	pqpair->shared_stats = true;
+	return 0;
+}
+
+int
+nvme_pcie_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	if (pqpair->flags.shared_cq) {
+		if (pqpair->cq->owner_tgroup != qpair->poll_group) {
+			NVME_QPAIR_ERRLOG(qpair, "Shared CQ poll-group ownership mismatch\n");
+			return -EINVAL;
+		}
+		if (pqpair->flags.shared_cq_tracked && !pqpair->flags.shared_cq_connected) {
+			pqpair->cq->poll_group_connected_count++;
+			pqpair->flags.shared_cq_connected = true;
+		}
+	}
+	return 0;
+}
+
+int
+nvme_pcie_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
+
+	if (pqpair->flags.shared_cq_connected) {
+		assert(pqpair->cq->poll_group_connected_count > 0);
+		pqpair->cq->poll_group_connected_count--;
+		pqpair->flags.shared_cq_connected = false;
+	}
+	return 0;
+}
+
 struct spdk_nvme_transport_poll_group *
 nvme_pcie_poll_group_create(void)
 {
@@ -2500,6 +2647,7 @@ nvme_pcie_poll_group_create(void)
 		return NULL;
 	}
 
+	TAILQ_INIT(&group->shared_cqs);
 	return &group->group;
 }
 
@@ -2507,6 +2655,8 @@ int64_t
 nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *tgroup,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
 {
+	struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+	struct nvme_pcie_cq *cq, *tmp_cq;
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
 	int32_t local_completions = 0;
 	int64_t total_completions = 0;
@@ -2515,7 +2665,67 @@ nvme_pcie_poll_group_process_completions(struct spdk_nvme_transport_poll_group *
 		disconnected_qpair_cb(qpair, tgroup->group->ctx);
 	}
 
+	/* Progress asynchronous SQ creation without draining the CQ per member. */
 	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		if (nvme_pcie_qpair(qpair)->flags.shared_cq &&
+		    nvme_qpair_get_state(qpair) == NVME_QPAIR_CONNECTING &&
+		    !qpair->ctrlr->is_failed && !qpair->ctrlr->is_removed) {
+			local_completions = spdk_nvme_qpair_process_completions(qpair, 0);
+			if (local_completions < 0) {
+				disconnected_qpair_cb(qpair, tgroup->group->ctx);
+				total_completions = -ENXIO;
+			}
+		}
+	}
+	TAILQ_FOREACH_SAFE(cq, &group->shared_cqs, poll_group_link, tmp_cq) {
+		struct nvme_pcie_io_cq *pcq = SPDK_CONTAINEROF(cq, struct nvme_pcie_io_cq, pcie_cq);
+		struct nvme_pcie_qpair *member, *tmp_member;
+		uint32_t ready = 0, budget;
+		uint64_t scaled;
+
+		if (cq->poll_group_connected_count == 0) {
+			continue;
+		}
+		if (pcq->cq.ctrlr->is_failed || pcq->cq.ctrlr->is_removed || pcq->cq.pending) {
+			TAILQ_FOREACH_SAFE(member, &cq->sq_members, cq_member_link, tmp_member) {
+				if (member->flags.shared_cq_connected && member->qpair.poll_group == tgroup) {
+					if (pcq->cq.ctrlr->is_removed) {
+						nvme_qpair_set_state(&member->qpair, NVME_QPAIR_DESTROYING);
+						member->qpair.in_completion_context = 1;
+						nvme_qpair_abort_all_queued_reqs(&member->qpair);
+						nvme_pcie_qpair_abort_reqs(&member->qpair, member->qpair.abort_dnr);
+						member->qpair.in_completion_context = 0;
+					}
+					disconnected_qpair_cb(&member->qpair, tgroup->group->ctx);
+				}
+			}
+			total_completions = -ENXIO;
+			continue;
+		}
+		TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+			enum nvme_qpair_state state = nvme_qpair_get_state(&member->qpair);
+
+			if (member->flags.shared_cq_connected && state >= NVME_QPAIR_CONNECTED &&
+			    state <= NVME_QPAIR_ENABLED) {
+				ready++;
+			}
+		}
+		if (ready == 0) {
+			continue;
+		}
+		scaled = (uint64_t)completions_per_qpair * ready;
+		budget = scaled > UINT32_MAX ? UINT32_MAX : (uint32_t)scaled;
+		local_completions = nvme_pcie_cq_process_completions_shared(cq, pcq->cq.ctrlr, budget);
+		if (local_completions < 0) {
+			total_completions = -ENXIO;
+		} else if (total_completions >= 0) {
+			total_completions += local_completions;
+		}
+	}
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		if (nvme_pcie_qpair(qpair)->flags.shared_cq) {
+			continue;
+		}
 		local_completions = spdk_nvme_qpair_process_completions(qpair, completions_per_qpair);
 		if (spdk_unlikely(local_completions < 0)) {
 			disconnected_qpair_cb(qpair, tgroup->group->ctx);
@@ -2542,7 +2752,10 @@ nvme_pcie_poll_group_check_disconnected_qpairs(struct spdk_nvme_transport_poll_g
 int
 nvme_pcie_poll_group_destroy(struct spdk_nvme_transport_poll_group *tgroup)
 {
-	if (!STAILQ_EMPTY(&tgroup->connected_qpairs) || !STAILQ_EMPTY(&tgroup->disconnected_qpairs)) {
+	struct nvme_pcie_poll_group *group = SPDK_CONTAINEROF(tgroup, struct nvme_pcie_poll_group, group);
+
+	if (!STAILQ_EMPTY(&tgroup->connected_qpairs) || !STAILQ_EMPTY(&tgroup->disconnected_qpairs) ||
+	    !TAILQ_EMPTY(&group->shared_cqs)) {
 		return -EBUSY;
 	}
 

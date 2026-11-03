@@ -5136,6 +5136,13 @@ struct spdk_nvme_transport_ops {
 			struct spdk_nvme_cq *cq, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
 
 	int (*ctrlr_connect_io_cq)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	int (*poll_group_add)(struct spdk_nvme_transport_poll_group *tgroup,
+			      struct spdk_nvme_qpair *qpair);
+	int (*poll_group_remove)(struct spdk_nvme_transport_poll_group *tgroup,
+				 struct spdk_nvme_qpair *qpair);
+	int (*poll_group_connect_qpair)(struct spdk_nvme_qpair *qpair);
+	int (*poll_group_disconnect_qpair)(struct spdk_nvme_qpair *qpair);
 };
 
 /**
