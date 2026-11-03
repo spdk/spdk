@@ -16,6 +16,7 @@
 
 pid_t g_spdk_nvme_pid;
 DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
+DEFINE_STUB(nvme_qpair_check_enabled, bool, (struct spdk_nvme_qpair *qpair), true);
 DEFINE_STUB_V(nvme_qpair_process_sw_completions, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(nvme_qpair_resubmit_requests, (struct spdk_nvme_qpair *qpair,
 		uint32_t num_requests));

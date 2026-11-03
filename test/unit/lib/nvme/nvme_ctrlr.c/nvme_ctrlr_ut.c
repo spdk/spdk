@@ -1700,6 +1700,8 @@ setup_qpairs(struct spdk_nvme_ctrlr *ctrlr, uint32_t num_io_queues)
 static void
 cleanup_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
+	g_ut_nvme_regs.cc.bits.en = 0;
+	g_ut_nvme_regs.csts.bits.rdy = 0;
 	nvme_ctrlr_destruct(ctrlr);
 }
 
@@ -2034,6 +2036,50 @@ test_independent_cq_reset_and_cleanup(void)
 	CU_ASSERT(TAILQ_FIRST(&ctrlr.active_io_cqs) == cq);
 	cleanup_qpairs(&ctrlr);
 	CU_ASSERT(g_cq_force_calls == 2);
+	g_cq_delete_rc = 0;
+	g_cq_delete_timeout = false;
+	MOCK_SET(nvme_shared_cq_enabled, false);
+}
+
+static void
+test_independent_cq_terminal_disable(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_ctrlr_detach_ctx ctx = {.ctrlr = &ctrlr, .shutdown_complete = true};
+	struct spdk_nvme_cq *cq;
+	unsigned i;
+	int rc = -EAGAIN;
+
+	setup_managed_cqs(&ctrlr);
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	g_cq_delete_rc = -ETIMEDOUT;
+	g_cq_delete_timeout = true;
+	CU_ASSERT(spdk_nvme_ctrlr_free_io_cq(cq) == -ETIMEDOUT);
+	CU_ASSERT(nvme_ctrlr_destruct_poll_async(&ctrlr, &ctx) == -EAGAIN);
+	CU_ASSERT(ctx.io_queues_disable_started && g_cq_force_calls == 0);
+	g_ut_nvme_regs.cc.bits.en = 0;
+	g_ut_nvme_regs.csts.bits.rdy = 0;
+	for (i = 0; i < 16 && rc == -EAGAIN; i++) {
+		rc = nvme_ctrlr_destruct_poll_async(&ctrlr, &ctx);
+	}
+	CU_ASSERT(rc == 0 && g_cq_force_calls == 1);
+	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_io_cqs));
+	nvme_ctrlr_destruct_finish(&ctrlr);
+
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	memset(&ctx, 0, sizeof(ctx));
+	ctx.ctrlr = &ctrlr;
+	ctx.shutdown_complete = ctx.io_queues_disable_started = true;
+	setup_managed_cqs(&ctrlr);
+	cq = spdk_nvme_ctrlr_alloc_io_cq(&ctrlr, NULL, 0);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	nvme_ctrlr_set_state(&ctrlr, NVME_CTRLR_STATE_ERROR, NVME_TIMEOUT_INFINITE);
+	CU_ASSERT(nvme_ctrlr_destruct_poll_async(&ctrlr, &ctx) != 0);
+	CU_ASSERT(g_cq_force_calls == 0);
+	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_io_cqs));
+	nvme_ctrlr_destruct_finish(&ctrlr);
+	free(cq);
 	g_cq_delete_rc = 0;
 	g_cq_delete_timeout = false;
 	MOCK_SET(nvme_shared_cq_enabled, false);
@@ -4523,6 +4569,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_independent_sq_orphan_cleanup);
 	CU_ADD_TEST(suite, test_independent_cq_opts_abi);
 	CU_ADD_TEST(suite, test_independent_cq_reset_and_cleanup);
+	CU_ADD_TEST(suite, test_independent_cq_terminal_disable);
 	CU_ADD_TEST(suite, test_alloc_qid_requires_common_free_id);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_ctrlr_opts);
 	CU_ADD_TEST(suite, test_ctrlr_get_default_io_qpair_opts);

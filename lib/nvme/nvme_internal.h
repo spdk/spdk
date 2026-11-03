@@ -1339,6 +1339,7 @@ struct nvme_ctrlr_detach_ctx {
 	uint64_t				shutdown_start_tsc;
 	uint32_t				shutdown_timeout_ms;
 	bool					shutdown_complete;
+	bool					io_queues_disable_started;
 	enum nvme_ctrlr_detach_state		state;
 	union spdk_nvme_csts_register		csts;
 	TAILQ_ENTRY(nvme_ctrlr_detach_ctx)	link;
@@ -1570,6 +1571,7 @@ uint32_t nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, 
 void	nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests);
 void	nvme_qpair_process_sw_completions(struct spdk_nvme_qpair *qpair);
+bool	nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair);
 struct spdk_nvme_ns *nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);
 bool	nvme_ctrlr_identify_ns_error_is_fatal(struct spdk_nvme_ctrlr *ctrlr,

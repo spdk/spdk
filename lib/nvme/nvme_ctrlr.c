@@ -5390,6 +5390,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct spdk_nvme_ns *ns, *tmp_ns;
 	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+	bool release_io_resources = true;
 	int rc = 0;
 
 	if (!ctx->shutdown_complete) {
@@ -5400,9 +5401,36 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		/* Destruct ctrlr forcefully for any other error. */
 	}
 
-	ctrlr->prepare_for_reset = true;
+	if (!TAILQ_EMPTY(&ctrlr->active_io_cqs) && !ctrlr->is_removed) {
+		ctx->shutdown_complete = true;
+		if (!ctx->io_queues_disable_started) {
+			ctrlr->is_disconnecting = true;
+			nvme_ctrlr_disable(ctrlr);
+			ctx->io_queues_disable_started = true;
+			return -EAGAIN;
+		}
+		rc = nvme_ctrlr_disable_poll(ctrlr);
+		if (rc == -EAGAIN) {
+			return rc;
+		}
+		if (rc != 0) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Cannot confirm DMA stopped; retaining managed queue memory\n");
+			release_io_resources = false;
+		}
+	}
+
+	ctrlr->prepare_for_reset = release_io_resources;
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp_qpair) {
-		int cleanup_rc = spdk_nvme_ctrlr_free_io_qpair(qpair);
+		int cleanup_rc;
+
+		if (!release_io_resources) {
+			nvme_ctrlr_proc_remove_io_qpair(qpair);
+			TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
+			NVME_CTRLR_ERRLOG(ctrlr, "SQ %u retains DMA memory after terminal disable failure\n",
+					  qpair->id);
+			continue;
+		}
+		cleanup_rc = spdk_nvme_ctrlr_free_io_qpair(qpair);
 
 		if (cleanup_rc != 0) {
 			NVME_CTRLR_ERRLOG(ctrlr, "Failed terminal SQ cleanup: rc=%d\n", cleanup_rc);
@@ -5414,10 +5442,11 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 
 		TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
 		nvme_ctrlr_proc_move_io_cq(cq, NULL);
-		if (cq->refcount == 0) {
+		if (release_io_resources && cq->refcount == 0) {
 			nvme_ctrlr_force_free_io_cq(cq);
 		} else {
-			NVME_CTRLR_ERRLOG(ctrlr, "CQ %u still bound after terminal cleanup; leaking host resources\n",
+			NVME_CTRLR_ERRLOG(ctrlr,
+					  "CQ %u cannot be released after terminal cleanup; retaining host resources\n",
 					  cq->id);
 		}
 	}

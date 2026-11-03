@@ -260,6 +260,9 @@ On controller reset, standalone CQs are recreated before their bound SQs are
 reconnected. CQ head, phase, and ring state are reinitialized, and queue-ID
 reservations and bindings are restored. Process and controller teardown clean
 up SQs before CQs, with host-only cleanup for terminal removal.
+Retained managed queues are released during terminal teardown only after
+controller disable confirms that DMA has stopped, or after device removal.
+If disable fails, the driver reports and retains the uncertain DMA resources.
 
 This proposal is intended for evaluating queue topology and resource usage.
 Functional tests must cover routing, wraparound, ownership, partial failures,

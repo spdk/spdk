@@ -740,7 +740,7 @@ nvme_qpair_resubmit_queued_reqs(struct spdk_nvme_qpair *qpair, uint32_t num_requ
 	return rc;
 }
 
-static inline bool
+bool
 nvme_qpair_check_enabled(struct spdk_nvme_qpair *qpair)
 {
 	/*

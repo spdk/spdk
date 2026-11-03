@@ -950,11 +950,27 @@ nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
 	struct nvme_pcie_qpair *delayed[NVME_MAX_COMPLETIONS];
 	uint32_t num_delayed = 0, i;
 	uint32_t num_completions = 0;
+	bool ready = false;
 
 	if (cq->in_completion_context) {
 		return -EBUSY;
 	}
 	cq->in_completion_context = true;
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		member->qpair.in_completion_context = 1;
+	}
+	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+		if (nvme_qpair_check_enabled(&member->qpair)) {
+			ready = true;
+		}
+	}
+	if (!ready) {
+		TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
+			member->qpair.in_completion_context = 0;
+		}
+		cq->in_completion_context = false;
+		return 0;
+	}
 	if (max_completions == 0 || max_completions > NVME_MAX_COMPLETIONS) {
 		max_completions = NVME_MAX_COMPLETIONS;
 	}
@@ -962,9 +978,6 @@ nvme_pcie_cq_process_completions_shared(struct nvme_pcie_cq *cq,
 	cq->stat.polls++;
 	if (cq->poll_group) {
 		cq->poll_group->stats.polls++;
-	}
-	TAILQ_FOREACH(member, &cq->sq_members, cq_member_link) {
-		member->qpair.in_completion_context = 1;
 	}
 	while (num_completions < max_completions) {
 		struct spdk_nvme_cpl *cpl = &cq->cpl[cq->cq_head];

@@ -59,6 +59,7 @@ DEFINE_STUB_V(spdk_nvme_qpair_print_completion_ext, (const struct spdk_nvme_qpai
 
 DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(nvme_qpair_abort_all_queued_reqs, (struct spdk_nvme_qpair *qpair));
+DEFINE_STUB(nvme_qpair_check_enabled, bool, (struct spdk_nvme_qpair *qpair), true);
 
 static struct spdk_nvme_ctrlr_process *g_current_process;
 
@@ -1310,6 +1311,13 @@ test_nvme_pcie_shared_cq_poll_group(void)
 	CU_ASSERT(nvme_pcie_poll_group_process_completions(tgroup, 0, ut_shared_cq_disconnected) == 0);
 	CU_ASSERT(sq_doorbell[0] == 2 && members[0].last_sq_tail == 2);
 	CU_ASSERT(group->stats.idle_polls == 1 && group->stats.sq_mmio_doorbell_updates == 1);
+	ut_shared_cq_fill(cq, 1);
+	polls = cq->stat.polls;
+	MOCK_SET(nvme_qpair_check_enabled, false);
+	CU_ASSERT(nvme_pcie_poll_group_process_completions(tgroup, 1, ut_shared_cq_disconnected) == 0);
+	CU_ASSERT(cq->stat.polls == polls);
+	MOCK_SET(nvme_qpair_check_enabled, true);
+	CU_ASSERT(nvme_pcie_poll_group_process_completions(tgroup, 1, ut_shared_cq_disconnected) == 1);
 
 	/* A connecting sibling must not drain independently or block the active SQ. */
 	nvme_qpair_set_state(&members[1].qpair, NVME_QPAIR_CONNECTING);
