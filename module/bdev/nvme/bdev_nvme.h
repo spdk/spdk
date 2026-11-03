@@ -104,7 +104,8 @@ typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
  * Flags read on IO threads as best-effort informational checks
  * (via nvme_ctrlr_is_available, nvme_ctrlr_is_failed, and direct reads):
  *   resetting, sched_reconnect, fast_io_fail_timedout,
- *   destruct, ana_log_page_updating, dont_retry, disabled
+ *   destruct, ana_log_page_updating, dont_retry, disabled,
+ *   disconnected_cb
  *
  * Stale reads are harmless - the IO path handles unavailable controllers
  * gracefully. The worst outcome of an IO thread seeing an outdated value

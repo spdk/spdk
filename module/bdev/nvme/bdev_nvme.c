@@ -800,11 +800,28 @@ nvme_detach_poller(void *arg)
 	return SPDK_POLLER_BUSY;
 }
 
-static void
-bdev_nvme_ctrlr_unregister_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr)
+static void bdev_nvme_ctrlr_register_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr);
+
+static bool
+bdev_nvme_ctrlr_unregister_reconnect_timer_ext(struct nvme_ctrlr *nvme_ctrlr,
+		nvme_ctrlr_disconnected_cb disconnected_cb)
 {
 	spdk_poller_unregister(&nvme_ctrlr->reconnect_delay_timer);
 	nvme_ctrlr->sched_reconnect = false;
+	if (disconnected_cb && nvme_ctrlr->disconnected_cb) {
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect was already scheduled.\n");
+		assert(nvme_ctrlr->disconnected_cb == bdev_nvme_ctrlr_register_reconnect_timer);
+		nvme_ctrlr->disconnected_cb = disconnected_cb;
+		return true;
+	}
+
+	return false;
+}
+
+static void
+bdev_nvme_ctrlr_unregister_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr)
+{
+	bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr, NULL);
 }
 
 static void
@@ -1203,7 +1220,8 @@ nvme_io_path_is_available(struct nvme_io_path *io_path)
 static inline bool
 nvme_ctrlr_has_sched_reconnect(struct nvme_ctrlr *nvme_ctrlr)
 {
-	return nvme_ctrlr->sched_reconnect;
+	return nvme_ctrlr->sched_reconnect ||
+	       nvme_ctrlr->disconnected_cb == bdev_nvme_ctrlr_register_reconnect_timer;
 }
 
 static inline bool
@@ -2787,8 +2805,10 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, false);
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
-		bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
+		if (bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr, bdev_nvme_reconnect_ctrlr)) {
+			return 0;
+		}
+
 		msg_fn = bdev_nvme_reconnect_ctrlr_now;
 	} else {
 		msg_fn = _bdev_nvme_reset_ctrlr;
@@ -2936,7 +2956,10 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, true);
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
+		if (bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr, bdev_nvme_disable_ctrlr_complete)) {
+			return 0;
+		}
+
 		msg_fn = _bdev_nvme_disable_ctrlr;
 	} else {
 		msg_fn = _bdev_nvme_disconnect_and_disable_ctrlr;
