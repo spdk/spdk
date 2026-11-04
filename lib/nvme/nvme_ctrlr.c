@@ -489,32 +489,62 @@ nvme_ctrlr_io_qpair_opts_copy(struct spdk_nvme_io_qpair_opts *dst,
 #undef SET_FIELD
 }
 
-static struct spdk_nvme_qpair *
-nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
-			   const struct spdk_nvme_io_qpair_opts *opts)
+static void
+nvme_ctrlr_io_qpair_opts_prepare(struct spdk_nvme_ctrlr *ctrlr,
+				 struct spdk_nvme_io_qpair_opts *opts,
+				 const struct spdk_nvme_io_qpair_opts *user_opts,
+				 size_t opts_size)
 {
-	int32_t					qid;
-	struct spdk_nvme_qpair			*qpair;
-	union spdk_nvme_cc_register		cc;
-
-	if (!ctrlr) {
-		return NULL;
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, opts, sizeof(*opts));
+	if (user_opts) {
+		nvme_ctrlr_io_qpair_opts_copy(opts, user_opts, spdk_min(opts->opts_size, opts_size));
 	}
+}
 
-	nvme_ctrlr_lock(ctrlr);
-	cc.raw = ctrlr->process_init_cc.raw;
+static bool
+nvme_ctrlr_io_qpair_opts_qprio_is_valid(struct spdk_nvme_ctrlr *ctrlr,
+					const struct spdk_nvme_io_qpair_opts *opts)
+{
+	union spdk_nvme_cc_register cc = ctrlr->process_init_cc;
 
 	if (opts->qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK) {
-		nvme_ctrlr_unlock(ctrlr);
-		return NULL;
+		return false;
 	}
 
 	/*
 	 * Only value SPDK_NVME_QPRIO_URGENT(0) is valid for the
 	 * default round robin arbitration method.
 	 */
-	if ((cc.bits.ams == SPDK_NVME_CC_AMS_RR) && (opts->qprio != SPDK_NVME_QPRIO_URGENT)) {
-		NVME_CTRLR_ERRLOG(ctrlr, "invalid queue priority for default round robin arbitration method\n");
+	if (cc.bits.ams == SPDK_NVME_CC_AMS_RR && opts->qprio != SPDK_NVME_QPRIO_URGENT) {
+		return false;
+	}
+
+	return true;
+}
+
+static bool
+nvme_ctrlr_io_qpair_sq_buffer_is_valid(const struct spdk_nvme_io_qpair_opts *opts)
+{
+	return !opts->sq.vaddr ||
+	       opts->sq.buffer_size >= (uint64_t)opts->io_queue_size * sizeof(struct spdk_nvme_cmd);
+}
+
+static struct spdk_nvme_qpair *
+nvme_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
+			   const struct spdk_nvme_io_qpair_opts *opts)
+{
+	int32_t					qid;
+	struct spdk_nvme_qpair			*qpair;
+
+	if (!ctrlr) {
+		return NULL;
+	}
+
+	nvme_ctrlr_lock(ctrlr);
+	if (!nvme_ctrlr_io_qpair_opts_qprio_is_valid(ctrlr, opts)) {
+		if (!(opts->qprio & ~SPDK_NVME_CREATE_IO_SQ_QPRIO_MASK)) {
+			NVME_CTRLR_ERRLOG(ctrlr, "invalid queue priority for default round robin arbitration method\n");
+		}
 		nvme_ctrlr_unlock(ctrlr);
 		return NULL;
 	}
@@ -668,17 +698,13 @@ spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	 * This allows for extensions of the opts structure without breaking
 	 * ABI compatibility.
 	 */
-	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	nvme_ctrlr_io_qpair_opts_prepare(ctrlr, &opts, user_opts, opts_size);
 	if (user_opts) {
-		nvme_ctrlr_io_qpair_opts_copy(&opts, user_opts, spdk_min(opts.opts_size, opts_size));
-
 		/* If user passes buffers, make sure they're big enough for the requested queue size */
-		if (opts.sq.vaddr) {
-			if (opts.sq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cmd))) {
-				NVME_CTRLR_ERRLOG(ctrlr, "sq buffer size %" PRIx64 " is too small for sq size %zx\n",
-						  opts.sq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cmd)));
-				goto unlock;
-			}
+		if (!nvme_ctrlr_io_qpair_sq_buffer_is_valid(&opts)) {
+			NVME_CTRLR_ERRLOG(ctrlr, "sq buffer size %" PRIx64 " is too small for sq size %zx\n",
+					  opts.sq.buffer_size, (opts.io_queue_size * sizeof(struct spdk_nvme_cmd)));
+			goto unlock;
 		}
 		if (opts.cq.vaddr) {
 			if (opts.cq.buffer_size < (opts.io_queue_size * sizeof(struct spdk_nvme_cpl))) {
