@@ -415,7 +415,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 {
 	struct spdk_nvme_qpair *qpair = req->qpair;
 	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
-	uint64_t timeout_ticks = active_proc->timeout_io_ticks;
+	uint64_t timeout_ticks;
 
 	assert(active_proc->timeout_cb_fn != NULL);
 
@@ -424,7 +424,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 			return 0;
 		}
 
-		timeout_ticks = active_proc->timeout_admin_ticks;
+		timeout_ticks = __atomic_load_n(&active_proc->timeout_admin_ticks, __ATOMIC_RELAXED);
 		if (req->cmd.opc == SPDK_NVME_OPC_KEEP_ALIVE && ctrlr->opts.keep_alive_timeout_ms) {
 			timeout_ticks = ctrlr->opts.keep_alive_timeout_ms * spdk_get_ticks_hz() / SPDK_SEC_TO_MSEC;
 		}
@@ -437,6 +437,8 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		 * we're timing out admin commands set the qpair to NULL.
 		 */
 		qpair = NULL;
+	} else {
+		timeout_ticks = __atomic_load_n(&active_proc->timeout_io_ticks, __ATOMIC_RELAXED);
 	}
 
 	if (spdk_unlikely(req->timed_out || req->submit_tick == 0)) {

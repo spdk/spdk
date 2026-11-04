@@ -5573,10 +5573,19 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
 
+	assert(cb_fn);
+
 	nvme_ctrlr_lock(ctrlr);
 
 	active_proc = nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc) {
+		if (active_proc->timeout_cb_fn &&
+		    (active_proc->timeout_cb_fn != cb_fn || active_proc->timeout_cb_arg != cb_arg)) {
+			NVME_CTRLR_ERRLOG(ctrlr, "A different timeout callback is already registered, "
+					  "only the timeout values can be changed\n");
+			goto out;
+		}
+
 		if (ctrlr->opts.keep_alive_timeout_ms * SPDK_MSEC_TO_USEC > timeout_io_us) {
 			NVME_CTRLR_WARNLOG(ctrlr,
 					   "opts.keep_alive_timeout_ms %u should be less than timeout_io_us %lu\n",
@@ -5589,14 +5598,23 @@ spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
 					   ctrlr->opts.keep_alive_timeout_ms, timeout_admin_us);
 		}
 
-		active_proc->timeout_io_ticks = timeout_io_us * spdk_get_ticks_hz() / 1000000ULL;
-		active_proc->timeout_admin_ticks = timeout_admin_us * spdk_get_ticks_hz() / 1000000ULL;
-		active_proc->timeout_cb_fn = cb_fn;
-		active_proc->timeout_cb_arg = cb_arg;
+		__atomic_store_n(&active_proc->timeout_io_ticks,
+				 timeout_io_us * spdk_get_ticks_hz() / 1000000ULL, __ATOMIC_RELAXED);
+		__atomic_store_n(&active_proc->timeout_admin_ticks,
+				 timeout_admin_us * spdk_get_ticks_hz() / 1000000ULL, __ATOMIC_RELAXED);
+		/*
+		 * Other threads read the callback without the lock, so it is written only on the
+		 * first registration. A registration with the same callback changes only the ticks.
+		 */
+		if (!active_proc->timeout_cb_fn) {
+			active_proc->timeout_cb_fn = cb_fn;
+			active_proc->timeout_cb_arg = cb_arg;
+		}
 	}
 
 	ctrlr->timeout_enabled = true;
 
+out:
 	nvme_ctrlr_unlock(ctrlr);
 }
 

@@ -1749,6 +1749,13 @@ typedef void (*spdk_nvme_timeout_cb)(void *cb_arg,
  * The application can choose to register for timeout callback or not register
  * for timeout callback.
  *
+ * To change the timeout values, call this function again with the same cb_fn and
+ * cb_arg. Once registered, the callback and its argument cannot be changed or
+ * unregistered. A timeout value of 0 makes commands time out immediately.
+ *
+ * This function is thread safe and can be called at any point while the controller
+ * is attached to the SPDK NVMe driver.
+ *
  * \param ctrlr NVMe controller on which to monitor for timeout.
  * \param timeout_io_us Timeout value in microseconds for io commands.
  * \param timeout_admin_us Timeout value in microseconds for admin commands.

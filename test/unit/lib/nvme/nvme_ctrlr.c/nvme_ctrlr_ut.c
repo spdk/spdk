@@ -2818,6 +2818,68 @@ test_nvme_ctrlr_add_remove_process(void)
 }
 
 static void
+ut_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+	      uint16_t cid)
+{
+}
+
+static void
+ut_timeout_cb2(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+	       uint16_t cid)
+{
+}
+
+static void
+test_nvme_ctrlr_register_timeout_callback(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ctrlr_process *proc;
+	void *cb_arg = (void *)0xDEADBEEF;
+	const uint64_t hz = 2500000000ULL;
+
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	TAILQ_INIT(&ctrlr.active_procs);
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr_add_process(&ctrlr, NULL) == 0);
+	proc = TAILQ_FIRST(&ctrlr.active_procs);
+	SPDK_CU_ASSERT_FATAL(proc != NULL);
+
+	MOCK_SET(spdk_get_ticks_hz, hz);
+
+	/* The first registration sets the timeouts and the callback */
+	spdk_nvme_ctrlr_register_timeout_callback(&ctrlr, 10 * SPDK_SEC_TO_USEC,
+			30 * SPDK_SEC_TO_USEC, ut_timeout_cb, cb_arg);
+	CU_ASSERT(proc->timeout_io_ticks == 10 * hz);
+	CU_ASSERT(proc->timeout_admin_ticks == 30 * hz);
+	CU_ASSERT(proc->timeout_cb_fn == ut_timeout_cb);
+	CU_ASSERT(proc->timeout_cb_arg == cb_arg);
+	CU_ASSERT(ctrlr.timeout_enabled == true);
+
+	/* A registration with the same callback and argument changes only the timeouts */
+	spdk_nvme_ctrlr_register_timeout_callback(&ctrlr, 20 * SPDK_SEC_TO_USEC,
+			40 * SPDK_SEC_TO_USEC, ut_timeout_cb, cb_arg);
+	CU_ASSERT(proc->timeout_io_ticks == 20 * hz);
+	CU_ASSERT(proc->timeout_admin_ticks == 40 * hz);
+	CU_ASSERT(proc->timeout_cb_fn == ut_timeout_cb);
+	CU_ASSERT(proc->timeout_cb_arg == cb_arg);
+	CU_ASSERT(ctrlr.timeout_enabled == true);
+
+	/* A registration with a different callback or argument changes nothing */
+	spdk_nvme_ctrlr_register_timeout_callback(&ctrlr, 50 * SPDK_SEC_TO_USEC,
+			60 * SPDK_SEC_TO_USEC, ut_timeout_cb2, cb_arg);
+	spdk_nvme_ctrlr_register_timeout_callback(&ctrlr, 50 * SPDK_SEC_TO_USEC,
+			60 * SPDK_SEC_TO_USEC, ut_timeout_cb, NULL);
+	CU_ASSERT(proc->timeout_io_ticks == 20 * hz);
+	CU_ASSERT(proc->timeout_admin_ticks == 40 * hz);
+	CU_ASSERT(proc->timeout_cb_fn == ut_timeout_cb);
+	CU_ASSERT(proc->timeout_cb_arg == cb_arg);
+	CU_ASSERT(ctrlr.timeout_enabled == true);
+
+	MOCK_CLEAR(spdk_get_ticks_hz);
+	nvme_ctrlr_remove_process(&ctrlr, proc);
+	CU_ASSERT(TAILQ_EMPTY(&ctrlr.active_procs));
+}
+
+static void
 test_nvme_ctrlr_set_arbitration_feature(void)
 {
 	struct spdk_nvme_ctrlr ctrlr = {};
@@ -4065,6 +4127,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_ctrlr_init_set_keep_alive_timeout);
 	CU_ADD_TEST(suite, test_alloc_io_qpair_fail);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_add_remove_process);
+	CU_ADD_TEST(suite, test_nvme_ctrlr_register_timeout_callback);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_arbitration_feature);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_set_state);
 	CU_ADD_TEST(suite, test_nvme_ctrlr_active_ns_list_v0);
