@@ -2354,7 +2354,8 @@ bdev_nvme_check_fast_io_fail_timeout(struct nvme_ctrlr *nvme_ctrlr)
 static void bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success);
 
 static void
-nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb cb_fn)
+nvme_ctrlr_disconnect_ext(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb cb_fn,
+			  void (*on_failure)(struct nvme_ctrlr *nvme_ctrlr))
 {
 	int rc;
 
@@ -2367,6 +2368,11 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 		} else {
 			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Controller is already resetting, rc %d.\n", rc);
 			assert(false && "should not happen by design");
+		}
+
+		if (on_failure) {
+			on_failure(nvme_ctrlr);
+			return;
 		}
 
 		bdev_nvme_reset_ctrlr_complete(nvme_ctrlr, false);
@@ -2383,6 +2389,12 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 	 * mode, this also keeps the adminq polled after the transport closed its fd.
 	 */
 	bdev_nvme_change_adminq_poll_period(nvme_ctrlr, 0);
+}
+
+static void
+nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb cb_fn)
+{
+	nvme_ctrlr_disconnect_ext(nvme_ctrlr, cb_fn, NULL);
 }
 
 enum bdev_nvme_op_after_reset {
@@ -2477,6 +2489,15 @@ bdev_nvme_ctrlr_register_reconnect_timer(struct nvme_ctrlr *nvme_ctrlr)
 static void remove_discovery_entry(struct nvme_ctrlr *nvme_ctrlr);
 
 static void
+bdev_nvme_sched_reconnect_failed(struct nvme_ctrlr *nvme_ctrlr)
+{
+	NVME_CTRLR_ERRLOG(nvme_ctrlr, "Scheduling Controller reconnect failed.\n");
+	assert(false && "should not happen by design");
+	/* No reference was taken, so no put is needed. If this is a hot remove, remove_cb should already
+	 * schedule destruction; this state is unexpected and might lead to undefined behavior. */
+}
+
+static void
 bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
 	bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
@@ -2552,7 +2573,8 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		remove_discovery_entry(nvme_ctrlr);
 		break;
 	case OP_SCHED_RECONNECT:
-		nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_ctrlr_register_reconnect_timer);
+		nvme_ctrlr_disconnect_ext(nvme_ctrlr, bdev_nvme_ctrlr_register_reconnect_timer,
+					  bdev_nvme_sched_reconnect_failed);
 		break;
 	case OP_FAILOVER:
 		nvme_ctrlr->ctrlr_op_cb_fn = ctrlr_op_cb_fn;
