@@ -2550,6 +2550,7 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	nvme_ctrlr->resetting = false;
 	nvme_ctrlr->dont_retry = false;
 	nvme_ctrlr->in_failover = false;
+	nvme_ctrlr->recreate_qpairs = false;
 
 	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
 	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
@@ -2633,6 +2634,7 @@ bdev_nvme_reset_create_qpairs_done(struct nvme_ctrlr *nvme_ctrlr, void *ctx, int
 		bdev_nvme_reset_ctrlr_complete(nvme_ctrlr, true);
 	} else {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "qpairs were failed to create after ctrlr reset.\n");
+		nvme_ctrlr->recreate_qpairs = false;
 
 		/* Delete the added qpairs and quiesce ctrlr to make the states clean. */
 		nvme_ctrlr_for_each_channel(nvme_ctrlr,
@@ -2729,6 +2731,7 @@ bdev_nvme_reconnect_ctrlr_poll(void *arg)
 		nvme_ctrlr_rescan_namespaces(nvme_ctrlr);
 
 		/* Recreate all of the I/O queue pairs */
+		nvme_ctrlr->recreate_qpairs = true;
 		nvme_ctrlr_for_each_channel(nvme_ctrlr,
 					    bdev_nvme_reset_create_qpair,
 					    NULL,
@@ -3809,10 +3812,10 @@ nvme_qpair_create(struct nvme_ctrlr *nvme_ctrlr, struct nvme_ctrlr_channel *ctrl
 	nvme_qpair->group->collect_spin_stat = false;
 #endif
 
-	if (!nvme_ctrlr->disabled) {
-		/* If a nvme_ctrlr is disabled, don't try to create qpair for it. Qpair will
-		 * be created when it's enabled.
-		 */
+	/* Defer connection while the controller is disabled, waiting to reconnect, or resetting prior
+	 * to qpair recreation. A successful reconnect qpair walk will establish the connection later. */
+	if (!nvme_ctrlr->disabled && !nvme_ctrlr_has_sched_reconnect(nvme_ctrlr) &&
+	    (!nvme_ctrlr->resetting || nvme_ctrlr->recreate_qpairs)) {
 		rc = bdev_nvme_create_qpair(nvme_qpair);
 		if (rc != 0) {
 			/* nvme_ctrlr can't create IO qpair if connection is down.

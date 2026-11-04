@@ -104,7 +104,7 @@ typedef void (*nvme_ctrlr_disconnected_cb)(struct nvme_ctrlr *nvme_ctrlr);
  * Flags read on IO threads as best-effort informational checks
  * (via nvme_ctrlr_is_available, nvme_ctrlr_is_failed, and direct reads):
  *   resetting, sched_reconnect, fast_io_fail_timedout,
- *   destruct, ana_log_page_updating, dont_retry, disabled,
+ *   destruct, ana_log_page_updating, dont_retry, disabled, recreate_qpairs
  *   disconnected_cb
  *
  * Stale reads are harmless - the IO path handles unavailable controllers
@@ -138,6 +138,7 @@ struct nvme_ctrlr {
 	uint32_t				io_path_cache_clearing : 1;
 	uint32_t				dont_retry : 1;
 	uint32_t				disabled : 1;
+	uint32_t				recreate_qpairs : 1;
 
 	struct spdk_bdev_nvme_ctrlr_opts	opts;
 
