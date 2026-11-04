@@ -512,6 +512,8 @@ struct spdk_nvme_cq {
 
 struct spdk_nvme_qpair {
 	struct spdk_nvme_ctrlr			*ctrlr;
+	struct spdk_nvme_cq			*bound_cq;
+	bool					sq_delete_pending;
 
 	uint16_t				id;
 
@@ -1240,6 +1242,7 @@ struct spdk_nvme_ctrlr {
 	struct spdk_nvme_queue_mgmt_opts	queue_mgmt_opts;
 	bool				io_cq_create_timed_out;
 	bool				io_cq_delete_timed_out;
+	bool				io_sq_delete_timed_out;
 
 	struct spdk_nvme_ctrlr_opts	opts;
 

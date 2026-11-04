@@ -490,6 +490,81 @@ test_nvme_pcie_private_cq_wrap_reset(void)
 }
 
 static void
+test_nvme_pcie_shared_sq_lifecycle(void)
+{
+	struct nvme_pcie_ctrlr pctrlr = {};
+	struct spdk_nvme_qpair adminq = {}, *sq1, *sq2;
+	struct nvme_request req = {};
+	struct spdk_nvme_io_qpair_opts opts = {
+		.io_queue_size = 16,
+		.io_queue_requests = 16,
+		.create_only = true,
+	};
+	struct spdk_nvme_io_cq_opts cq_opts = {.io_queue_size = 8};
+	struct spdk_nvme_cpl cpl = {};
+	struct spdk_nvme_cq *cq;
+	struct nvme_pcie_cq *pcie_cq;
+	uint32_t doorbells[16] = {};
+
+	pctrlr.ctrlr.adminq = &adminq;
+	pctrlr.ctrlr.page_size = 4096;
+	pctrlr.ctrlr.opts.num_io_queues = 4;
+	pctrlr.doorbell_base = doorbells;
+	pctrlr.doorbell_stride_u32 = 1;
+	STAILQ_INIT(&adminq.free_req);
+	STAILQ_INSERT_HEAD(&adminq.free_req, &req, stailq);
+	req.qpair = &adminq;
+	g_capture_cq_commands = true;
+	g_cq_wait_rc = g_cq_submit_rc = 0;
+	g_cq_wait_timeout = false;
+	cq = nvme_pcie_ctrlr_create_io_cq(&pctrlr.ctrlr, 3, &cq_opts);
+	SPDK_CU_ASSERT_FATAL(cq != NULL);
+	cq->ctrlr = &pctrlr.ctrlr;
+	pcie_cq = &nvme_pcie_io_cq(cq)->pcie_cq;
+	pcie_cq->cq_head = 5;
+	pcie_cq->phase = 0;
+	sq1 = nvme_pcie_ctrlr_create_io_sq(&pctrlr.ctrlr, cq, 1, &opts);
+	SPDK_CU_ASSERT_FATAL(sq1 != NULL);
+	sq2 = nvme_pcie_ctrlr_create_io_sq(&pctrlr.ctrlr, cq, 2, &opts);
+	SPDK_CU_ASSERT_FATAL(sq2 != NULL);
+	CU_ASSERT(pcie_cq->cq_head == 5);
+	CU_ASSERT(pcie_cq->phase == 0);
+	CU_ASSERT(cq->refcount == 2);
+	CU_ASSERT(pcie_cq->refcount == 2);
+	CU_ASSERT(pcie_cq->sq_map[1] == nvme_pcie_qpair(sq1));
+	CU_ASSERT(pcie_cq->sq_map[2] == nvme_pcie_qpair(sq2));
+	CU_ASSERT(nvme_pcie_qpair(sq1)->cq == nvme_pcie_qpair(sq2)->cq);
+	CU_ASSERT(nvme_pcie_qpair(sq1)->cq_local.cpl == NULL);
+	CU_ASSERT(nvme_pcie_ctrlr_create_io_sq(&pctrlr.ctrlr, cq, 1, &opts) == NULL);
+	CU_ASSERT(nvme_pcie_ctrlr_connect_qpair(&pctrlr.ctrlr, sq1) == 0);
+	CU_ASSERT(g_cq_command.opc == SPDK_NVME_OPC_CREATE_IO_SQ);
+	CU_ASSERT(g_cq_command.cdw10_bits.create_io_q.qid == 1);
+	CU_ASSERT(g_cq_command.cdw10_bits.create_io_q.qsize == 15);
+	CU_ASSERT(g_cq_command.cdw11_bits.create_io_sq.cqid == 3);
+	nvme_completion_create_sq_cb(sq1, &cpl);
+	CU_ASSERT(nvme_pcie_qpair(sq1)->flags.sq_created);
+	CU_ASSERT(pcie_cq->cq_head == 5);
+	CU_ASSERT(pcie_cq->phase == 0);
+	g_cq_wait_rc = -EIO;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_qpair(&pctrlr.ctrlr, sq1) == -EIO);
+	CU_ASSERT(g_cq_command.opc == SPDK_NVME_OPC_DELETE_IO_SQ);
+	CU_ASSERT(cq->refcount == 2);
+	CU_ASSERT(pcie_cq->sq_map[1] == nvme_pcie_qpair(sq1));
+	g_cq_wait_rc = 0;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_qpair(&pctrlr.ctrlr, sq1) == 0);
+	CU_ASSERT(cq->refcount == 1);
+	CU_ASSERT(pcie_cq->sq_map[1] == NULL);
+	/* A never-connected SQ has no device queue to delete. */
+	g_cq_command.opc = 0;
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_qpair(&pctrlr.ctrlr, sq2) == 0);
+	CU_ASSERT(g_cq_command.opc == 0);
+	CU_ASSERT(cq->refcount == 0);
+	CU_ASSERT(TAILQ_EMPTY(&pcie_cq->sq_members));
+	CU_ASSERT(nvme_pcie_ctrlr_delete_io_cq(&pctrlr.ctrlr, cq) == 0);
+	g_capture_cq_commands = false;
+}
+
+static void
 test_nvme_pcie_shared_cq_routing(void)
 {
 	struct nvme_pcie_ctrlr pctrlr = {};
@@ -1168,6 +1243,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_alloc_cmb);
 	CU_ADD_TEST(suite, test_nvme_pcie_standalone_cq_lifecycle);
 	CU_ADD_TEST(suite, test_nvme_pcie_shared_cq_routing);
+	CU_ADD_TEST(suite, test_nvme_pcie_shared_sq_lifecycle);
 	CU_ADD_TEST(suite, test_nvme_pcie_qpair_construct_destroy);
 	CU_ADD_TEST(suite, test_nvme_pcie_private_cq_wrap_reset);
 	CU_ADD_TEST(suite, test_nvme_pcie_ctrlr_cmd_create_delete_io_queue);

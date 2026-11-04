@@ -199,6 +199,9 @@ struct nvme_pcie_qpair {
 
 		/* Disable merging of physically contiguous SGL entries */
 		uint8_t disable_pcie_sgl_merge	: 1;
+		uint8_t shared_cq : 1;
+		uint8_t sq_created : 1;
+		uint8_t sq_deleted : 1;
 	} flags;
 
 	/*
@@ -382,6 +385,8 @@ struct spdk_nvme_cq *nvme_pcie_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 int nvme_pcie_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
 int nvme_pcie_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
 int nvme_pcie_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+struct spdk_nvme_qpair *nvme_pcie_ctrlr_create_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_cq *cq, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
 int nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *req);
 int nvme_pcie_poll_group_get_stats(struct spdk_nvme_transport_poll_group *tgroup,
 				   struct spdk_nvme_transport_poll_group_stat **_stats);
