@@ -2762,8 +2762,10 @@ _bdev_nvme_reset_ctrlr(void *ctx)
 }
 
 static int
-bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
+bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
+	spdk_msg_fn msg_fn;
+
 	assert(spdk_thread_is_app_thread(NULL));
 
 	if (nvme_ctrlr->destruct) {
@@ -2787,29 +2789,14 @@ bdev_nvme_get_reset_ctrlr_fn(struct nvme_ctrlr *nvme_ctrlr, spdk_msg_fn *msg_fn)
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
 		bdev_nvme_ctrlr_unregister_reconnect_timer(nvme_ctrlr);
-		*msg_fn = bdev_nvme_reconnect_ctrlr_now;
+		msg_fn = bdev_nvme_reconnect_ctrlr_now;
 	} else {
-		*msg_fn = _bdev_nvme_reset_ctrlr;
+		msg_fn = _bdev_nvme_reset_ctrlr;
 	}
 
+	/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
+	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
 	return 0;
-}
-
-static int
-bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
-{
-	spdk_msg_fn msg_fn;
-	int rc;
-
-	assert(spdk_thread_is_app_thread(NULL));
-
-	rc = bdev_nvme_get_reset_ctrlr_fn(nvme_ctrlr, &msg_fn);
-	if (rc == 0) {
-		/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
-		spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
-	}
-
-	return rc;
 }
 
 static void
@@ -3209,12 +3196,11 @@ _bdev_nvme_reset_io_msg(void *ctx)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
 	struct nvme_bdev *nbdev = nbdev_from_bdev(bdev_io->bdev);
 	struct nvme_ctrlr *nvme_ctrlr = bio->io_path->qpair->ctrlr;
-	spdk_msg_fn reset_fn;
 	int rc;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	rc = bdev_nvme_get_reset_ctrlr_fn(nvme_ctrlr, &reset_fn);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	if (rc == -EBUSY) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
@@ -3244,7 +3230,6 @@ _bdev_nvme_reset_io_msg(void *ctx)
 	nvme_ctrlr->ctrlr_op_cb_fn = bdev_nvme_reset_io_continue;
 	nvme_ctrlr->ctrlr_op_cb_arg = bio;
 	NVME_BDEV_INFOLOG(nbdev, nvme_ctrlr, "reset_io %p started resetting ctrlr.\n", bio);
-	reset_fn(nvme_ctrlr);
 }
 
 static void

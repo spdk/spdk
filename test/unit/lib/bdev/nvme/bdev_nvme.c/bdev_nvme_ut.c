@@ -2143,7 +2143,7 @@ test_pending_reset(void)
 	poll_thread_times(0, 1);
 	poll_thread_times(1, 1);
 	poll_thread_times(0, 2);
-	poll_thread_times(1, 1);
+	poll_thread_times(1, 2);
 	poll_thread_times(0, 2);
 
 	/* first_bdev_io completes before second_bdev_io is scheduled. */
