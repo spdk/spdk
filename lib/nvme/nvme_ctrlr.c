@@ -388,6 +388,19 @@ nvme_ctrlr_proc_add_io_qpair(struct spdk_nvme_qpair *qpair)
  * Note: the ctrlr_lock must be held when calling this function.
  */
 static void
+nvme_ctrlr_proc_move_io_qpair(struct spdk_nvme_qpair *qpair,
+			      struct spdk_nvme_ctrlr_process *proc)
+{
+	if (qpair->active_proc) {
+		TAILQ_REMOVE(&qpair->active_proc->allocated_io_qpairs, qpair, per_process_tailq);
+	}
+	qpair->active_proc = proc;
+	if (proc) {
+		TAILQ_INSERT_TAIL(&proc->allocated_io_qpairs, qpair, per_process_tailq);
+	}
+}
+
+static void
 nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr_process	*active_proc;
@@ -407,6 +420,21 @@ nvme_ctrlr_proc_remove_io_qpair(struct spdk_nvme_qpair *qpair)
 
 			break;
 		}
+	}
+}
+
+static void
+nvme_ctrlr_proc_orphan_io_qpairs(struct spdk_nvme_ctrlr_process *proc)
+{
+	struct spdk_nvme_qpair *qpair, *tmp;
+
+	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp) {
+		NVME_QPAIR_ERRLOG(qpair, "Retaining SQ after process cleanup failed; reset required\n");
+		if (qpair->bound_cq && qpair->bound_cq->bound_proc == proc) {
+			qpair->bound_cq->bound_proc = NULL;
+		}
+		nvme_ctrlr_proc_move_io_qpair(qpair, NULL);
+		qpair->no_deletion_notification_needed = 1;
 	}
 }
 
@@ -816,6 +844,12 @@ int
 spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_cq *cq;
+	struct spdk_nvme_qpair *member;
+	enum nvme_qpair_state previous_state;
+	uint16_t qid;
+	bool independent;
 	int rc;
 
 	if (qpair == NULL) {
@@ -823,6 +857,12 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 	ctrlr = qpair->ctrlr;
+	cq = qpair->bound_cq;
+	qid = qpair->id;
+	independent = cq != NULL;
+	if (qpair->sq_delete_pending && !ctrlr->is_removed && !ctrlr->prepare_for_reset) {
+		return -EBUSY;
+	}
 
 	if (qpair->in_completion_context) {
 		if (ctrlr->queue_mgmt_opts.mode == SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ) {
@@ -851,7 +891,7 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	if (nvme_qpair_get_state(qpair) != NVME_QPAIR_DISCONNECTED) {
 		NVME_CTRLR_ERRLOG(ctrlr, "qpair is not in DISCONNECTED state: state=%d\n",
 				  nvme_qpair_get_state(qpair));
-		return 0;
+		return independent ? -EIO : 0;
 	}
 
 	if (qpair->poll_group && (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr))) {
@@ -859,11 +899,12 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 		if (rc != 0) {
 			NVME_CTRLR_ERRLOG(ctrlr, "spdk_nvme_poll_group_remove() failed: rc=%s\n",
 					  spdk_strerror(abs(rc)));
-			return 0;
+			return independent ? rc : 0;
 		}
 	}
 
 	/* Do not retry. */
+	previous_state = nvme_qpair_get_state(qpair);
 	nvme_qpair_set_state(qpair, NVME_QPAIR_DESTROYING);
 
 	/* In the multi-process case, a process may call this function on a foreign
@@ -872,17 +913,54 @@ spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
 	 * with that qpair, since the callbacks will also be foreign to this process.
 	 */
 	if (qpair->active_proc == nvme_ctrlr_get_current_process(ctrlr)) {
+		if (independent) {
+			qpair->in_completion_context = 1;
+		}
 		nvme_qpair_abort_all_queued_reqs(qpair);
+		qpair->in_completion_context = 0;
 	}
 
 	nvme_ctrlr_lock(ctrlr);
 
-	nvme_ctrlr_proc_remove_io_qpair(qpair);
+	proc = qpair->active_proc;
+	if (independent) {
+		/* Unlink managed SQs by their recorded owner, but retain it for transport cleanup. */
+		nvme_ctrlr_proc_move_io_qpair(qpair, NULL);
+		qpair->active_proc = proc;
+	} else {
+		nvme_ctrlr_proc_remove_io_qpair(qpair);
+	}
 
 	TAILQ_REMOVE(&ctrlr->active_io_qpairs, qpair, tailq);
-	spdk_nvme_ctrlr_free_qid(ctrlr, qpair->id);
-
-	nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
+	if (independent) {
+		if (cq->bound_proc == proc) {
+			cq->bound_proc = NULL;
+			TAILQ_FOREACH(member, &ctrlr->active_io_qpairs, tailq) {
+				if (member->bound_cq == cq) {
+					cq->bound_proc = member->active_proc;
+					break;
+				}
+			}
+		}
+		ctrlr->io_sq_delete_timed_out = false;
+		rc = nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
+		if (rc != 0) {
+			qpair->sq_delete_pending = ctrlr->io_sq_delete_timed_out;
+			TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
+			qpair->active_proc = NULL;
+			nvme_ctrlr_proc_move_io_qpair(qpair, proc);
+			cq->bound_proc = proc;
+			nvme_qpair_set_state(qpair, previous_state);
+			nvme_ctrlr_unlock(ctrlr);
+			return rc;
+		}
+		if (ctrlr->free_io_sqids) {
+			spdk_bit_array_set(ctrlr->free_io_sqids, qid);
+		}
+	} else {
+		spdk_nvme_ctrlr_free_qid(ctrlr, qid);
+		nvme_transport_ctrlr_delete_io_qpair(ctrlr, qpair);
+	}
 	nvme_ctrlr_unlock(ctrlr);
 	return 0;
 }
@@ -2110,6 +2188,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct spdk_nvme_ns *ns, *tmp_ns;
 	struct spdk_nvme_qpair	*qpair;
+	struct spdk_nvme_qpair *tmp_qpair;
 	struct spdk_nvme_cq *cq, *tmp_cq;
 	int rc = 0, rc_tmp = 0;
 
@@ -2129,6 +2208,18 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 	 * own thread outside of the context of the reset.
 	 */
 	if (rc == 0 && !spdk_nvme_ctrlr_is_fabrics(ctrlr)) {
+		TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp_qpair) {
+			if (qpair->active_proc == NULL && qpair->no_deletion_notification_needed) {
+				ctrlr->prepare_for_reset = true;
+				rc_tmp = spdk_nvme_ctrlr_free_io_qpair(qpair);
+				ctrlr->prepare_for_reset = false;
+				if (rc_tmp != 0) {
+					NVME_CTRLR_ERRLOG(ctrlr, "Failed to clean orphan SQ after reset: rc=%d\n", rc_tmp);
+					rc = rc_tmp;
+					goto reinitialize_done;
+				}
+			}
+		}
 		TAILQ_FOREACH_SAFE(cq, &ctrlr->active_io_cqs, tailq, tmp_cq) {
 			if (cq->pending || (cq->proc == NULL && cq->refcount == 0)) {
 				TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
@@ -2143,7 +2234,11 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 			if (rc_tmp != 0) {
 				cq->pending = ctrlr->io_cq_create_timed_out;
 				rc = rc_tmp;
+				break;
 			}
+		}
+		if (rc != 0) {
+			goto reinitialize_done;
 		}
 		/* Reinitialize qpairs */
 		TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
@@ -2152,9 +2247,12 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 			 * qid.
 			 */
 			assert(spdk_bit_array_get(ctrlr->free_io_sqids, qpair->id));
-			assert(spdk_bit_array_get(ctrlr->free_io_cqids, qpair->id));
 			spdk_bit_array_clear(ctrlr->free_io_sqids, qpair->id);
-			spdk_bit_array_clear(ctrlr->free_io_cqids, qpair->id);
+			if (qpair->bound_cq == NULL) {
+				assert(spdk_bit_array_get(ctrlr->free_io_cqids, qpair->id));
+				spdk_bit_array_clear(ctrlr->free_io_cqids, qpair->id);
+			}
+			qpair->sq_delete_pending = false;
 			if (nvme_ctrlr_get_current_process(ctrlr) != qpair->active_proc) {
 				/*
 				 * We cannot reinitialize a foreign qpair. The qpair's owning
@@ -2171,6 +2269,7 @@ spdk_nvme_ctrlr_reconnect_poll_async(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+reinitialize_done:
 	/*
 	 * Take this opportunity to remove inactive namespaces. During a reset namespace
 	 * handles can be invalidated.
@@ -4363,6 +4462,7 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
+	nvme_ctrlr_proc_orphan_io_qpairs(proc);
 	nvme_ctrlr_proc_cleanup_io_cqs(proc);
 
 	TAILQ_REMOVE(&ctrlr->active_procs, proc, tailq);
@@ -4397,8 +4497,6 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 	nvme_ctrlr_proc_free_async_events(proc);
 
 	TAILQ_FOREACH_SAFE(qpair, &proc->allocated_io_qpairs, per_process_tailq, tmp_qpair) {
-		TAILQ_REMOVE(&proc->allocated_io_qpairs, qpair, per_process_tailq);
-
 		/*
 		 * The process may have been killed while some qpairs were in their
 		 *  completion context.  Clear that flag here to allow these IO
@@ -4411,6 +4509,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
+	nvme_ctrlr_proc_orphan_io_qpairs(proc);
 	nvme_ctrlr_proc_cleanup_io_cqs(proc);
 	spdk_free(proc);
 }
@@ -5290,6 +5389,7 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 			       struct nvme_ctrlr_detach_ctx *ctx)
 {
 	struct spdk_nvme_ns *ns, *tmp_ns;
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
 	int rc = 0;
 
 	if (!ctx->shutdown_complete) {
@@ -5300,12 +5400,26 @@ nvme_ctrlr_destruct_poll_async(struct spdk_nvme_ctrlr *ctrlr,
 		/* Destruct ctrlr forcefully for any other error. */
 	}
 
+	ctrlr->prepare_for_reset = true;
+	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp_qpair) {
+		int cleanup_rc = spdk_nvme_ctrlr_free_io_qpair(qpair);
+
+		if (cleanup_rc != 0) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed terminal SQ cleanup: rc=%d\n", cleanup_rc);
+		}
+	}
+	ctrlr->prepare_for_reset = false;
 	while (!TAILQ_EMPTY(&ctrlr->active_io_cqs)) {
 		struct spdk_nvme_cq *cq = TAILQ_FIRST(&ctrlr->active_io_cqs);
 
 		TAILQ_REMOVE(&ctrlr->active_io_cqs, cq, tailq);
 		nvme_ctrlr_proc_move_io_cq(cq, NULL);
-		nvme_ctrlr_force_free_io_cq(cq);
+		if (cq->refcount == 0) {
+			nvme_ctrlr_force_free_io_cq(cq);
+		} else {
+			NVME_CTRLR_ERRLOG(ctrlr, "CQ %u still bound after terminal cleanup; leaking host resources\n",
+					  cq->id);
+		}
 	}
 
 	if (ctx->cb_fn) {
@@ -6627,6 +6741,101 @@ spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq)
 	}
 	nvme_ctrlr_unlock(ctrlr);
 	return rc;
+}
+
+struct spdk_nvme_qpair *
+spdk_nvme_ctrlr_alloc_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq,
+			    uint16_t sqid, const struct spdk_nvme_io_qpair_opts *user_opts,
+			    size_t opts_size)
+{
+	struct spdk_nvme_io_qpair_opts opts;
+	struct spdk_nvme_ctrlr_process *proc;
+	struct spdk_nvme_cq *active_cq;
+	struct spdk_nvme_qpair *qpair = NULL;
+	int32_t qid;
+	int rc;
+
+	if (ctrlr == NULL || cq == NULL || !nvme_shared_cq_enabled()) {
+		SPDK_ERRLOG("Independent SQ allocation unavailable\n");
+		return NULL;
+	}
+	nvme_ctrlr_lock(ctrlr);
+	/* Compare pointers before dereferencing a potentially stale or foreign CQ. */
+	TAILQ_FOREACH(active_cq, &ctrlr->active_io_cqs, tailq) {
+		if (active_cq == cq) {
+			break;
+		}
+	}
+	if (active_cq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "CQ is not owned by this controller\n");
+		goto out;
+	}
+	if (ctrlr->queue_mgmt_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ ||
+	    ctrlr->state != NVME_CTRLR_STATE_READY || ctrlr->is_failed || ctrlr->is_removed ||
+	    cq->pending) {
+		NVME_CTRLR_ERRLOG(ctrlr, "SQ allocation requires a ready controller and CQ in SHARED_CQ mode\n");
+		goto out;
+	}
+	proc = nvme_ctrlr_get_current_process(ctrlr);
+	if (cq->bound_proc && cq->bound_proc != proc) {
+		NVME_CTRLR_ERRLOG(ctrlr, "CQ is bound to another process\n");
+		goto out;
+	}
+	if (user_opts && opts_size == 0) {
+		NVME_CTRLR_ERRLOG(ctrlr, "SQ opts_size must not be zero\n");
+		goto out;
+	}
+	nvme_ctrlr_io_qpair_opts_prepare(ctrlr, &opts, user_opts, opts_size);
+	if (!nvme_ctrlr_io_queue_size_is_valid(ctrlr, opts.io_queue_size, "SQ")) {
+		goto out;
+	}
+	if (!nvme_ctrlr_io_qpair_sq_buffer_is_valid(&opts) ||
+	    (!opts.sq.vaddr && opts.sq.paddr)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid SQ ring address or buffer size\n");
+		goto out;
+	}
+	if (ctrlr->opts.enable_interrupts) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Independent SQs do not support interrupts\n");
+		goto out;
+	}
+	if (!nvme_ctrlr_io_qpair_opts_qprio_is_valid(ctrlr, &opts)) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Invalid SQ priority %u\n", opts.qprio);
+		goto out;
+	}
+	qid = sqid ?
+	      nvme_ctrlr_reserve_qid_from_pool(ctrlr, ctrlr->free_io_sqids, "SQ", sqid) :
+	      nvme_ctrlr_alloc_qid_from_pool(ctrlr, ctrlr->free_io_sqids, "SQ");
+	if (qid < 0) {
+		goto out;
+	}
+	qpair = nvme_transport_ctrlr_create_io_sq(ctrlr, cq, qid, &opts);
+	if (qpair == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "Failed to create independent SQ %u\n", qid);
+		spdk_bit_array_set(ctrlr->free_io_sqids, qid);
+		goto out;
+	}
+	qpair->bound_cq = cq;
+	TAILQ_INSERT_TAIL(&ctrlr->active_io_qpairs, qpair, tailq);
+	nvme_ctrlr_proc_add_io_qpair(qpair);
+	cq->bound_proc = qpair->active_proc;
+	if (!opts.create_only) {
+		rc = spdk_nvme_ctrlr_connect_io_qpair(ctrlr, qpair);
+		if (rc != 0) {
+			NVME_CTRLR_ERRLOG(ctrlr, "Failed to connect independent SQ %u: rc=%d\n", qid, rc);
+			if (spdk_nvme_ctrlr_free_io_qpair(qpair) == 0) {
+				qpair = NULL;
+			}
+		}
+	}
+out:
+	nvme_ctrlr_unlock(ctrlr);
+	return qpair;
+}
+
+int
+spdk_nvme_ctrlr_free_io_sq(struct spdk_nvme_qpair *qpair)
+{
+	return spdk_nvme_ctrlr_free_io_qpair(qpair);
 }
 
 int32_t

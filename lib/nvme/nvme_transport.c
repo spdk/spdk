@@ -495,7 +495,7 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 	return qpair;
 }
 
-void
+int
 nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
@@ -512,8 +512,11 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	if (rc != 0) {
 		NVME_CTRLR_ERRLOG(ctrlr, "transport %s returned non-zero for ctrlr_delete_io_qpair op\n",
 				  transport->ops.name);
-		assert(false);
+		if (ctrlr->queue_mgmt_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ) {
+			assert(false);
+		}
 	}
+	return rc;
 }
 
 struct spdk_nvme_cq *

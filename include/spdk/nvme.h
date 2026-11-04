@@ -2044,6 +2044,30 @@ struct spdk_nvme_cq *spdk_nvme_ctrlr_alloc_io_cq(struct spdk_nvme_ctrlr *ctrlr,
 int spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq);
 
 /**
+ * Allocate a PCIe I/O SQ bound to an existing standalone CQ in SHARED_CQ mode.
+ *
+ * A zero SQID selects a free SQID independently of CQIDs. The existing qpair
+ * options control SQ depth, priority, request count, delayed submission and
+ * create-only/asynchronous connection. Completion-buffer options are ignored.
+ * Interrupt mode is not supported. All SQs sharing a CQ use one process and
+ * polling domain. The driver imposes no SQ-depth versus CQ-depth policy.
+ *
+ * \return SQ handle, or NULL on failure.
+ */
+struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_cq *cq, uint16_t sqid,
+		const struct spdk_nvme_io_qpair_opts *opts, size_t opts_size);
+
+/**
+ * Free an independent SQ, retaining its shared CQ.
+ *
+ * \return 0 on success; -EAGAIN in a completion callback, -EBUSY while an
+ * ambiguous delete awaits reset, or another negative errno on failure.
+ * Only success invalidates the SQ handle. On failure it and its SQID remain owned.
+ */
+int spdk_nvme_ctrlr_free_io_sq(struct spdk_nvme_qpair *qpair);
+
+/**
  * Poll an independent PCIe CQ, dispatching completions to their owning SQs.
  *
  * A zero maximum uses the bounded default batch size. The caller must serialize
@@ -2187,7 +2211,8 @@ spdk_nvme_qp_failure_reason spdk_nvme_ctrlr_get_admin_qp_failure_reason(
  *
  * \param qpair I/O queue pair to free.
  *
- * \return 0 on success, or -EAGAIN from a completion callback in SHARED_CQ mode.
+ * \return 0 on success. In SHARED_CQ mode, -EAGAIN from a completion callback,
+ * -EBUSY for a pending delete, or another negative errno on deletion failure.
  * Legacy coupled qpair behavior is unchanged.
  */
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);

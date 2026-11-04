@@ -889,6 +889,10 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 {
 	int32_t ret;
 
+	if (qpair->bound_cq && qpair->in_completion_context) {
+		return -EBUSY;
+	}
+
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		/* Complete any pending register operations */
 		nvme_complete_register_operations(qpair);
