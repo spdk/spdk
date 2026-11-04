@@ -2361,12 +2361,14 @@ nvme_ctrlr_disconnect(struct nvme_ctrlr *nvme_ctrlr, nvme_ctrlr_disconnected_cb 
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Start disconnecting ctrlr.\n");
 
 	rc = spdk_nvme_ctrlr_disconnect(nvme_ctrlr->ctrlr);
-	if (rc != 0) {
-		NVME_CTRLR_WARNLOG(nvme_ctrlr, "disconnecting ctrlr failed.\n");
+	if (rc) {
+		if (rc == -ENXIO) {
+			NVME_CTRLR_WARNLOG(nvme_ctrlr, "Controller has been removed.\n");
+		} else {
+			NVME_CTRLR_ERRLOG(nvme_ctrlr, "Controller is already resetting, rc %d.\n", rc);
+			assert(false && "should not happen by design");
+		}
 
-		/* Disconnect fails if ctrlr is already resetting or removed. In this case,
-		 * fail the reset sequence immediately.
-		 */
 		bdev_nvme_reset_ctrlr_complete(nvme_ctrlr, false);
 		return;
 	}
