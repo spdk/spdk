@@ -2398,6 +2398,10 @@ static _bdev_nvme_op_after_reset
 bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 			       bool pending_failover)
 {
+	if (nvme_ctrlr->destruct) {
+		return OP_NONE;
+	}
+
 	if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
 		if (pending_failover) {
 			/* This is a fix for a race condition that failover was lost
