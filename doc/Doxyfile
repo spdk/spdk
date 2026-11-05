@@ -245,6 +245,22 @@ IMAGE_PATH             = img
 # Configuration options related to source browsing
 #---------------------------------------------------------------------------
 
+# If the SOURCE_BROWSER tag is set to YES then a list of source files will be
+# generated. Documented entities will be cross-referenced with these sources.
+#
+# Note: To get rid of all source code in the generated output, make sure that
+# also VERBATIM_HEADERS is set to NO.
+# The default value is: NO.
+
+SOURCE_BROWSER         = YES
+
+# Setting the STRIP_CODE_COMMENTS tag to YES will instruct Doxygen to hide any
+# special comment blocks from generated source code fragments. Normal C, C++ and
+# Fortran comments will always remain visible.
+# The default value is: YES.
+
+STRIP_CODE_COMMENTS    = NO
+
 # If the VERBATIM_HEADERS tag is set the YES then Doxygen will generate a
 # verbatim copy of the header file for each class for which an include is
 # specified. Set to NO to disable this.
