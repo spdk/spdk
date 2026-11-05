@@ -53,8 +53,16 @@ DEFINE_STUB(nvme_transport_ctrlr_process_transport_events, int,
 DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
 
 DEFINE_STUB_V(nvme_ctrlr_abort_queued_aborts, (struct spdk_nvme_ctrlr *ctrlr));
-DEFINE_STUB(nvme_ctrlr_reinitialize_io_qpair, int,
-	    (struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair), 0);
+static unsigned g_reinitialize_calls;
+
+int
+nvme_ctrlr_reinitialize_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	g_reinitialize_calls++;
+	nvme_qpair_set_state(qpair, NVME_QPAIR_CONNECTING);
+	qpair->transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_NONE;
+	return 0;
+}
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
@@ -79,7 +87,8 @@ prepare_submit_request_test(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_ctrlr *ctrlr)
 {
 	memset(ctrlr, 0, sizeof(*ctrlr));
-	ctrlr->free_io_qids = NULL;
+	ctrlr->free_io_sqids = NULL;
+	ctrlr->free_io_cqids = NULL;
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	TAILQ_INIT(&ctrlr->active_procs);
 	MOCK_CLEAR(spdk_zmalloc);
@@ -90,6 +99,36 @@ static void
 cleanup_submit_request_test(struct spdk_nvme_qpair *qpair)
 {
 	free(qpair->req_buf);
+}
+
+static void
+test_shared_qpair_reenable(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_cq cq = {};
+	unsigned calls = g_reinitialize_calls;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	qpair.bound_cq = &cq;
+	qpair.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	qpair.is_new_qpair = true;
+	nvme_qpair_set_state(&qpair, NVME_QPAIR_CONNECTED);
+	ctrlr.is_resetting = true;
+	CU_ASSERT(!nvme_qpair_check_enabled(&qpair));
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_CONNECTED);
+	ctrlr.is_resetting = false;
+	CU_ASSERT(nvme_qpair_check_enabled(&qpair));
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_ENABLED);
+	qpair.transport_failure_reason = SPDK_NVME_QPAIR_FAILURE_RESET;
+	CU_ASSERT(!nvme_qpair_check_enabled(&qpair));
+	CU_ASSERT(g_reinitialize_calls == calls + 1);
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_CONNECTING);
+	nvme_qpair_set_state(&qpair, NVME_QPAIR_CONNECTED);
+	qpair.is_new_qpair = false;
+	CU_ASSERT(nvme_qpair_check_enabled(&qpair));
+	CU_ASSERT(nvme_qpair_get_state(&qpair) == NVME_QPAIR_ENABLED);
+	cleanup_submit_request_test(&qpair);
 }
 
 static void
@@ -862,6 +901,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_ctrlr_failed);
 	CU_ADD_TEST(suite, struct_packing);
 	CU_ADD_TEST(suite, test_nvme_qpair_process_completions);
+	CU_ADD_TEST(suite, test_shared_qpair_reenable);
 	CU_ADD_TEST(suite, test_nvme_completion_is_retry);
 #ifdef DEBUG
 	CU_ADD_TEST(suite, test_get_status_string);

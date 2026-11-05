@@ -69,6 +69,9 @@ DEFINE_STUB(nvme_ctrlr_get_cap, int, (struct spdk_nvme_ctrlr *ctrlr,
 				      union spdk_nvme_cap_register *cap), 0);
 DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(spdk_nvme_transport_register, (const struct spdk_nvme_transport_ops *ops));
+DEFINE_STUB_V(spdk_nvme_transport_register_ext, (const struct spdk_nvme_transport_ops *ops,
+		size_t ops_size));
+DEFINE_STUB(nvme_shared_cq_enabled, bool, (void), false);
 DEFINE_STUB(nvme_transport_ctrlr_connect_qpair, int, (struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair), 0);
 DEFINE_STUB_V(nvme_transport_ctrlr_disconnect_qpair_done, (struct spdk_nvme_qpair *qpair));

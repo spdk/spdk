@@ -1695,4 +1695,14 @@ nvme_get_default_hostnqn(char *buf, int len)
 	return 0;
 }
 
+bool
+nvme_shared_cq_enabled(void)
+{
+#ifdef SPDK_CONFIG_NVME_SHARED_CQ
+	return true;
+#else
+	return false;
+#endif
+}
+
 SPDK_LOG_REGISTER_COMPONENT(nvme)

@@ -188,6 +188,89 @@ require that data should be done by sending a request to the owning thread.
 This results in a message passing architecture, as opposed to a locking
 architecture, and will result in superior scaling across CPU cores.
 
+#### Independent PCIe Submission and Completion Queues {#nvme_shared_cq}
+
+Shared-CQ queue management separates the lifetime of a PCIe I/O completion queue
+(CQ) from the submission queues (SQs) bound to it. Several SQs may post
+completions to one CQ. Each SQ remains a queue-pair handle for normal I/O
+submission, while the application owns the standalone CQ. Existing coupled
+1:1 qpairs remain the default and retain their private completion path.
+
+##### Configuration and allocation
+
+Build with `./configure --enable-nvme-shared-cq` to enable this experimental
+extension. It is disabled by default; `--disable-nvme-shared-cq` explicitly
+disables it. Without build support, selecting shared-CQ mode returns `-ENOTSUP`.
+Enabled builds still default to legacy mode.
+
+Independent CQ/SQ management requires an explicit per-controller opt-in before
+allocating I/O queues. The default is legacy coupled-qpair behavior. Mode
+changes are rejected while any I/O qpairs or standalone CQs exist. Independent
+allocation is initially PCIe-only; other transports report unsupported
+operations rather than emulating PCIe queue semantics.
+
+The application allocates a CQ, allocates one or more SQs bound to it, submits
+and polls I/O, frees all bound SQs, and finally frees the CQ. Explicit SQIDs
+and CQIDs use independent namespaces: an SQ and a CQ may have the same numeric
+ID, but IDs cannot be duplicated within either namespace. A coupled qpair
+reserves its numeric ID in both namespaces.
+
+SQ and CQ depths are independently configured within controller limits. The
+driver does not reject or warn when one SQ, or the aggregate bound SQ depth,
+exceeds the CQ depth. Applications must size the CQ for the aggregate
+completion load. Sharing a CQ does not increase the software request pool or
+change the tracker-capacity calculation.
+
+##### Ownership and polling
+
+A shared CQ has one serialized polling domain. Polling a bound SQ may complete
+requests belonging to any sibling SQ, so callbacks execute on the thread
+draining the CQ, not necessarily through the SQ handle used to initiate the
+poll. All access must respect SPDK's single-thread-at-a-time qpair contract.
+There are no new data-path locks, and this extension does not permit concurrent
+polling or arbitrary cross-thread submission to shared queues.
+
+The CQ records its process ownership and, when attached, its poll-group
+ownership. Cross-process binding and conflicting poll-group ownership are
+rejected. Direct CQ or bound-SQ polling is rejected while a poll group owns
+the CQ. A poll group drains each shared CQ once per polling cycle, dispatching
+CQEs by SQID and then by the owning SQ's CID. The shared completion budget is
+CQ-centric, not a per-SQ fairness guarantee.
+
+Queued-request resubmission, delayed SQ doorbells, timeout checks, and deferred
+software errors must be handled for the owning or bound SQs, including siblings
+not explicitly polled by the application. Ownership migration requires
+quiescing I/O and removing the existing poll-group membership before attaching
+the queues to another group.
+
+##### Deletion, failure, and reset
+
+A CQ cannot be freed while SQs remain bound. Deleting an SQ releases only its
+SQ resources and CQ reference; it does not delete the application-owned CQ.
+Managed SQ deletion requested from a completion callback must be retried
+outside the completion context so its result is observable by the caller.
+
+Device-command failure and timeout are distinct. A failed CQ deletion retains
+the handle and CQID for retry when the device state is known. A timed-out
+create or delete leaves device ownership unresolved: the driver retains the
+host resources and ID in pending state until reset or terminal cleanup can
+resolve ownership. Allocation must not expose a usable handle for a pending
+CQ. Neither an allocation failure nor a deletion error permits early reuse of
+DMA memory or an ID that the controller may still reference.
+
+On controller reset, standalone CQs are recreated before their bound SQs are
+reconnected. CQ head, phase, and ring state are reinitialized, and queue-ID
+reservations and bindings are restored. Process and controller teardown clean
+up SQs before CQs, with host-only cleanup for terminal removal.
+Retained managed queues are released during terminal teardown only after
+controller disable confirms that DMA has stopped, or after device removal.
+If disable fails, the driver reports and retains the uncertain DMA resources.
+
+This extension is intended for evaluating queue topology and resource usage.
+Functional tests must cover routing, wraparound, ownership, partial failures,
+deletion under load, and recovery. No throughput, CPU, or latency improvement
+is implied without measurements on representative workloads.
+
 ### NVMe Driver Internal Memory Usage {#nvme_memory_usage}
 
 The SPDK NVMe driver provides a zero-copy data transfer path, which means that

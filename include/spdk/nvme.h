@@ -1971,6 +1971,117 @@ struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_qpair(struct spdk_nvme_ctrlr *c
 		const struct spdk_nvme_io_qpair_opts *opts,
 		size_t opts_size);
 
+struct spdk_nvme_cq;
+
+/** Controller queue-management mode. Legacy coupled qpairs remain the default. */
+enum spdk_nvme_queue_mgmt_mode {
+	SPDK_NVME_QUEUE_MGMT_MODE_LEGACY = 0,
+	SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ = 1,
+};
+
+struct spdk_nvme_queue_mgmt_opts {
+	size_t opts_size;
+	enum spdk_nvme_queue_mgmt_mode mode;
+};
+
+/** Initialize queue-management options to legacy mode. */
+void spdk_nvme_ctrlr_get_default_queue_mgmt_opts(struct spdk_nvme_queue_mgmt_opts *opts,
+		size_t opts_size);
+
+/**
+ * Select queue management before allocating any I/O queues.
+ * Independent PCIe SQ/CQ management requires --enable-nvme-shared-cq at build
+ * time and SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ at runtime.
+ *
+ * \return 0 on success, -EINVAL for invalid options, -ENOTSUP when shared CQ
+ * support is not built, or -EBUSY while any I/O SQ/CQ is allocated.
+ */
+int spdk_nvme_ctrlr_set_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+					const struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size);
+
+/** Read the controller's current queue-management options. Returns 0 or -EINVAL. */
+int spdk_nvme_ctrlr_get_queue_mgmt_opts(struct spdk_nvme_ctrlr *ctrlr,
+					struct spdk_nvme_queue_mgmt_opts *opts, size_t opts_size);
+
+/** Options for an independently allocated PCIe completion queue. */
+struct spdk_nvme_io_cq_opts {
+	/** Number of CQ entries, or zero to use the controller default. */
+	uint32_t io_queue_size;
+	/** Requested CQID, or zero to allocate any free CQID independently of SQIDs. */
+	uint16_t cqid;
+	uint8_t reserved6[2];
+	/** Optional caller-owned DMA ring, with the same requirements as qpair CQ memory. */
+	struct {
+		struct spdk_nvme_cpl *vaddr;
+		uint64_t paddr;
+		uint64_t buffer_size;
+	} cq;
+	/** Size of this structure as known to the caller. */
+	size_t opts_size;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_io_cq_opts) == 40, "Incorrect size");
+
+/**
+ * Allocate an independent PCIe CQ in SHARED_CQ mode.
+ *
+ * Only fully covered option fields are read; opts_size must be nonzero when
+ * opts is non-NULL. A zero queue size uses the controller default. Caller-owned
+ * ring memory must remain DMA-accessible until successful deletion or reset
+ * cleanup. CQ depth is independent of individual and aggregate SQ depth; the
+ * caller must provision sufficient completion capacity for its workload.
+ *
+ * \return CQ handle, or NULL on failure. A timed-out create retains internal
+ * ownership of the ring and CQID until reset or controller destruction.
+ */
+struct spdk_nvme_cq *spdk_nvme_ctrlr_alloc_io_cq(struct spdk_nvme_ctrlr *ctrlr,
+		const struct spdk_nvme_io_cq_opts *opts, size_t opts_size);
+
+/**
+ * Free an independent CQ after all bound SQs have been freed.
+ *
+ * \return 0 on success, -EBUSY if bound or pending, or another negative errno
+ * on failure. Only success invalidates the handle. A failed delete retains
+ * the handle, ring and CQID; a timed-out delete requires controller reset.
+ */
+int spdk_nvme_ctrlr_free_io_cq(struct spdk_nvme_cq *cq);
+
+/**
+ * Allocate a PCIe I/O SQ bound to an existing standalone CQ in SHARED_CQ mode.
+ *
+ * A zero SQID selects a free SQID independently of CQIDs. The existing qpair
+ * options control SQ depth, priority, request count, delayed submission and
+ * create-only/asynchronous connection. Completion-buffer options are ignored.
+ * Interrupt mode is not supported. All SQs sharing a CQ use one process and
+ * polling domain. The driver imposes no SQ-depth versus CQ-depth policy.
+ *
+ * \return SQ handle, or NULL on failure.
+ */
+struct spdk_nvme_qpair *spdk_nvme_ctrlr_alloc_io_sq(struct spdk_nvme_ctrlr *ctrlr,
+		struct spdk_nvme_cq *cq, uint16_t sqid,
+		const struct spdk_nvme_io_qpair_opts *opts, size_t opts_size);
+
+/**
+ * Free an independent SQ, retaining its shared CQ.
+ *
+ * \return 0 on success; -EAGAIN in a completion callback, -EBUSY while an
+ * ambiguous delete awaits reset, or another negative errno on failure.
+ * Only success invalidates the SQ handle. On failure it and its SQID remain owned.
+ */
+int spdk_nvme_ctrlr_free_io_sq(struct spdk_nvme_qpair *qpair);
+
+/**
+ * Poll an independent PCIe CQ, dispatching completions to their owning SQs.
+ *
+ * A zero maximum uses the bounded default batch size. The caller must serialize
+ * all polling and queue operations in the CQ's polling domain.
+ *
+ * \return Number of CQEs consumed, or -EINVAL for a NULL handle, -ENOTSUP if
+ * unavailable, -EBUSY for poll-group ownership or recursive polling, -EPERM for
+ * a foreign process, or -ENXIO for a failed/removed controller.
+ */
+int32_t spdk_nvme_pcie_cq_process_completions(struct spdk_nvme_cq *cq,
+		uint32_t max_completions);
+
 /**
  * Connect a newly created I/O qpair.
  *
@@ -2096,11 +2207,15 @@ spdk_nvme_qp_failure_reason spdk_nvme_ctrlr_get_admin_qp_failure_reason(
 /**
  * Free an I/O queue pair that was allocated by spdk_nvme_ctrlr_alloc_io_qpair().
  *
- * The qpair must not be accessed after calling this function.
+ * The qpair must not be accessed after a successful free. In SHARED_CQ mode,
+ * freeing from a completion callback returns -EAGAIN without freeing it; retry
+ * after polling returns.
  *
  * \param qpair I/O queue pair to free.
  *
- * \return 0 on success.  This function will never return any value other than 0.
+ * \return 0 on success. In SHARED_CQ mode, -EAGAIN from a completion callback,
+ * -EBUSY for a pending delete, or another negative errno on deletion failure.
+ * Legacy coupled qpair behavior is unchanged.
  */
 int spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair);
 
@@ -3113,6 +3228,7 @@ const struct spdk_nvme_transport_id *spdk_nvme_ctrlr_get_transport_id(
  *
  * This function is only needed for the non-standard case of allocating queues using the raw
  * command interface. In most cases \ref spdk_nvme_ctrlr_alloc_io_qpair should be sufficient.
+ * The returned ID is reserved in both the submission and completion queue namespaces.
  *
  * \param ctrlr Opaque handle to NVMe controller.
  * \return qid on success, -1 on failure.
@@ -3123,6 +3239,7 @@ int32_t spdk_nvme_ctrlr_alloc_qid(struct spdk_nvme_ctrlr *ctrlr);
  * \brief Free NVMe I/O queue identifier.
  *
  * This function must only be called with qids previously allocated with \ref spdk_nvme_ctrlr_alloc_qid.
+ * It releases the ID in both the submission and completion queue namespaces.
  *
  * \param ctrlr Opaque handle to NVMe controller.
  * \param qid NVMe Queue Identifier.
@@ -5007,6 +5124,27 @@ struct spdk_nvme_transport_ops {
 
 	/* Optional callback for transports to process transport-specific events. E.g. poll RDMA_CM event channel */
 	int (*ctrlr_process_transport_events)(struct spdk_nvme_ctrlr *ctrlr);
+
+	/* Optional operations for independently managed PCIe queues. */
+	struct spdk_nvme_cq *(*ctrlr_create_io_cq)(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+			const struct spdk_nvme_io_cq_opts *opts);
+
+	int (*ctrlr_delete_io_cq)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	/* Release host resources only after the controller can no longer DMA to the CQ. */
+	int (*ctrlr_delete_io_cq_force)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	struct spdk_nvme_qpair *(*ctrlr_create_io_sq)(struct spdk_nvme_ctrlr *ctrlr,
+			struct spdk_nvme_cq *cq, uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts);
+
+	int (*ctrlr_connect_io_cq)(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq);
+
+	int (*poll_group_add)(struct spdk_nvme_transport_poll_group *tgroup,
+			      struct spdk_nvme_qpair *qpair);
+	int (*poll_group_remove)(struct spdk_nvme_transport_poll_group *tgroup,
+				 struct spdk_nvme_qpair *qpair);
+	int (*poll_group_connect_qpair)(struct spdk_nvme_qpair *qpair);
+	int (*poll_group_disconnect_qpair)(struct spdk_nvme_qpair *qpair);
 };
 
 /**
@@ -5019,13 +5157,26 @@ struct spdk_nvme_transport_ops {
  */
 void spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops);
 
+/**
+ * Register transport operations with explicit structure size.
+ *
+ * This API enables forward-compatible extension of struct
+ * spdk_nvme_transport_ops by allowing callers to provide the size of the
+ * structure they were compiled against.
+ *
+ * \param ops The operations associated with an NVMe-oF transport.
+ * \param ops_size Size of the caller's struct spdk_nvme_transport_ops.
+ */
+void spdk_nvme_transport_register_ext(const struct spdk_nvme_transport_ops *ops,
+				      size_t ops_size);
+
 /*
  * Macro used to register new transports.
  */
 #define SPDK_NVME_TRANSPORT_REGISTER(name, transport_ops) \
 static void __attribute__((constructor)) _spdk_nvme_transport_register_##name(void) \
 { \
-	spdk_nvme_transport_register(transport_ops); \
+	spdk_nvme_transport_register_ext((transport_ops), sizeof(*(transport_ops))); \
 }
 
 /**

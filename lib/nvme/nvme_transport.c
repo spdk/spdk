@@ -83,9 +83,16 @@ spdk_nvme_transport_available_by_name(const char *transport_name)
 }
 
 void
-spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+spdk_nvme_transport_register_ext(const struct spdk_nvme_transport_ops *ops,
+				 size_t ops_size)
 {
 	struct spdk_nvme_transport *new_transport;
+	size_t copy_size;
+
+	if (ops == NULL || ops_size < sizeof(ops->name)) {
+		SPDK_ERRLOG("Invalid transport ops or ops_size too small to cover the transport name.\n");
+		return;
+	}
 
 	if (nvme_get_transport(ops->name)) {
 		SPDK_ERRLOG("Double registering NVMe transport %s is prohibited.\n", ops->name);
@@ -98,9 +105,31 @@ spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
 		return;
 	}
 	new_transport = &g_transports[g_current_transport_index++];
+	copy_size = spdk_min(ops_size, sizeof(new_transport->ops));
 
-	new_transport->ops = *ops;
+	memset(&new_transport->ops, 0, sizeof(new_transport->ops));
+	memcpy(&new_transport->ops, ops, copy_size);
 	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, new_transport, link);
+}
+
+void
+spdk_nvme_transport_register(const struct spdk_nvme_transport_ops *ops)
+{
+	/*
+	 * Backward-compatible registration: copy only the original SPDK fields
+	 * (up through and including ctrlr_process_transport_events, the last upstream
+	 * field) and zero-fill any appended extension callbacks.
+	 *
+	 * The static assertion below enforces that no new fields were ever inserted
+	 * before ctrlr_connect_qpair (which would shift it and corrupt the prefix copy).
+	 */
+	SPDK_STATIC_ASSERT(
+		offsetof(struct spdk_nvme_transport_ops, ctrlr_connect_qpair) ==
+		offsetof(struct spdk_nvme_transport_ops, ctrlr_delete_io_qpair) + sizeof(void *),
+		"ctrlr_connect_qpair offset changed: a field was inserted before it");
+	spdk_nvme_transport_register_ext(ops,
+					 offsetof(struct spdk_nvme_transport_ops, ctrlr_process_transport_events) +
+					 sizeof(((struct spdk_nvme_transport_ops *)0)->ctrlr_process_transport_events));
 }
 
 struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
@@ -466,7 +495,7 @@ nvme_transport_ctrlr_create_io_qpair(struct spdk_nvme_ctrlr *ctrlr, uint16_t qid
 	return qpair;
 }
 
-void
+int
 nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
 {
 	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
@@ -483,8 +512,87 @@ nvme_transport_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 	if (rc != 0) {
 		NVME_CTRLR_ERRLOG(ctrlr, "transport %s returned non-zero for ctrlr_delete_io_qpair op\n",
 				  transport->ops.name);
-		assert(false);
+		if (ctrlr->queue_mgmt_opts.mode != SPDK_NVME_QUEUE_MGMT_MODE_SHARED_CQ) {
+			assert(false);
+		}
 	}
+	return rc;
+}
+
+struct spdk_nvme_cq *
+nvme_transport_ctrlr_create_io_cq(struct spdk_nvme_ctrlr *ctrlr, uint16_t cqid,
+				  const struct spdk_nvme_io_cq_opts *opts)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_create_io_cq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "transport %s does not support independent completion queues\n",
+				  transport->ops.name);
+		return NULL;
+	}
+
+	return transport->ops.ctrlr_create_io_cq(ctrlr, cqid, opts);
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_delete_io_cq == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_delete_io_cq(ctrlr, cq);
+}
+
+int
+nvme_transport_ctrlr_delete_io_cq_force(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_delete_io_cq_force == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_delete_io_cq_force(ctrlr, cq);
+}
+
+int
+nvme_transport_ctrlr_connect_io_cq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_connect_io_cq == NULL) {
+		return -ENOTSUP;
+	}
+
+	return transport->ops.ctrlr_connect_io_cq(ctrlr, cq);
+}
+
+struct spdk_nvme_qpair *
+nvme_transport_ctrlr_create_io_sq(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_cq *cq,
+				  uint16_t qid, const struct spdk_nvme_io_qpair_opts *opts)
+{
+	const struct spdk_nvme_transport *transport = nvme_get_transport(ctrlr->trid.trstring);
+	struct spdk_nvme_qpair *qpair;
+
+	assert(transport != NULL);
+	if (transport->ops.ctrlr_create_io_sq == NULL) {
+		NVME_CTRLR_ERRLOG(ctrlr, "transport %s does not support independent submission queues\n",
+				  transport->ops.name);
+		return NULL;
+	}
+
+	qpair = transport->ops.ctrlr_create_io_sq(ctrlr, cq, qid, opts);
+	if (qpair != NULL && !nvme_qpair_is_admin_queue(qpair)) {
+		qpair->transport = transport;
+	}
+	return qpair;
 }
 
 static void
@@ -760,8 +868,17 @@ int
 nvme_transport_poll_group_add(struct spdk_nvme_transport_poll_group *tgroup,
 			      struct spdk_nvme_qpair *qpair)
 {
+	int rc;
+
 	qpair->poll_group = tgroup;
 	assert(nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTED);
+	if (tgroup->transport->ops.poll_group_add) {
+		rc = tgroup->transport->ops.poll_group_add(tgroup, qpair);
+		if (rc != 0) {
+			qpair->poll_group = NULL;
+			return rc;
+		}
+	}
 	qpair->poll_group_tailq_head = &tgroup->disconnected_qpairs;
 	STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
 
@@ -780,6 +897,12 @@ nvme_transport_poll_group_remove(struct spdk_nvme_transport_poll_group *tgroup,
 		return -ENOENT;
 	}
 
+	if (tgroup->transport->ops.poll_group_remove) {
+		rc = tgroup->transport->ops.poll_group_remove(tgroup, qpair);
+		if (rc != 0) {
+			return rc;
+		}
+	}
 	STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 
 	qpair->poll_group = NULL;
@@ -823,6 +946,13 @@ nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (qpair->poll_group_tailq_head == &tgroup->connected_qpairs) {
+		if (tgroup->transport->ops.poll_group_disconnect_qpair) {
+			rc = tgroup->transport->ops.poll_group_disconnect_qpair(qpair);
+			if (rc != 0) {
+				NVME_QPAIR_ERRLOG(qpair, "Transport poll-group disconnect failed: rc=%d\n", rc);
+				return rc;
+			}
+		}
 		qpair->poll_group_tailq_head = &tgroup->disconnected_qpairs;
 		STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 		assert(tgroup->num_connected_qpairs > 0);
@@ -839,6 +969,7 @@ int
 nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 {
 	struct spdk_nvme_transport_poll_group *tgroup;
+	int rc;
 
 	tgroup = qpair->poll_group;
 
@@ -847,6 +978,12 @@ nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 	}
 
 	if (qpair->poll_group_tailq_head == &tgroup->disconnected_qpairs) {
+		if (tgroup->transport->ops.poll_group_connect_qpair) {
+			rc = tgroup->transport->ops.poll_group_connect_qpair(qpair);
+			if (rc != 0) {
+				return rc == -EINPROGRESS ? 0 : rc;
+			}
+		}
 		qpair->poll_group_tailq_head = &tgroup->connected_qpairs;
 		STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 		STAILQ_INSERT_TAIL(&tgroup->connected_qpairs, qpair, poll_group_stailq);
