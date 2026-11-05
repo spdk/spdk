@@ -313,45 +313,22 @@ test_make_uninstall() {
 }
 
 _build_doc() {
-	local doxygenv
-	doxygenv=$(doxygen --version)
-
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS Q=@ &> "$out"/doxygen.log
 	if hash mdl 2> /dev/null; then
 		echo "Checking generated jsonrpc.md markdown format..."
 		mdl -s "$rootdir/mdl_rules.rb" "$rootdir/doc/jsonrpc.md"
 	fi
 	if [ -s "$out"/doxygen.log ]; then
-		if [[ "$doxygenv" == "1.8.20" ]]; then
-			# Doxygen 1.8.20 produces false positives, see:
-			# https://github.com/doxygen/doxygen/issues/7948
-			grep -vE '\\ilinebr'
-		elif [[ "$doxygenv" == "1.9.5" ]]; then
-			# Doxygen 1.9.5 produces false positives, see:
-			# https://github.com/doxygen/doxygen/issues/9552 and
-			# https://github.com/doxygen/doxygen/issues/9678
-			grep -vE '\\ifile|@param'
-		else
-			cat -
-		fi < "$out/doxygen.log" && echo "Doxygen errors found!" && return 1
-
-		echo "Doxygen $doxygenv detected. No warnings except false positives, continuing the test"
-	fi
-	if hash pdflatex 2> /dev/null; then
-		$MAKE -C "$rootdir"/doc/output/latex --no-print-directory $MAKEFLAGS &>> "$out"/doxygen.log
+		cat "$out/doxygen.log"
+		echo "Doxygen errors found!"
+		return 1
 	fi
 	mkdir -p "$out"/doc
 	# Copy and remove files to avoid mv: failed to preserve ownership error
 	cp -r --preserve=mode "$rootdir"/doc/output/html "$out"/doc
 	rm -rf "$rootdir"/doc/output/html
-	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
-		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
-	fi
 	$MAKE -C "$rootdir"/doc --no-print-directory $MAKEFLAGS clean &>> "$out"/doxygen.log
-	if [ -s "$out"/doxygen.log ]; then
-		# Save the log as an artifact in case we are working with potentially broken version
-		eq "$doxygenv" 1.8.20 || rm "$out"/doxygen.log
-	fi
+	rm -f "$out"/doxygen.log
 	rm -rf "$rootdir"/doc/output
 }
 
