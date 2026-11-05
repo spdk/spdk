@@ -1,0 +1,144 @@
+@import url("https://fonts.googleapis.com/css?family=Roboto:400,700");
+
+/* SPDK additions to the stock Doxygen 1.18 stylesheet. */
+body, table, div, p, dl, .title {
+    font-family: "Roboto", sans-serif;
+}
+
+#doc-content .contents,
+#doc-content .textblock {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+#doc-content .contents p,
+#doc-content .contents dl {
+    font-size: inherit;
+    line-height: inherit;
+}
+
+/* Center the page in a column as wide as the website's, under a title bar
+   like the website's page titles. */
+#doc-content {
+    box-sizing: border-box;
+    padding: 0 15px;
+}
+
+#doc-content > .header,
+#doc-content > .contents,
+#doc-content > div > .header,
+#doc-content > div > .contents {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 1296px;
+}
+
+div.header {
+    background: #f8f9fa;
+    border-bottom: 3px solid #2b497d;
+    margin-top: 16px;
+    overflow: hidden;
+}
+
+div.headertitle {
+    padding: 20px 30px 16px;
+}
+
+.title {
+    color: #1a1a1a;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.15;
+    margin: 4px 0;
+}
+
+/* Hide Doxygen's project node, so the tree starts with the main page. The
+   main page node stays, since on API pages Doxygen only loads its children
+   when it is expanded. */
+#nav-tree-contents > ul > li > .item {
+    display: none;
+}
+
+#nav-tree-contents > ul > li > .children_ul {
+    display: block !important;
+    padding-left: 0 !important;
+}
+
+/* Doxygen's 12px panel labels are hard to read, and long labels get clipped.
+   Use the font and colors of the website's sidebar, and wrap long labels. */
+#nav-tree .label,
+ul.page-outline div.item {
+    font: 15px/1.4 "Roboto", sans-serif;
+    overflow-wrap: anywhere;
+    padding: 6px 0;
+}
+
+#nav-tree .label a,
+ul.page-outline div.item a {
+    color: #333;
+}
+
+#nav-tree .selected .label a {
+    color: #2b497d;
+    font-weight: 700;
+}
+
+#nav-tree .item,
+ul.page-outline div.item {
+    align-items: center;
+    display: flex;
+}
+
+ul.page-outline .arrow {
+    flex-shrink: 0;
+}
+
+#nav-tree li,
+ul.page-outline li {
+    white-space: normal;
+}
+
+/* On narrow screens hide the side panels and let the content use the full width. */
+@media (max-width: 767.98px) {
+    body {
+        overflow: auto !important;
+    }
+
+    /* Move the panels off-screen instead of hiding them, so Doxygen still
+       measures their width and does not save a width of 0. */
+    #side-nav,
+    #page-nav,
+    #page-nav-resize-handle {
+        left: -10000px !important;
+        position: absolute !important;
+        visibility: hidden !important;
+    }
+
+    #container {
+        display: block !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    #doc-content {
+        height: auto !important;
+        margin-left: 0 !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    #doc-content .contents {
+        overflow-x: auto;
+    }
+
+    #doc-content .title {
+        font-size: 2rem;
+    }
+
+    #doc-content span.tt,
+    #doc-content .memname,
+    #doc-content td,
+    #doc-content th {
+        overflow-wrap: anywhere;
+    }
+}

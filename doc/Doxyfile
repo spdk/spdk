@@ -273,7 +273,20 @@ VERBATIM_HEADERS       = NO
 # documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_EXTRA_STYLESHEET  = stylesheet.css
+HTML_EXTRA_STYLESHEET  = theme/spdk.css
+
+# The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
+# should be rendered with a dark or light theme.
+# Possible values are: LIGHT always generates light mode output, DARK always
+# generates dark mode output, AUTO_LIGHT automatically sets the mode according
+# to the user preference, uses light mode if no preference is set (the default),
+# AUTO_DARK automatically sets the mode according to the user preference, uses
+# dark mode if no preference is set and TOGGLE allows a user to switch between
+# light and dark mode via a button.
+# The default value is: AUTO_LIGHT.
+# This tag requires that the tag GENERATE_HTML is set to YES.
+
+HTML_COLORSTYLE        = LIGHT
 
 #---------------------------------------------------------------------------
 # Configuration options related to the LaTeX output
