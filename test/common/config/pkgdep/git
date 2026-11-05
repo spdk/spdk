@@ -360,8 +360,8 @@ function install_bpftrace() {
 }
 
 function install_doxygen() {
-	# Stable, 1.10 commit that works for our docs
-	local release=78422d3905e57acebf0374feefafa6578dbe86aa
+	# Doxygen 1.18.0
+	local release=8e760943e5d9581a444cf327f43a0b4d20d29482
 
 	rm -rf "$GIT_REPOS/doxygen"
 
