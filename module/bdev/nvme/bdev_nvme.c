@@ -2785,21 +2785,8 @@ bdev_nvme_reset_destroy_qpairs(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
-bdev_nvme_reconnect_ctrlr_now(void *ctx)
+_bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
-
-	assert(nvme_ctrlr->resetting == true);
-	assert(spdk_thread_is_app_thread(NULL));
-
-	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
-}
-
-static void
-_bdev_nvme_reset_ctrlr(void *ctx)
-{
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
-
 	assert(nvme_ctrlr->resetting == true);
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -2811,9 +2798,9 @@ _bdev_nvme_reset_ctrlr(void *ctx)
 }
 
 static int
-bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
-	spdk_msg_fn msg_fn;
+	bool disconnect_pending;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -2831,22 +2818,25 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 		return -EALREADY;
 	}
 
+	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
+
 	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->dont_retry = true;
+	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
+	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, false);
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		if (bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr, bdev_nvme_reconnect_ctrlr)) {
-			return 0;
+		disconnect_pending = bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr,
+				     bdev_nvme_reconnect_ctrlr);
+		if (!disconnect_pending) {
+			bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 		}
 
-		msg_fn = bdev_nvme_reconnect_ctrlr_now;
-	} else {
-		msg_fn = _bdev_nvme_reset_ctrlr;
+		return 0;
 	}
 
-	/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
-	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
+	_bdev_nvme_reset_ctrlr(nvme_ctrlr);
 	return 0;
 }
 
@@ -2855,7 +2845,7 @@ bdev_nvme_reset_ctrlr_msg(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
-	bdev_nvme_reset_ctrlr(nvme_ctrlr);
+	bdev_nvme_reset_ctrlr(nvme_ctrlr, NULL, NULL);
 }
 
 static void
@@ -2865,7 +2855,7 @@ bdev_nvme_reset_ctrlr_async(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static int
-bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -2881,10 +2871,14 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 		return -EALREADY;
 	}
 
+	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
+
 	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->disabled = false;
+	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
+	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, true);
-	bdev_nvme_reconnect_ctrlr_now(nvme_ctrlr);
+	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 	return 0;
 }
 
@@ -2938,7 +2932,7 @@ bdev_nvme_disable_destroy_qpairs(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
-_bdev_nvme_disable_ctrlr(void *ctx)
+bdev_nvme_disable_ctrlr_complete_msg(void *ctx)
 {
 	struct nvme_ctrlr *nvme_ctrlr = ctx;
 
@@ -2949,10 +2943,8 @@ _bdev_nvme_disable_ctrlr(void *ctx)
 }
 
 static void
-_bdev_nvme_disconnect_and_disable_ctrlr(void *ctx)
+bdev_nvme_disconnect_and_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 {
-	struct nvme_ctrlr *nvme_ctrlr = ctx;
-
 	assert(nvme_ctrlr->resetting == true);
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -2964,9 +2956,9 @@ _bdev_nvme_disconnect_and_disable_ctrlr(void *ctx)
 }
 
 static int
-bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
+bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn, void *cb_arg)
 {
-	spdk_msg_fn msg_fn;
+	bool disconnect_pending;
 
 	assert(spdk_thread_is_app_thread(NULL));
 
@@ -2982,22 +2974,26 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr)
 		return -EALREADY;
 	}
 
+	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
+
 	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->dont_retry = true;
+	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
+	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, true);
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
-		if (bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr, bdev_nvme_disable_ctrlr_complete)) {
-			return 0;
+		disconnect_pending = bdev_nvme_ctrlr_unregister_reconnect_timer_ext(nvme_ctrlr,
+				     bdev_nvme_disable_ctrlr_complete);
+		if (!disconnect_pending) {
+			spdk_thread_send_msg(spdk_thread_get_app_thread(), bdev_nvme_disable_ctrlr_complete_msg,
+					     nvme_ctrlr);
 		}
 
-		msg_fn = _bdev_nvme_disable_ctrlr;
-	} else {
-		msg_fn = _bdev_nvme_disconnect_and_disable_ctrlr;
+		return 0;
 	}
 
-	/* Ensure completion is async otherwise ctrlr_op_cb_fn might not be set yet. */
-	spdk_thread_send_msg(spdk_thread_get_app_thread(), msg_fn, nvme_ctrlr);
+	bdev_nvme_disconnect_and_disable_ctrlr(nvme_ctrlr);
 	return 0;
 }
 
@@ -3009,25 +3005,19 @@ nvme_ctrlr_op(struct nvme_ctrlr *nvme_ctrlr, enum nvme_ctrlr_op op,
 
 	switch (op) {
 	case NVME_CTRLR_OP_RESET:
-		rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+		rc = bdev_nvme_reset_ctrlr(nvme_ctrlr, cb_fn, cb_arg);
 		break;
 	case NVME_CTRLR_OP_ENABLE:
-		rc = bdev_nvme_enable_ctrlr(nvme_ctrlr);
+		rc = bdev_nvme_enable_ctrlr(nvme_ctrlr, cb_fn, cb_arg);
 		break;
 	case NVME_CTRLR_OP_DISABLE:
-		rc = bdev_nvme_disable_ctrlr(nvme_ctrlr);
+		rc = bdev_nvme_disable_ctrlr(nvme_ctrlr, cb_fn, cb_arg);
 		break;
 	default:
 		rc = -EINVAL;
 		break;
 	}
 
-	if (rc == 0) {
-		assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
-		assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
-		nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
-		nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
-	}
 	return rc;
 }
 
@@ -3254,7 +3244,7 @@ _bdev_nvme_reset_io_msg(void *ctx)
 
 	assert(spdk_thread_is_app_thread(NULL));
 
-	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+	rc = bdev_nvme_reset_ctrlr(nvme_ctrlr, bdev_nvme_reset_io_continue, bio);
 	if (rc == -EBUSY) {
 		/*
 		 * Reset call is queued only if it is from the app framework. This is on purpose so that
@@ -3279,10 +3269,6 @@ _bdev_nvme_reset_io_msg(void *ctx)
 		return;
 	}
 
-	assert(nvme_ctrlr->ctrlr_op_cb_fn == NULL);
-	assert(nvme_ctrlr->ctrlr_op_cb_arg == NULL);
-	nvme_ctrlr->ctrlr_op_cb_fn = bdev_nvme_reset_io_continue;
-	nvme_ctrlr->ctrlr_op_cb_arg = bio;
 	NVME_BDEV_INFOLOG(nbdev, nvme_ctrlr, "reset_io %p started resetting ctrlr.\n", bio);
 }
 
