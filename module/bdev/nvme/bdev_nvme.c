@@ -2444,6 +2444,7 @@ bdev_nvme_ctrlr_mark_resetting(struct nvme_ctrlr *nvme_ctrlr, bool restart_timer
 {
 	assert(nvme_ctrlr->resetting == false);
 	nvme_ctrlr->resetting = true;
+	nvme_ctrlr_get_ref(nvme_ctrlr);
 
 	if (!nvme_ctrlr->reset_start_tsc || restart_timer) {
 		nvme_ctrlr->reset_start_tsc = spdk_get_ticks();
@@ -2466,7 +2467,6 @@ bdev_nvme_ctrlr_reconnect_timer(void *ctx)
 		return SPDK_POLLER_BUSY;
 	}
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, false);
 	bdev_nvme_reconnect_ctrlr(nvme_ctrlr);
 	return SPDK_POLLER_BUSY;
@@ -2820,7 +2820,6 @@ bdev_nvme_reset_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_fn
 
 	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->dont_retry = true;
 	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
 	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
@@ -2873,7 +2872,6 @@ bdev_nvme_enable_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_f
 
 	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->disabled = false;
 	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
 	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
@@ -2976,7 +2974,6 @@ bdev_nvme_disable_ctrlr(struct nvme_ctrlr *nvme_ctrlr, bdev_nvme_ctrlr_op_cb cb_
 
 	assert(!nvme_ctrlr->ctrlr_op_cb_fn && !nvme_ctrlr->ctrlr_op_cb_arg);
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->dont_retry = true;
 	nvme_ctrlr->ctrlr_op_cb_fn = cb_fn;
 	nvme_ctrlr->ctrlr_op_cb_arg = cb_arg;
@@ -3363,7 +3360,6 @@ bdev_nvme_start_ctrlr_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		return 0;
 	}
 
-	nvme_ctrlr_get_ref(nvme_ctrlr);
 	nvme_ctrlr->in_failover = true;
 	bdev_nvme_ctrlr_mark_resetting(nvme_ctrlr, false);
 	_bdev_nvme_reset_ctrlr(nvme_ctrlr);
