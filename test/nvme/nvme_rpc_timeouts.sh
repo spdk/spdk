@@ -72,4 +72,48 @@ trap - SIGINT SIGTERM EXIT
 rm -f ${tmpfile_default_settings} ${tmpfile_modified_settings}
 killprocess $spdk_tgt_pid
 
+## Runtime test: with a controller attached, the timeouts can be changed only between
+## non-zero values, and a rejected call changes nothing.
+tmpfile_before=/tmp/settings_before_$$
+tmpfile_after=/tmp/settings_after_$$
+
+get_timeouts() {
+	$rpc_py framework_get_config bdev | jq -r '.[] | select(.method == "bdev_nvme_set_options") |
+		"\(.params.timeout_us) \(.params.timeout_admin_us)"'
+}
+
+check_rejected() {
+	NOT $rpc_py bdev_nvme_set_options "$@"
+	$rpc_py save_config > $tmpfile_after
+	diff $tmpfile_before $tmpfile_after
+}
+
+$SPDK_BIN_DIR/spdk_tgt &
+spdk_tgt_pid=$!
+trap 'killprocess ${spdk_tgt_pid}; rm -f ${tmpfile_before} ${tmpfile_after}; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $spdk_tgt_pid
+
+$rpc_py bdev_nvme_set_options --timeout-us=10000000 --timeout-admin-us=30000000
+$rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a "$(get_first_nvme_bdf)"
+
+echo Changing the timeouts with a controller attached:
+$rpc_py bdev_nvme_set_options --timeout-us=20000000 --timeout-admin-us=40000000
+[[ $(get_timeouts) == "20000000 40000000" ]]
+
+echo Disabling the timeouts with a controller attached must fail:
+$rpc_py save_config > $tmpfile_before
+check_rejected --timeout-us=0 --timeout-admin-us=0
+
+echo Timeouts disabled when the controller was attached can not be changed:
+$rpc_py bdev_nvme_detach_controller Nvme0
+$rpc_py bdev_nvme_set_options --timeout-us=0 --timeout-admin-us=0
+$rpc_py bdev_nvme_attach_controller -b Nvme0 -t PCIe -a "$(get_first_nvme_bdf)"
+$rpc_py save_config > $tmpfile_before
+check_rejected --timeout-us=10000000
+
+$rpc_py bdev_nvme_detach_controller Nvme0
+trap - SIGINT SIGTERM EXIT
+rm -f ${tmpfile_before} ${tmpfile_after}
+killprocess $spdk_tgt_pid
+
 echo RPC TIMEOUT SETTING TEST PASSED.

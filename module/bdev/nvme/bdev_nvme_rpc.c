@@ -101,7 +101,7 @@ rpc_bdev_nvme_set_options(struct spdk_jsonrpc_request *request,
 	rc = spdk_bdev_nvme_set_opts(&opts);
 	if (rc == -EPERM) {
 		spdk_jsonrpc_send_error_response(request, -EPERM,
-						 "RPC not permitted with nvme controllers already attached");
+						 "With nvme controllers attached, only enabled timeouts can be changed");
 		return;
 	} else if (rc) {
 		spdk_jsonrpc_send_error_response(request, rc, spdk_strerror(-rc));

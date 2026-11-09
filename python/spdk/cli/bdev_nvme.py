@@ -65,9 +65,9 @@ def add_parser(subparsers):
         args.client.bdev_nvme_set_options(**params)
 
     p = subparsers.add_parser('bdev_nvme_set_options',
-                              help="Set global parameters for all bdev NVMe. This RPC may only be called"
-                                   " before SPDK subsystems have been initialized or any bdev NVMe has"
-                                   " been created. Parameters, ctrlr_loss_timeout_sec,"
+                              help="Set global parameters for all bdev NVMe. While bdev NVMe controllers are"
+                                   " attached, only `timeout_us` and `timeout_admin_us` can be changed."
+                                   " Parameters, ctrlr_loss_timeout_sec,"
                                    " reconnect_delay_sec, and fast_io_fail_timeout_sec, are for I/O"
                                    " error resiliency. They can be overridden if they are given by the"
                                    " RPC bdev_nvme_attach_controller. The `multipath_opts` parameter"
@@ -78,7 +78,8 @@ def add_parser(subparsers):
                    choices=['none', 'reset', 'abort'],
                    help="Action to take on command time out")
     p.add_argument('-t', '--timeout-us',
-                   help="Timeout for each command, in microseconds. If 0, don't track timeouts.", type=int)
+                   help="Timeout for each command, in microseconds. If 0, don't track timeouts. Can be"
+                        " changed while controllers are attached, but not to or from 0.", type=int)
     p.add_argument('--timeout-admin-us',
                    help="Timeout for each admin command, in microseconds. If 0, treat same as io timeouts.", type=int)
     p.add_argument('-k', '--keep-alive-timeout-ms',
