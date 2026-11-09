@@ -4613,7 +4613,9 @@ int spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
  * \            NULL for Admin queue pair.
  * \param opc Opcode for Admin or I/O commands.
  *
- * The function will remove specified command in the error list.
+ * The function will remove specified command in the error list. Requests that
+ * are already held by a do_not_submit injection are not affected and still
+ * complete with the injected status after their timeout_in_us expires.
  */
 void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,

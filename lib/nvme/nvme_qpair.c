@@ -859,6 +859,14 @@ spdk_nvme_qpair_get_fd(struct spdk_nvme_qpair *qpair, struct spdk_event_handler_
 	return nvme_transport_qpair_get_fd(ctrlr, qpair, opts);
 }
 
+/* Held requests are processed only while err_cmd_enabled is set. */
+static void
+nvme_qpair_update_err_cmd_enabled(struct spdk_nvme_qpair *qpair)
+{
+	qpair->err_cmd_enabled = !TAILQ_EMPTY(&qpair->err_cmd_head) ||
+				 !STAILQ_EMPTY(&qpair->err_req_head);
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -903,6 +911,7 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 								   req->cpl.status.sc, qpair->abort_dnr, true);
 			}
 		}
+		nvme_qpair_update_err_cmd_enabled(qpair);
 	}
 
 	qpair->in_completion_context = 1;
@@ -1030,6 +1039,7 @@ nvme_qpair_complete_error_reqs(struct spdk_nvme_qpair *qpair)
 						   req->cpl.status.sct,
 						   req->cpl.status.sc, qpair->abort_dnr, true);
 	}
+	nvme_qpair_update_err_cmd_enabled(qpair);
 }
 
 void
@@ -1324,7 +1334,7 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		}
 	}
 
-	qpair->err_cmd_enabled = !TAILQ_EMPTY(&qpair->err_cmd_head);
+	nvme_qpair_update_err_cmd_enabled(qpair);
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		nvme_ctrlr_unlock(ctrlr);

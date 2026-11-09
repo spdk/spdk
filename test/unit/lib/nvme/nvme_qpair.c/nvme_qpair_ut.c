@@ -524,6 +524,69 @@ test_nvme_qpair_add_cmd_error_injection(void)
 	cleanup_submit_request_test(&qpair);
 }
 
+static uint32_t g_held_req_cpl_count;
+static struct spdk_nvme_status g_held_req_cpl_status;
+
+static void
+held_req_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	g_held_req_cpl_count++;
+	g_held_req_cpl_status = cpl->status;
+}
+
+static void
+test_nvme_qpair_error_injection_removed(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_request *req, *req2;
+	int rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	qpair.state = NVME_QPAIR_ENABLED;
+	g_transport_process_completions_rc = 0;
+	g_held_req_cpl_count = 0;
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ, true,
+			1000, 2, SPDK_NVME_SCT_MEDIA_ERROR, SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
+	CU_ASSERT(rc == 0);
+
+	req = nvme_allocate_request_null(&qpair, held_req_cb, NULL);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_READ;
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
+	CU_ASSERT(STAILQ_FIRST(&qpair.err_req_head) == req);
+
+	/* Removing the last injection must not strand the request it already holds. */
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
+	CU_ASSERT(TAILQ_EMPTY(&qpair.err_cmd_head));
+	CU_ASSERT(qpair.err_cmd_enabled == true);
+
+	/* A read submitted after the removal goes to the transport and is not held. */
+	g_submit_order_count = 0;
+	req2 = nvme_allocate_request_null(&qpair, held_req_cb, NULL);
+	SPDK_CU_ASSERT_FATAL(req2 != NULL);
+	req2->cmd.opc = SPDK_NVME_OPC_READ;
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req2) == 0);
+	CU_ASSERT(g_submit_order_count == 1);
+	CU_ASSERT(STAILQ_FIRST(&qpair.err_req_head) == req);
+	CU_ASSERT(STAILQ_NEXT(req, stailq) == NULL);
+	nvme_free_request(req2);
+
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 0);
+
+	spdk_delay_us(1001);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 1);
+	CU_ASSERT(g_held_req_cpl_status.sct == SPDK_NVME_SCT_MEDIA_ERROR);
+	CU_ASSERT(g_held_req_cpl_status.sc == SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
+	CU_ASSERT(qpair.err_cmd_enabled == false);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
+
+	cleanup_submit_request_test(&qpair);
+}
+
 static struct nvme_request *
 allocate_request_tree(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -867,6 +930,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_get_status_string);
 #endif
 	CU_ADD_TEST(suite, test_nvme_qpair_add_cmd_error_injection);
+	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_removed);
 	CU_ADD_TEST(suite, test_nvme_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_ordering);
