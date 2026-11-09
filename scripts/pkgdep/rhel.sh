@@ -138,6 +138,8 @@ fi
 
 pkgdep_setup_python_venv "$rootdir"
 
+# Additional dependencies for scripts/genrpc.py
+yum install -y python3-yaml python3-jinja2 python3-tabulate
 # Additional dependencies for SPDK CLI
 yum install -y python3-configshell python3-pexpect
 # Additional dependencies for ISA-L used in compression
