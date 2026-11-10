@@ -2525,11 +2525,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		 * is not ready to try. We will try the active trid after reconnect_delay_sec
 		 * seconds if it is non-zero or at the next reset call otherwise.
 		 */
-	} else {
-		/* Connecting the active trid succeeded. Clear the last failed time because it
-		 * means the trid is failed if its last failed time is non-zero.
-		 */
-		nvme_ctrlr->active_path_id->last_failed_tsc = 0;
 	}
 
 	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Clear pending resets.\n");
@@ -2544,6 +2539,8 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		}
 	} else {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Resetting controller successful.\n");
+		/* The path is failed if its last failed time is non-zero. */
+		nvme_ctrlr->active_path_id->last_failed_tsc = 0;
 		nvme_ctrlr->reset_start_tsc = 0;
 	}
 
