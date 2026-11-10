@@ -2502,8 +2502,6 @@ bdev_nvme_sched_reconnect_failed(struct nvme_ctrlr *nvme_ctrlr)
 static void
 bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
-	bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
-	void *ctrlr_op_cb_arg = nvme_ctrlr->ctrlr_op_cb_arg;
 	bool pending_failover;
 	enum bdev_nvme_op_after_reset op_after_reset;
 
@@ -2546,14 +2544,16 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	nvme_ctrlr->in_failover = false;
 	nvme_ctrlr->recreate_qpairs = false;
 
-	nvme_ctrlr->ctrlr_op_cb_fn = NULL;
-	nvme_ctrlr->ctrlr_op_cb_arg = NULL;
-
 	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
 
 	/* Delay callbacks and clearing pending resets when the next operation is a failover. */
 	if (op_after_reset != OP_FAILOVER) {
+		bdev_nvme_ctrlr_op_cb ctrlr_op_cb_fn = nvme_ctrlr->ctrlr_op_cb_fn;
+		void *ctrlr_op_cb_arg = nvme_ctrlr->ctrlr_op_cb_arg;
+
 		bdev_nvme_complete_pending_resets(nvme_ctrlr, success);
+		nvme_ctrlr->ctrlr_op_cb_fn = NULL;
+		nvme_ctrlr->ctrlr_op_cb_arg = NULL;
 		if (ctrlr_op_cb_fn) {
 			ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
 		}
@@ -2575,8 +2575,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 					  bdev_nvme_sched_reconnect_failed);
 		break;
 	case OP_FAILOVER:
-		nvme_ctrlr->ctrlr_op_cb_fn = ctrlr_op_cb_fn;
-		nvme_ctrlr->ctrlr_op_cb_arg = ctrlr_op_cb_arg;
 		bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		break;
 	default:
