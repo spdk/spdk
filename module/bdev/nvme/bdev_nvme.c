@@ -2246,14 +2246,35 @@ bdev_nvme_complete_pending_resets(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	}
 }
 
-/* This function marks the current trid as failed by storing the current ticks
- * and then sets the next trid to the active trid within a controller if exists.
- *
- * The purpose of the boolean return value is to request the caller to disconnect
- * the current trid now to try connecting the next trid.
- */
 static bool
-bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove, bool start)
+bdev_nvme_ctrlr_failover_next_path_ready(struct nvme_ctrlr *nvme_ctrlr)
+{
+	struct nvme_path_id *next_path;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	next_path = TAILQ_NEXT(nvme_ctrlr->active_path_id, link);
+	if (!next_path) {
+		/* There is no alternate path. */
+		return false;
+	}
+
+	if (!next_path->last_failed_tsc) {
+		/* The next path is not failed or used yet. */
+		return true;
+	}
+
+	if (spdk_get_ticks() > next_path->last_failed_tsc + spdk_get_ticks_hz() *
+	    nvme_ctrlr->opts.reconnect_delay_sec) {
+		/* Enough backoff passed since the next path failed. */
+		return true;
+	}
+
+	return false;
+}
+
+static void
+bdev_nvme_ctrlr_failover_rotate_paths(struct nvme_ctrlr *nvme_ctrlr, bool release)
 {
 	struct nvme_path_id *path_id, *next_path;
 	int rc __attribute__((unused));
@@ -2263,23 +2284,14 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove, bool start)
 	path_id = TAILQ_FIRST(&nvme_ctrlr->trids);
 	assert(path_id);
 	assert(path_id == nvme_ctrlr->active_path_id);
-	next_path = TAILQ_NEXT(path_id, link);
 
-	/* Update the last failed time. It means the trid is failed if its last
-	 * failed time is non-zero.
-	 */
+	/* The path is failed if its last failed time is non-zero. */
 	path_id->last_failed_tsc = spdk_get_ticks();
 
-	if (next_path == NULL) {
-		/* There is no alternate trid within a controller. */
-		return false;
-	}
-
-	if (!start && nvme_ctrlr->opts.reconnect_delay_sec == 0) {
-		/* Connect is not retried in a controller reset sequence. Connecting
-		 * the next trid will be done by the next bdev_nvme_failover_ctrlr() call.
-		 */
-		return false;
+	next_path = TAILQ_NEXT(nvme_ctrlr->active_path_id, link);
+	if (!next_path) {
+		/* There is no alternate path. */
+		return;
 	}
 
 	assert(path_id->trid.trtype != SPDK_NVME_TRANSPORT_PCIE);
@@ -2291,30 +2303,13 @@ bdev_nvme_failover_trid(struct nvme_ctrlr *nvme_ctrlr, bool remove, bool start)
 	rc = spdk_nvme_ctrlr_set_trid(nvme_ctrlr->ctrlr, &next_path->trid);
 	assert(rc == 0);
 	TAILQ_REMOVE(&nvme_ctrlr->trids, path_id, link);
-	if (!remove) {
-		/** Shuffle the old trid to the end of the list and use the new one.
-		 * Allows for round robin through multiple connections.
-		 */
-		TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
-	} else {
+	if (release) {
 		free(path_id);
+	} else {
+		/* Shuffle the old path to the end of the list and use the new one.
+		 * Allows for round robin through multiple connections. */
+		TAILQ_INSERT_TAIL(&nvme_ctrlr->trids, path_id, link);
 	}
-
-	if (start || next_path->last_failed_tsc == 0) {
-		/* bdev_nvme_failover_ctrlr() is just called or the next trid is not failed
-		 * or used yet. Try the next trid now.
-		 */
-		return true;
-	}
-
-	if (spdk_get_ticks() > next_path->last_failed_tsc + spdk_get_ticks_hz() *
-	    nvme_ctrlr->opts.reconnect_delay_sec) {
-		/* Enough backoff passed since the next trid failed. Try the next trid now. */
-		return true;
-	}
-
-	/* The next trid will be tried after reconnect_delay_sec seconds. */
-	return false;
 }
 
 static bool
@@ -2409,15 +2404,14 @@ enum bdev_nvme_op_after_reset {
 typedef enum bdev_nvme_op_after_reset _bdev_nvme_op_after_reset;
 
 static _bdev_nvme_op_after_reset
-bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
-			       bool pending_failover)
+bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
 	if (nvme_ctrlr->destruct) {
 		return OP_NONE;
 	}
 
 	if (success || nvme_ctrlr->opts.reconnect_delay_sec == 0) {
-		if (pending_failover) {
+		if (nvme_ctrlr->pending_failover) {
 			/* This is a fix for a race condition that failover was lost
 			 * if fabric connect command got timeout while ctrlr was being
 			 * reset and reset succeeded. We check connection establishment
@@ -2431,6 +2425,8 @@ bdev_nvme_check_op_after_reset(struct nvme_ctrlr *nvme_ctrlr, bool success,
 		} else {
 			return OP_NONE;
 		}
+	} else if (bdev_nvme_ctrlr_failover_next_path_ready(nvme_ctrlr)) {
+		return OP_FAILOVER;
 	} else if (bdev_nvme_check_ctrlr_loss_timeout(nvme_ctrlr)) {
 		return OP_DESTRUCT;
 	} else {
@@ -2502,36 +2498,17 @@ bdev_nvme_sched_reconnect_failed(struct nvme_ctrlr *nvme_ctrlr)
 static void
 bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 {
-	bool pending_failover;
 	enum bdev_nvme_op_after_reset op_after_reset;
 
 	assert(spdk_thread_is_app_thread(NULL));
-
-	pending_failover = nvme_ctrlr->pending_failover;
-	nvme_ctrlr->pending_failover = false;
-
-	if (!success) {
-		/* Connecting the active trid failed. Set the next alternate trid to the
-		 * active trid if it exists.
-		 */
-		if (bdev_nvme_failover_trid(nvme_ctrlr, false, false)) {
-			/* The next alternate trid exists and is ready to try. Try it now. */
-			NVME_CTRLR_INFOLOG(nvme_ctrlr, "Try the next alternate trid now.\n");
-			nvme_ctrlr_disconnect(nvme_ctrlr, bdev_nvme_reconnect_ctrlr);
-			return;
-		}
-
-		/* We came here if there is no alternate trid or if the next trid exists but
-		 * is not ready to try. We will try the active trid after reconnect_delay_sec
-		 * seconds if it is non-zero or at the next reset call otherwise.
-		 */
-	}
 
 	if (!success) {
 		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Resetting controller failed.\n");
 		if (bdev_nvme_check_fast_io_fail_timeout(nvme_ctrlr)) {
 			nvme_ctrlr->fast_io_fail_timedout = true;
 		}
+
+		nvme_ctrlr->active_path_id->last_failed_tsc = spdk_get_ticks();
 	} else {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Resetting controller successful.\n");
 		/* The path is failed if its last failed time is non-zero. */
@@ -2539,12 +2516,12 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		nvme_ctrlr->reset_start_tsc = 0;
 	}
 
+	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success);
 	nvme_ctrlr->resetting = false;
 	nvme_ctrlr->dont_retry = false;
 	nvme_ctrlr->in_failover = false;
 	nvme_ctrlr->recreate_qpairs = false;
-
-	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
+	nvme_ctrlr->pending_failover = false;
 
 	/* Delay callbacks and clearing pending resets when the next operation is a failover. */
 	if (op_after_reset != OP_FAILOVER) {
@@ -2571,10 +2548,15 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		remove_discovery_entry(nvme_ctrlr);
 		break;
 	case OP_SCHED_RECONNECT:
+		assert(!success);
+		assert(nvme_ctrlr->opts.reconnect_delay_sec);
+		/* Reconnect is retried after the delay, so select another path when one is configured. */
+		bdev_nvme_ctrlr_failover_rotate_paths(nvme_ctrlr, false);
 		nvme_ctrlr_disconnect_ext(nvme_ctrlr, bdev_nvme_ctrlr_register_reconnect_timer,
 					  bdev_nvme_sched_reconnect_failed);
 		break;
 	case OP_FAILOVER:
+		NVME_CTRLR_INFOLOG(nvme_ctrlr, "Scheduling failover.\n");
 		bdev_nvme_failover_ctrlr(nvme_ctrlr);
 		break;
 	default:
@@ -3339,7 +3321,7 @@ bdev_nvme_start_ctrlr_failover(struct nvme_ctrlr *nvme_ctrlr, bool remove)
 		}
 	}
 
-	bdev_nvme_failover_trid(nvme_ctrlr, remove, true);
+	bdev_nvme_ctrlr_failover_rotate_paths(nvme_ctrlr, remove);
 
 	if (nvme_ctrlr_has_sched_reconnect(nvme_ctrlr)) {
 		NVME_CTRLR_NOTICELOG(nvme_ctrlr, "Reconnect is already scheduled.\n");
