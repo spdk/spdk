@@ -230,6 +230,11 @@ void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts, size_t opts_size)
 /**
  * Set the bdev nvme options.
  *
+ * All options may only be modified when no NVMe controllers are attached, with the exception of
+ * active timeout values. The enable/disable state of timeout tracking is locked while any
+ * controller is attached. If timeout_us is 0, tracking is disabled. If timeout_us is > 0,
+ * tracking is enabled and the timeouts can be dynamically updated to other non-zero values.
+ *
  * \param opts New value of bdev nvme options to be set.
  * \return 0 on success, negative errno on failure.
  */

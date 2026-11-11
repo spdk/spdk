@@ -6357,10 +6357,9 @@ nvme_ctrlr_create(struct spdk_nvme_ctrlr *ctrlr,
 	if (g_opts.timeout_us > 0) {
 		/* Register timeout callback. Timeout values for IO vs. admin reqs can be different. */
 		/* If timeout_admin_us is 0 (not specified), admin uses same timeout as IO. */
-		uint64_t adm_timeout_us = (g_opts.timeout_admin_us == 0) ?
-					  g_opts.timeout_us : g_opts.timeout_admin_us;
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
-				adm_timeout_us, timeout_cb, nvme_ctrlr);
+				g_opts.timeout_admin_us ? g_opts.timeout_admin_us : g_opts.timeout_us,
+				timeout_cb, nvme_ctrlr);
 	}
 
 	spdk_nvme_ctrlr_set_remove_cb(ctrlr, remove_cb, nvme_ctrlr);
@@ -6648,11 +6647,37 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 			opts->multipath_min_io);
 }
 
+static void
+bdev_nvme_set_timeouts(uint64_t timeout_us, uint64_t timeout_admin_us)
+{
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	assert(spdk_thread_is_app_thread(NULL));
+
+	g_opts.timeout_us = timeout_us;
+	g_opts.timeout_admin_us = timeout_admin_us;
+
+	TAILQ_FOREACH(nbdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		TAILQ_FOREACH(nvme_ctrlr, &nbdev_ctrlr->ctrlrs, tailq) {
+			if (nvme_ctrlr->destruct) {
+				continue;
+			}
+
+			spdk_nvme_ctrlr_register_timeout_callback(nvme_ctrlr->ctrlr, timeout_us,
+					timeout_admin_us ? timeout_admin_us : timeout_us, timeout_cb, nvme_ctrlr);
+		}
+	}
+
+	SPDK_NOTICELOG("Command timeouts changed: io %" PRIu64 " us, admin %" PRIu64 " us\n",
+		       timeout_us, timeout_admin_us);
+}
+
 int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
 	struct spdk_nvme_transport_opts transport_opts;
-	struct spdk_bdev_nvme_opts opts_local = {};
+	struct spdk_bdev_nvme_opts opts_local = {}, cur_opts = {};
 	int ret;
 
 	if (!opts) {
@@ -6715,7 +6740,22 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 #undef SET_FIELD
 
 	if (g_bdev_nvme_init_done && !TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		return -EPERM;
+		spdk_bdev_nvme_get_opts(&cur_opts, sizeof(cur_opts));
+		cur_opts.opts_size = opts_local.opts_size;
+		cur_opts.timeout_us = opts_local.timeout_us;
+		cur_opts.timeout_admin_us = opts_local.timeout_admin_us;
+		/* Both are zeroed and filled field by field, so memcmp() is safe. */
+		if (memcmp(&opts_local, &cur_opts, sizeof(cur_opts)) != 0) {
+			return -EPERM;
+		}
+
+		if (!g_opts.timeout_us || !opts_local.timeout_us) {
+			SPDK_ERRLOG("Timeouts can't be enabled or disabled while controllers are attached\n");
+			return -EPERM;
+		}
+
+		bdev_nvme_set_timeouts(opts_local.timeout_us, opts_local.timeout_admin_us);
+		return 0;
 	}
 
 	spdk_nvme_transport_get_opts(&transport_opts, sizeof(transport_opts));

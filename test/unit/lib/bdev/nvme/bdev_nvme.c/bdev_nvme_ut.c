@@ -167,9 +167,6 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_max_xfer_size, uint32_t,
 DEFINE_STUB(spdk_nvme_ctrlr_get_transport_id, const struct spdk_nvme_transport_id *,
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 
-DEFINE_STUB_V(spdk_nvme_ctrlr_register_timeout_callback, (struct spdk_nvme_ctrlr *ctrlr,
-		uint64_t timeout_io_us, uint64_t timeout_admin_us, spdk_nvme_timeout_cb cb_fn, void *cb_arg));
-
 DEFINE_STUB(spdk_nvme_ctrlr_is_fabrics, bool, (struct spdk_nvme_ctrlr *ctrlr), true);
 
 DEFINE_STUB(spdk_nvme_ctrlr_is_ocssd_supported, bool, (struct spdk_nvme_ctrlr *ctrlr), false);
@@ -365,6 +362,11 @@ struct spdk_nvme_ctrlr {
 	spdk_nvme_aer_cb		aer_cb_fn;
 	spdk_nvme_ns_attr_changed_cb	ns_attr_changed_cb_fn;
 	void				*ns_attr_changed_cb_arg;
+	uint32_t			timeout_register_count;
+	uint64_t			timeout_io_us;
+	uint64_t			timeout_admin_us;
+	spdk_nvme_timeout_cb		timeout_cb_fn;
+	void				*timeout_cb_arg;
 	struct spdk_nvme_transport_id	trid;
 	TAILQ_HEAD(, spdk_nvme_qpair)	active_io_qpairs;
 	TAILQ_ENTRY(spdk_nvme_ctrlr)	tailq;
@@ -391,6 +393,22 @@ spdk_nvme_ctrlr_register_aer_callback(struct spdk_nvme_ctrlr *ctrlr,
 				      void *aer_cb_arg)
 {
 	ctrlr->aer_cb_fn = aer_cb_fn;
+}
+
+void
+spdk_nvme_ctrlr_register_timeout_callback(struct spdk_nvme_ctrlr *ctrlr,
+		uint64_t timeout_io_us, uint64_t timeout_admin_us,
+		spdk_nvme_timeout_cb cb_fn, void *cb_arg)
+{
+	/* The nvme library accepts a new registration only with the same callback and argument */
+	CU_ASSERT(ctrlr->timeout_cb_fn == NULL ||
+		  (ctrlr->timeout_cb_fn == cb_fn && ctrlr->timeout_cb_arg == cb_arg));
+
+	ctrlr->timeout_register_count++;
+	ctrlr->timeout_io_us = timeout_io_us;
+	ctrlr->timeout_admin_us = timeout_admin_us;
+	ctrlr->timeout_cb_fn = cb_fn;
+	ctrlr->timeout_cb_arg = cb_arg;
 }
 
 void
@@ -8847,6 +8865,155 @@ test_bdev_nvme_path_iterators(void)
 	CU_ASSERT(spdk_bdev_nvme_first_bdev_ctrlr() == NULL);
 }
 
+static void
+test_set_timeouts(void)
+{
+	struct spdk_nvme_transport_id trid1 = {}, trid2 = {}, trid3 = {};
+	struct spdk_nvme_ctrlr ctrlr1 = {}, ctrlr2 = {}, ctrlr3 = {}, ctrlr4 = {};
+	struct spdk_bdev_nvme_opts saved_opts, opts;
+	struct nvme_ctrlr *nvme_ctrlr1, *nvme_ctrlr2;
+	int rc;
+
+	set_thread(0);
+	spdk_bdev_nvme_get_opts(&saved_opts, sizeof(saved_opts));
+
+	/* Timeouts set before any controller is attached */
+	spdk_bdev_nvme_get_opts(&opts, sizeof(opts));
+	opts.timeout_us = 10 * SPDK_SEC_TO_USEC;
+	opts.timeout_admin_us = 60 * SPDK_SEC_TO_USEC;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+
+	ut_init_trid(&trid1);
+	ut_init_trid2(&trid2);
+	ut_init_trid3(&trid3);
+
+	rc = nvme_ctrlr_create(&ctrlr1, "nvme0", &trid1, NULL);
+	CU_ASSERT(rc == 0);
+	rc = nvme_ctrlr_create(&ctrlr2, "nvme1", &trid2, NULL);
+	CU_ASSERT(rc == 0);
+
+	nvme_ctrlr1 = nvme_ctrlr_get_by_name("nvme0");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr1 != NULL);
+	nvme_ctrlr2 = nvme_ctrlr_get_by_name("nvme1");
+	SPDK_CU_ASSERT_FATAL(nvme_ctrlr2 != NULL);
+
+	/* The timeout callback is registered at attach */
+	CU_ASSERT(ctrlr1.timeout_register_count == 1);
+	CU_ASSERT(ctrlr1.timeout_io_us == 10 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_admin_us == 60 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_cb_fn == timeout_cb);
+	CU_ASSERT(ctrlr1.timeout_cb_arg == nvme_ctrlr1);
+	CU_ASSERT(ctrlr2.timeout_register_count == 1);
+
+	/* Other options can't be changed while controllers are attached, nothing is changed then */
+	opts.timeout_admin_us = 30 * SPDK_SEC_TO_USEC;
+	opts.keep_alive_timeout_ms++;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(g_opts.timeout_admin_us == 60 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(g_opts.keep_alive_timeout_ms == saved_opts.keep_alive_timeout_ms);
+	CU_ASSERT(ctrlr1.timeout_register_count == 1);
+	opts.keep_alive_timeout_ms--;
+
+	/* Change the admin timeout of the attached controllers by registering the same callback */
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_opts.timeout_us == 10 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(g_opts.timeout_admin_us == 30 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_register_count == 2);
+	CU_ASSERT(ctrlr1.timeout_io_us == 10 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_admin_us == 30 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_cb_fn == timeout_cb);
+	CU_ASSERT(ctrlr1.timeout_cb_arg == nvme_ctrlr1);
+	CU_ASSERT(ctrlr2.timeout_register_count == 2);
+	CU_ASSERT(ctrlr2.timeout_admin_us == 30 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr2.timeout_cb_fn == timeout_cb);
+	CU_ASSERT(ctrlr2.timeout_cb_arg == nvme_ctrlr2);
+
+	/* An admin timeout of 0 means the same as the I/O timeout */
+	opts.timeout_us = 20 * SPDK_SEC_TO_USEC;
+	opts.timeout_admin_us = 0;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.timeout_register_count == 3);
+	CU_ASSERT(ctrlr1.timeout_io_us == 20 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_admin_us == 20 * SPDK_SEC_TO_USEC);
+
+	/* Sending the same values back is allowed */
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.timeout_register_count == 4);
+	CU_ASSERT(ctrlr1.timeout_io_us == 20 * SPDK_SEC_TO_USEC);
+
+	/* A controller being destructed is skipped */
+	nvme_ctrlr2->destruct = true;
+	opts.timeout_us = 40 * SPDK_SEC_TO_USEC;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr1.timeout_register_count == 5);
+	CU_ASSERT(ctrlr1.timeout_io_us == 40 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr2.timeout_register_count == 4);
+	CU_ASSERT(ctrlr2.timeout_io_us == 20 * SPDK_SEC_TO_USEC);
+	nvme_ctrlr2->destruct = false;
+
+	/* Timeouts can't be disabled while controllers are attached */
+	opts.timeout_us = 0;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(g_opts.timeout_us == 40 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr1.timeout_register_count == 5);
+
+	/* A controller attached later gets the current values */
+	rc = nvme_ctrlr_create(&ctrlr3, "nvme2", &trid3, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr3.timeout_register_count == 1);
+	CU_ASSERT(ctrlr3.timeout_io_us == 40 * SPDK_SEC_TO_USEC);
+	CU_ASSERT(ctrlr3.timeout_admin_us == 40 * SPDK_SEC_TO_USEC);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_nvme_delete("nvme1", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_nvme_delete("nvme2", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+
+	ut_complete_async_delete();
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme1") == NULL);
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme2") == NULL);
+
+	/* Timeouts disabled when controllers are attached can't be changed */
+	opts.timeout_us = 0;
+	opts.timeout_admin_us = 0;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == 0);
+
+	rc = nvme_ctrlr_create(&ctrlr4, "nvme0", &trid1, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ctrlr4.timeout_register_count == 0);
+
+	opts.timeout_us = 10 * SPDK_SEC_TO_USEC;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(g_opts.timeout_us == 0);
+	CU_ASSERT(ctrlr4.timeout_register_count == 0);
+
+	/* With timeouts disabled, the options can't be set at all while controllers are attached */
+	opts.timeout_us = 0;
+	rc = spdk_bdev_nvme_set_opts(&opts);
+	CU_ASSERT(rc == -EPERM);
+	CU_ASSERT(ctrlr4.timeout_register_count == 0);
+
+	rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+	CU_ASSERT(rc == 0);
+	ut_complete_async_delete();
+	CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+
+	rc = spdk_bdev_nvme_set_opts(&saved_opts);
+	CU_ASSERT(rc == 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -8919,6 +9086,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_bdev_nvme_ctrlr_iterators);
 	CU_ADD_TEST(suite, test_set_opts_rdma_umr_per_io);
 	CU_ADD_TEST(suite, test_bdev_nvme_path_iterators);
+	CU_ADD_TEST(suite, test_set_timeouts);
 
 	allocate_threads(3);
 	set_thread(0);
