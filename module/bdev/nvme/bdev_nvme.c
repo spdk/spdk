@@ -6651,7 +6651,8 @@ bdev_nvme_validate_opts(const struct spdk_bdev_nvme_opts *opts)
 int
 spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 {
-	struct spdk_nvme_transport_opts drv_opts;
+	struct spdk_nvme_transport_opts transport_opts;
+	struct spdk_bdev_nvme_opts opts_local = {};
 	int ret;
 
 	if (!opts) {
@@ -6670,34 +6671,8 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 		return ret;
 	}
 
-	if (g_bdev_nvme_init_done && !TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
-		return -EPERM;
-	}
-
-	spdk_nvme_transport_get_opts(&drv_opts, sizeof(drv_opts));
-	if (opts->rdma_srq_size != 0) {
-		drv_opts.rdma_srq_size = opts->rdma_srq_size;
-	}
-	if (opts->rdma_max_cq_size != 0) {
-		drv_opts.rdma_max_cq_size = opts->rdma_max_cq_size;
-	}
-	if (opts->rdma_cm_event_timeout_ms != 0) {
-		drv_opts.rdma_cm_event_timeout_ms = opts->rdma_cm_event_timeout_ms;
-	}
-	if (drv_opts.rdma_umr_per_io != opts->rdma_umr_per_io) {
-		drv_opts.rdma_umr_per_io = opts->rdma_umr_per_io;
-	}
-	if (opts->tcp_connect_timeout_ms != 0) {
-		drv_opts.tcp_connect_timeout_ms = opts->tcp_connect_timeout_ms;
-	}
-	ret = spdk_nvme_transport_set_opts(&drv_opts, sizeof(drv_opts));
-	if (ret) {
-		SPDK_ERRLOG("Failed to set NVMe transport opts.\n");
-		return ret;
-	}
-
 #define SET_FIELD(field, defval) \
-		g_opts.field = SPDK_GET_FIELD(opts, field, defval, opts->opts_size); \
+		opts_local.field = SPDK_GET_FIELD(opts, field, defval, opts->opts_size); \
 
 	SET_FIELD(action_on_timeout, 0);
 	SET_FIELD(keep_alive_timeout_ms, 0);
@@ -6735,10 +6710,37 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 	SET_FIELD(multipath_selector, BDEV_NVME_MULTIPATH_SELECTOR_DEFAULT);
 	SET_FIELD(multipath_min_io, BDEV_NVME_MULTIPATH_MIN_IO_DEFAULT);
 
-	g_opts.opts_size = opts->opts_size;
+	opts_local.opts_size = opts->opts_size;
 
 #undef SET_FIELD
 
+	if (g_bdev_nvme_init_done && !TAILQ_EMPTY(&g_nvme_bdev_ctrlrs)) {
+		return -EPERM;
+	}
+
+	spdk_nvme_transport_get_opts(&transport_opts, sizeof(transport_opts));
+	if (opts->rdma_srq_size) {
+		transport_opts.rdma_srq_size = opts->rdma_srq_size;
+	}
+	if (opts->rdma_max_cq_size) {
+		transport_opts.rdma_max_cq_size = opts->rdma_max_cq_size;
+	}
+	if (opts->rdma_cm_event_timeout_ms) {
+		transport_opts.rdma_cm_event_timeout_ms = opts->rdma_cm_event_timeout_ms;
+	}
+	if (transport_opts.rdma_umr_per_io != opts->rdma_umr_per_io) {
+		transport_opts.rdma_umr_per_io = opts->rdma_umr_per_io;
+	}
+	if (opts->tcp_connect_timeout_ms) {
+		transport_opts.tcp_connect_timeout_ms = opts->tcp_connect_timeout_ms;
+	}
+	ret = spdk_nvme_transport_set_opts(&transport_opts, sizeof(transport_opts));
+	if (ret) {
+		SPDK_ERRLOG("Failed to set NVMe transport opts.\n");
+		return ret;
+	}
+
+	g_opts = opts_local;
 	return 0;
 }
 
