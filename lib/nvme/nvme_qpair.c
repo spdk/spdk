@@ -867,11 +867,39 @@ nvme_qpair_update_err_cmd_enabled(struct spdk_nvme_qpair *qpair)
 				 !STAILQ_EMPTY(&qpair->err_req_head);
 }
 
+void
+nvme_qpair_process_error_reqs(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_request *req, *tmp;
+	STAILQ_HEAD(, nvme_request) expired;
+	uint64_t now = spdk_get_ticks();
+
+	assert(qpair->in_completion_context);
+
+	/* A completion callback may complete the other held requests. */
+	STAILQ_INIT(&expired);
+	STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
+		if ((qpair->id != 0 || req->pid == getpid()) &&
+		    now - req->submit_tick > req->timeout_tsc) {
+			STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
+			STAILQ_INSERT_TAIL(&expired, req, stailq);
+		}
+	}
+
+	while (!STAILQ_EMPTY(&expired)) {
+		req = STAILQ_FIRST(&expired);
+		STAILQ_REMOVE_HEAD(&expired, stailq);
+		nvme_qpair_manual_complete_request(qpair, req, req->cpl.status.sct,
+						   req->cpl.status.sc, qpair->abort_dnr, true);
+	}
+
+	nvme_qpair_update_err_cmd_enabled(qpair);
+}
+
 int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	int32_t ret;
-	struct nvme_request *req, *tmp;
 
 	if (nvme_qpair_is_admin_queue(qpair)) {
 		/* Complete any pending register operations */
@@ -900,21 +928,13 @@ spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		return -ENXIO;
 	}
 
+	qpair->in_completion_context = 1;
+
 	/* error injection for those queued error requests */
 	if (spdk_unlikely(qpair->err_cmd_enabled && !STAILQ_EMPTY(&qpair->err_req_head))) {
-		STAILQ_FOREACH_SAFE(req, &qpair->err_req_head, stailq, tmp) {
-			if ((qpair->id != 0 || req->pid == getpid()) &&
-			    spdk_get_ticks() - req->submit_tick > req->timeout_tsc) {
-				STAILQ_REMOVE(&qpair->err_req_head, req, nvme_request, stailq);
-				nvme_qpair_manual_complete_request(qpair, req,
-								   req->cpl.status.sct,
-								   req->cpl.status.sc, qpair->abort_dnr, true);
-			}
-		}
-		nvme_qpair_update_err_cmd_enabled(qpair);
+		nvme_qpair_process_error_reqs(qpair);
 	}
 
-	qpair->in_completion_context = 1;
 	ret = nvme_transport_qpair_process_completions(qpair, max_completions);
 	if (ret < 0) {
 		if (ret == -ENXIO && nvme_qpair_get_state(qpair) == NVME_QPAIR_DISCONNECTING) {
@@ -1133,6 +1153,9 @@ _nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *r
 				req->cpl.status.sct = cmd->status.sct;
 				req->cpl.status.sc = cmd->status.sc;
 				STAILQ_INSERT_TAIL(&qpair->err_req_head, req, stailq);
+				if (qpair->poll_group != NULL) {
+					qpair->poll_group->has_err_reqs = true;
+				}
 				cmd->err_count--;
 				return 0;
 			}

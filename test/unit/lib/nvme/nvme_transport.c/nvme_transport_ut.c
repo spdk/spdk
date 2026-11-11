@@ -58,6 +58,7 @@ test_nvme_transport_poll_group_connect_qpair(void)
 	struct spdk_nvme_qpair qpair = {};
 	struct spdk_nvme_transport_poll_group	tgroup = {};
 	struct spdk_nvme_transport transport = {};
+	struct nvme_request req = {};
 
 	qpair.poll_group = &tgroup;
 	tgroup.transport = &transport;
@@ -79,8 +80,22 @@ test_nvme_transport_poll_group_connect_qpair(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));
 	CU_ASSERT(!STAILQ_EMPTY(&tgroup.connected_qpairs));
+	CU_ASSERT(tgroup.connected_qpairs_gen == 1);
+	CU_ASSERT(tgroup.has_err_reqs == false);
 	STAILQ_REMOVE(&tgroup.connected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.connected_qpairs));
+
+	/* A qpair that reconnects with held error-injection requests flags its poll group. */
+	STAILQ_INIT(&qpair.err_req_head);
+	STAILQ_INSERT_TAIL(&qpair.err_req_head, &req, stailq);
+	qpair.poll_group_tailq_head = &tgroup.disconnected_qpairs;
+	STAILQ_INSERT_TAIL(&tgroup.disconnected_qpairs, &qpair, poll_group_stailq);
+
+	rc = nvme_transport_poll_group_connect_qpair(&qpair);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(tgroup.has_err_reqs == true);
+	STAILQ_REMOVE(&tgroup.connected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
+	STAILQ_REMOVE_HEAD(&qpair.err_req_head, stailq);
 
 	/* None qpairs */
 	qpair.poll_group_tailq_head = NULL;
@@ -117,6 +132,7 @@ test_nvme_transport_poll_group_disconnect_qpair(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.connected_qpairs));
 	CU_ASSERT(tgroup.num_connected_qpairs == 0);
+	CU_ASSERT(tgroup.connected_qpairs_gen == 1);
 	CU_ASSERT(!STAILQ_EMPTY(&tgroup.disconnected_qpairs));
 	STAILQ_REMOVE(&tgroup.disconnected_qpairs, &qpair, spdk_nvme_qpair, poll_group_stailq);
 	CU_ASSERT(STAILQ_EMPTY(&tgroup.disconnected_qpairs));

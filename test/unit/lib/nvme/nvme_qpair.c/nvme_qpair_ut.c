@@ -526,12 +526,24 @@ test_nvme_qpair_add_cmd_error_injection(void)
 
 static uint32_t g_held_req_cpl_count;
 static struct spdk_nvme_status g_held_req_cpl_status;
+static bool g_held_req_cpl_in_completion_context;
+static bool g_held_req_cpl_complete_held_reqs;
 
 static void
 held_req_cb(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
+	struct spdk_nvme_qpair *qpair = cb_arg;
+
 	g_held_req_cpl_count++;
 	g_held_req_cpl_status = cpl->status;
+	if (qpair != NULL) {
+		g_held_req_cpl_in_completion_context = qpair->in_completion_context;
+	}
+	if (g_held_req_cpl_complete_held_reqs) {
+		/* Act like the callback disconnected the qpair. */
+		g_held_req_cpl_complete_held_reqs = false;
+		nvme_qpair_complete_error_reqs(qpair);
+	}
 }
 
 static void
@@ -584,6 +596,85 @@ test_nvme_qpair_error_injection_removed(void)
 	CU_ASSERT(qpair.err_cmd_enabled == false);
 	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
 
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
+test_nvme_qpair_error_injection_poll_group(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_transport_poll_group tgroup = {};
+	struct nvme_request *req;
+	int rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	qpair.state = NVME_QPAIR_ENABLED;
+	qpair.poll_group = &tgroup;
+	g_transport_process_completions_rc = 0;
+	g_held_req_cpl_count = 0;
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ, true,
+			1000, 1, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(rc == 0);
+
+	/* Holding a request flags the poll group so that it walks the qpair. */
+	req = nvme_allocate_request_null(&qpair, held_req_cb, &qpair);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = SPDK_NVME_OPC_READ;
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req) == 0);
+	CU_ASSERT(tgroup.has_err_reqs == true);
+
+	/* The held request completes in the completion context, so its callback may free the
+	 * qpair.
+	 */
+	g_held_req_cpl_in_completion_context = false;
+	spdk_delay_us(1001);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 1);
+	CU_ASSERT(g_held_req_cpl_in_completion_context == true);
+	CU_ASSERT(qpair.in_completion_context == 0);
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
+test_nvme_qpair_error_injection_cb_completes_held(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct nvme_request *req1, *req2;
+	int rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	qpair.state = NVME_QPAIR_ENABLED;
+	g_transport_process_completions_rc = 0;
+	g_held_req_cpl_count = 0;
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ, true,
+			1000, 2, SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(rc == 0);
+
+	req1 = nvme_allocate_request_null(&qpair, held_req_cb, &qpair);
+	SPDK_CU_ASSERT_FATAL(req1 != NULL);
+	req1->cmd.opc = SPDK_NVME_OPC_READ;
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req1) == 0);
+	spdk_delay_us(600);
+	req2 = nvme_allocate_request_null(&qpair, held_req_cb, &qpair);
+	SPDK_CU_ASSERT_FATAL(req2 != NULL);
+	req2->cmd.opc = SPDK_NVME_OPC_READ;
+	CU_ASSERT(nvme_qpair_submit_request(&qpair, req2) == 0);
+
+	/* Only req1 expired. Its callback completes req2, which the walk must not touch again. */
+	spdk_delay_us(500);
+	g_held_req_cpl_complete_held_reqs = true;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 2);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
+	CU_ASSERT(g_held_req_cpl_complete_held_reqs == false);
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
 	cleanup_submit_request_test(&qpair);
 }
 
@@ -931,6 +1022,8 @@ main(int argc, char **argv)
 #endif
 	CU_ADD_TEST(suite, test_nvme_qpair_add_cmd_error_injection);
 	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_removed);
+	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_poll_group);
+	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_cb_completes_held);
 	CU_ADD_TEST(suite, test_nvme_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_ordering);

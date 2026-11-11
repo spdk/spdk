@@ -827,6 +827,7 @@ nvme_transport_poll_group_disconnect_qpair(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE(&tgroup->connected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 		assert(tgroup->num_connected_qpairs > 0);
 		tgroup->num_connected_qpairs--;
+		tgroup->connected_qpairs_gen++;
 		STAILQ_INSERT_TAIL(&tgroup->disconnected_qpairs, qpair, poll_group_stailq);
 
 		return 0;
@@ -851,6 +852,10 @@ nvme_transport_poll_group_connect_qpair(struct spdk_nvme_qpair *qpair)
 		STAILQ_REMOVE(&tgroup->disconnected_qpairs, qpair, spdk_nvme_qpair, poll_group_stailq);
 		STAILQ_INSERT_TAIL(&tgroup->connected_qpairs, qpair, poll_group_stailq);
 		tgroup->num_connected_qpairs++;
+		tgroup->connected_qpairs_gen++;
+		if (!STAILQ_EMPTY(&qpair->err_req_head)) {
+			tgroup->has_err_reqs = true;
+		}
 
 		return 0;
 	}

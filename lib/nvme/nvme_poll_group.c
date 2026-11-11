@@ -344,6 +344,44 @@ spdk_nvme_poll_group_wait(struct spdk_nvme_poll_group *group,
 	return num_events;
 }
 
+/* Some transport poll groups never call spdk_nvme_qpair_process_completions(). */
+static void
+nvme_transport_poll_group_process_error_reqs(struct spdk_nvme_transport_poll_group *tgroup)
+{
+	struct spdk_nvme_qpair *qpair, *tmp_qpair;
+	uint32_t gen;
+	bool freed;
+
+	tgroup->has_err_reqs = false;
+
+	STAILQ_FOREACH_SAFE(qpair, &tgroup->connected_qpairs, poll_group_stailq, tmp_qpair) {
+		if (!qpair->err_cmd_enabled || STAILQ_EMPTY(&qpair->err_req_head)) {
+			continue;
+		}
+
+		if (nvme_qpair_get_state(qpair) == NVME_QPAIR_ENABLED && !qpair->ctrlr->is_failed &&
+		    !qpair->in_completion_context) {
+			gen = tgroup->connected_qpairs_gen;
+			qpair->in_completion_context = 1;
+			nvme_qpair_process_error_reqs(qpair);
+			qpair->in_completion_context = 0;
+			freed = qpair->delete_after_completion_context;
+			if (spdk_unlikely(freed)) {
+				spdk_nvme_ctrlr_free_io_qpair(qpair);
+			}
+			/* A callback may have disconnected or freed tmp_qpair. */
+			if (spdk_unlikely(freed || tgroup->connected_qpairs_gen != gen)) {
+				tgroup->has_err_reqs = true;
+				break;
+			}
+		}
+
+		if (!STAILQ_EMPTY(&qpair->err_req_head)) {
+			tgroup->has_err_reqs = true;
+		}
+	}
+}
+
 int64_t
 spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 		uint32_t completions_per_qpair, spdk_nvme_disconnected_qpair_cb disconnected_qpair_cb)
@@ -362,6 +400,10 @@ spdk_nvme_poll_group_process_completions(struct spdk_nvme_poll_group *group,
 
 	STAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		int64_t local_completions;
+
+		if (spdk_unlikely(tgroup->has_err_reqs)) {
+			nvme_transport_poll_group_process_error_reqs(tgroup);
+		}
 
 		local_completions = nvme_transport_poll_group_process_completions(tgroup, completions_per_qpair,
 				    disconnected_qpair_cb);

@@ -602,6 +602,10 @@ struct spdk_nvme_transport_poll_group {
 	STAILQ_HEAD(, spdk_nvme_qpair)			disconnected_qpairs;
 	STAILQ_ENTRY(spdk_nvme_transport_poll_group)	link;
 	uint32_t					num_connected_qpairs;
+	/* Incremented whenever connected_qpairs changes. */
+	uint32_t					connected_qpairs_gen;
+	/* A connected qpair may hold error-injection requests. */
+	bool						has_err_reqs;
 };
 
 struct spdk_nvme_ns {
@@ -1544,6 +1548,7 @@ int	nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 void	nvme_qpair_abort_all_queued_reqs(struct spdk_nvme_qpair *qpair);
 uint32_t nvme_qpair_abort_queued_reqs_with_cbarg(struct spdk_nvme_qpair *qpair, void *cmd_cb_arg);
 void	nvme_qpair_abort_queued_reqs(struct spdk_nvme_qpair *qpair);
+void	nvme_qpair_process_error_reqs(struct spdk_nvme_qpair *qpair);
 void	nvme_qpair_resubmit_requests(struct spdk_nvme_qpair *qpair, uint32_t num_requests);
 struct spdk_nvme_ns *nvme_ctrlr_find_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
 int	nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr);

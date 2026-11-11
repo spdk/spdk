@@ -212,6 +212,40 @@ nvme_transport_poll_group_process_completions(struct spdk_nvme_transport_poll_gr
 	return g_process_completions_return_value;
 }
 
+static uint32_t g_process_error_reqs_count;
+static bool g_process_error_reqs_in_completion_context;
+static bool g_process_error_reqs_complete_all;
+static bool g_process_error_reqs_free_qpair;
+static bool g_process_error_reqs_change_qpairs;
+
+void
+nvme_qpair_process_error_reqs(struct spdk_nvme_qpair *qpair)
+{
+	g_process_error_reqs_count++;
+	g_process_error_reqs_in_completion_context = qpair->in_completion_context;
+
+	if (g_process_error_reqs_complete_all) {
+		STAILQ_INIT(&qpair->err_req_head);
+	}
+	if (g_process_error_reqs_free_qpair) {
+		qpair->delete_after_completion_context = 1;
+	}
+	if (g_process_error_reqs_change_qpairs) {
+		/* Act like a callback disconnected another qpair of the poll group. */
+		qpair->poll_group->connected_qpairs_gen++;
+		g_process_error_reqs_change_qpairs = false;
+	}
+}
+
+static struct spdk_nvme_qpair *g_free_io_qpair;
+
+int
+spdk_nvme_ctrlr_free_io_qpair(struct spdk_nvme_qpair *qpair)
+{
+	g_free_io_qpair = qpair;
+	return 0;
+}
+
 static void
 test_spdk_nvme_poll_group_create(void)
 {
@@ -510,6 +544,121 @@ test_spdk_nvme_poll_group_process_completions(void)
 }
 
 static void
+test_spdk_nvme_poll_group_process_error_reqs(void)
+{
+	struct spdk_nvme_poll_group *group;
+	struct spdk_nvme_transport_poll_group *tgroup, *tmp_tgroup;
+	struct spdk_nvme_qpair qpair = {}, qpair2 = {};
+	struct nvme_request req = {}, req2 = {};
+
+	TAILQ_INSERT_TAIL(&g_spdk_nvme_transports, &t1, link);
+	group = spdk_nvme_poll_group_create(NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+
+	qpair.state = NVME_QPAIR_DISCONNECTED;
+	qpair.transport = &t1;
+	qpair.ctrlr = &c1;
+	STAILQ_INIT(&qpair.err_req_head);
+	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair) == 0);
+	qpair.state = NVME_QPAIR_ENABLED;
+	tgroup = qpair.poll_group;
+	SPDK_CU_ASSERT_FATAL(tgroup != NULL);
+	g_process_completions_return_value = 0;
+	g_process_error_reqs_count = 0;
+	g_process_error_reqs_complete_all = false;
+	g_process_error_reqs_free_qpair = false;
+	g_process_error_reqs_change_qpairs = false;
+	g_free_io_qpair = NULL;
+
+	/* Qpairs are not walked unless the poll group is flagged. */
+	STAILQ_INSERT_TAIL(&qpair.err_req_head, &req, stailq);
+	qpair.err_cmd_enabled = 1;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 0);
+
+	/* Held requests are processed in completion context and the flag stays set while
+	 * requests are still held.
+	 */
+	tgroup->has_err_reqs = true;
+	g_process_error_reqs_in_completion_context = false;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 1);
+	CU_ASSERT(g_process_error_reqs_in_completion_context == true);
+	CU_ASSERT(qpair.in_completion_context == 0);
+	CU_ASSERT(tgroup->has_err_reqs == true);
+
+	/* A qpair that is not enabled is skipped but keeps the poll group flagged. */
+	g_process_error_reqs_count = 0;
+	qpair.state = NVME_QPAIR_CONNECTING;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 0);
+	CU_ASSERT(tgroup->has_err_reqs == true);
+	qpair.state = NVME_QPAIR_ENABLED;
+
+	/* A qpair freed by a completion callback is freed once processing returns. */
+	g_process_error_reqs_free_qpair = true;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 1);
+	CU_ASSERT(g_free_io_qpair == &qpair);
+	CU_ASSERT(tgroup->has_err_reqs == true);
+	g_process_error_reqs_free_qpair = false;
+	qpair.delete_after_completion_context = 0;
+
+	/* A callback that changes connected_qpairs stops the walk, and the next poll takes the
+	 * remaining qpairs.
+	 */
+	qpair2.state = NVME_QPAIR_DISCONNECTED;
+	qpair2.transport = &t1;
+	qpair2.ctrlr = &c1;
+	STAILQ_INIT(&qpair2.err_req_head);
+	CU_ASSERT(spdk_nvme_poll_group_add(group, &qpair2) == 0);
+	qpair2.state = NVME_QPAIR_ENABLED;
+	STAILQ_INSERT_TAIL(&qpair2.err_req_head, &req2, stailq);
+	qpair2.err_cmd_enabled = 1;
+	g_process_error_reqs_count = 0;
+	g_process_error_reqs_change_qpairs = true;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 1);
+	CU_ASSERT(tgroup->has_err_reqs == true);
+
+	g_process_error_reqs_count = 0;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 2);
+	CU_ASSERT(tgroup->has_err_reqs == true);
+
+	STAILQ_INIT(&qpair2.err_req_head);
+	qpair2.state = NVME_QPAIR_DISCONNECTED;
+	CU_ASSERT(nvme_transport_poll_group_disconnect_qpair(&qpair2) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair2) == 0);
+
+	/* The flag is cleared once no qpair holds requests. */
+	g_process_error_reqs_count = 0;
+	tgroup->has_err_reqs = true;
+	g_process_error_reqs_complete_all = true;
+	CU_ASSERT(spdk_nvme_poll_group_process_completions(group, 0,
+			unit_test_disconnected_qpair_cb) == 0);
+	CU_ASSERT(g_process_error_reqs_count == 1);
+	CU_ASSERT(tgroup->has_err_reqs == false);
+	g_process_error_reqs_complete_all = false;
+
+	qpair.state = NVME_QPAIR_DISCONNECTED;
+	CU_ASSERT(nvme_transport_poll_group_disconnect_qpair(&qpair) == 0);
+	CU_ASSERT(spdk_nvme_poll_group_remove(group, &qpair) == 0);
+	STAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp_tgroup) {
+		STAILQ_REMOVE(&group->tgroups, tgroup, spdk_nvme_transport_poll_group, link);
+		free(tgroup);
+	}
+	SPDK_CU_ASSERT_FATAL(spdk_nvme_poll_group_destroy(group) == 0);
+	TAILQ_REMOVE(&g_spdk_nvme_transports, &t1, link);
+}
+
+static void
 test_spdk_nvme_poll_group_destroy(void)
 {
 	struct spdk_nvme_poll_group *group;
@@ -600,6 +749,8 @@ main(int argc, char **argv)
 			    test_spdk_nvme_poll_group_add_remove) == NULL ||
 		CU_add_test(suite, "nvme_poll_group_process_completions",
 			    test_spdk_nvme_poll_group_process_completions) == NULL ||
+		CU_add_test(suite, "nvme_poll_group_process_error_reqs",
+			    test_spdk_nvme_poll_group_process_error_reqs) == NULL ||
 		CU_add_test(suite, "nvme_poll_group_destroy_test", test_spdk_nvme_poll_group_destroy) == NULL ||
 		CU_add_test(suite, "nvme_poll_group_get_free_stats",
 			    test_spdk_nvme_poll_group_get_free_stats) == NULL
