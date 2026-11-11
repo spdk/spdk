@@ -4586,6 +4586,11 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
  *                      have their completion status modified after the
  *                      controller completes the request.
  * \param timeout_in_us Wait specified microseconds when do_not_submit is true.
+ *                      While a request is held, it is checked against the
+ *                      timeouts registered with
+ *                      spdk_nvme_ctrlr_register_timeout_callback(). The
+ *                      callback receives a CID of 0xFFFF for every held
+ *                      request.
  * \param err_count Number of matching requests to inject errors.
  * \param sct Status code type.
  * \param sc Status code.

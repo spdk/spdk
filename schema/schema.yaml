@@ -5429,7 +5429,7 @@ methods:
         description: Set to true if request should not be submitted to the controller (default false)
       - name: timeout_in_us
         type: uint64
-        description: Wait specified microseconds when do_not_submit is true
+        description: Wait specified microseconds when do_not_submit is true. Held commands are subject to the timeout_us and timeout_admin_us timeouts set by bdev_nvme_set_options
       - name: err_count
         type: uint32
         description: Number of matching NVMe commands to inject errors

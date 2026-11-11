@@ -55,6 +55,39 @@ DEFINE_STUB_V(nvme_ctrlr_disconnect_qpair, (struct spdk_nvme_qpair *qpair));
 DEFINE_STUB_V(nvme_ctrlr_abort_queued_aborts, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(nvme_ctrlr_reinitialize_io_qpair, int,
 	    (struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair), 0);
+DEFINE_STUB(nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
+	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
+
+static uint32_t g_check_timeout_count;
+static struct nvme_request *g_check_timeout_req;
+static uint16_t g_check_timeout_cid;
+static struct spdk_nvme_ctrlr_process *g_check_timeout_proc;
+static bool g_check_timeout_in_completion_context;
+static bool g_check_timeout_complete_held_reqs;
+
+DEFINE_RETURN_MOCK(nvme_request_check_timeout, int);
+int
+nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
+			   struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick)
+{
+	struct spdk_nvme_qpair *qpair = req->qpair;
+
+	g_check_timeout_count++;
+	g_check_timeout_req = req;
+	g_check_timeout_cid = cid;
+	g_check_timeout_proc = active_proc;
+	g_check_timeout_in_completion_context = qpair->in_completion_context;
+
+	HANDLE_RETURN_MOCK(nvme_request_check_timeout);
+
+	/* Act like a timeout callback ran for the request. */
+	req->timed_out = true;
+	if (g_check_timeout_complete_held_reqs) {
+		nvme_qpair_complete_error_reqs(qpair);
+	}
+
+	return 0;
+}
 
 void
 nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
@@ -678,6 +711,198 @@ test_nvme_qpair_error_injection_cb_completes_held(void)
 	cleanup_submit_request_test(&qpair);
 }
 
+static void
+dummy_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
+		 uint16_t cid)
+{
+}
+
+static struct nvme_request *
+hold_request(struct spdk_nvme_qpair *qpair, uint8_t opc)
+{
+	struct nvme_request *req;
+
+	req = nvme_allocate_request_null(qpair, held_req_cb, qpair);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	req->cmd.opc = opc;
+	CU_ASSERT(nvme_qpair_submit_request(qpair, req) == 0);
+
+	return req;
+}
+
+static void
+test_nvme_qpair_error_injection_timeout(void)
+{
+	struct spdk_nvme_qpair qpair = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ctrlr_process proc = { .timeout_cb_fn = dummy_timeout_cb };
+	struct nvme_request *req1, *req2;
+	int rc;
+
+	prepare_submit_request_test(&qpair, &ctrlr);
+	qpair.state = NVME_QPAIR_ENABLED;
+	qpair.active_proc = &proc;
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	ctrlr.timeout_enabled = true;
+	g_transport_process_completions_rc = 0;
+	g_held_req_cpl_count = 0;
+	g_check_timeout_complete_held_reqs = false;
+	MOCK_CLEAR(nvme_request_check_timeout);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ, true,
+			30 * SPDK_SEC_TO_USEC, 4, SPDK_NVME_SCT_GENERIC,
+			SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(rc == 0);
+	req1 = hold_request(&qpair, SPDK_NVME_OPC_READ);
+	req2 = hold_request(&qpair, SPDK_NVME_OPC_READ);
+
+	/* Each poll reports at most one held request, oldest first, with CID 0xFFFF and in the
+	 * completion context. Reported requests are skipped afterwards.
+	 */
+	g_check_timeout_count = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 1);
+	CU_ASSERT(g_check_timeout_req == req1);
+	CU_ASSERT(g_check_timeout_cid == UINT16_MAX);
+	CU_ASSERT(g_check_timeout_proc == &proc);
+	CU_ASSERT(g_check_timeout_in_completion_context == true);
+
+	g_check_timeout_count = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 1);
+	CU_ASSERT(g_check_timeout_req == req2);
+
+	g_check_timeout_count = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 0);
+	CU_ASSERT(g_held_req_cpl_count == 0);
+
+	/* Requests newer than one that has not timed out yet are not checked. */
+	req1->timed_out = false;
+	req2->timed_out = false;
+	g_check_timeout_count = 0;
+	MOCK_SET(nvme_request_check_timeout, 1);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 1);
+	CU_ASSERT(g_check_timeout_req == req1);
+	MOCK_CLEAR(nvme_request_check_timeout);
+
+	/* No timeout checks without a registered callback or a ready controller. */
+	g_check_timeout_count = 0;
+	ctrlr.timeout_enabled = false;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	ctrlr.timeout_enabled = true;
+	ctrlr.state = NVME_CTRLR_STATE_INIT;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	proc.timeout_cb_fn = NULL;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	proc.timeout_cb_fn = dummy_timeout_cb;
+	qpair.active_proc = NULL;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	qpair.active_proc = &proc;
+	CU_ASSERT(g_check_timeout_count == 0);
+	CU_ASSERT(g_held_req_cpl_count == 0);
+
+	/* Held requests still complete with the injected status once the hold time expires. */
+	spdk_delay_us(30 * SPDK_SEC_TO_USEC + 1);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 2);
+	CU_ASSERT(g_held_req_cpl_status.sc == SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
+	CU_ASSERT(g_check_timeout_count == 0);
+
+	/* A timeout callback that completes all held requests stops the walk. */
+	req1 = hold_request(&qpair, SPDK_NVME_OPC_READ);
+	req2 = hold_request(&qpair, SPDK_NVME_OPC_READ);
+	g_held_req_cpl_count = 0;
+	g_check_timeout_count = 0;
+	g_check_timeout_complete_held_reqs = true;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&qpair, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 1);
+	CU_ASSERT(g_held_req_cpl_count == 2);
+	CU_ASSERT(STAILQ_EMPTY(&qpair.err_req_head));
+	g_check_timeout_complete_held_reqs = false;
+
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, &qpair, SPDK_NVME_OPC_READ);
+	cleanup_submit_request_test(&qpair);
+}
+
+static void
+test_nvme_qpair_error_injection_timeout_admin(void)
+{
+	struct spdk_nvme_qpair adminq = {};
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_ctrlr_process proc = { .timeout_cb_fn = dummy_timeout_cb };
+	struct nvme_request *aer, *req;
+	pid_t saved_pid = g_spdk_nvme_pid;
+	int rc;
+
+	TAILQ_INIT(&ctrlr.active_io_qpairs);
+	TAILQ_INIT(&ctrlr.active_procs);
+	STAILQ_INIT(&ctrlr.register_operations);
+	MOCK_CLEAR(spdk_zmalloc);
+	SPDK_CU_ASSERT_FATAL(nvme_qpair_init(&adminq, 0, &ctrlr, 0, 32, false) == 0);
+	adminq.state = NVME_QPAIR_ENABLED;
+	ctrlr.adminq = &adminq;
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	ctrlr.timeout_enabled = true;
+	SPDK_CU_ASSERT_FATAL(pthread_mutex_init(&ctrlr.ctrlr_lock, NULL) == 0);
+	g_spdk_nvme_pid = getpid();
+	g_transport_process_completions_rc = 0;
+	g_held_req_cpl_count = 0;
+	g_check_timeout_complete_held_reqs = false;
+	MOCK_CLEAR(nvme_request_check_timeout);
+
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, NULL,
+			SPDK_NVME_OPC_ASYNC_EVENT_REQUEST, true, 30 * SPDK_SEC_TO_USEC, 1,
+			SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(rc == 0);
+	rc = spdk_nvme_qpair_add_cmd_error_injection(&ctrlr, NULL, SPDK_NVME_OPC_GET_LOG_PAGE, true,
+			30 * SPDK_SEC_TO_USEC, 1, SPDK_NVME_SCT_GENERIC,
+			SPDK_NVME_SC_INTERNAL_DEVICE_ERROR);
+	CU_ASSERT(rc == 0);
+	aer = hold_request(&adminq, SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
+	req = hold_request(&adminq, SPDK_NVME_OPC_GET_LOG_PAGE);
+	CU_ASSERT(STAILQ_FIRST(&adminq.err_req_head) == aer);
+
+	/* No timeout check without a current process. */
+	g_check_timeout_count = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&adminq, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 0);
+
+	/* A held AER is never reported and does not hide the requests behind it. */
+	MOCK_SET(nvme_ctrlr_get_current_process, &proc);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&adminq, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 1);
+	CU_ASSERT(g_check_timeout_req == req);
+	CU_ASSERT(g_check_timeout_cid == UINT16_MAX);
+	CU_ASSERT(g_check_timeout_proc == &proc);
+	CU_ASSERT(g_check_timeout_in_completion_context == true);
+
+	/* Admin requests of another process are not reported. */
+	req->timed_out = false;
+	req->pid = g_spdk_nvme_pid + 1;
+	g_check_timeout_count = 0;
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&adminq, 0) == 0);
+	CU_ASSERT(g_check_timeout_count == 0);
+	req->pid = g_spdk_nvme_pid;
+	CU_ASSERT(g_held_req_cpl_count == 0);
+
+	/* The injected status is still returned once the hold time expires. */
+	spdk_delay_us(30 * SPDK_SEC_TO_USEC + 1);
+	CU_ASSERT(spdk_nvme_qpair_process_completions(&adminq, 0) == 0);
+	CU_ASSERT(g_held_req_cpl_count == 2);
+	CU_ASSERT(STAILQ_EMPTY(&adminq.err_req_head));
+
+	MOCK_CLEAR(nvme_ctrlr_get_current_process);
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, NULL, SPDK_NVME_OPC_ASYNC_EVENT_REQUEST);
+	spdk_nvme_qpair_remove_cmd_error_injection(&ctrlr, NULL, SPDK_NVME_OPC_GET_LOG_PAGE);
+	pthread_mutex_destroy(&ctrlr.ctrlr_lock);
+	g_spdk_nvme_pid = saved_pid;
+	cleanup_submit_request_test(&adminq);
+}
+
 static struct nvme_request *
 allocate_request_tree(struct spdk_nvme_qpair *qpair, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
@@ -1024,6 +1249,8 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_removed);
 	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_poll_group);
 	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_cb_completes_held);
+	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_timeout);
+	CU_ADD_TEST(suite, test_nvme_qpair_error_injection_timeout_admin);
 	CU_ADD_TEST(suite, test_nvme_qpair_submit_request);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_with_transport_failed);
 	CU_ADD_TEST(suite, test_nvme_qpair_resubmit_request_ordering);

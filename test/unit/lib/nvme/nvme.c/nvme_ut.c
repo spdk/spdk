@@ -1318,11 +1318,13 @@ test_trid_adrfam_str(void)
 
 /* stub callback used by the test_nvme_request_check_timeout */
 static bool ut_timeout_cb_call = false;
+static struct spdk_nvme_qpair *ut_timeout_cb_qpair;
 static void
 dummy_timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 		 struct spdk_nvme_qpair *qpair, uint16_t cid)
 {
 	ut_timeout_cb_call = true;
+	ut_timeout_cb_qpair = qpair;
 }
 
 static void
@@ -1379,7 +1381,29 @@ test_nvme_request_check_timeout(void)
 	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
 	CU_ASSERT(req.timed_out == true);
 	CU_ASSERT(ut_timeout_cb_call == true);
+	CU_ASSERT(ut_timeout_cb_qpair == &qpair);
 	CU_ASSERT(rc == 0);
+
+	/* admin commands use the admin timeout and report a NULL qpair */
+	ut_timeout_cb_call = false;
+	ut_timeout_cb_qpair = &qpair;
+	qpair.id = 0;
+	req.timed_out = false;
+	req.cmd.opc = SPDK_NVME_OPC_IDENTIFY;
+	req.submit_tick = 1;
+	active_proc.timeout_io_ticks = 1;
+	active_proc.timeout_admin_ticks = 10;
+	now_tick = 5;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(ut_timeout_cb_call == false);
+
+	now_tick = 12;
+	rc = nvme_request_check_timeout(&req, cid, &active_proc, now_tick);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(req.timed_out == true);
+	CU_ASSERT(ut_timeout_cb_call == true);
+	CU_ASSERT(ut_timeout_cb_qpair == NULL);
 }
 
 struct nvme_completion_poll_status g_status;

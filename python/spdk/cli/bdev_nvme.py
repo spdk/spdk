@@ -624,7 +624,10 @@ def add_parser(subparsers):
     p.add_argument('-s', '--do-not-submit',
                    help="""Set to true if request should not be submitted to the controller""",
                    dest="do_not_submit", action='store_true')
-    p.add_argument('-w', '--timeout-in-us', help="""Wait specified microseconds when do_not_submit is true""", type=int)
+    p.add_argument('-w', '--timeout-in-us',
+                   help="""Wait specified microseconds when do_not_submit is true. Held commands are subject to the """
+                        """timeout_us and timeout_admin_us timeouts set by bdev_nvme_set_options""",
+                   type=int)
     p.add_argument('-e', '--err-count', help="""Number of matching NVMe commands to inject errors""", type=int)
     p.add_argument('-u', '--sct', help="""Status code type""", type=int)
     p.add_argument('-c', '--sc', help="""Status code""", type=int)

@@ -867,6 +867,39 @@ nvme_qpair_update_err_cmd_enabled(struct spdk_nvme_qpair *qpair)
 				 !STAILQ_EMPTY(&qpair->err_req_head);
 }
 
+static void
+nvme_qpair_check_error_reqs_timeout(struct spdk_nvme_qpair *qpair, uint64_t now)
+{
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvme_ctrlr_process *active_proc;
+	struct nvme_request *req;
+	bool admin = nvme_qpair_is_admin_queue(qpair);
+
+	if (!ctrlr->timeout_enabled || ctrlr->state != NVME_CTRLR_STATE_READY) {
+		return;
+	}
+
+	active_proc = admin ? nvme_ctrlr_get_current_process(ctrlr) : qpair->active_proc;
+	if (active_proc == NULL || active_proc->timeout_cb_fn == NULL) {
+		return;
+	}
+
+	STAILQ_FOREACH(req, &qpair->err_req_head, stailq) {
+		/* nvme_request_check_timeout() would skip these. */
+		if (req->timed_out ||
+		    (admin && req->pid != g_spdk_nvme_pid) ||
+		    (admin && req->cmd.opc == SPDK_NVME_OPC_ASYNC_EVENT_REQUEST)) {
+			continue;
+		}
+
+		/* Held requests have no CID. The callback may complete held requests, so check
+		 * only the oldest unreported one.
+		 */
+		nvme_request_check_timeout(req, UINT16_MAX, active_proc, now);
+		break;
+	}
+}
+
 void
 nvme_qpair_process_error_reqs(struct spdk_nvme_qpair *qpair)
 {
@@ -893,6 +926,7 @@ nvme_qpair_process_error_reqs(struct spdk_nvme_qpair *qpair)
 						   req->cpl.status.sc, qpair->abort_dnr, true);
 	}
 
+	nvme_qpair_check_error_reqs_timeout(qpair, now);
 	nvme_qpair_update_err_cmd_enabled(qpair);
 }
 
