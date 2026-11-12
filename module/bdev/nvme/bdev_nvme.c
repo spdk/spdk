@@ -2232,6 +2232,8 @@ bdev_nvme_complete_pending_resets(struct nvme_ctrlr *nvme_ctrlr, bool success)
 	int rc = 0;
 	struct nvme_bdev_io *bio;
 
+	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Clear pending resets.\n");
+
 	if (!success) {
 		rc = -1;
 	}
@@ -2527,11 +2529,6 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 		 */
 	}
 
-	NVME_CTRLR_INFOLOG(nvme_ctrlr, "Clear pending resets.\n");
-
-	/* Make sure we clear any pending resets before returning. */
-	bdev_nvme_complete_pending_resets(nvme_ctrlr, success);
-
 	if (!success) {
 		NVME_CTRLR_ERRLOG(nvme_ctrlr, "Resetting controller failed.\n");
 		if (bdev_nvme_check_fast_io_fail_timeout(nvme_ctrlr)) {
@@ -2554,9 +2551,12 @@ bdev_nvme_reset_ctrlr_complete(struct nvme_ctrlr *nvme_ctrlr, bool success)
 
 	op_after_reset = bdev_nvme_check_op_after_reset(nvme_ctrlr, success, pending_failover);
 
-	/* Delay callbacks when the next operation is a failover. */
-	if (ctrlr_op_cb_fn && op_after_reset != OP_FAILOVER) {
-		ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
+	/* Delay callbacks and clearing pending resets when the next operation is a failover. */
+	if (op_after_reset != OP_FAILOVER) {
+		bdev_nvme_complete_pending_resets(nvme_ctrlr, success);
+		if (ctrlr_op_cb_fn) {
+			ctrlr_op_cb_fn(ctrlr_op_cb_arg, success ? 0 : -1);
+		}
 	}
 
 	if (nvme_ctrlr_put_ref(nvme_ctrlr) == 0) {
