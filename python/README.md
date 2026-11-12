@@ -53,6 +53,20 @@ From a Python interpreter:
 
 For more information, see <https://spdk.io/doc/jsonrpc.html>
 
+## RPC client behavior and tests
+
+RPC errors raise `JSONRPCException` without modifying the caller's parameters.
+Single calls reject responses whose IDs do not match the request, including late
+responses from an earlier timed-out call. The receive path handles UTF-8
+characters split across socket reads and reports invalid UTF-8 explicitly.
+
+The Python RPC client regression tests use local socket pairs and do not require
+a running SPDK application or storage hardware. From the repository root, run:
+
+```shell
+PYTHONPATH=python python3 -m unittest discover -s test/rpc_client -p '*_test.py' -v
+```
+
 ## Model Context Protocol (MCP)
 
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_SPDK-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=spdk&config=%7B%22name%22%3A%22spdk%22%2C%22command%22%3A%22uvx%22%2C%22args%22%3A%5B%22spdk-mcp%22%5D%2C%22env%22%3A%7B%22SPDK_RPC_ADDRESS%22%3A%22%2Fvar%2Ftmp%2Fspdk.sock%22%7D%7D)

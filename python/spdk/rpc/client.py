@@ -2,6 +2,7 @@
 #  Copyright (C) 2017 Intel Corporation.
 #  All rights reserved.
 
+import codecs
 import copy
 import ctypes
 import json
@@ -82,6 +83,7 @@ class JSONRPCClient(JSONRPCAbstractClient):
         self.timeout = timeout if timeout is not None else 60.0
         self._request_id = 0
         self._recv_buf = ""
+        self._recv_decoder = codecs.getincrementaldecoder("utf-8")()
         self._reqs = []
         self._batch_mode = kwargs.get('batch_mode', False)
 
@@ -208,12 +210,12 @@ class JSONRPCClient(JSONRPCAbstractClient):
                     self.sock.close()
                     self.sock = None
                     raise JSONRPCException("Connection closed with partial response:\n%s\n" % self._recv_buf)
-                self._recv_buf += newdata.decode("utf-8")
+                self._recv_buf += self._recv_decoder.decode(newdata)
                 response = self.decode_one_response()
             except socket.timeout:
                 break  # throw exception after loop to avoid Python freaking out about nested exceptions
-            except ValueError:
-                continue  # incomplete response; keep buffering
+            except UnicodeDecodeError as ex:
+                raise JSONRPCException("Invalid UTF-8 in response: %s" % ex) from ex
 
         if not response:
             raise JSONRPCException("Timeout while waiting for response:\n%s\n" % self._recv_buf)
@@ -250,10 +252,14 @@ class JSONRPCClient(JSONRPCAbstractClient):
             else:
                 raise e
 
+        response_id = response.get('id') if isinstance(response, dict) else None
+        if isinstance(response_id, bool) or response_id != req_id:
+            raise JSONRPCException("Response ID does not match request ID %s:\n%s" %
+                                   (req_id, json.dumps(response, indent=2)))
+
         if 'error' in response:
-            params["method"] = method
-            params["req_id"] = req_id
-            msg = "\n".join(["request:", "%s" % json.dumps(params, indent=2),
+            request = {'method': method, 'params': params, 'id': req_id}
+            msg = "\n".join(["request:", "%s" % json.dumps(request, indent=2),
                              "Got JSON-RPC error response",
                              "response:",
                              json.dumps(response['error'], indent=2)])
@@ -349,9 +355,8 @@ class JSONRPCGoClient(JSONRPCAbstractClient):
             lib.spdk_gorpc_free_response(resp.response)
 
         if 'error' in json_resp:
-            params["method"] = method
-            params["req_id"] = json_resp['id']
-            msg = "\n".join(["request:", "%s" % json.dumps(params, indent=2),
+            request = {**command_info, 'id': json_resp['id']}
+            msg = "\n".join(["request:", "%s" % json.dumps(request, indent=2),
                              "Got JSON-RPC error response",
                              "response:",
                              json.dumps(json_resp['error'], indent=2)])
