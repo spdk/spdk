@@ -224,7 +224,7 @@ nvme_get_admin_qpair_command_string(char *buf, size_t size, uint16_t qid, struct
 		break;
 	default:
 		snprintf(buf, size,
-			 "%s (%02" PRIu8 ") qid:%" PRIu16 " cid:%" PRIu16 " nsid:%" PRIu32 " cdw10:%08" PRIx32 " cdw11:%08"
+			 "%s (%02" PRIu16 ") qid:%" PRIu16 " cid:%" PRIu16 " nsid:%" PRIu32 " cdw10:%08" PRIx32 " cdw11:%08"
 			 PRIx32 " %s",
 			 nvme_get_string(admin_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid, cmd->cdw10, cmd->cdw11,
 			 dptr);
@@ -267,7 +267,7 @@ nvme_get_io_qpair_command_string(char *buf, size_t size, uint16_t qid, struct sp
 		break;
 	default:
 		snprintf(buf, size,
-			 "%s (%02" PRIx8 ") sqid:%" PRIu16 " cid:%" PRIu16 " nsid:%" PRIu32,
+			 "%s (%02" PRIx16 ") sqid:%" PRIu16 " cid:%" PRIu16 " nsid:%" PRIu32,
 			 nvme_get_string(io_opcode, cmd->opc), cmd->opc, qid, cmd->cid, cmd->nsid);
 		break;
 	}
@@ -509,8 +509,8 @@ nvme_get_completion_string_ext(char *buf, size_t size, uint16_t qid,
 	assert(cpl != NULL);
 
 	snprintf(buf, size,
-		 "%s (%02" PRIx8 "/%02" PRIx8 ") qid:%" PRIu16 " cid:%" PRIu16 " cdw0:%08" PRIx32 " sqhd:%04" PRIx16
-		 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
+		 "%s (%02" PRIx16 "/%02" PRIx16 ") qid:%" PRIu16 " cid:%" PRIu16 " cdw0:%08" PRIx32
+		 " sqhd:%04" PRIx16 " p:%" PRIx16 " m:%" PRIx16 " dnr:%" PRIx16,
 		 spdk_nvme_cpl_get_status_string_ext(&cpl->status, opc), cpl->status.sct,
 		 cpl->status.sc, qid, cpl->cid, cpl->cdw0, cpl->sqhd, cpl->status.p,
 		 cpl->status.m, cpl->status.dnr);
