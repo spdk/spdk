@@ -18,10 +18,8 @@ run_test "vfio_user_nvme_restart_vm" $WORKDIR/nvme/vfio_user_restart_vm.sh
 run_test "vfio_user_virtio_blk_restart_vm" $WORKDIR/virtio/fio_restart_vm.sh virtio_blk
 run_test "vfio_user_virtio_scsi_restart_vm" $WORKDIR/virtio/fio_restart_vm.sh virtio_scsi
 run_test "vfio_user_virtio_bdevperf" $WORKDIR/virtio/initiator_bdevperf.sh
-if [[ $CONFIG_FSDEV == y ]]; then
+if [[ $SPDK_TEST_FSDEV -eq 1 ]]; then
 	run_test "vfio_user_virtio_fs_fio" $WORKDIR/virtio/fio_fs.sh
-else
-	echo "vfio_user_virtio_fs_fio skipped: fsdev is disabled by config"
 fi
 
 vhosttestfini

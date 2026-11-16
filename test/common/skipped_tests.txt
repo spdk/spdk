@@ -201,5 +201,8 @@ xnvme_bdevperf
 xnvme_fio_plugin
 xnvme_rpc
 
+# fsdev is going to be replaced, enable with SPDK_TEST_FSDEV=1
+vfio_user_virtio_fs_fio
+
 # Temporarily disabled as part of no-huge rafactor
 nvmf_bdevio_no_huge
