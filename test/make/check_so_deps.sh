@@ -111,6 +111,7 @@ function confirm_abi_deps() {
 	local processed_so=0
 	local abi_test_failed=false
 	local abidiff_output
+	local abidiff_rc
 	local release
 	local suppression_file="$testdir/abigail_suppressions.ini"
 
@@ -228,7 +229,16 @@ function confirm_abi_deps() {
 			'--headers-dir2' $rootdir/include
 			'--leaf-changes-only' '--suppressions' $suppression_file)
 
-		if ! output=$("${cmd_args[@]}" --stat); then
+		output=$("${cmd_args[@]}" --stat) && abidiff_rc=0 || abidiff_rc=$?
+		# Bit 0 (ABIDIFF_ERROR) and bit 1 (ABIDIFF_USAGE_ERROR) mean that nothing was compared
+		if ((abidiff_rc & 3)); then
+			echo "abidiff failed to compare $so_file, exit code $abidiff_rc."
+			abi_test_failed=true
+			continue
+		fi
+
+		# Bit 2 (ABIDIFF_ABI_CHANGE) is also set for incompatible changes
+		if ((abidiff_rc & 4)); then
 			# remove any filtered out variables.
 			output=$(sed "s/ [()][^)]*[)]//g" <<< "$output")
 
