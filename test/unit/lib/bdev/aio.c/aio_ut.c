@@ -20,7 +20,6 @@ static int g_ioctl_result;
 static int g_ioctl_errno;
 
 static int g_fallocate_calls;
-static int g_fallocate_fd;
 static int g_fallocate_mode;
 static off_t g_fallocate_offset;
 static off_t g_fallocate_len;
@@ -69,7 +68,6 @@ int
 __wrap_fallocate(int fd, int mode, off_t offset, off_t len)
 {
 	g_fallocate_calls++;
-	g_fallocate_fd = fd;
 	g_fallocate_mode = mode;
 	g_fallocate_offset = offset;
 	g_fallocate_len = len;
@@ -158,7 +156,6 @@ ut_reset(void)
 	g_ioctl_errno = 0;
 
 	g_fallocate_calls = 0;
-	g_fallocate_fd = 0;
 	g_fallocate_mode = 0;
 	g_fallocate_offset = 0;
 	g_fallocate_len = 0;
