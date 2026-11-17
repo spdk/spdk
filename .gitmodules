@@ -3,7 +3,7 @@
 	url = https://github.com/spdk/dpdk.git
 [submodule "intel-ipsec-mb"]
 	path = intel-ipsec-mb
-	url = https://github.com/spdk/intel-ipsec-mb.git
+	url = https://github.com/intel/intel-ipsec-mb.git
 [submodule "isa-l"]
 	path = isa-l
 	url = https://github.com/intel/isa-l.git
