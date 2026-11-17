@@ -5456,6 +5456,13 @@ _nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		ctx->populates_in_progress = 1;
 	}
 
+	if (nvme_ctrlr->destruct) {
+		/* Namespaces are depopulated during destruction. Block populating new
+		 * namespaces to avoid bumping the controller ref.
+		 */
+		goto out;
+	}
+
 	if (!changed_ns_list) {
 		/* Full scan: check all existing namespaces and look for new ones. */
 		RB_FOREACH_SAFE(nvme_ns, nvme_ns_tree, &nvme_ctrlr->namespaces, tmp) {
@@ -5482,6 +5489,7 @@ _nvme_ctrlr_populate_namespaces(struct nvme_ctrlr *nvme_ctrlr,
 		}
 	}
 
+out:
 	/* Populate might complete immediately. */
 	nvme_ctrlr_populate_namespaces_try_finish(nvme_ctrlr, &ctx);
 }

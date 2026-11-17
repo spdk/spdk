@@ -7716,6 +7716,201 @@ test_ns_remove_during_reset(void)
 }
 
 static void
+ut_attach_ctrlr_done(void *cb_ctx, size_t bdev_count, int rc)
+{
+	bool *done = cb_ctx;
+
+	attach_ctrlr_done(NULL, bdev_count, rc);
+	*done = true;
+}
+
+enum ut_case_destruct {
+	/* A reset reconnects after the delete, and its rescan finds namespace 1. */
+	UT_CASE_DESTRUCT_DURING_RECONNECT,
+	/* The first ANA log page read completes after the delete, and the first
+	 * populate finds namespace 1.
+	 */
+	UT_CASE_DESTRUCT_DURING_INIT_ANA_LOG_PAGE,
+	/* As above, with namespace 1 inactive at first. The read completion
+	 * registers the namespace attribute changed callback again, and namespace 1
+	 * becomes active.
+	 */
+	UT_CASE_DESTRUCT_BEFORE_NS_ATTR_CHANGED,
+	UT_CASE_DESTRUCT_COUNT,
+};
+
+/* Namespaces are depopulated when the destruction of a ctrlr starts. Each case
+ * makes the ctrlr populate its namespaces after that, with namespace 1 active:
+ * no namespace must be added, the waiting reset or attach must complete, and
+ * the ctrlr must be freed.
+ */
+static void
+test_destructing_ctrlr_does_not_populate_ns(void)
+{
+	struct spdk_nvme_transport_id trid = {};
+	struct spdk_bdev_nvme_ctrlr_opts opts = {.multipath = false};
+	struct spdk_nvme_ctrlr_opts dopts = {.hostnqn = UT_HOSTNQN};
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_bdev_ctrlr *nbdev_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr;
+	struct spdk_io_channel *ch;
+	const int STRING_SIZE = 32;
+	const char *attached_names[STRING_SIZE];
+	const uint32_t changed_ns_list[] = {1};
+	bool attach_done;
+	int test_case, rc;
+
+	ut_init_trid(&trid);
+
+	set_thread(0);
+
+	for (test_case = 0; test_case < UT_CASE_DESTRUCT_COUNT; test_case++) {
+		memset(attached_names, 0, sizeof(char *) * STRING_SIZE);
+		attach_done = false;
+		ch = NULL;
+
+		/* With ANA reporting, the ctrlr populates its namespaces only once it
+		 * has read the ANA log page.
+		 */
+		ctrlr = ut_attach_ctrlr(&trid, 1, test_case != UT_CASE_DESTRUCT_DURING_RECONNECT,
+					false);
+		SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+
+		switch (test_case) {
+		case UT_CASE_DESTRUCT_DURING_RECONNECT:
+			g_ut_attach_bdev_count = 1;
+			break;
+		case UT_CASE_DESTRUCT_BEFORE_NS_ATTR_CHANGED:
+			ctrlr->ns[0].is_active = false;
+		/* fallthrough */
+		case UT_CASE_DESTRUCT_DURING_INIT_ANA_LOG_PAGE:
+			g_ut_attach_bdev_count = 0;
+			break;
+		}
+
+		g_ut_attach_ctrlr_status = 0;
+
+		rc = spdk_bdev_nvme_create(&trid, "nvme0", attached_names, STRING_SIZE,
+					   ut_attach_ctrlr_done, &attach_done, &dopts, &opts);
+		CU_ASSERT(rc == 0);
+
+		spdk_delay_us(1000);
+		poll_threads();
+
+		nbdev_ctrlr = nvme_bdev_ctrlr_get_by_name("nvme0");
+		SPDK_CU_ASSERT_FATAL(nbdev_ctrlr != NULL);
+		nvme_ctrlr = nvme_ctrlr_get_by_name("nvme0");
+		SPDK_CU_ASSERT_FATAL(nvme_ctrlr != NULL);
+
+		switch (test_case) {
+		case UT_CASE_DESTRUCT_DURING_RECONNECT:
+			CU_ASSERT(attach_done == true);
+			CU_ASSERT(nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1) != NULL);
+
+			/* The channel keeps the ctrlr registered until it is put, so
+			 * that the ctrlr can be checked after its reset completes.
+			 */
+			ch = spdk_get_io_channel(nvme_ctrlr);
+			SPDK_CU_ASSERT_FATAL(ch != NULL);
+
+			/* Hold the reset before it reconnects: the adminq reports the
+			 * disconnect only once it is released.
+			 */
+			g_ut_pause_process_adminq = INT_MAX;
+
+			rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+			CU_ASSERT(rc == 0);
+
+			poll_threads();
+			CU_ASSERT(nvme_ctrlr->resetting == true);
+			break;
+		case UT_CASE_DESTRUCT_DURING_INIT_ANA_LOG_PAGE:
+		case UT_CASE_DESTRUCT_BEFORE_NS_ATTR_CHANGED:
+			/* The ANA log page read is outstanding. */
+			CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 1);
+			CU_ASSERT(attach_done == false);
+			break;
+		}
+
+		rc = spdk_bdev_nvme_delete("nvme0", &g_any_path, NULL, NULL);
+		CU_ASSERT(rc == 0);
+		CU_ASSERT(nvme_ctrlr->destruct == true);
+
+		switch (test_case) {
+		case UT_CASE_DESTRUCT_DURING_RECONNECT:
+			/* The destruction depopulates the namespaces at once; the reset
+			 * keeps its reference to the ctrlr.
+			 */
+			poll_threads();
+
+			CU_ASSERT(nvme_ctrlr->resetting == true);
+			CU_ASSERT(RB_EMPTY(&nvme_ctrlr->namespaces));
+			CU_ASSERT(nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1) == NULL);
+
+			/* Release the reset: the reconnect succeeds and rescans. */
+			g_ut_pause_process_adminq = 0;
+
+			spdk_delay_us(g_opts.nvme_adminq_poll_period_us);
+			poll_threads();
+
+			CU_ASSERT(ctrlr->adminq.is_connected == true);
+			CU_ASSERT(nvme_ctrlr->resetting == false);
+			break;
+		case UT_CASE_DESTRUCT_DURING_INIT_ANA_LOG_PAGE:
+		case UT_CASE_DESTRUCT_BEFORE_NS_ATTR_CHANGED:
+			/* The read completes before the ctrlr is unregistered: the
+			 * adminq is polled once more. The attach must still complete.
+			 */
+			bdev_nvme_poll_adminq(nvme_ctrlr);
+
+			CU_ASSERT(ctrlr->adminq.num_outstanding_reqs == 0);
+			CU_ASSERT(attach_done == true);
+			CU_ASSERT(RB_EMPTY(&nvme_ctrlr->namespaces));
+			break;
+		}
+
+		switch (test_case) {
+		case UT_CASE_DESTRUCT_DURING_RECONNECT:
+			break;
+		case UT_CASE_DESTRUCT_BEFORE_NS_ATTR_CHANGED:
+			/* Notify the ctrlr if it has a callback registered, as by
+			 * lib/nvme.
+			 */
+			ctrlr->ns[0].is_active = true;
+
+			if (ctrlr->ns_attr_changed_cb_fn != NULL) {
+				ctrlr->ns_attr_changed_cb_fn(ctrlr->ns_attr_changed_cb_arg,
+							     changed_ns_list,
+							     SPDK_COUNTOF(changed_ns_list));
+			}
+		/* fallthrough */
+		case UT_CASE_DESTRUCT_DURING_INIT_ANA_LOG_PAGE:
+			CU_ASSERT(attached_names[0] == NULL);
+			break;
+		}
+
+		CU_ASSERT(RB_EMPTY(&nvme_ctrlr->namespaces));
+		CU_ASSERT(nvme_bdev_ctrlr_get_bdev(nbdev_ctrlr, 1) == NULL);
+
+		if (!RB_EMPTY(&nvme_ctrlr->namespaces)) {
+			/* Release the namespace added by mistake, so that the ctrlr is
+			 * freed and the next cases are not affected by this failure.
+			 */
+			nvme_ctrlr_depopulate_namespaces(nvme_ctrlr);
+			poll_threads();
+		}
+
+		if (ch != NULL) {
+			spdk_put_io_channel(ch);
+		}
+
+		ut_complete_async_delete();
+
+		CU_ASSERT(nvme_ctrlr_get_by_name("nvme0") == NULL);
+	}
+}
+
+static void
 test_io_path_is_current(void)
 {
 	struct nvme_bdev_channel nbdev_ch = {
@@ -8713,6 +8908,7 @@ main(int argc, char **argv)
 	CU_ADD_TEST(suite, test_disable_enable_ctrlr);
 	CU_ADD_TEST(suite, test_delete_ctrlr_done);
 	CU_ADD_TEST(suite, test_ns_remove_during_reset);
+	CU_ADD_TEST(suite, test_destructing_ctrlr_does_not_populate_ns);
 	CU_ADD_TEST(suite, test_io_path_is_current);
 	CU_ADD_TEST(suite, test_bdev_reset_abort_io);
 	CU_ADD_TEST(suite, test_race_between_clear_pending_resets_and_reset_ctrlr_complete);
