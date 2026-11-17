@@ -130,7 +130,7 @@ xlio_sock_get_domain(struct spdk_xlio_sock *sock)
 		return -ENOMEM;
 	}
 
-	sock->mem_map = spdk_rdma_utils_create_mem_map(pd, NULL, IBV_ACCESS_LOCAL_WRITE);
+	sock->mem_map = spdk_rdma_utils_create_mem_map(pd, IBV_ACCESS_LOCAL_WRITE);
 	if (sock->mem_map == NULL) {
 		spdk_rdma_utils_put_memory_domain(sock->domain);
 		sock->domain = NULL;
