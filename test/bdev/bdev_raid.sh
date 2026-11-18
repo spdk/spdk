@@ -1091,7 +1091,7 @@ function raid_nvmf_uaf_test() {
 		for ((i = 0; i < num_base_bdevs - 1; i++)); do
 			local nqn="${bdev_nqn_prefix}$i"
 			local port=$((base_port + i))
-			$rpc_py nvmf_subsystem_remove_listener $nqn -t tcp -a $tcp_addr -s $port 2> /dev/null || true
+			$rpc_py nvmf_subsystem_remove_listener $nqn -t tcp -a $tcp_addr -s $port
 			sleep 0.5
 		done
 
