@@ -57,6 +57,9 @@ function cleanup() {
 		killprocess $raid_pid
 	fi
 
+	# raid_nvmf_uaf_test leaves its filesystem mounted when it fails
+	umount -fl "$tmp_dir/raid_uaf_test/data" 2> /dev/null || true
+
 	rm -rf "$tmp_dir"
 }
 
@@ -1006,8 +1009,8 @@ function raid_nvmf_uaf_test() {
 
 		# Start SPDK target with NVMe-oF support
 		$rootdir/build/bin/spdk_tgt &
-		local spdk_pid=$!
-		waitforlisten $spdk_pid
+		raid_pid=$!
+		waitforlisten $raid_pid
 
 		# Initialize NVMe-oF transport
 		mkdir -p "$raid_uaf_tmp_dir"
@@ -1104,11 +1107,11 @@ function raid_nvmf_uaf_test() {
 		umount -fl $new_nvme_dev 2> /dev/null || true
 		nvme disconnect -n $raid_nqn 2> /dev/null || true
 		rm -rf $raid_uaf_tmp_dir
-		if ! kill -0 $spdk_pid 2> /dev/null; then
+		if ! kill -0 $raid_pid 2> /dev/null; then
 			echo "spdk_tgt crashed during iteration $iteration"
 			return 1
 		else
-			killprocess $spdk_pid 2> /dev/null || true
+			killprocess $raid_pid 2> /dev/null || true
 		fi
 	done
 
