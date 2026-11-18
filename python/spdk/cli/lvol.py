@@ -12,7 +12,7 @@ def add_parser(subparsers):
 
     def bdev_lvol_create_lvstore(args):
         # The default unmap clear method may take over 60.0 sec.
-        if args.timeout is None:
+        if args.client_timeout is None:
             args.client.timeout = 90.0
         print_json(args.client.bdev_lvol_create_lvstore(
                                                      bdev_name=args.bdev_name,

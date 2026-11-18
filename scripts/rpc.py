@@ -38,7 +38,7 @@ def create_parser():
     parser.add_argument('-p', dest='port',
                         help='RPC port number (if server_addr is IP address)',
                         default=5260, type=int)
-    parser.add_argument('-t', dest='timeout',
+    parser.add_argument('-t', dest='client_timeout', metavar='TIMEOUT',
                         help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=None, type=float)
     parser.add_argument('-r', dest='conn_retries',
@@ -91,7 +91,7 @@ def execute_script(parser, client, timeout, fd, batch=False):
             continue
         args = parser.parse_args(rpc_args)
         args.client = client
-        args.timeout = timeout
+        args.client_timeout = timeout
         try:
             call_rpc_func(args)
         except JSONRPCException as ex:
@@ -136,7 +136,7 @@ def run_server(parser, subparsers, plugins, use_go_client):
                                                     log_level=getattr(logging, tmp_args.verbose.upper()))
             else:
                 tmp_args.client = JSONRPCClient(
-                    tmp_args.server_addr, tmp_args.port, tmp_args.timeout,
+                    tmp_args.server_addr, tmp_args.port, tmp_args.client_timeout,
                     log_level=getattr(logging, tmp_args.verbose.upper()), conn_retries=tmp_args.conn_retries)
             call_rpc_func(tmp_args)
             print("**STATUS=0", flush=True)
@@ -203,7 +203,7 @@ def main():
             exit(1)
     else:
         try:
-            args.client = JSONRPCClient(args.server_addr, args.port, args.timeout,
+            args.client = JSONRPCClient(args.server_addr, args.port, args.client_timeout,
                                         log_level=getattr(logging, args.verbose.upper()),
                                         conn_retries=args.conn_retries,
                                         batch_mode=args.batch_mode)
@@ -218,7 +218,7 @@ def main():
             print(ex.message)
             exit(1)
     else:
-        execute_script(parser, args.client, args.timeout, sys.stdin, batch=args.batch_mode)
+        execute_script(parser, args.client, args.client_timeout, sys.stdin, batch=args.batch_mode)
 
 
 if __name__ == "__main__":

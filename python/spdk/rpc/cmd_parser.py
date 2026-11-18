@@ -8,7 +8,7 @@ import os
 import sys
 from shlex import quote
 
-args_global = ['server_addr', 'port', 'timeout', 'verbose', 'dry_run', 'conn_retries',
+args_global = ['server_addr', 'port', 'client_timeout', 'verbose', 'dry_run', 'conn_retries',
                'is_server', 'batch_mode', 'rpc_plugin', 'called_rpc_name', 'func', 'client', 'go_client']
 
 

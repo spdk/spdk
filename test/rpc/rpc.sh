@@ -43,6 +43,10 @@ function rpc_dry_run() {
 	json=$($rpc_py --dry-run bdev_get_bdevs -b bdev_name | sed '1d')
 	[ "$(jq -r '.method' <<< "$json")" == "bdev_get_bdevs" ]
 	[ "$(jq -r '.params.name' <<< "$json")" == "bdev_name" ]
+
+	# The rpc.py -t must not replace bdev_get_bdevs -t
+	json=$(echo "bdev_get_bdevs -b bdev_name -t 2000" | $rpc_py --dry-run -t 5 | sed '1d')
+	[ "$(jq -r '.params.timeout' <<< "$json")" == "2000" ]
 }
 
 function rpc_trace_cmd_test() {
