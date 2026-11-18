@@ -2306,7 +2306,11 @@ _raid_bdev_remove_base_bdev(struct raid_base_bdev_info *base_info,
 
 	assert(spdk_get_thread() == spdk_thread_get_app_thread());
 
-	if (base_info->remove_scheduled || !base_info->is_configured) {
+	if (base_info->remove_scheduled) {
+		return -EALREADY;
+	}
+
+	if (!base_info->is_configured) {
 		return -ENODEV;
 	}
 
@@ -2408,6 +2412,9 @@ _raid_bdev_fail_base_bdev(void *ctx)
 
 	rc = _raid_bdev_remove_base_bdev(base_info, raid_bdev_fail_base_remove_cb, base_info);
 	if (rc != 0) {
+		if (rc == -EALREADY) {
+			rc = 0;
+		}
 		raid_bdev_fail_base_remove_cb(base_info, rc);
 	}
 }
@@ -2511,7 +2518,7 @@ raid_bdev_event_base_bdev(enum spdk_bdev_event_type type, struct spdk_bdev *bdev
 	switch (type) {
 	case SPDK_BDEV_EVENT_REMOVE:
 		rc = raid_bdev_remove_base_bdev(bdev, NULL, NULL);
-		if (rc != 0) {
+		if (rc != 0 && rc != -EALREADY) {
 			SPDK_ERRLOG("Failed to remove base bdev %s: %s\n",
 				    spdk_bdev_get_name(bdev), spdk_strerror(-rc));
 		}
@@ -2683,6 +2690,9 @@ raid_bdev_process_finish_unquiesced(void *ctx, int status)
 		status = _raid_bdev_remove_base_bdev(process->target, raid_bdev_process_finish_target_removed,
 						     process);
 		if (status != 0) {
+			if (status == -EALREADY) {
+				status = 0;
+			}
 			raid_bdev_process_finish_target_removed(process, status);
 		}
 		return;
