@@ -559,19 +559,22 @@ function rpc_cmd() {
 	xtrace_disable
 	local rsp rc=1
 	local stdin cmd cmds_number=0 status_number=0 status
+	# Give rpc.py the same timeout and wait 5s longer, so a timed out command reports
+	# its status here and not to the next rpc_cmd.
+	local timeout=${RPC_PIPE_TIMEOUT:-15}
 
 	if (($#)); then
 		cmds_number=1
-		echo "$@" >&$RPC_PIPE_INPUT
+		echo "-t $timeout" "$@" >&$RPC_PIPE_INPUT
 	elif [[ ! -t 0 ]]; then
 		mapfile -t stdin <&0
 		cmds_number=${#stdin[@]}
-		printf '%s\n' "${stdin[@]}" >&$RPC_PIPE_INPUT
+		printf -- "-t $timeout %s\n" "${stdin[@]}" >&$RPC_PIPE_INPUT
 	else
 		return 0
 	fi
 
-	while read -t "${RPC_PIPE_TIMEOUT:-15}" -ru $RPC_PIPE_OUTPUT rsp; do
+	while read -t "$((${timeout%.*} + 5))" -ru $RPC_PIPE_OUTPUT rsp; do
 		if [[ $rsp == "**STATUS="* ]]; then
 			status[${rsp#*=}]=$rsp
 			if ((++status_number == cmds_number)); then

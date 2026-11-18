@@ -60,6 +60,20 @@ function rpc_trace_cmd_test() {
 	[ "$(jq -r .bdev.tpoint_mask <<< "$info")" != "0x0" ]
 }
 
+# A timed out rpc_cmd must not leave its response for the next rpc_cmd
+function rpc_cmd_timeout() {
+	local out version
+
+	kill -STOP "$spdk_pid"
+	waitforcondition '[[ $(ps -o stat= -p $spdk_pid) =~ ^T ]]'
+	out=$(RPC_PIPE_TIMEOUT=1 rpc_cmd bdev_get_bdevs) || true
+	kill -CONT "$spdk_pid"
+
+	[[ $out == *"Timeout while waiting for response"* ]]
+	version=$(rpc_cmd spdk_get_version)
+	[[ $(jq -r .version <<< "$version") == SPDK* ]]
+}
+
 function go_rpc() {
 	bdevs=$($rootdir/build/examples/hello_gorpc)
 	[ "$(jq length <<< "$bdevs")" == "0" ]
@@ -76,7 +90,8 @@ function go_rpc() {
 
 run_app_bg $SPDK_BIN_DIR/spdk_tgt -e bdev
 spdk_pid=$!
-trap 'killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
+# A target left stopped by rpc_cmd_timeout doesn't act on SIGTERM until resumed
+trap 'kill -CONT $spdk_pid || :; killprocess $spdk_pid; exit 1' SIGINT SIGTERM EXIT
 waitforlisten $spdk_pid
 
 export PYTHONPATH=$PYTHONPATH:$testdir
@@ -89,6 +104,9 @@ run_test "rpc_dry_run" rpc_dry_run
 run_test "rpc_trace_cmd_test" rpc_trace_cmd_test
 if [[ $SPDK_JSONRPC_GO_CLIENT -eq 1 ]]; then
 	run_test "go_rpc" go_rpc
+else
+	# The Go client has no response timeout
+	run_test "rpc_cmd_timeout" rpc_cmd_timeout
 fi
 # same integrity test, but with rpc_cmd() instead
 rpc="rpc_cmd"
