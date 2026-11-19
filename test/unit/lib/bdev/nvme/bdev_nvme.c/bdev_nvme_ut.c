@@ -7836,7 +7836,7 @@ test_destructing_ctrlr_does_not_populate_ns(void)
 			 */
 			g_ut_pause_process_adminq = INT_MAX;
 
-			rc = bdev_nvme_reset_ctrlr(nvme_ctrlr);
+			rc = bdev_nvme_reset_ctrlr(nvme_ctrlr, NULL, NULL);
 			CU_ASSERT(rc == 0);
 
 			poll_threads();
