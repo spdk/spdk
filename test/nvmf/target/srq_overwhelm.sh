@@ -29,12 +29,14 @@ for i in $(seq 0 5); do
 	waitforblk "nvme${i}n1"
 done
 
-# by running 6 different FIO jobs, each with 13 subjobs, we end up with 78 fio threads trying to write to
+# by running 6 different FIO jobs, each with 13 subjobs, we end up with 78 fio threads reading from
 # our target at once. This completely overwhelms the target SRQ, but allows us to verify that rnr_retry is
 # working even at very high queue depths because the rdma qpair doesn't fail.
 # It is normal to see the initiator timeout and reconnect waiting for completions from an overwhelmed target,
 # but the connection should come up and FIO should complete without errors.
-$rootdir/scripts/fio-wrapper -p nvmf -i 1048576 -d 128 -t read -r 10 -n 13
+# Use 128 KiB blocks to match the RDMA transport's default maximum I/O size
+# and reduce fio's buffer allocation.
+$rootdir/scripts/fio-wrapper -p nvmf -i 131072 -d 128 -t read -r 10 -n 13
 
 sync
 
