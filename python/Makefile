@@ -31,7 +31,7 @@ check: build
 	$(Q)python -m twine check $(SPDK_ROOT_DIR)/python/dist/*
 
 install:
-	$(Q)uv pip install --prefix=$(DESTDIR)$(CONFIG_PREFIX) $(SPDK_ROOT_DIR)/python
+	$(Q)uv pip install $(USE_SYSTEM_PYTHON) --prefix=$(DESTDIR)$(CONFIG_PREFIX) $(SPDK_ROOT_DIR)/python
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/python/spdk.egg-info $(DESTDIR)$(CONFIG_PREFIX)/.lock
 
 uninstall:
