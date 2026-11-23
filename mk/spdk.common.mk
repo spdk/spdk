@@ -76,24 +76,34 @@ COMMON_CFLAGS += -march=$(TARGET_ARCHITECTURE)
 endif
 
 ifeq ($(TARGET_MACHINE),x86_64)
+SPDK_NO_AVX512F=
 ifeq ($(CC_TYPE),gcc)
 ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx512f >/dev/null && echo 1))
-# Don't use AVX-512 instructions in SPDK code - it breaks Valgrind for
-# some cases where compiler decides to hyper-optimize a relatively
-# simple operation (like int-to-float conversion) using AVX-512
-COMMON_CFLAGS += -mno-avx512f
-# Disable AVX10.1 extensions which are allowed by default and may conflict with -mno-avx512f
-ifneq (,$(shell $(CC) -Werror -mavx10.1 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
-COMMON_CFLAGS += -mno-avx10.1
-else ifneq (,$(shell $(CC) -Werror -mavx10.1-256 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
-COMMON_CFLAGS += -mno-avx10.1-256 -mno-avx10.1-512
-endif
+SPDK_NO_AVX512F=y
 endif
 endif
 ifeq ($(CC_TYPE),clang)
 LLC=llc$(shell echo $(CC) | grep -o -E  "\-[0-9]{2}")
 ifneq (,$(shell $(LLC) -march=x86-64 -mattr=help 2>&1 | grep -e avx512f >/dev/null && echo 1))
+SPDK_NO_AVX512F=y
+endif
+endif
+ifeq ($(SPDK_NO_AVX512F),y)
+# Don't use AVX-512 instructions in SPDK code - it breaks Valgrind for
+# some cases where compiler decides to hyper-optimize a relatively
+# simple operation (like int-to-float conversion) using AVX-512
 COMMON_CFLAGS += -mno-avx512f
+# Disable AVX10.1 extensions which are allowed by default and may conflict with
+# -mno-avx512f. Probe the exact flag we pass, most recent spelling first. In gcc
+# the -256/-512 suffix selects the maximum vector width, so both are needed to
+# cover either width; clang has -mno-avx10.1-256 but no -mno-avx10.1-512, which
+# is what separates the two compilers here.
+ifneq (,$(shell $(CC) -Werror -mno-avx10.1 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
+COMMON_CFLAGS += -mno-avx10.1
+else ifneq (,$(shell $(CC) -Werror -mno-avx10.1-512 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
+COMMON_CFLAGS += -mno-avx10.1-256 -mno-avx10.1-512
+else ifneq (,$(shell $(CC) -Werror -mno-avx10.1-256 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
+COMMON_CFLAGS += -mno-avx10.1-256
 endif
 endif
 endif
