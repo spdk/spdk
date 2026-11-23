@@ -17,9 +17,9 @@ mkdir -p $vfu_dir
 # Start `spdk_tgt` and configure it
 vfu_tgt_run 0 -m 0x3 -s 512
 
-$rpc_py bdev_malloc_create -b malloc0 64 512
-$rpc_py bdev_malloc_create -b malloc1 64 512
-$rpc_py bdev_malloc_create -b malloc2 64 512
+$rpc_py bdev_malloc_create -b malloc0 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py bdev_malloc_create -b malloc1 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+$rpc_py bdev_malloc_create -b malloc2 $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 
 $rpc_py vfu_tgt_set_base_path $vfu_dir
 
