@@ -17,7 +17,7 @@ vhosttestinit
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
-vfu_tgt_run 0
+vfu_tgt_run 0 -m 0xf -s 512
 
 vfu_vm_dir="$VM_DIR/vfu_tgt"
 rm -rf $vfu_vm_dir

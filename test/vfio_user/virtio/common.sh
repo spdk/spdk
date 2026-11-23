@@ -5,6 +5,7 @@
 function vfu_tgt_run() {
 	local vhost_name=$1
 	local vfio_user_dir vfu_pid_file rpc_py
+	shift
 
 	vfio_user_dir=$(get_vhost_dir $vhost_name)
 	vfu_pid_file="$vfio_user_dir/vhost.pid"
@@ -13,7 +14,7 @@ function vfu_tgt_run() {
 	mkdir -p $vfio_user_dir
 
 	timing_enter vfu_tgt_start
-	$rootdir/build/bin/spdk_tgt -r $vfio_user_dir/rpc.sock -m 0xf -s 512 &
+	$rootdir/build/bin/spdk_tgt -r $vfio_user_dir/rpc.sock "$@" &
 	vfupid=$!
 	echo $vfupid > $vfu_pid_file
 

@@ -5,17 +5,17 @@
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/test/common/autotest_common.sh
+source $rootdir/test/vfio_user/common.sh
+source $rootdir/test/vfio_user/virtio/common.sh
 
-rpc_py="$rootdir/scripts/rpc.py"
+rpc_py="$rootdir/scripts/rpc.py -s $(get_vhost_dir 0)/rpc.sock"
 
 vfu_dir="$SPDK_TEST_STORAGE/vfu_devices"
 rm -rf $vfu_dir
 mkdir -p $vfu_dir
 
 # Start `spdk_tgt` and configure it
-$SPDK_BIN_DIR/spdk_tgt -m 0x3 -L vfu_virtio &
-spdk_tgt_pid=$!
-waitforlisten $spdk_tgt_pid
+vfu_tgt_run 0 -m 0x3 -s 512
 
 $rpc_py bdev_malloc_create -b malloc0 64 512
 $rpc_py bdev_malloc_create -b malloc1 64 512
@@ -56,4 +56,5 @@ trap - SIGINT SIGTERM EXIT
 $rpc_py vfu_virtio_delete_endpoint vfu.blk
 $rpc_py vfu_virtio_delete_endpoint vfu.scsi
 
-killprocess $spdk_tgt_pid
+vhost_kill 0
+vhosttestfini
