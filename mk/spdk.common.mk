@@ -82,10 +82,12 @@ ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx512f >/dev/null &
 # some cases where compiler decides to hyper-optimize a relatively
 # simple operation (like int-to-float conversion) using AVX-512
 COMMON_CFLAGS += -mno-avx512f
-endif
-# Fix for GCC 15+ environments with AVX10 hardware
-ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx10.1 >/dev/null && echo 1))
+# Disable AVX10.1 extensions which are allowed by default and may conflict with -mno-avx512f
+ifneq (,$(shell $(CC) -Werror -mavx10.1 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
 COMMON_CFLAGS += -mno-avx10.1
+else ifneq (,$(shell $(CC) -Werror -mavx10.1-256 -x c -fsyntax-only /dev/null >/dev/null 2>&1 && echo 1))
+COMMON_CFLAGS += -mno-avx10.1-256 -mno-avx10.1-512
+endif
 endif
 endif
 ifeq ($(CC_TYPE),clang)
