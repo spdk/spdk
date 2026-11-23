@@ -83,6 +83,10 @@ ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx512f >/dev/null &
 # simple operation (like int-to-float conversion) using AVX-512
 COMMON_CFLAGS += -mno-avx512f
 endif
+# Fix for GCC 15+ environments with AVX10 hardware
+ifneq (,$(shell $(CC) --target-help 2>/dev/null | grep -e -mavx10.1 >/dev/null && echo 1))
+COMMON_CFLAGS += -mno-avx10.1
+endif
 endif
 ifeq ($(CC_TYPE),clang)
 LLC=llc$(shell echo $(CC) | grep -o -E  "\-[0-9]{2}")
